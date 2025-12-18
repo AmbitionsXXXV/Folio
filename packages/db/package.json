@@ -13,7 +13,12 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:start:docker": "docker-compose up -d",
+    "db:stop:docker": "docker-compose down",
+    "db:init:local": "./scripts/init-local-db.sh",
+    "db:start:local": "./scripts/start-local-db.sh",
+    "db:stop:local": "./scripts/stop-local-db.sh"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.8",

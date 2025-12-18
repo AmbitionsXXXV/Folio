@@ -4,6 +4,17 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/utils/orpc'
 
+type SignUpHandlerParams = {
+	name: string
+	email: string
+	password: string
+	setError: (error: string | null) => void
+	setIsLoading: (loading: boolean) => void
+	setName: (name: string) => void
+	setEmail: (email: string) => void
+	setPassword: (password: string) => void
+}
+
 function signUpHandler({
 	name,
 	email,
@@ -13,7 +24,7 @@ function signUpHandler({
 	setName,
 	setEmail,
 	setPassword,
-}) {
+}: SignUpHandlerParams) {
 	setIsLoading(true)
 	setError(null)
 

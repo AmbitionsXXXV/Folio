@@ -25,7 +25,7 @@ export const auth = betterAuth({
 			verification,
 		},
 	}),
-	trustedOrigins: [process.env.CORS_ORIGIN || '', 'mybettertapp://', 'exp://'],
+	trustedOrigins: [process.env.CORS_ORIGIN || '', 'exp://', 'ai-start://'],
 	emailAndPassword: {
 		enabled: true,
 	},

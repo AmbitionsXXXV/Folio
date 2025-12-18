@@ -39,5 +39,14 @@
       "jsxQuoteStyle": "double"
     }
   },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "performance": {
+        "noNamespaceImport": "off"
+      }
+    }
+  },
   "extends": ["ultracite/core", "ultracite/react"]
 }

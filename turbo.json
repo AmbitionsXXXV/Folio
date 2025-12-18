@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "ui": "tui",
+  "globalPassThroughEnv": ["CORS_ORIGIN", "DATABASE_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -32,6 +32,21 @@
     "db:generate": {
       "cache": false,
       "persistent": true
+    },
+    "db:start:docker": {
+      "cache": false
+    },
+    "db:stop:docker": {
+      "cache": false
+    },
+    "db:init:local": {
+      "cache": false
+    },
+    "db:start:local": {
+      "cache": false
+    },
+    "db:stop:local": {
+      "cache": false
     }
   }
 }
