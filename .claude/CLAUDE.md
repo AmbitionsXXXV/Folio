@@ -1,3 +1,194 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Folio is a cross-platform personal learning system for capturing, organizing, and revisiting what you learn. Built as a monorepo with Better-T-Stack, it combines React (TanStack Start), React Native (Expo), Hono, oRPC, Drizzle, and PostgreSQL.
+
+## Development Commands
+
+### Common Workflows
+
+```bash
+# Install dependencies
+bun install
+
+# Start all apps in development
+bun run dev
+
+# Build all apps
+bun run build
+
+# Type checking across all apps
+bun run check-types
+
+# Format and lint code
+bun run check           # Check for issues
+bun x ultracite fix     # Auto-fix issues
+```
+
+### Individual App Development
+
+```bash
+# Web app only (TanStack Start)
+bun run dev:web
+
+# Server only (Hono)
+bun run dev:server
+
+# Mobile app only (Expo)
+bun run dev:native
+```
+
+### Database Management
+
+```bash
+# Push schema changes to database
+bun run db:push
+
+# Generate migration files
+bun run db:generate
+
+# Run migrations
+bun run db:migrate
+
+# Open Drizzle Studio (database UI)
+bun run db:studio
+
+# Docker PostgreSQL management
+bun run db:start:docker
+bun run db:stop:docker
+
+# Local PostgreSQL management
+bun run db:init:local
+bun run db:start:local
+bun run db:stop:local
+```
+
+## Architecture Overview
+
+### Monorepo Structure
+
+This is a **Turborepo** monorepo with three apps and three shared packages:
+
+**Apps:**
+
+- `apps/web` - React web app using TanStack Start (SSR framework with TanStack Router)
+- `apps/native` - React Native mobile app using Expo Router
+- `apps/server` - Hono backend server exposing oRPC and OpenAPI endpoints
+
+**Packages:**
+
+- `packages/api` - Shared API layer containing oRPC router definitions and procedures
+- `packages/auth` - Better Auth configuration shared across apps
+- `packages/db` - Drizzle ORM schema and database connection
+
+### API Architecture (oRPC)
+
+The API is built with **oRPC**, which provides end-to-end type safety between client and server.
+
+**Key files:**
+
+- `packages/api/src/index.ts` - Defines `publicProcedure` and `protectedProcedure` with authentication middleware
+- `packages/api/src/context.ts` - Creates request context with session data from Better Auth
+- `packages/api/src/routers/index.ts` - Exports `appRouter` with all API endpoints
+
+**Server integration** (`apps/server/src/index.ts`):
+
+- Uses `RPCHandler` for type-safe RPC calls at `/rpc/*`
+- Uses `OpenAPIHandler` for OpenAPI documentation at `/api-reference/*`
+- Hono middleware handles CORS, logging, and Better Auth at `/api/auth/*`
+
+**Client usage:**
+
+- Web and native apps use `@orpc/tanstack-query` for React Query integration
+- Import `AppRouter` type from `packages/api` for full type safety
+
+### Authentication Flow
+
+**Better Auth** is configured in `packages/auth/src/index.ts`:
+
+- Email/password authentication enabled
+- Expo plugin for mobile auth
+- Drizzle adapter for PostgreSQL persistence
+- Session management via cookies (SameSite=none for cross-origin)
+
+**Schema** (`packages/db/src/schema/auth.ts`):
+
+- User, session, account, and verification tables
+- Drizzle relations defined for type-safe joins
+
+**Middleware** (`packages/api/src/index.ts`):
+
+- `requireAuth` middleware throws `UNAUTHORIZED` if no session
+- `protectedProcedure` extends `publicProcedure` with auth requirement
+
+### Database Layer
+
+**Drizzle ORM** with PostgreSQL:
+
+- Connection: `packages/db/src/index.ts` creates drizzle client from `DATABASE_URL`
+- Schema: `packages/db/src/schema/auth.ts` (currently only auth tables)
+- Config: `packages/db/drizzle.config.ts` for Drizzle Kit
+
+**Environment variables required** (in `apps/server/.env`):
+
+```bash
+DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DB_NAME"
+AUTH_SECRET="your-secret-key"
+AUTH_URL="http://localhost:3001"
+CORS_ORIGIN="http://localhost:3001"
+```
+
+### Mobile App Structure
+
+**Expo Router** with nested navigation:
+
+- `apps/native/app/_layout.tsx` - Root layout
+- `apps/native/app/(drawer)/` - Drawer navigation
+- `apps/native/app/(drawer)/(tabs)/` - Tab navigation within drawer
+- Uses `heroui-native` for UI components
+- React 19 with React Native 0.81
+
+### Web App Structure
+
+**TanStack Start** (SSR framework):
+
+- Built with Vite
+- Uses TanStack Router for routing
+- TailwindCSS 4.x with Base UI components
+- React 19
+- Dark mode support via `next-themes`
+
+## Important Development Notes
+
+### Type Safety
+
+- All API calls between client and server are fully type-safe via oRPC
+- Import `AppRouterClient` type for client-side type inference
+- Context typing is derived from `createContext` return type
+
+### Adding New API Endpoints
+
+1. Define procedure in `packages/api/src/routers/index.ts`
+2. Use `publicProcedure` or `protectedProcedure` as base
+3. Types automatically propagate to all consuming apps
+4. No manual OpenAPI spec writing needed - auto-generated
+
+### Adding New Database Tables
+
+1. Define schema in `packages/db/src/schema/`
+2. Export from `packages/db/src/index.ts`
+3. Add to drizzle client schema object
+4. Run `bun run db:push` to sync to database
+
+### Code Quality
+
+This project uses **Ultracite** (Biome preset) for formatting and linting. Run `bun x ultracite fix` before committing. See the code standards section below for details.
+
+---
+
 # Ultracite Code Standards
 
 This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
@@ -87,19 +278,21 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 ### Framework-Specific Guidance
 
-**Next.js:**
+**TanStack Start (this project's web framework):**
 
-- Use Next.js `<Image>` component for images
-- Use `next/head` or App Router metadata API for head elements
-- Use Server Components for async data fetching instead of async Client Components
+- Use TanStack Router for navigation
+- Server functions run on the server - mark with `'use server'`
+- Client components need `'use client'` directive
+
+**React Native + Expo (this project's mobile framework):**
+
+- Use Expo Router for navigation (file-based routing)
+- Use `heroui-native` components for UI
+- Test on both iOS and Android simulators
 
 **React 19+:**
 
 - Use ref as a prop instead of `React.forwardRef`
-
-**Solid/Svelte/Vue/Qwik:**
-
-- Use `class` and `for` attributes (not `className` or `htmlFor`)
 
 ---
 
