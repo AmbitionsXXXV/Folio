@@ -17,14 +17,14 @@
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:",
-    "@ai-start/api": "workspace:*",
-    "@ai-start/auth": "workspace:*",
-    "@ai-start/db": "workspace:*"
+    "@folio/api": "workspace:*",
+    "@folio/auth": "workspace:*",
+    "@folio/db": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
     "typescript": "catalog:",
     "tsdown": "^0.18.0",
-    "@ai-start/config": "workspace:*"
+    "@folio/config": "workspace:*"
   }
 }

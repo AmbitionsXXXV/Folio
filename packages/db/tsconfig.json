@@ -1,5 +1,5 @@
 {
-  "extends": "@ai-start/config/tsconfig.base.json",
+  "extends": "@folio/config/tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,

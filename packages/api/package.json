@@ -1,5 +1,5 @@
 {
-  "name": "@ai-start/api",
+  "name": "@folio/api",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -12,7 +12,7 @@
   "scripts": {},
   "devDependencies": {
     "typescript": "catalog:",
-    "@ai-start/config": "workspace:*"
+    "@folio/config": "workspace:*"
   },
   "dependencies": {
     "@orpc/server": "catalog:",
@@ -22,7 +22,7 @@
     "hono": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:",
-    "@ai-start/auth": "workspace:*",
-    "@ai-start/db": "workspace:*"
+    "@folio/auth": "workspace:*",
+    "@folio/db": "workspace:*"
   }
 }

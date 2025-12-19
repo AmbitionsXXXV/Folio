@@ -1,23 +1,23 @@
 {
   "expo": {
-    "scheme": "ai-start",
+    "scheme": "folio",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
     "web": {
       "bundler": "metro"
     },
-    "name": "ai-start",
-    "slug": "ai-start",
+    "name": "Folio",
+    "slug": "folio",
     "plugins": ["expo-font"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "ios": {
-      "bundleIdentifier": "com.etcetera.ai-start"
+      "bundleIdentifier": "com.etcetera.folio"
     },
     "android": {
-      "package": "com.etcetera.aistart"
+      "package": "com.etcetera.folio"
     }
   }
 }

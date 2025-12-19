@@ -1,5 +1,5 @@
 {
-  "name": "ai-start",
+  "name": "folio",
   "private": true,
   "type": "module",
   "workspaces": {
@@ -32,15 +32,15 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
-    "db:push": "turbo -F @ai-start/db db:push",
-    "db:studio": "turbo -F @ai-start/db db:studio",
-    "db:generate": "turbo -F @ai-start/db db:generate",
-    "db:migrate": "turbo -F @ai-start/db db:migrate",
-    "db:start:docker": "turbo -F @ai-start/db db:start:docker",
-    "db:stop:docker": "turbo -F @ai-start/db db:stop:docker",
-    "db:init:local": "turbo -F @ai-start/db db:init:local",
-    "db:start:local": "turbo -F @ai-start/db db:start:local",
-    "db:stop:local": "turbo -F @ai-start/db db:stop:local",
+    "db:push": "turbo -F @folio/db db:push",
+    "db:studio": "turbo -F @folio/db db:studio",
+    "db:generate": "turbo -F @folio/db db:generate",
+    "db:migrate": "turbo -F @folio/db db:migrate",
+    "db:start:docker": "turbo -F @folio/db db:start:docker",
+    "db:stop:docker": "turbo -F @folio/db db:stop:docker",
+    "db:init:local": "turbo -F @folio/db db:init:local",
+    "db:start:local": "turbo -F @folio/db db:start:local",
+    "db:stop:local": "turbo -F @folio/db db:stop:local",
     "commit": "cz"
   },
   "dependencies": {

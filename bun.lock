@@ -26,10 +26,10 @@
       "name": "native",
       "version": "1.0.0",
       "dependencies": {
-        "@ai-start/api": "workspace:*",
         "@better-auth/expo": "catalog:",
         "@expo/metro-runtime": "~6.1.2",
         "@expo/vector-icons": "^15.0.3",
+        "@folio/api": "workspace:*",
         "@gorhom/bottom-sheet": "^5.2.6",
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react-native": "^1.0.9",
@@ -68,7 +68,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@ai-start/config": "workspace:*",
+        "@folio/config": "workspace:*",
         "@types/node": "^24.10.0",
         "@types/react": "~19.1.0",
         "typescript": "catalog:",
@@ -77,9 +77,9 @@
     "apps/server": {
       "name": "server",
       "dependencies": {
-        "@ai-start/api": "workspace:*",
-        "@ai-start/auth": "workspace:*",
-        "@ai-start/db": "workspace:*",
+        "@folio/api": "workspace:*",
+        "@folio/auth": "workspace:*",
+        "@folio/db": "workspace:*",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
@@ -89,7 +89,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@ai-start/config": "workspace:*",
+        "@folio/config": "workspace:*",
         "@types/bun": "catalog:",
         "tsdown": "^0.18.0",
         "typescript": "catalog:",
@@ -98,9 +98,9 @@
     "apps/web": {
       "name": "web",
       "dependencies": {
-        "@ai-start/api": "workspace:*",
-        "@ai-start/auth": "workspace:*",
         "@base-ui/react": "^1.0.0",
+        "@folio/api": "workspace:*",
+        "@folio/auth": "workspace:*",
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react": "^1.1.3",
         "@orpc/client": "catalog:",
@@ -129,7 +129,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@ai-start/config": "workspace:*",
+        "@folio/config": "workspace:*",
         "@tanstack/react-query-devtools": "^5.91.1",
         "@tanstack/react-router-devtools": "^1.141.6",
         "@testing-library/dom": "^10.4.0",
@@ -144,10 +144,10 @@
       },
     },
     "packages/api": {
-      "name": "@ai-start/api",
+      "name": "@folio/api",
       "dependencies": {
-        "@ai-start/auth": "workspace:*",
-        "@ai-start/db": "workspace:*",
+        "@folio/auth": "workspace:*",
+        "@folio/db": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
@@ -157,30 +157,30 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@ai-start/config": "workspace:*",
+        "@folio/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/auth": {
-      "name": "@ai-start/auth",
+      "name": "@folio/auth",
       "dependencies": {
-        "@ai-start/db": "workspace:*",
         "@better-auth/expo": "catalog:",
+        "@folio/db": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@ai-start/config": "workspace:*",
+        "@folio/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/config": {
-      "name": "@ai-start/config",
+      "name": "@folio/config",
       "version": "0.0.0",
     },
     "packages/db": {
-      "name": "@ai-start/db",
+      "name": "@folio/db",
       "dependencies": {
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
@@ -188,7 +188,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@ai-start/config": "workspace:*",
+        "@folio/config": "workspace:*",
         "@types/pg": "^8.15.6",
         "drizzle-kit": "^0.31.8",
         "typescript": "catalog:",
@@ -213,14 +213,6 @@
   },
   "packages": {
     "@0no-co/graphql.web": ["@0no-co/graphql.web@1.2.0", "", { "peerDependencies": { "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0" }, "optionalPeers": ["graphql"] }, "sha512-/1iHy9TTr63gE1YcR5idjx8UREz1s0kFhydf3bBLCXyqjhkIc6igAzTOx3zPifCwFR87tsh/4Pa9cNts6d2otw=="],
-
-    "@ai-start/api": ["@ai-start/api@workspace:packages/api"],
-
-    "@ai-start/auth": ["@ai-start/auth@workspace:packages/auth"],
-
-    "@ai-start/config": ["@ai-start/config@workspace:packages/config"],
-
-    "@ai-start/db": ["@ai-start/db@workspace:packages/db"],
 
     "@asamuzakjp/css-color": ["@asamuzakjp/css-color@3.2.0", "", { "dependencies": { "@csstools/css-calc": "^2.1.3", "@csstools/css-color-parser": "^3.0.9", "@csstools/css-parser-algorithms": "^3.0.4", "@csstools/css-tokenizer": "^3.0.3", "lru-cache": "^10.4.3" } }, "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="],
 
@@ -616,6 +608,14 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
 
+    "@folio/api": ["@folio/api@workspace:packages/api"],
+
+    "@folio/auth": ["@folio/auth@workspace:packages/auth"],
+
+    "@folio/config": ["@folio/config@workspace:packages/config"],
+
+    "@folio/db": ["@folio/db@workspace:packages/db"],
+
     "@gorhom/bottom-sheet": ["@gorhom/bottom-sheet@5.2.8", "", { "dependencies": { "@gorhom/portal": "1.0.14", "invariant": "^2.2.4" }, "peerDependencies": { "@types/react": "*", "@types/react-native": "*", "react": "*", "react-native": "*", "react-native-gesture-handler": ">=2.16.1", "react-native-reanimated": ">=3.16.0 || >=4.0.0-" }, "optionalPeers": ["@types/react", "@types/react-native"] }, "sha512-+N27SMpbBxXZQ/IA2nlEV6RGxL/qSFHKfdFKcygvW+HqPG5jVNb1OqehLQsGfBP+Up42i0gW5ppI+DhpB7UCzA=="],
 
     "@gorhom/portal": ["@gorhom/portal@1.0.14", "", { "dependencies": { "nanoid": "^3.3.1" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-MXyL4xvCjmgaORr/rtryDNFy3kU4qUbKlwtQqqsygd0xX3mhKjOLn6mQK8wfu0RkoE0pBE0nAasRoHua+/QZ7A=="],
@@ -960,7 +960,7 @@
 
     "@tanstack/start-storage-context": ["@tanstack/start-storage-context@1.141.4", "", { "dependencies": { "@tanstack/router-core": "1.141.4" } }, "sha512-e7lGJdwFN5DPCX8O6Dr8Rbhmb9Yw168TBkT9BFPtlI9wJQPmhqezF2D6hUfGhZi1iff92NkbcQUORYtHLHc+AQ=="],
 
-    "@tanstack/store": ["@tanstack/store@0.7.7", "", {}, "sha512-xa6pTan1bcaqYDS9BDpSiS63qa6EoDkPN9RsRaxHuDdVDNntzq3xNwR5YKTU/V3SkSyC9T4YVOPh2zRQN0nhIQ=="],
+    "@tanstack/store": ["@tanstack/store@0.8.0", "", {}, "sha512-Om+BO0YfMZe//X2z0uLF2j+75nQga6TpTJgLJQBiq85aOyZNIhkCgleNcud2KQg4k4v9Y9l+Uhru3qWMPGTOzQ=="],
 
     "@tanstack/virtual-file-routes": ["@tanstack/virtual-file-routes@1.141.0", "", {}, "sha512-CJrWtr6L9TVzEImm9S7dQINx+xJcYP/aDkIi6gnaWtIgbZs1pnzsE0yJc2noqXZ+yAOqLx3TBGpBEs9tS0P9/A=="],
 
@@ -2440,9 +2440,7 @@
 
     "@tailwindcss/vite/@tailwindcss/oxide": ["@tailwindcss/oxide@4.1.18", "", { "optionalDependencies": { "@tailwindcss/oxide-android-arm64": "4.1.18", "@tailwindcss/oxide-darwin-arm64": "4.1.18", "@tailwindcss/oxide-darwin-x64": "4.1.18", "@tailwindcss/oxide-freebsd-x64": "4.1.18", "@tailwindcss/oxide-linux-arm-gnueabihf": "4.1.18", "@tailwindcss/oxide-linux-arm64-gnu": "4.1.18", "@tailwindcss/oxide-linux-arm64-musl": "4.1.18", "@tailwindcss/oxide-linux-x64-gnu": "4.1.18", "@tailwindcss/oxide-linux-x64-musl": "4.1.18", "@tailwindcss/oxide-wasm32-wasi": "4.1.18", "@tailwindcss/oxide-win32-arm64-msvc": "4.1.18", "@tailwindcss/oxide-win32-x64-msvc": "4.1.18" } }, "sha512-EgCR5tTS5bUSKQgzeMClT6iCY3ToqE1y+ZB0AKldj809QXk1Y+3jB0upOYZrn9aGIzPtUsP7sX4QQ4XtjBB95A=="],
 
-    "@tanstack/react-store/@tanstack/store": ["@tanstack/store@0.8.0", "", {}, "sha512-Om+BO0YfMZe//X2z0uLF2j+75nQga6TpTJgLJQBiq85aOyZNIhkCgleNcud2KQg4k4v9Y9l+Uhru3qWMPGTOzQ=="],
-
-    "@tanstack/router-core/@tanstack/store": ["@tanstack/store@0.8.0", "", {}, "sha512-Om+BO0YfMZe//X2z0uLF2j+75nQga6TpTJgLJQBiq85aOyZNIhkCgleNcud2KQg4k4v9Y9l+Uhru3qWMPGTOzQ=="],
+    "@tanstack/form-core/@tanstack/store": ["@tanstack/store@0.7.7", "", {}, "sha512-xa6pTan1bcaqYDS9BDpSiS63qa6EoDkPN9RsRaxHuDdVDNntzq3xNwR5YKTU/V3SkSyC9T4YVOPh2zRQN0nhIQ=="],
 
     "@tanstack/router-core/seroval": ["seroval@1.4.0", "", {}, "sha512-BdrNXdzlofomLTiRnwJTSEAaGKyHHZkbMXIywOh7zlzp4uZnXErEwl9XZ+N1hJSNpeTtNxWvVwN0wUzAIQ4Hpg=="],
 

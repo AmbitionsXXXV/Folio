@@ -1,5 +1,5 @@
 {
-  "name": "@ai-start/db",
+  "name": "@folio/db",
   "type": "module",
   "exports": {
     ".": {
@@ -24,7 +24,7 @@
     "drizzle-kit": "^0.31.8",
     "@types/pg": "^8.15.6",
     "typescript": "catalog:",
-    "@ai-start/config": "workspace:*"
+    "@folio/config": "workspace:*"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",

@@ -1,4 +1,5 @@
-import { db } from '@ai-start/db'
+import { expo } from '@better-auth/expo'
+import { db } from '@folio/db'
 import {
 	account,
 	accountRelations,
@@ -7,8 +8,7 @@ import {
 	user,
 	userRelations,
 	verification,
-} from '@ai-start/db/schema/auth'
-import { expo } from '@better-auth/expo'
+} from '@folio/db/schema/auth'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 
@@ -25,7 +25,7 @@ export const auth = betterAuth({
 			verification,
 		},
 	}),
-	trustedOrigins: [process.env.CORS_ORIGIN || '', 'exp://', 'ai-start://'],
+	trustedOrigins: [process.env.CORS_ORIGIN || '', 'exp://', 'folio://'],
 	emailAndPassword: {
 		enabled: true,
 	},
