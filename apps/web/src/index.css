@@ -198,6 +198,15 @@ body {
 	}
 }
 
+@utility no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
 /* Tiptap Editor Styles */
 .tiptap {
 	outline: none;
@@ -308,4 +317,52 @@ body {
 
 .tiptap a:hover {
 	opacity: 0.8;
+}
+
+.cn-command {
+	@apply bg-popover text-popover-foreground rounded-xl! p-1;
+}
+
+.cn-command-dialog {
+	@apply rounded-xl!;
+}
+
+.cn-command-input-wrapper {
+	@apply p-1 pb-0;
+}
+
+.cn-command-input-group {
+	@apply bg-input/30 border-input/30 h-8! rounded-lg! shadow-none! *:data-[slot=input-group-addon]:pl-2!;
+}
+
+.cn-command-input-icon {
+	@apply size-4 shrink-0 opacity-50;
+}
+
+.cn-command-input {
+	@apply w-full text-sm;
+}
+
+.cn-command-list {
+	@apply no-scrollbar max-h-72 scroll-py-1 outline-none;
+}
+
+.cn-command-empty {
+	@apply py-6 text-center text-sm;
+}
+
+.cn-command-group {
+	@apply text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium;
+}
+
+.cn-command-separator {
+	@apply bg-border -mx-1 h-px;
+}
+
+.cn-command-item {
+	@apply data-[selected=true]:bg-muted data-[selected=true]:text-foreground data-[selected=true]:*:[svg]:text-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none [&_svg:not([class*='size-'])]:size-4 in-data-[slot=dialog-content]:rounded-lg!;
+}
+
+.cn-command-shortcut {
+	@apply text-muted-foreground group-data-[selected=true]/command-item:text-foreground ml-auto text-xs tracking-widest;
 }

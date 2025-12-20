@@ -24,7 +24,7 @@ const SourceTypeSchema = z.enum([
 const CreateSourceInputSchema = z.object({
 	type: SourceTypeSchema.default('link'),
 	title: z.string().min(1).max(500),
-	url: z.string().url().optional(),
+	url: z.url().optional(),
 	author: z.string().max(200).optional(),
 	publishedAt: z.date().optional(),
 	metadata: z.string().optional(),
@@ -37,7 +37,7 @@ const UpdateSourceInputSchema = z.object({
 	id: z.string(),
 	type: SourceTypeSchema.optional(),
 	title: z.string().min(1).max(500).optional(),
-	url: z.string().url().nullable().optional(),
+	url: z.url().nullable().optional(),
 	author: z.string().max(200).nullable().optional(),
 	publishedAt: z.date().nullable().optional(),
 	metadata: z.string().nullable().optional(),

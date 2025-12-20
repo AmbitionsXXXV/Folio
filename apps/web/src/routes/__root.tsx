@@ -9,7 +9,9 @@ import {
 	Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { CommandPalette } from '@/components/command-palette'
 import { Toaster } from '@/components/ui/sonner'
+import { CommandPaletteProvider } from '@/contexts/command-palette-context'
 import type { orpc } from '@/utils/orpc'
 import Header from '../components/header'
 import appCss from '../index.css?url'
@@ -50,10 +52,13 @@ function RootDocument() {
 				<HeadContent />
 			</head>
 			<body>
-				<div className="grid h-svh grid-rows-[auto_1fr]">
-					<Header />
-					<Outlet />
-				</div>
+				<CommandPaletteProvider>
+					<div className="grid h-svh grid-rows-[auto_1fr]">
+						<Header />
+						<Outlet />
+					</div>
+					<CommandPalette />
+				</CommandPaletteProvider>
 				<Toaster richColors />
 				<TanStackRouterDevtools position="bottom-left" />
 				<ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />

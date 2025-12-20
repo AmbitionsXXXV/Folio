@@ -36,16 +36,16 @@ Done: 实现了完整的 tags API router（CRUD + 列表），以及 entries rou
 
 - [x] 创建来源（链接/书籍/文章）
 - [x] 关联条目与来源
-- [ ] 来源列表页面
+- [x] 来源列表页面
 
-Done: 实现了完整的 sources API router（CRUD + 列表 + 分页），以及 entry-source 关联 API（addToEntry/removeFromEntry/getEntrySources/getSourceEntries）。包含完整的单元测试。
+Done: 实现了完整的 sources API router（CRUD + 列表 + 分页），以及 entry-source 关联 API（addToEntry/removeFromEntry/getEntrySources/getSourceEntries）。包含完整的单元测试。Web 端实现了来源列表页面，支持按类型筛选、创建/编辑/删除来源。
 
 #### 5. 基础搜索
 
 - [x] 关键词搜索（标题/内容）
-- [ ] 搜索结果展示
+- [x] 搜索结果展示
 
-Done: 实现了 search API router，支持对 entries 的标题和内容进行 ILIKE 模糊搜索，支持游标分页。包含完整的单元测试。
+Done: 实现了 search API router，支持对 entries 的标题和内容进行 ILIKE 模糊搜索，支持游标分页。Web 端实现了搜索页面，支持关键词搜索和分页加载结果。包含完整的单元测试。
 
 #### 6. 复习工作流
 
@@ -64,7 +64,7 @@ Done: 实现了完整的 review API router，包括 getQueue（支持 new/starre
 - [x] 条目编辑器
 - [x] 资料库页面
 - [ ] 标签管理页面
-- [ ] 来源管理页面
+- [x] 来源管理页面
 - [ ] 复习页面
 
 #### 移动应用 (Expo)

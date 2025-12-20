@@ -44,6 +44,11 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "a11y": {
+        "useSemanticElements": "off",
+        "useKeyWithClickEvents": "off",
+        "noNoninteractiveElementInteractions": "off"
+      },
       "style": {
         "useBlockStatements": "off"
       },
@@ -55,7 +60,9 @@
         "noLeakedRender": "off"
       },
       "performance": {
-        "noNamespaceImport": "off"
+        "noNamespaceImport": "off",
+        "noReExportAll": "off",
+        "noBarrelFile": "off"
       }
     }
   },

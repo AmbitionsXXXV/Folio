@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SourcesRouteImport } from './routes/sources'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
@@ -18,6 +20,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EntriesNewRouteImport } from './routes/entries/new'
 import { Route as EntriesIdRouteImport } from './routes/entries/$id'
 
+const SourcesRoute = SourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/sources': typeof SourcesRoute
   '/entries/$id': typeof EntriesIdRoute
   '/entries/new': typeof EntriesNewRoute
 }
@@ -76,6 +90,8 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/sources': typeof SourcesRoute
   '/entries/$id': typeof EntriesIdRoute
   '/entries/new': typeof EntriesNewRoute
 }
@@ -87,6 +103,8 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/sources': typeof SourcesRoute
   '/entries/$id': typeof EntriesIdRoute
   '/entries/new': typeof EntriesNewRoute
 }
@@ -99,6 +117,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/register'
+    | '/search'
+    | '/sources'
     | '/entries/$id'
     | '/entries/new'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +129,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/register'
+    | '/search'
+    | '/sources'
     | '/entries/$id'
     | '/entries/new'
   id:
@@ -119,6 +141,8 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/register'
+    | '/search'
+    | '/sources'
     | '/entries/$id'
     | '/entries/new'
   fileRoutesById: FileRoutesById
@@ -130,12 +154,28 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  SearchRoute: typeof SearchRoute
+  SourcesRoute: typeof SourcesRoute
   EntriesIdRoute: typeof EntriesIdRoute
   EntriesNewRoute: typeof EntriesNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sources': {
+      id: '/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof SourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -202,6 +242,8 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  SearchRoute: SearchRoute,
+  SourcesRoute: SourcesRoute,
   EntriesIdRoute: EntriesIdRoute,
   EntriesNewRoute: EntriesNewRoute,
 }
