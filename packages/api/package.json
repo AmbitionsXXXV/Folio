@@ -15,14 +15,16 @@
     "@folio/config": "workspace:*"
   },
   "dependencies": {
-    "@orpc/server": "catalog:",
+    "@folio/auth": "workspace:*",
+    "@folio/db": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "hono": "catalog:",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@folio/auth": "workspace:*",
-    "@folio/db": "workspace:*"
+    "drizzle-orm": "^0.45.1",
+    "hono": "catalog:",
+    "nanoid": "^5.1.6",
+    "zod": "catalog:"
   }
 }

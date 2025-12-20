@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vitest'
 import { appRouter } from '../../src/routers'
 
 describe('appRouter structure', () => {
@@ -12,9 +12,24 @@ describe('appRouter structure', () => {
 		expect(typeof appRouter.privateData).toBe('object')
 	})
 
+	it('exports entries router', () => {
+		expect(appRouter.entries).toBeDefined()
+		expect(typeof appRouter.entries).toBe('object')
+	})
+
 	it('has correct procedure types', () => {
 		// Verify the router structure is correct
 		expect(appRouter).toHaveProperty('healthCheck')
 		expect(appRouter).toHaveProperty('privateData')
+		expect(appRouter).toHaveProperty('entries')
+	})
+
+	it('entries router has all required procedures', () => {
+		expect(appRouter.entries).toHaveProperty('create')
+		expect(appRouter.entries).toHaveProperty('update')
+		expect(appRouter.entries).toHaveProperty('delete')
+		expect(appRouter.entries).toHaveProperty('restore')
+		expect(appRouter.entries).toHaveProperty('get')
+		expect(appRouter.entries).toHaveProperty('list')
 	})
 })

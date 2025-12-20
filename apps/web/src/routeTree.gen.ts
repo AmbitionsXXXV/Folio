@@ -9,13 +9,33 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EntriesNewRouteImport } from './routes/entries/new'
+import { Route as EntriesIdRouteImport } from './routes/entries/$id'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -28,44 +48,120 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntriesNewRoute = EntriesNewRouteImport.update({
+  id: '/entries/new',
+  path: '/entries/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntriesIdRoute = EntriesIdRouteImport.update({
+  id: '/entries/$id',
+  path: '/entries/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/inbox': typeof InboxRoute
+  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/entries/$id': typeof EntriesIdRoute
+  '/entries/new': typeof EntriesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/inbox': typeof InboxRoute
+  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/entries/$id': typeof EntriesIdRoute
+  '/entries/new': typeof EntriesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/inbox': typeof InboxRoute
+  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/entries/$id': typeof EntriesIdRoute
+  '/entries/new': typeof EntriesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/inbox'
+    | '/library'
+    | '/login'
+    | '/register'
+    | '/entries/$id'
+    | '/entries/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login'
-  id: '__root__' | '/' | '/dashboard' | '/login'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/inbox'
+    | '/library'
+    | '/login'
+    | '/register'
+    | '/entries/$id'
+    | '/entries/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/inbox'
+    | '/library'
+    | '/login'
+    | '/register'
+    | '/entries/$id'
+    | '/entries/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
+  InboxRoute: typeof InboxRoute
+  LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  EntriesIdRoute: typeof EntriesIdRoute
+  EntriesNewRoute: typeof EntriesNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -82,13 +178,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entries/new': {
+      id: '/entries/new'
+      path: '/entries/new'
+      fullPath: '/entries/new'
+      preLoaderRoute: typeof EntriesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entries/$id': {
+      id: '/entries/$id'
+      path: '/entries/$id'
+      fullPath: '/entries/$id'
+      preLoaderRoute: typeof EntriesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
+  InboxRoute: InboxRoute,
+  LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  EntriesIdRoute: EntriesIdRoute,
+  EntriesNewRoute: EntriesNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

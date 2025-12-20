@@ -44,6 +44,16 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "style": {
+        "useBlockStatements": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off",
+        "noNestedComponentDefinitions": "off"
+      },
+      "nursery": {
+        "noLeakedRender": "off"
+      },
       "performance": {
         "noNamespaceImport": "off"
       }

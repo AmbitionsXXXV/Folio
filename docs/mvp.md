@@ -16,11 +16,13 @@ FolioNote 是一个个人知识管理应用，旨在帮助用户捕获、组织�
 
 #### 2. 条目管理 (Entries)
 
-- [ ] 创建学习笔记条目
-- [ ] 编辑条目（Markdown 支持）
-- [ ] 删除条目（软删除）
-- [ ] 条目列表与筛选
-- [ ] 收件箱（Inbox）功能 - 快速捕获未分类内容
+- [x] 创建学习笔记条目
+- [x] 编辑条目（Markdown 支持）
+- [x] 删除条目（软删除）
+- [x] 条目列表与筛选
+- [x] 收件箱（Inbox）功能 - 快速捕获未分类内容
+
+Done: 实现了完整的 entries API router（CRUD + 列表筛选 + 游标分页），以及 Web 端的收件箱页面、资料库页面、条目编辑器（基于 Tiptap）和快速捕获组件。
 
 #### 3. 标签系统 (Tags)
 
@@ -49,10 +51,10 @@ FolioNote 是一个个人知识管理应用，旨在帮助用户捕获、组织�
 
 #### Web 应用
 
-- [ ] 应用框架与导航
-- [ ] 收件箱页面
-- [ ] 条目编辑器
-- [ ] 资料库页面
+- [x] 应用框架与导航
+- [x] 收件箱页面
+- [x] 条目编辑器
+- [x] 资料库页面
 - [ ] 标签管理页面
 - [ ] 来源管理页面
 - [ ] 复习页面
@@ -67,13 +69,13 @@ FolioNote 是一个个人知识管理应用，旨在帮助用户捕获、组织�
 
 ### 数据模型
 
-- [ ] users（由 Better Auth 提供）
-- [ ] entries（学习笔记）
-- [ ] tags（标签）
-- [ ] entry_tags（多对多关系）
-- [ ] sources（来源）
-- [ ] entry_sources（多对多关系）
-- [ ] review_events（复习记录）
+- [x] users（由 Better Auth 提供）
+- [x] entries（学习笔记）
+- [x] tags（标签）
+- [x] entry_tags（多对多关系）
+- [x] sources（来源）
+- [x] entry_sources（多对多关系）
+- [x] review_events（复习记录）
 
 ## MVP 范围外 (Out of Scope)
 
