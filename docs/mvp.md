@@ -249,6 +249,38 @@ Done: review API router（getQueue/markReviewed/history/todayStats/reviewCount�
 * [ ] 复习流程
 * [ ] 富文本：WebView 只读渲染（优先）与编辑（次优先）
 
+### D. 国际化（i18n）支持（Web + iOS + Server）
+
+目标：统一管理多语言资源，支持 Web、iOS（Expo）、以及 Server 接口返回的本地化 msg（同时保留稳定 error code）。
+
+#### D1. 共享 locales 子包
+
+* [ ] 新增 `packages/locales` 统一管理语言资源（例如 `en-US`、`zh-CN`）
+* [ ] 统一 key 命名规范（如 `auth.*` / `entry.*` / `review.*`）
+* [ ] 插值与复数规则使用 ICU MessageFormat
+* [ ] CI 校验：各语言 key 一致（缺失/多余 key 报错）
+
+#### D2. Web / Native 集成
+
+* [ ] Web：提供 `t(key, params)`（或 Provider/hook）替换关键 UI 文案
+* [ ] iOS：同样提供 `t(key, params)`，覆盖导航、按钮、空态、错误提示
+* [ ] 支持语言切换与 fallback（默认 en-US，或按产品策略）
+
+#### D3. Server 接口 msg 国际化（双轨）
+
+* [ ] Server 根据 `X-Locale` / `Accept-Language` / 用户设置解析 locale
+* [ ] 错误返回结构包含：
+  * [ ] `code`（稳定）
+  * [ ] `message`（服务端按 locale 渲染）
+  * [ ] `params`（可选）
+* [ ] 设置 `Vary: Accept-Language, X-Locale`（若使用缓存）
+
+验收标准：
+
+* Web / iOS / Server 在相同 locale 下对关键错误与空态展示一致语义
+* 语言切换后无需改业务逻辑即可改变 UI 文案
+* Server 错误响应始终包含稳定 `code`，并提供对应语言 `message`
+
 ---
 
 ## MVP v2 范围外（Out of Scope）

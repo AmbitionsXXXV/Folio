@@ -8,7 +8,7 @@
     },
     "name": "FolioNote",
     "slug": "folio",
-    "plugins": ["expo-font"],
+    "plugins": ["expo-font", "expo-router"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
