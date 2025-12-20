@@ -78,7 +78,7 @@ export function QuickCapture({
 		<div className="flex gap-2">
 			<div className="relative flex-1">
 				<Textarea
-					className="pr-10"
+					className="border-spacing-0.5 border-border pr-10"
 					disabled={createMutation.isPending}
 					onChange={(e) => setValue(e.target.value)}
 					onKeyDown={handleKeyDown}

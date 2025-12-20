@@ -155,7 +155,7 @@ export function SourceDialog({ open, onClose, source }: SourceDialogProps) {
 						</SheetDescription>
 					</SheetHeader>
 
-					<div className="mt-6 space-y-6">
+					<div className="mt-6 space-y-6 px-4">
 						{/* Type selector */}
 						<div className="space-y-2">
 							<Label>类型</Label>
