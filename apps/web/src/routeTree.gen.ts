@@ -9,6 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TagsRouteImport } from './routes/tags'
+import { Route as SourcesRouteImport } from './routes/sources'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
@@ -18,6 +22,26 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EntriesNewRouteImport } from './routes/entries/new'
 import { Route as EntriesIdRouteImport } from './routes/entries/$id'
 
+const TagsRoute = TagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SourcesRoute = SourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -66,6 +90,10 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/review': typeof ReviewRoute
+  '/search': typeof SearchRoute
+  '/sources': typeof SourcesRoute
+  '/tags': typeof TagsRoute
   '/entries/$id': typeof EntriesIdRoute
   '/entries/new': typeof EntriesNewRoute
 }
@@ -76,6 +104,10 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/review': typeof ReviewRoute
+  '/search': typeof SearchRoute
+  '/sources': typeof SourcesRoute
+  '/tags': typeof TagsRoute
   '/entries/$id': typeof EntriesIdRoute
   '/entries/new': typeof EntriesNewRoute
 }
@@ -87,6 +119,10 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/review': typeof ReviewRoute
+  '/search': typeof SearchRoute
+  '/sources': typeof SourcesRoute
+  '/tags': typeof TagsRoute
   '/entries/$id': typeof EntriesIdRoute
   '/entries/new': typeof EntriesNewRoute
 }
@@ -99,6 +135,10 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/register'
+    | '/review'
+    | '/search'
+    | '/sources'
+    | '/tags'
     | '/entries/$id'
     | '/entries/new'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +149,10 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/register'
+    | '/review'
+    | '/search'
+    | '/sources'
+    | '/tags'
     | '/entries/$id'
     | '/entries/new'
   id:
@@ -119,6 +163,10 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/register'
+    | '/review'
+    | '/search'
+    | '/sources'
+    | '/tags'
     | '/entries/$id'
     | '/entries/new'
   fileRoutesById: FileRoutesById
@@ -130,12 +178,44 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ReviewRoute: typeof ReviewRoute
+  SearchRoute: typeof SearchRoute
+  SourcesRoute: typeof SourcesRoute
+  TagsRoute: typeof TagsRoute
   EntriesIdRoute: typeof EntriesIdRoute
   EntriesNewRoute: typeof EntriesNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tags': {
+      id: '/tags'
+      path: '/tags'
+      fullPath: '/tags'
+      preLoaderRoute: typeof TagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sources': {
+      id: '/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof SourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -202,6 +282,10 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ReviewRoute: ReviewRoute,
+  SearchRoute: SearchRoute,
+  SourcesRoute: SourcesRoute,
+  TagsRoute: TagsRoute,
   EntriesIdRoute: EntriesIdRoute,
   EntriesNewRoute: EntriesNewRoute,
 }

@@ -13,6 +13,7 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { EntryEditor } from '@/components/entry-editor'
+import { EntryTags } from '@/components/entry-tags'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { getUser } from '@/functions/get-user'
@@ -265,6 +266,11 @@ function EntryEditPage() {
 				placeholder="标题"
 				value={title}
 			/>
+
+			{/* Tags */}
+			<div className="mb-4">
+				<EntryTags entryId={id} />
+			</div>
 
 			{/* Editor */}
 			<EntryEditor

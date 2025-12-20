@@ -9,7 +9,9 @@ import {
 	Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { CommandPalette } from '@/components/command-palette'
 import { Toaster } from '@/components/ui/sonner'
+import { CommandPaletteProvider } from '@/contexts/command-palette-context'
 import type { orpc } from '@/utils/orpc'
 import Header from '../components/header'
 import appCss from '../index.css?url'
@@ -45,15 +47,24 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
 	return (
-		<html className="dark" lang="en">
+		<html className="dark no-scrollbar bg-background" lang="en">
 			<head>
 				<HeadContent />
 			</head>
-			<body>
-				<div className="grid h-svh grid-rows-[auto_1fr]">
-					<Header />
-					<Outlet />
-				</div>
+			<body className="bg-background">
+				<CommandPaletteProvider>
+					<div className="relative z-10 grid min-h-svh grid-rows-[auto_1fr]">
+						<div className="animate-fade-in delay-100">
+							<Header />
+						</div>
+						<div className="animate-fade-in-scale delay-200">
+							<Outlet />
+						</div>
+					</div>
+					<div className="animate-fade-in delay-300">
+						<CommandPalette />
+					</div>
+				</CommandPaletteProvider>
 				<Toaster richColors />
 				<TanStackRouterDevtools position="bottom-left" />
 				<ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />

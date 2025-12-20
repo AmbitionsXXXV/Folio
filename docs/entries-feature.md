@@ -84,6 +84,7 @@
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
 | filter | enum | 否 | 'all' | 筛选类型 |
+| tagId | string | 否 | - | 按标签筛选 |
 | cursor | string | 否 | - | 分页游标 |
 | limit | number | 否 | 20 | 每页数量（1-100） |
 
@@ -105,6 +106,44 @@
 }
 ```
 
+### entries.addTag
+
+为条目添加标签。
+
+**输入参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| entryId | string | 是 | 条目 ID |
+| tagId | string | 是 | 标签 ID |
+
+**返回：** `{ success: true, entryTag: EntryTag }`
+
+### entries.removeTag
+
+从条目移除标签。
+
+**输入参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| entryId | string | 是 | 条目 ID |
+| tagId | string | 是 | 标签 ID |
+
+**返回：** `{ success: true, deleted: boolean }`
+
+### entries.getTags
+
+获取条目的所有标签。
+
+**输入参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| id | string | 是 | 条目 ID |
+
+**返回：** `Tag[]`
+
 ## Web 页面
 
 ### 收件箱 `/inbox`
@@ -124,6 +163,7 @@
 
 - Tiptap 富文本编辑器
 - 自动保存（500ms 防抖）
+- 标签管理：添加/移除标签，创建新标签
 - 操作栏：收藏、置顶、删除、移至收件箱/资料库
 - 显示创建和更新时间
 
@@ -172,6 +212,15 @@ Tiptap 富文本编辑器封装，支持：
 - 自动识别标题（第一行短文本）
 - 加载状态指示
 
+### EntryTags
+
+条目标签管理组件，支持：
+
+- 显示条目当前标签
+- 添加/移除标签
+- 创建新标签
+- 弹出式选择器
+
 ## 文件结构
 
 ```text
@@ -183,6 +232,7 @@ apps/web/src/
 │   ├── entry-card.tsx      # 卡片组件
 │   ├── entry-editor.tsx    # 编辑器组件
 │   ├── entry-list.tsx      # 列表组件
+│   ├── entry-tags.tsx      # 标签管理组件
 │   └── quick-capture.tsx   # 快速捕获组件
 └── routes/
     ├── inbox.tsx           # 收件箱页面

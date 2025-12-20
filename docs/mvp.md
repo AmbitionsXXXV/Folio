@@ -26,26 +26,34 @@ Done: 实现了完整的 entries API router（CRUD + 列表筛选 + 游标分页
 
 #### 3. 标签系统 (Tags)
 
-- [ ] 创建/编辑/删除标签
-- [ ] 为条目添加/移除标签
-- [ ] 按标签筛选条目
+- [x] 创建/编辑/删除标签
+- [x] 为条目添加/移除标签
+- [x] 按标签筛选条目
+
+Done: 实现了完整的 tags API router（CRUD + 列表），以及 entries router 扩展（addTag/removeTag/getTags + tagId 筛选）。包含完整的单元测试。
 
 #### 4. 来源管理 (Sources)
 
-- [ ] 创建来源（链接/书籍/文章）
-- [ ] 关联条目与来源
-- [ ] 来源列表页面
+- [x] 创建来源（链接/书籍/文章）
+- [x] 关联条目与来源
+- [x] 来源列表页面
+
+Done: 实现了完整的 sources API router（CRUD + 列表 + 分页），以及 entry-source 关联 API（addToEntry/removeFromEntry/getEntrySources/getSourceEntries）。包含完整的单元测试。Web 端实现了来源列表页面，支持按类型筛选、创建/编辑/删除来源。
 
 #### 5. 基础搜索
 
-- [ ] 关键词搜索（标题/内容）
-- [ ] 搜索结果展示
+- [x] 关键词搜索（标题/内容）
+- [x] 搜索结果展示
+
+Done: 实现了 search API router，支持对 entries 的标题和内容进行 ILIKE 模糊搜索，支持游标分页。Web 端实现了搜索页面，支持关键词搜索和分页加载结果。包含完整的单元测试。
 
 #### 6. 复习工作流
 
-- [ ] "今日复习"队列
-- [ ] 标记条目为"已复习"
-- [ ] 简单的复习规则（新条目、收藏条目、未复习条目）
+- [x] "今日复习"队列
+- [x] 标记条目为"已复习"
+- [x] 简单的复习规则（新条目、收藏条目、未复习条目）
+
+Done: 实现了完整的 review API router，包括 getQueue（支持 new/starred/unreviewed/all 规则）、markReviewed、getHistory、getTodayStats、getEntryReviewCount。包含完整的单元测试。
 
 ### 平台支持
 
@@ -55,9 +63,11 @@ Done: 实现了完整的 entries API router（CRUD + 列表筛选 + 游标分页
 - [x] 收件箱页面
 - [x] 条目编辑器
 - [x] 资料库页面
-- [ ] 标签管理页面
-- [ ] 来源管理页面
-- [ ] 复习页面
+- [x] 标签管理页面
+- [x] 来源管理页面
+- [x] 复习页面
+
+Done: 实现了标签管理页面，支持创建/编辑/删除标签、颜色选择、显示条目数量。实现了复习页面，支持四种复习模式（新条目/收藏/未复习/全部）、今日统计、复习卡片交互。
 
 #### 移动应用 (Expo)
 

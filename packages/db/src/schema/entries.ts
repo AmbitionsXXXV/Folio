@@ -21,13 +21,15 @@ export const entries = pgTable(
 		isStarred: boolean('is_starred').notNull().default(false),
 		/** 是否置顶 */
 		isPinned: boolean('is_pinned').notNull().default(false),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
 		/** soft-delete 字段 */
-		deletedAt: timestamp('deleted_at'),
+		deletedAt: timestamp('deleted_at', { withTimezone: true }),
 	},
 	(table) => [
 		index('entries_user_id_updated_at_idx').on(table.userId, table.updatedAt),
@@ -62,8 +64,10 @@ export const tags = pgTable(
 		name: text('name').notNull(),
 		/** 标签颜色（可选，用于 UI 显示） */
 		color: text('color'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
@@ -92,7 +96,9 @@ export const entryTags = pgTable(
 		tagId: text('tag_id')
 			.notNull()
 			.references(() => tags.id, { onDelete: 'cascade' }),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
 	},
 	(table) => [
 		index('entry_tags_entry_id_tag_id_idx').on(table.entryId, table.tagId),
@@ -130,16 +136,18 @@ export const sources = pgTable(
 		/** 作者 */
 		author: text('author'),
 		/** 出版/发布日期 */
-		publishedAt: timestamp('published_at'),
+		publishedAt: timestamp('published_at', { withTimezone: true }),
 		/** 额外元数据（JSON 字符串） */
 		metadata: text('metadata'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
 		/** soft-delete 字段 */
-		deletedAt: timestamp('deleted_at'),
+		deletedAt: timestamp('deleted_at', { withTimezone: true }),
 	},
 	(table) => [
 		index('sources_user_id_idx').on(table.userId),
@@ -171,7 +179,9 @@ export const entrySources = pgTable(
 			.references(() => sources.id, { onDelete: 'cascade' }),
 		/** 笔记在来源中的位置（如页码、章节等） */
 		position: text('position'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
 	},
 	(table) => [
 		index('entry_sources_entry_id_source_id_idx').on(table.entryId, table.sourceId),
@@ -212,13 +222,15 @@ export const attachments = pgTable(
 		storageKey: text('storage_key').notNull(),
 		/** 缩略图路径（如果是图片） */
 		thumbnailKey: text('thumbnail_key'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
 		/** soft-delete 字段 */
-		deletedAt: timestamp('deleted_at'),
+		deletedAt: timestamp('deleted_at', { withTimezone: true }),
 	},
 	(table) => [
 		index('attachments_user_id_idx').on(table.userId),
@@ -255,8 +267,12 @@ export const reviewEvents = pgTable(
 		/** 复习时的备注（可选） */
 		note: text('note'),
 		/** 复习时间 */
-		reviewedAt: timestamp('reviewed_at').defaultNow().notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
+		reviewedAt: timestamp('reviewed_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
 	},
 	(table) => [
 		index('review_events_user_id_idx').on(table.userId),
@@ -293,8 +309,10 @@ export const dailyLogs = pgTable(
 		summary: text('summary'),
 		/** 当日心情/状态（可选） */
 		mood: text('mood'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
