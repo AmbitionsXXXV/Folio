@@ -2,6 +2,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuGroup,
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
@@ -21,39 +22,40 @@ export default function UserMenu() {
 
 	if (!session) {
 		return (
-			<Button asChild variant="outline">
-				<Link to="/login">Sign In</Link>
-			</Button>
+			<Link to="/login">
+				<Button variant="outline">Sign In</Button>
+			</Link>
 		)
 	}
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
+			<DropdownMenuTrigger>
 				<Button variant="outline">{session.user.name}</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="bg-card">
-				<DropdownMenuLabel>My Account</DropdownMenuLabel>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-				<DropdownMenuItem asChild>
-					<Button
-						className="w-full"
-						onClick={() => {
-							authClient.signOut({
-								fetchOptions: {
-									onSuccess: () => {
-										navigate({
-											to: '/',
-										})
-									},
+			<DropdownMenuContent className="min-w-max max-w-40 bg-card">
+				<DropdownMenuGroup>
+					<DropdownMenuLabel>My Account</DropdownMenuLabel>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem className="break-all" title={session.user.email}>
+						{session.user.email}
+					</DropdownMenuItem>
+				</DropdownMenuGroup>
+				<DropdownMenuItem
+					onClick={() => {
+						authClient.signOut({
+							fetchOptions: {
+								onSuccess: () => {
+									navigate({
+										to: '/',
+									})
 								},
-							})
-						}}
-						variant="destructive"
-					>
-						Sign Out
-					</Button>
+							},
+						})
+					}}
+					variant="destructive"
+				>
+					Sign Out
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
