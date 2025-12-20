@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap");
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -22,24 +22,44 @@ body {
 
 /* Editorial Theme Enhancements */
 body::before {
-	content: '';
+	content: "";
 	position: fixed;
 	inset: 0;
 	background:
-		radial-gradient(circle at 50% 0%, rgba(120, 119, 198, 0.04) 0%, transparent 50%),
-		radial-gradient(circle at 0% 100%, rgba(167, 139, 250, 0.03) 0%, transparent 50%);
+		radial-gradient(
+			circle at 50% 0%,
+			rgba(120, 119, 198, 0.04) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			circle at 0% 100%,
+			rgba(167, 139, 250, 0.03) 0%,
+			transparent 50%
+		);
 	pointer-events: none;
 	z-index: 0;
 }
 
 /* Subtle paper texture */
 body::after {
-	content: '';
+	content: "";
 	position: fixed;
 	inset: 0;
 	background-image:
-		repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(120, 119, 198, 0.008) 2px, rgba(120, 119, 198, 0.008) 4px),
-		repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(167, 139, 250, 0.008) 2px, rgba(167, 139, 250, 0.008) 4px);
+		repeating-linear-gradient(
+			0deg,
+			transparent,
+			transparent 2px,
+			rgba(120, 119, 198, 0.008) 2px,
+			rgba(120, 119, 198, 0.008) 4px
+		),
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 2px,
+			rgba(167, 139, 250, 0.008) 2px,
+			rgba(167, 139, 250, 0.008) 4px
+		);
 	opacity: 0.4;
 	pointer-events: none;
 	z-index: 0;
@@ -47,16 +67,37 @@ body::after {
 }
 
 @keyframes grain {
-	0%, 100% { transform: translate(0, 0); }
-	10% { transform: translate(-5%, -10%); }
-	20% { transform: translate(-15%, 5%); }
-	30% { transform: translate(7%, -25%); }
-	40% { transform: translate(-5%, 25%); }
-	50% { transform: translate(-15%, 10%); }
-	60% { transform: translate(15%, 0%); }
-	70% { transform: translate(0%, 15%); }
-	80% { transform: translate(3%, 25%); }
-	90% { transform: translate(-10%, 10%); }
+	0%,
+	100% {
+		transform: translate(0, 0);
+	}
+	10% {
+		transform: translate(-5%, -10%);
+	}
+	20% {
+		transform: translate(-15%, 5%);
+	}
+	30% {
+		transform: translate(7%, -25%);
+	}
+	40% {
+		transform: translate(-5%, 25%);
+	}
+	50% {
+		transform: translate(-15%, 10%);
+	}
+	60% {
+		transform: translate(15%, 0%);
+	}
+	70% {
+		transform: translate(0%, 15%);
+	}
+	80% {
+		transform: translate(3%, 25%);
+	}
+	90% {
+		transform: translate(-10%, 10%);
+	}
 }
 
 /* Vignette effect */
@@ -463,4 +504,20 @@ body::after {
 
 .cn-command-shortcut {
 	@apply text-muted-foreground group-data-[selected=true]/command-item:text-foreground ml-auto text-xs tracking-widest;
+}
+
+.cn-popover-content {
+	@apply bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 flex flex-col gap-2.5 rounded-lg p-2.5 text-sm shadow-md ring-1 duration-100;
+}
+
+.cn-popover-header {
+	@apply flex flex-col gap-0.5 text-sm;
+}
+
+.cn-popover-title {
+	@apply font-medium;
+}
+
+.cn-popover-description {
+	@apply text-muted-foreground;
 }
