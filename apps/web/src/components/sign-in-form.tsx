@@ -9,11 +9,10 @@ import { Input } from './ui/input'
 import { Label } from './ui/label'
 
 /**
- * Render the sign-in form UI and handle user authentication.
+ * Renders the sign-in form and handles user authentication.
  *
- * Displays a loader while session state is pending. Presents email and password fields,
- * validates inputs (email format and password length), and submits credentials to authenticate.
- * On successful sign-in navigates to the dashboard and shows a success toast; on failure shows an error toast.
+ * Displays a loader while session state is pending, validates email and password, submits credentials,
+ * navigates to the dashboard and shows a success toast on success, and shows an error toast on failure.
  *
  * @returns The React element for the sign-in form.
  */

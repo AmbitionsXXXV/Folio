@@ -15,7 +15,13 @@ type QuickCaptureProps = {
 const TITLE_PUNCTUATION_REGEX = /[.。!！?？]$/
 
 /**
- * Quick capture input for rapidly adding new entries to inbox
+ * Compact input for quickly creating an inbox entry from typed text.
+ *
+ * Splits multi-line input into a short title (first line) and content when the first line is under 100 characters and does not end with punctuation; otherwise treats the whole input as content. On successful creation the input is cleared and the 'entries' cache is invalidated.
+ *
+ * @param placeholder - Placeholder text shown inside the input
+ * @param onSuccess - Optional callback invoked after a successful entry creation
+ * @returns A React element that renders the quick-capture input and submit button
  */
 export function QuickCapture({
 	placeholder = '快速记录想法...',
