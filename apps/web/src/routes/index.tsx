@@ -164,7 +164,11 @@ function HomeComponent() {
 
 					<div className="grid gap-6 md:grid-cols-3">
 						<div className="group rounded-xl border border-border/50 bg-card/50 p-6 transition-colors hover:border-primary/30">
-							<div className="mb-3 text-3xl">📝</div>
+							<img
+								alt="Capture Insights"
+								className="mb-3 size-12"
+								src="/img/note.png"
+							/>
 							<h3 className="mb-2 font-display font-semibold text-lg">
 								Capture Insights
 							</h3>
@@ -175,7 +179,11 @@ function HomeComponent() {
 						</div>
 
 						<div className="group rounded-xl border border-border/50 bg-card/50 p-6 transition-colors hover:border-primary/30">
-							<div className="mb-3 text-3xl">🏷️</div>
+							<img
+								alt="Organize Freely"
+								className="mb-3 size-12"
+								src="/img/bookmark.png"
+							/>
 							<h3 className="mb-2 font-display font-semibold text-lg">
 								Organize Freely
 							</h3>
@@ -186,7 +194,11 @@ function HomeComponent() {
 						</div>
 
 						<div className="group rounded-xl border border-border/50 bg-card/50 p-6 transition-colors hover:border-primary/30">
-							<div className="mb-3 text-3xl">🔍</div>
+							<img
+								alt="Revisit Anytime"
+								className="mb-3 size-12"
+								src="/img/zoom.png"
+							/>
 							<h3 className="mb-2 font-display font-semibold text-lg">
 								Revisit Anytime
 							</h3>

@@ -53,7 +53,7 @@ function RootDocument() {
 			</head>
 			<body className="bg-background">
 				<CommandPaletteProvider>
-					<div className="relative z-10 grid h-svh grid-rows-[auto_1fr]">
+					<div className="relative z-10 grid min-h-svh grid-rows-[auto_1fr]">
 						<div className="animate-fade-in delay-100">
 							<Header />
 						</div>

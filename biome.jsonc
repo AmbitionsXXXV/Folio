@@ -53,6 +53,7 @@
         "useBlockStatements": "off"
       },
       "correctness": {
+        "useImageSize": "off",
         "useExhaustiveDependencies": "off",
         "noNestedComponentDefinitions": "off"
       },
