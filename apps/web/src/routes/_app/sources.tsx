@@ -10,7 +10,7 @@ import {
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -18,7 +18,6 @@ import { SourceCard } from '@/components/source-card'
 import { SourceDialog } from '@/components/source-dialog'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getUser } from '@/functions/get-user'
 import { orpc } from '@/utils/orpc'
 
 type SourceType = 'link' | 'pdf' | 'book' | 'article' | 'video' | 'podcast' | 'other'
@@ -38,19 +37,8 @@ const SOURCE_TYPE_CONFIG: Record<
 	other: { label: '其他', icon: Link01Icon },
 }
 
-export const Route = createFileRoute('/sources')({
+export const Route = createFileRoute('/_app/sources')({
 	component: SourcesPage,
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 function SourcesPage() {
@@ -69,18 +57,26 @@ function SourcesPage() {
 
 	const queryClient = useQueryClient()
 
-	const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-		useInfiniteQuery({
-			queryKey: ['sources', filter],
-			queryFn: ({ pageParam }) =>
-				orpc.sources.list.call({
-					type: filter === 'all' ? undefined : filter,
-					cursor: pageParam,
-					limit: 20,
-				}),
-			getNextPageParam: (lastPage) => lastPage.nextCursor,
-			initialPageParam: undefined as string | undefined,
-		})
+	const {
+		data,
+		isLoading,
+		isError,
+		error,
+		hasNextPage,
+		fetchNextPage,
+		isFetchingNextPage,
+		refetch,
+	} = useInfiniteQuery({
+		queryKey: ['sources', filter],
+		queryFn: ({ pageParam }) =>
+			orpc.sources.list.call({
+				type: filter === 'all' ? undefined : filter,
+				cursor: pageParam,
+				limit: 20,
+			}),
+		getNextPageParam: (lastPage) => lastPage?.nextCursor,
+		initialPageParam: undefined as string | undefined,
+	})
 
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => orpc.sources.delete.call({ id }),
@@ -93,7 +89,8 @@ function SourcesPage() {
 		},
 	})
 
-	const sources = data?.pages.flatMap((page) => page.items) ?? []
+	const sources =
+		data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
 
 	const filters: { key: FilterType; labelKey: string; icon?: IconSvgElement }[] = [
 		{ key: 'all', labelKey: 'review.allItems' },
@@ -125,6 +122,94 @@ function SourcesPage() {
 	const handleDialogClose = () => {
 		setIsDialogOpen(false)
 		setEditingSource(null)
+	}
+
+	const renderSourceList = () => {
+		if (isLoading) {
+			return (
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					<Skeleton className="h-32" />
+					<Skeleton className="h-32" />
+					<Skeleton className="h-32" />
+					<Skeleton className="h-32" />
+					<Skeleton className="h-32" />
+					<Skeleton className="h-32" />
+				</div>
+			)
+		}
+
+		if (isError) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<HugeiconsIcon
+						className="mb-4 size-12 text-destructive/50"
+						icon={Link01Icon}
+					/>
+					<p className="mb-2 font-medium text-destructive">{t('common.error')}</p>
+					<p className="mb-4 text-muted-foreground text-sm">
+						{error?.message ?? t('common.unknownError')}
+					</p>
+					<Button onClick={() => refetch()} variant="outline">
+						{t('common.retry')}
+					</Button>
+				</div>
+			)
+		}
+
+		if (sources.length === 0) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<HugeiconsIcon
+						className="mb-4 size-12 text-muted-foreground/50"
+						icon={Link01Icon}
+					/>
+					<p className="mb-2 font-medium text-muted-foreground">
+						{t('source.noSources')}
+					</p>
+					<p className="mb-4 text-muted-foreground text-sm">
+						{t('source.addSource')}
+					</p>
+					<Button onClick={handleCreate} variant="outline">
+						<HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+						{t('source.newSource')}
+					</Button>
+				</div>
+			)
+		}
+
+		return (
+			<>
+				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{sources.map((source) => (
+						<SourceCard
+							key={source.id}
+							{...source}
+							icon={
+								SOURCE_TYPE_CONFIG[source.type as SourceType]?.icon || Link01Icon
+							}
+							onDelete={() => deleteMutation.mutate(source.id)}
+							onEdit={() => handleEdit(source)}
+							typeLabel={
+								SOURCE_TYPE_CONFIG[source.type as SourceType]?.label || '其他'
+							}
+						/>
+					))}
+				</div>
+
+				{/* Load more */}
+				{hasNextPage ? (
+					<div className="mt-8 flex justify-center">
+						<Button
+							disabled={isFetchingNextPage}
+							onClick={() => fetchNextPage()}
+							variant="outline"
+						>
+							{isFetchingNextPage ? t('common.loading') : t('common.more')}
+						</Button>
+					</div>
+				) : null}
+			</>
+		)
 	}
 
 	return (
@@ -163,69 +248,7 @@ function SourcesPage() {
 			</div>
 
 			{/* Source list */}
-			{isLoading ? (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-					<Skeleton className="h-32" />
-				</div>
-			) : null}
-
-			{!isLoading && sources.length === 0 ? (
-				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<HugeiconsIcon
-						className="mb-4 size-12 text-muted-foreground/50"
-						icon={Link01Icon}
-					/>
-					<p className="mb-2 font-medium text-muted-foreground">
-						{t('source.noSources')}
-					</p>
-					<p className="mb-4 text-muted-foreground text-sm">
-						{t('source.addSource')}
-					</p>
-					<Button onClick={handleCreate} variant="outline">
-						<HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-						{t('source.newSource')}
-					</Button>
-				</div>
-			) : null}
-
-			{!isLoading && sources.length > 0 ? (
-				<>
-					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-						{sources.map((source) => (
-							<SourceCard
-								key={source.id}
-								{...source}
-								icon={
-									SOURCE_TYPE_CONFIG[source.type as SourceType]?.icon || Link01Icon
-								}
-								onDelete={() => deleteMutation.mutate(source.id)}
-								onEdit={() => handleEdit(source)}
-								typeLabel={
-									SOURCE_TYPE_CONFIG[source.type as SourceType]?.label || '其他'
-								}
-							/>
-						))}
-					</div>
-
-					{/* Load more */}
-					{hasNextPage ? (
-						<div className="mt-8 flex justify-center">
-							<Button
-								disabled={isFetchingNextPage}
-								onClick={() => fetchNextPage()}
-								variant="outline"
-							>
-								{isFetchingNextPage ? t('common.loading') : t('common.more')}
-							</Button>
-						</div>
-					) : null}
-				</>
-			) : null}
+			{renderSourceList()}
 
 			{/* Source dialog */}
 			<SourceDialog

@@ -9,7 +9,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -25,22 +25,10 @@ import { EntrySources, type EntrySourcesRef } from '@/components/entry-sources'
 import { EntryTags, type EntryTagsRef } from '@/components/entry-tags'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUser } from '@/functions/get-user'
 import { orpc } from '@/utils/orpc'
 
-export const Route = createFileRoute('/entries/$id')({
+export const Route = createFileRoute('/_app/entries/$id')({
 	component: EntryEditPage,
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 /**

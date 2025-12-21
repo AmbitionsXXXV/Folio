@@ -9,39 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TagsRouteImport } from './routes/tags'
-import { Route as SourcesRouteImport } from './routes/sources'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as ReviewRouteImport } from './routes/review'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LibraryRouteImport } from './routes/library'
-import { Route as InboxRouteImport } from './routes/inbox'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EntriesNewRouteImport } from './routes/entries/new'
-import { Route as EntriesIdRouteImport } from './routes/entries/$id'
+import { Route as AppTagsRouteImport } from './routes/_app/tags'
+import { Route as AppSourcesRouteImport } from './routes/_app/sources'
+import { Route as AppSearchRouteImport } from './routes/_app/search'
+import { Route as AppReviewRouteImport } from './routes/_app/review'
+import { Route as AppLibraryRouteImport } from './routes/_app/library'
+import { Route as AppInboxRouteImport } from './routes/_app/inbox'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppEntriesNewRouteImport } from './routes/_app/entries/new'
+import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
 
-const TagsRoute = TagsRouteImport.update({
-  id: '/tags',
-  path: '/tags',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SourcesRoute = SourcesRouteImport.update({
-  id: '/sources',
-  path: '/sources',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReviewRoute = ReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -52,19 +33,8 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LibraryRoute = LibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InboxRoute = InboxRouteImport.update({
-  id: '/inbox',
-  path: '/inbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -72,69 +42,105 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EntriesNewRoute = EntriesNewRouteImport.update({
+const AppTagsRoute = AppTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSourcesRoute = AppSourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReviewRoute = AppReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLibraryRoute = AppLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInboxRoute = AppInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEntriesNewRoute = AppEntriesNewRouteImport.update({
   id: '/entries/new',
   path: '/entries/new',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const EntriesIdRoute = EntriesIdRouteImport.update({
+const AppEntriesIdRoute = AppEntriesIdRouteImport.update({
   id: '/entries/$id',
   path: '/entries/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/inbox': typeof InboxRoute
-  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/review': typeof ReviewRoute
-  '/search': typeof SearchRoute
-  '/sources': typeof SourcesRoute
-  '/tags': typeof TagsRoute
-  '/entries/$id': typeof EntriesIdRoute
-  '/entries/new': typeof EntriesNewRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/inbox': typeof AppInboxRoute
+  '/library': typeof AppLibraryRoute
+  '/review': typeof AppReviewRoute
+  '/search': typeof AppSearchRoute
+  '/sources': typeof AppSourcesRoute
+  '/tags': typeof AppTagsRoute
+  '/entries/$id': typeof AppEntriesIdRoute
+  '/entries/new': typeof AppEntriesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/inbox': typeof InboxRoute
-  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/review': typeof ReviewRoute
-  '/search': typeof SearchRoute
-  '/sources': typeof SourcesRoute
-  '/tags': typeof TagsRoute
-  '/entries/$id': typeof EntriesIdRoute
-  '/entries/new': typeof EntriesNewRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/inbox': typeof AppInboxRoute
+  '/library': typeof AppLibraryRoute
+  '/review': typeof AppReviewRoute
+  '/search': typeof AppSearchRoute
+  '/sources': typeof AppSourcesRoute
+  '/tags': typeof AppTagsRoute
+  '/entries/$id': typeof AppEntriesIdRoute
+  '/entries/new': typeof AppEntriesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/inbox': typeof InboxRoute
-  '/library': typeof LibraryRoute
+  '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/review': typeof ReviewRoute
-  '/search': typeof SearchRoute
-  '/sources': typeof SourcesRoute
-  '/tags': typeof TagsRoute
-  '/entries/$id': typeof EntriesIdRoute
-  '/entries/new': typeof EntriesNewRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/inbox': typeof AppInboxRoute
+  '/_app/library': typeof AppLibraryRoute
+  '/_app/review': typeof AppReviewRoute
+  '/_app/search': typeof AppSearchRoute
+  '/_app/sources': typeof AppSourcesRoute
+  '/_app/tags': typeof AppTagsRoute
+  '/_app/entries/$id': typeof AppEntriesIdRoute
+  '/_app/entries/new': typeof AppEntriesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
+    | '/register'
     | '/dashboard'
     | '/inbox'
     | '/library'
-    | '/login'
-    | '/register'
     | '/review'
     | '/search'
     | '/sources'
@@ -144,11 +150,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
+    | '/register'
     | '/dashboard'
     | '/inbox'
     | '/library'
-    | '/login'
-    | '/register'
     | '/review'
     | '/search'
     | '/sources'
@@ -158,64 +164,29 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/dashboard'
-    | '/inbox'
-    | '/library'
+    | '/_app'
     | '/login'
     | '/register'
-    | '/review'
-    | '/search'
-    | '/sources'
-    | '/tags'
-    | '/entries/$id'
-    | '/entries/new'
+    | '/_app/dashboard'
+    | '/_app/inbox'
+    | '/_app/library'
+    | '/_app/review'
+    | '/_app/search'
+    | '/_app/sources'
+    | '/_app/tags'
+    | '/_app/entries/$id'
+    | '/_app/entries/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
-  InboxRoute: typeof InboxRoute
-  LibraryRoute: typeof LibraryRoute
+  AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  ReviewRoute: typeof ReviewRoute
-  SearchRoute: typeof SearchRoute
-  SourcesRoute: typeof SourcesRoute
-  TagsRoute: typeof TagsRoute
-  EntriesIdRoute: typeof EntriesIdRoute
-  EntriesNewRoute: typeof EntriesNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tags': {
-      id: '/tags'
-      path: '/tags'
-      fullPath: '/tags'
-      preLoaderRoute: typeof TagsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sources': {
-      id: '/sources'
-      path: '/sources'
-      fullPath: '/sources'
-      preLoaderRoute: typeof SourcesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/review': {
-      id: '/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof ReviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -230,25 +201,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/library': {
-      id: '/library'
-      path: '/library'
-      fullPath: '/library'
-      preLoaderRoute: typeof LibraryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inbox': {
-      id: '/inbox'
-      path: '/inbox'
-      fullPath: '/inbox'
-      preLoaderRoute: typeof InboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -258,36 +215,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/entries/new': {
-      id: '/entries/new'
+    '/_app/tags': {
+      id: '/_app/tags'
+      path: '/tags'
+      fullPath: '/tags'
+      preLoaderRoute: typeof AppTagsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/sources': {
+      id: '/_app/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof AppSourcesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/review': {
+      id: '/_app/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof AppReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/library': {
+      id: '/_app/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AppLibraryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/inbox': {
+      id: '/_app/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AppInboxRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/entries/new': {
+      id: '/_app/entries/new'
       path: '/entries/new'
       fullPath: '/entries/new'
-      preLoaderRoute: typeof EntriesNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppEntriesNewRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/entries/$id': {
-      id: '/entries/$id'
+    '/_app/entries/$id': {
+      id: '/_app/entries/$id'
       path: '/entries/$id'
       fullPath: '/entries/$id'
-      preLoaderRoute: typeof EntriesIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppEntriesIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppInboxRoute: typeof AppInboxRoute
+  AppLibraryRoute: typeof AppLibraryRoute
+  AppReviewRoute: typeof AppReviewRoute
+  AppSearchRoute: typeof AppSearchRoute
+  AppSourcesRoute: typeof AppSourcesRoute
+  AppTagsRoute: typeof AppTagsRoute
+  AppEntriesIdRoute: typeof AppEntriesIdRoute
+  AppEntriesNewRoute: typeof AppEntriesNewRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppInboxRoute: AppInboxRoute,
+  AppLibraryRoute: AppLibraryRoute,
+  AppReviewRoute: AppReviewRoute,
+  AppSearchRoute: AppSearchRoute,
+  AppSourcesRoute: AppSourcesRoute,
+  AppTagsRoute: AppTagsRoute,
+  AppEntriesIdRoute: AppEntriesIdRoute,
+  AppEntriesNewRoute: AppEntriesNewRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
-  InboxRoute: InboxRoute,
-  LibraryRoute: LibraryRoute,
+  AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  ReviewRoute: ReviewRoute,
-  SearchRoute: SearchRoute,
-  SourcesRoute: SourcesRoute,
-  TagsRoute: TagsRoute,
-  EntriesIdRoute: EntriesIdRoute,
-  EntriesNewRoute: EntriesNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

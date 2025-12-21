@@ -14,10 +14,11 @@ import { I18nextProvider } from 'react-i18next'
 import { CommandPalette } from '@/components/command-palette'
 import { Toaster } from '@/components/ui/sonner'
 import { CommandPaletteProvider } from '@/contexts/command-palette-context'
+import { useIsMobile } from '@/hooks/use-mobile'
 import i18n from '@/lib/i18n'
 import type { orpc } from '@/utils/orpc'
-import Header from '../components/header'
 import appCss from '../index.css?url'
+
 export type RouterAppContext = {
 	orpc: typeof orpc
 	queryClient: QueryClient
@@ -49,6 +50,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 })
 
 function RootDocument() {
+	const isMobile = useIsMobile()
+
 	return (
 		<I18nextProvider i18n={i18n}>
 			<html
@@ -67,21 +70,14 @@ function RootDocument() {
 						enableSystem
 					>
 						<CommandPaletteProvider>
-							<div className="relative z-10 grid min-h-svh grid-rows-[auto_1fr]">
-								<div className="animate-fade-in delay-100">
-									<Header />
-								</div>
-								<div className="animate-fade-in-scale delay-200">
-									<Outlet />
-								</div>
-							</div>
-							<div className="animate-fade-in delay-300">
-								<CommandPalette />
-							</div>
+							<Outlet />
+							<CommandPalette />
 						</CommandPaletteProvider>
 						<Toaster richColors />
 					</ThemeProvider>
-					<TanStackRouterDevtools position="bottom-left" />
+					<TanStackRouterDevtools
+						position={isMobile ? 'bottom-left' : 'top-right'}
+					/>
 					<ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
 					<Scripts />
 				</body>

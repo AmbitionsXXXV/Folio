@@ -2,29 +2,17 @@ import { Add01Icon, BookOpen01Icon, StarIcon } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EntryList } from '@/components/entry-list'
 import { Button } from '@/components/ui/button'
-import { getUser } from '@/functions/get-user'
 import { orpc } from '@/utils/orpc'
 
 type FilterType = 'all' | 'starred' | 'pinned'
 
-export const Route = createFileRoute('/library')({
+export const Route = createFileRoute('/_app/library')({
 	component: LibraryPage,
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 /**
@@ -38,21 +26,30 @@ function LibraryPage() {
 	const { t } = useTranslation()
 	const [filter, setFilter] = useState<FilterType>('all')
 
-	const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-		useInfiniteQuery({
-			queryKey: ['entries', 'library', filter],
-			queryFn: ({ pageParam }) =>
-				orpc.entries.list.call({
-					filter: filter === 'all' ? 'all' : filter,
-					cursor: pageParam,
-					limit: 20,
-				}),
-			getNextPageParam: (lastPage) => lastPage.nextCursor,
-			initialPageParam: undefined as string | undefined,
-		})
+	const {
+		data,
+		isLoading,
+		isError,
+		error,
+		hasNextPage,
+		fetchNextPage,
+		isFetchingNextPage,
+		refetch,
+	} = useInfiniteQuery({
+		queryKey: ['entries', 'library', filter],
+		queryFn: ({ pageParam }) =>
+			orpc.entries.list.call({
+				filter: filter === 'all' ? 'all' : filter,
+				cursor: pageParam,
+				limit: 20,
+			}),
+		getNextPageParam: (lastPage) => lastPage?.nextCursor,
+		initialPageParam: undefined as string | undefined,
+	})
 
-	// Flatten all pages and filter out inbox entries for 'all' filter
-	const allEntries = data?.pages.flatMap((page) => page.items) ?? []
+	// Flatten all pages and filter out inbox entries for 'all' filter with safe access
+	const allEntries =
+		data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
 	const entries =
 		filter === 'all' ? allEntries.filter((e) => !e.isInbox) : allEntries
 
@@ -104,10 +101,14 @@ function LibraryPage() {
 			<EntryList
 				emptyMessage={t('entry.emptyLibrary')}
 				entries={entries}
+				errorMessage={
+					isError ? (error?.message ?? t('common.unknownError')) : undefined
+				}
 				hasMore={hasNextPage}
 				isLoading={isLoading}
 				isLoadingMore={isFetchingNextPage}
 				onLoadMore={() => fetchNextPage()}
+				onRetry={refetch}
 			/>
 		</div>
 	)

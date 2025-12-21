@@ -1,8 +1,9 @@
-import { Loading02Icon } from '@hugeicons/core-free-icons'
+import { AlertCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { orpc } from '@/utils/orpc'
 import { EntryCard } from './entry-card'
+import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
 
 type Entry = {
@@ -23,6 +24,8 @@ type EntryListProps = {
 	onLoadMore?: () => void
 	isLoadingMore?: boolean
 	emptyMessage?: string
+	errorMessage?: string
+	onRetry?: () => void
 }
 
 /**
@@ -37,6 +40,8 @@ export function EntryList({
 	onLoadMore,
 	isLoadingMore = false,
 	emptyMessage = '暂无笔记',
+	errorMessage,
+	onRetry,
 }: EntryListProps) {
 	const queryClient = useQueryClient()
 
@@ -84,6 +89,24 @@ export function EntryList({
 				<Skeleton className="h-36 rounded-lg" />
 				<Skeleton className="h-36 rounded-lg" />
 				<Skeleton className="h-36 rounded-lg" />
+			</div>
+		)
+	}
+
+	if (errorMessage) {
+		return (
+			<div className="flex flex-col items-center justify-center py-12 text-center">
+				<HugeiconsIcon
+					className="mb-4 size-12 text-destructive/50"
+					icon={AlertCircleIcon}
+				/>
+				<p className="mb-2 font-medium text-destructive">加载失败</p>
+				<p className="mb-4 text-muted-foreground text-sm">{errorMessage}</p>
+				{onRetry ? (
+					<Button onClick={onRetry} variant="outline">
+						重试
+					</Button>
+				) : null}
 			</div>
 		)
 	}
