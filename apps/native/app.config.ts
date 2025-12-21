@@ -14,6 +14,7 @@ const config: ExpoConfig = {
 		'expo-router',
 		'expo-web-browser',
 		'expo-notifications',
+		'expo-localization',
 		[
 			'expo-secure-store',
 			{
