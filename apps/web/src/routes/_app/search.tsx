@@ -1,53 +1,50 @@
 import { Search01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { createFileRoute, redirect, useSearch } from '@tanstack/react-router'
+import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EntryList } from '@/components/entry-list'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUser } from '@/functions/get-user'
 import { orpc } from '@/utils/orpc'
 
-export const Route = createFileRoute('/search')({
+export const Route = createFileRoute('/_app/search')({
 	component: SearchPage,
 	validateSearch: (search: Record<string, unknown>) => ({
 		q: typeof search.q === 'string' ? search.q : '',
 	}),
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 function SearchPage() {
 	const { t } = useTranslation()
-	const { q } = useSearch({ from: '/search' })
+	const { q } = useSearch({ from: '/_app/search' })
 	const [searchInput, setSearchInput] = useState(q)
 
-	const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-		useInfiniteQuery({
-			queryKey: ['search', 'entries', q],
-			queryFn: ({ pageParam }) =>
-				orpc.search.entries.call({
-					query: q,
-					cursor: pageParam,
-					limit: 20,
-				}),
-			getNextPageParam: (lastPage) => lastPage.nextCursor,
-			initialPageParam: undefined as string | undefined,
-			enabled: q.length > 0,
-		})
+	const {
+		data,
+		isLoading,
+		isError,
+		error,
+		hasNextPage,
+		fetchNextPage,
+		isFetchingNextPage,
+		refetch,
+	} = useInfiniteQuery({
+		queryKey: ['search', 'entries', q],
+		queryFn: ({ pageParam }) =>
+			orpc.search.entries.call({
+				query: q,
+				cursor: pageParam,
+				limit: 20,
+			}),
+		getNextPageParam: (lastPage) => lastPage?.nextCursor,
+		initialPageParam: undefined as string | undefined,
+		enabled: q.length > 0,
+	})
 
-	const entries = data?.pages.flatMap((page) => page.items) ?? []
+	const entries =
+		data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault()
@@ -98,17 +95,23 @@ function SearchPage() {
 			{q ? (
 				<>
 					<p className="mb-4 text-muted-foreground text-sm">
-						{isLoading
-							? t('common.loading')
-							: t('search.resultCount', { count: entries.length })}
+						{(() => {
+							if (isLoading) return t('common.loading')
+							if (isError) return t('common.error')
+							return t('search.resultCount', { count: entries.length })
+						})()}
 					</p>
 					<EntryList
 						emptyMessage={t('search.noResults')}
 						entries={entries}
+						errorMessage={
+							isError ? (error?.message ?? t('common.unknownError')) : undefined
+						}
 						hasMore={hasNextPage}
 						isLoading={isLoading}
 						isLoadingMore={isFetchingNextPage}
 						onLoadMore={() => fetchNextPage()}
+						onRetry={refetch}
 					/>
 				</>
 			) : (

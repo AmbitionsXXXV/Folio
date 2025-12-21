@@ -1,28 +1,16 @@
 import { ArrowLeft01Icon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { EntryEditor } from '@/components/entry-editor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUser } from '@/functions/get-user'
 import { orpc } from '@/utils/orpc'
 
-export const Route = createFileRoute('/entries/new')({
+export const Route = createFileRoute('/_app/entries/new')({
 	component: NewEntryPage,
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 /**

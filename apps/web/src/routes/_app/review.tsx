@@ -10,13 +10,12 @@ import {
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getUser } from '@/functions/get-user'
 import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 
@@ -65,19 +64,8 @@ const REVIEW_RULES: {
 	},
 ]
 
-export const Route = createFileRoute('/review')({
+export const Route = createFileRoute('/_app/review')({
 	component: ReviewPage,
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 function ReviewPage() {
@@ -129,6 +117,8 @@ function ReviewSession({
 	const {
 		data: queueData,
 		isLoading: isLoadingQueue,
+		isError: isQueueError,
+		error: queueError,
 		refetch: refetchQueue,
 	} = useQuery({
 		queryKey: ['review', 'queue', selectedRule],
@@ -143,7 +133,8 @@ function ReviewSession({
 		mutationFn: (entryId: string) => orpc.review.markReviewed.call({ entryId }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['review', 'stats'] })
-			if (queueData && currentIndex < queueData.items.length - 1) {
+			const queueItems = queueData?.items ?? []
+			if (queueItems.length > 0 && currentIndex < queueItems.length - 1) {
 				onIndexChange((prev) => prev + 1)
 			} else {
 				toast.success('太棒了！你已完成本轮复习')
@@ -164,15 +155,17 @@ function ReviewSession({
 	}
 
 	const handleSkip = () => {
-		if (queueData && currentIndex < queueData.items.length - 1) {
+		const queueItems = queueData?.items ?? []
+		if (queueItems.length > 0 && currentIndex < queueItems.length - 1) {
 			onIndexChange((prev) => prev + 1)
 		} else {
 			toast.info('已到达队列末尾')
 		}
 	}
 
-	const currentEntry = queueData?.items[currentIndex] as Entry | undefined
-	const totalInQueue = queueData?.items.length ?? 0
+	const items = queueData?.items ?? []
+	const currentEntry = items[currentIndex] as Entry | undefined
+	const totalInQueue = items.length
 	const reviewedToday = queueData?.reviewedTodayCount ?? 0
 	const ruleLabel = REVIEW_RULES.find((r) => r.key === selectedRule)?.label ?? ''
 
@@ -195,7 +188,24 @@ function ReviewSession({
 				</div>
 			) : null}
 
-			{!isLoadingQueue && totalInQueue === 0 ? (
+			{/* Error state */}
+			{isQueueError ? (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<HugeiconsIcon
+						className="mb-4 size-12 text-destructive/50"
+						icon={RefreshIcon}
+					/>
+					<p className="mb-2 font-medium text-destructive">加载失败</p>
+					<p className="mb-4 text-muted-foreground text-sm">
+						{queueError?.message ?? '未知错误'}
+					</p>
+					<Button onClick={() => refetchQueue()} variant="outline">
+						重试
+					</Button>
+				</div>
+			) : null}
+
+			{!(isLoadingQueue || isQueueError) && totalInQueue === 0 ? (
 				<ReviewEmptyState
 					onStop={onStop}
 					ruleLabel={ruleLabel}
@@ -203,7 +213,7 @@ function ReviewSession({
 				/>
 			) : null}
 
-			{!isLoadingQueue && currentEntry ? (
+			{!(isLoadingQueue || isQueueError) && currentEntry ? (
 				<ReviewCard
 					entry={currentEntry}
 					isMarkingReviewed={markReviewedMutation.isPending}
@@ -303,7 +313,13 @@ type ReviewDashboardProps = {
 }
 
 function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
-	const { data: stats, isLoading: isLoadingStats } = useQuery({
+	const {
+		data: stats,
+		isLoading: isLoadingStats,
+		isError: isStatsError,
+		error: statsError,
+		refetch: refetchStats,
+	} = useQuery({
 		queryKey: ['review', 'stats'],
 		queryFn: () => orpc.review.getTodayStats.call({}),
 	})
@@ -321,41 +337,13 @@ function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
 			</div>
 
 			<div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				{isLoadingStats ? (
-					<>
-						<Skeleton className="h-24" />
-						<Skeleton className="h-24" />
-						<Skeleton className="h-24" />
-						<Skeleton className="h-24" />
-					</>
-				) : (
-					<>
-						<StatsCard
-							description="今日已复习"
-							icon={CheckmarkCircle02Icon}
-							iconColor="text-green-500"
-							value={stats?.reviewedToday ?? 0}
-						/>
-						<StatsCard
-							description="总条目数"
-							icon={RefreshIcon}
-							iconColor="text-blue-500"
-							value={stats?.totalEntries ?? 0}
-						/>
-						<StatsCard
-							description="收藏条目"
-							icon={StarIcon}
-							iconColor="text-amber-500"
-							value={stats?.starredEntries ?? 0}
-						/>
-						<StatsCard
-							description="未复习"
-							icon={ViewIcon}
-							iconColor="text-purple-500"
-							value={stats?.unreviewedEntries ?? 0}
-						/>
-					</>
-				)}
+				<StatsContent
+					errorMessage={statsError?.message}
+					isError={isStatsError}
+					isLoading={isLoadingStats}
+					onRetry={refetchStats}
+					stats={stats}
+				/>
 			</div>
 
 			<h2 className="mb-4 font-semibold text-lg">选择复习模式</h2>
@@ -385,6 +373,80 @@ function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
 				))}
 			</div>
 		</div>
+	)
+}
+
+type StatsContentProps = {
+	isLoading: boolean
+	isError: boolean
+	errorMessage?: string
+	onRetry: () => void
+	stats?: {
+		reviewedToday: number
+		totalEntries: number
+		starredEntries: number
+		unreviewedEntries: number
+	}
+}
+
+function StatsContent({
+	isLoading,
+	isError,
+	errorMessage,
+	onRetry,
+	stats,
+}: StatsContentProps) {
+	if (isLoading) {
+		return (
+			<>
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+			</>
+		)
+	}
+
+	if (isError) {
+		return (
+			<div className="col-span-full flex flex-col items-center justify-center py-8 text-center">
+				<p className="mb-2 text-destructive text-sm">
+					{errorMessage ?? '加载统计数据失败'}
+				</p>
+				<Button onClick={onRetry} size="sm" variant="outline">
+					重试
+				</Button>
+			</div>
+		)
+	}
+
+	return (
+		<>
+			<StatsCard
+				description="今日已复习"
+				icon={CheckmarkCircle02Icon}
+				iconColor="text-green-500"
+				value={stats?.reviewedToday ?? 0}
+			/>
+			<StatsCard
+				description="总条目数"
+				icon={RefreshIcon}
+				iconColor="text-blue-500"
+				value={stats?.totalEntries ?? 0}
+			/>
+			<StatsCard
+				description="收藏条目"
+				icon={StarIcon}
+				iconColor="text-amber-500"
+				value={stats?.starredEntries ?? 0}
+			/>
+			<StatsCard
+				description="未复习"
+				icon={ViewIcon}
+				iconColor="text-purple-500"
+				value={stats?.unreviewedEntries ?? 0}
+			/>
+		</>
 	)
 }
 

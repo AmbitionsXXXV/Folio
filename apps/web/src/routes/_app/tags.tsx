@@ -7,7 +7,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -24,7 +24,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getUser } from '@/functions/get-user'
 import { orpc } from '@/utils/orpc'
 
 type Tag = {
@@ -55,19 +54,8 @@ const PRESET_COLORS = [
 	'#f43f5e', // rose
 ]
 
-export const Route = createFileRoute('/tags')({
+export const Route = createFileRoute('/_app/tags')({
 	component: TagsPage,
-	beforeLoad: async () => {
-		const session = await getUser()
-		return { session }
-	},
-	loader: ({ context }) => {
-		if (!context.session) {
-			throw redirect({
-				to: '/login',
-			})
-		}
-	},
 })
 
 function TagsPage() {
@@ -79,10 +67,17 @@ function TagsPage() {
 	const [tagColor, setTagColor] = useState<string | null>(null)
 
 	// Fetch all tags
-	const { data: tags = [], isLoading } = useQuery({
+	const {
+		data: tagsData,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useQuery({
 		queryKey: ['tags'],
 		queryFn: () => orpc.tags.list.call({}),
 	})
+	const tags = tagsData ?? []
 
 	// Create tag mutation
 	const createMutation = useMutation({
@@ -93,8 +88,8 @@ function TagsPage() {
 			toast.success('标签已创建')
 			handleCloseDialog()
 		},
-		onError: (error: Error) => {
-			if (error.message.includes('already exists')) {
+		onError: (mutationError: Error) => {
+			if (mutationError.message.includes('already exists')) {
 				toast.error('标签名称已存在')
 			} else {
 				toast.error('创建失败')
@@ -111,8 +106,8 @@ function TagsPage() {
 			toast.success('标签已更新')
 			handleCloseDialog()
 		},
-		onError: (error: Error) => {
-			if (error.message.includes('already exists')) {
+		onError: (mutationError: Error) => {
+			if (mutationError.message.includes('already exists')) {
 				toast.error('标签名称已存在')
 			} else {
 				toast.error('更新失败')
@@ -135,7 +130,9 @@ function TagsPage() {
 	const handleOpenCreate = () => {
 		setEditingTag(null)
 		setTagName('')
-		setTagColor(PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)])
+		setTagColor(
+			PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)] ?? null
+		)
 		setIsDialogOpen(true)
 	}
 
@@ -203,44 +200,17 @@ function TagsPage() {
 			</div>
 
 			{/* Tag list */}
-			{isLoading ? (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					<Skeleton className="h-24" />
-					<Skeleton className="h-24" />
-					<Skeleton className="h-24" />
-					<Skeleton className="h-24" />
-					<Skeleton className="h-24" />
-					<Skeleton className="h-24" />
-				</div>
-			) : null}
-
-			{!isLoading && tags.length === 0 ? (
-				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<HugeiconsIcon
-						className="mb-4 size-12 text-muted-foreground/50"
-						icon={Tag01Icon}
-					/>
-					<p className="mb-2 font-medium text-muted-foreground">{t('tag.noTags')}</p>
-					<p className="mb-4 text-muted-foreground text-sm">{t('tag.addTag')}</p>
-					<Button onClick={handleOpenCreate} variant="outline">
-						<HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-						{t('tag.newTag')}
-					</Button>
-				</div>
-			) : null}
-
-			{!isLoading && tags.length > 0 ? (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-					{tags.map((tag: Tag) => (
-						<TagCard
-							key={tag.id}
-							onDelete={() => handleDelete(tag)}
-							onEdit={() => handleOpenEdit(tag)}
-							tag={tag}
-						/>
-					))}
-				</div>
-			) : null}
+			<TagListContent
+				error={error}
+				handleDelete={handleDelete}
+				handleOpenCreate={handleOpenCreate}
+				handleOpenEdit={handleOpenEdit}
+				isError={isError}
+				isLoading={isLoading}
+				refetch={refetch}
+				t={t}
+				tags={tags}
+			/>
 
 			{/* Create/Edit dialog */}
 			<Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
@@ -410,5 +380,90 @@ function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
 				</CardContent>
 			</Link>
 		</Card>
+	)
+}
+
+type TagListContentProps = {
+	isLoading: boolean
+	isError: boolean
+	error: Error | null
+	tags: Tag[]
+	handleOpenCreate: () => void
+	handleOpenEdit: (tag: Tag) => void
+	handleDelete: (tag: Tag) => void
+	refetch: () => void
+	t: (key: string) => string
+}
+
+function TagListContent({
+	isLoading,
+	isError,
+	error,
+	tags,
+	handleOpenCreate,
+	handleOpenEdit,
+	handleDelete,
+	refetch,
+	t,
+}: TagListContentProps) {
+	if (isLoading) {
+		return (
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+				<Skeleton className="h-24" />
+			</div>
+		)
+	}
+
+	if (isError) {
+		return (
+			<div className="flex flex-col items-center justify-center py-16 text-center">
+				<HugeiconsIcon
+					className="mb-4 size-12 text-destructive/50"
+					icon={Tag01Icon}
+				/>
+				<p className="mb-2 font-medium text-destructive">{t('common.error')}</p>
+				<p className="mb-4 text-muted-foreground text-sm">
+					{error?.message ?? t('common.unknownError')}
+				</p>
+				<Button onClick={() => refetch()} variant="outline">
+					{t('common.retry')}
+				</Button>
+			</div>
+		)
+	}
+
+	if (tags.length === 0) {
+		return (
+			<div className="flex flex-col items-center justify-center py-16 text-center">
+				<HugeiconsIcon
+					className="mb-4 size-12 text-muted-foreground/50"
+					icon={Tag01Icon}
+				/>
+				<p className="mb-2 font-medium text-muted-foreground">{t('tag.noTags')}</p>
+				<p className="mb-4 text-muted-foreground text-sm">{t('tag.addTag')}</p>
+				<Button onClick={handleOpenCreate} variant="outline">
+					<HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+					{t('tag.newTag')}
+				</Button>
+			</div>
+		)
+	}
+
+	return (
+		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{tags.map((tag: Tag) => (
+				<TagCard
+					key={tag.id}
+					onDelete={() => handleDelete(tag)}
+					onEdit={() => handleOpenEdit(tag)}
+					tag={tag}
+				/>
+			))}
+		</div>
 	)
 }

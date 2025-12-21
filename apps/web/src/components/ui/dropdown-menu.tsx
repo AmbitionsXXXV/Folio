@@ -1,6 +1,7 @@
 import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 import { ArrowRight01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
@@ -11,8 +12,25 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
 	return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-	return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+function DropdownMenuTrigger({
+	asChild,
+	children,
+	...props
+}: MenuPrimitive.Trigger.Props & { asChild?: boolean }) {
+	if (asChild && React.isValidElement(children)) {
+		return (
+			<MenuPrimitive.Trigger
+				data-slot="dropdown-menu-trigger"
+				render={children}
+				{...props}
+			/>
+		)
+	}
+	return (
+		<MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>
+			{children}
+		</MenuPrimitive.Trigger>
+	)
 }
 
 function DropdownMenuContent({
