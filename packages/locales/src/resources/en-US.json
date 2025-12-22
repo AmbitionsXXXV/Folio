@@ -5,6 +5,7 @@
     "loading": "Loading...",
     "confirm": "Confirm",
     "delete": "Delete",
+    "deleting": "Deleting...",
     "edit": "Edit",
     "create": "Create",
     "search": "Search",
@@ -26,7 +27,8 @@
     "item_one": "{{count}} item",
     "item_other": "{{count}} items",
     "selected_one": "{{count}} selected",
-    "selected_other": "{{count}} selected"
+    "selected_other": "{{count}} selected",
+    "confirmDelete": "Confirm Delete"
   },
   "auth": {
     "signIn": "Sign In",
@@ -58,6 +60,7 @@
     "placeholder": "Start writing...",
     "untitled": "Untitled",
     "moveToLibrary": "Move to Library",
+    "moveToInbox": "Move to Inbox",
     "starred": "Starred",
     "pinned": "Pinned",
     "createdAt": "Created at",
@@ -65,8 +68,17 @@
     "count_one": "{{count}} entry",
     "count_other": "{{count}} entries",
     "deleteConfirm": "Are you sure you want to delete this entry?",
+    "deleteConfirmTitle": "Confirm Delete Entry",
+    "deleteConfirmDesc": "This will move the entry to trash. You can restore it later from the trash.",
+    "notExist": "Entry not found or has been deleted",
+    "backToInbox": "Back to Inbox",
     "saveSuccess": "Entry saved",
-    "deleteSuccess": "Entry deleted"
+    "saveFailed": "Failed to save, please try again",
+    "deleteSuccess": "Entry deleted",
+    "movedToLibrary": "Moved to Library",
+    "movedToInbox": "Moved to Inbox",
+    "movedToTrash": "Moved to Trash",
+    "versionConflict": "Content has been modified by another client, please refresh the page"
   },
   "tag": {
     "tags": "Tags",
@@ -78,7 +90,17 @@
     "tagName": "Tag name",
     "tagColor": "Tag color",
     "count_one": "{{count}} tag",
-    "count_other": "{{count}} tags"
+    "count_other": "{{count}} tags",
+    "deleteConfirmTitle": "Confirm Delete Tag",
+    "deleteConfirmDesc": "Are you sure you want to delete the tag \"{{name}}\"? This action cannot be undone, but it won't affect entries using this tag.",
+    "created": "Tag created",
+    "updated": "Tag updated",
+    "deleted": "Tag deleted",
+    "createFailed": "Failed to create",
+    "updateFailed": "Failed to update",
+    "deleteFailed": "Failed to delete",
+    "nameExists": "Tag name already exists",
+    "preview": "Preview"
   },
   "source": {
     "sources": "Sources",
@@ -97,7 +119,11 @@
     "author": "Author",
     "publishedAt": "Published at",
     "count_one": "{{count}} source",
-    "count_other": "{{count}} sources"
+    "count_other": "{{count}} sources",
+    "deleteConfirmTitle": "Confirm Delete Source",
+    "deleteConfirmDesc": "Are you sure you want to delete the source \"{{title}}\"? This action cannot be undone.",
+    "deleted": "Source deleted",
+    "deleteFailed": "Failed to delete"
   },
   "review": {
     "today": "Today's Review",
@@ -146,6 +172,7 @@
   },
   "editor": {
     "placeholder": "Start writing...",
+    "placeholderWithSlash": "Start writing... Type / to open command menu",
     "heading1": "Heading 1",
     "heading2": "Heading 2",
     "heading3": "Heading 3",
@@ -156,7 +183,10 @@
     "divider": "Divider",
     "insertTag": "Insert Tag",
     "insertSource": "Insert Source",
-    "insertReference": "Insert Reference"
+    "insertReference": "Insert Reference",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "saveFailed": "Save failed"
   },
   "error": {
     "unauthorized": "Please sign in to continue",

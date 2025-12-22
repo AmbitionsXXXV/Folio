@@ -11,7 +11,9 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
 import {
 	createRefCommandWithEvent,
 	getCurrentEditor,
@@ -23,13 +25,29 @@ import { EntryEditor } from '@/components/entry-editor'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import { EntrySources, type EntrySourcesRef } from '@/components/entry-sources'
 import { EntryTags, type EntryTagsRef } from '@/components/entry-tags'
+import { SaveStatusIndicator } from '@/components/save-status-indicator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { type SaveStatus, useAutoSave } from '@/hooks/use-auto-save'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/entries/$id')({
 	component: EntryEditPage,
 })
+
+/**
+ * 更新条目的数据类型
+ */
+type UpdateEntryData = {
+	id: string
+	title?: string
+	content?: string
+	contentJson?: string
+	isInbox?: boolean
+	isStarred?: boolean
+	isPinned?: boolean
+	expectedVersion?: string
+}
 
 /**
  * Render the entry editing UI for the current route id.
@@ -39,6 +57,7 @@ export const Route = createFileRoute('/_app/entries/$id')({
  * @returns The entry editor page UI element for the current entry.
  */
 function EntryEditPage() {
+	const { t } = useTranslation()
 	const { id } = Route.useParams()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
@@ -49,11 +68,36 @@ function EntryEditPage() {
 	// Local state for optimistic updates
 	const [localTitle, setLocalTitle] = useState<string | null>(null)
 	const [localContent, setLocalContent] = useState<string | null>(null)
+	// 跟踪当前版本号
+	const [currentVersion, setCurrentVersion] = useState<string>('1')
+	// 删除确认对话框状态
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
 	// Fetch entry data
 	const { data: entry, isLoading } = useQuery({
 		queryKey: ['entries', id],
 		queryFn: () => orpc.entries.get.call({ id }),
+	})
+
+	// 当 entry 加载完成时，更新版本号
+	useEffect(() => {
+		if (entry?.version) {
+			setCurrentVersion(entry.version)
+		}
+	}, [entry?.version])
+
+	// 自动保存 hook
+	const { status: saveStatus, save: autoSave } = useAutoSave<UpdateEntryData>({
+		onSave: async (data) => {
+			const result = await orpc.entries.update.call(data)
+			// 更新版本号
+			if (result.version) {
+				setCurrentVersion(result.version)
+			}
+			queryClient.invalidateQueries({ queryKey: ['entries'] })
+		},
+		debounceMs: 1000,
+		savedDurationMs: 2000,
 	})
 
 	// Create tag command for slash menu
@@ -107,22 +151,24 @@ function EntryEditPage() {
 		}
 	}, [])
 
-	// Update mutation
+	// Update mutation for non-content updates (star, pin, inbox)
 	const updateMutation = useMutation({
-		mutationFn: (data: {
-			id: string
-			title?: string
-			content?: string
-			contentJson?: string
-			isInbox?: boolean
-			isStarred?: boolean
-			isPinned?: boolean
-		}) => orpc.entries.update.call(data),
-		onSuccess: () => {
+		mutationFn: (data: UpdateEntryData) => orpc.entries.update.call(data),
+		onSuccess: (result) => {
+			if (result.version) {
+				setCurrentVersion(result.version)
+			}
 			queryClient.invalidateQueries({ queryKey: ['entries'] })
 		},
-		onError: () => {
-			toast.error('保存失败，请重试')
+		onError: (error) => {
+			// 检查是否是版本冲突错误
+			if (error.message?.includes('Version conflict')) {
+				toast.error(t('entry.versionConflict'))
+				// 重新获取最新数据
+				queryClient.invalidateQueries({ queryKey: ['entries', id] })
+			} else {
+				toast.error(t('entry.saveFailed'))
+			}
 		},
 	})
 
@@ -131,7 +177,7 @@ function EntryEditPage() {
 		mutationFn: (data: { id: string }) => orpc.entries.delete.call(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['entries'] })
-			toast.success('已移至回收站')
+			toast.success(t('entry.movedToTrash'))
 			navigate({ to: entry?.isInbox ? '/inbox' : '/library' })
 		},
 	})
@@ -141,68 +187,101 @@ function EntryEditPage() {
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const newTitle = e.target.value
 			setLocalTitle(newTitle)
-			updateMutation.mutate({ id, title: newTitle })
+			autoSave({
+				id,
+				title: newTitle,
+				expectedVersion: currentVersion,
+			})
 		},
-		[id, updateMutation]
+		[id, autoSave, currentVersion]
 	)
 
 	const handleContentChange = useCallback(
 		(html: string, json: string) => {
 			setLocalContent(json)
-			updateMutation.mutate({ id, content: html, contentJson: json })
+			autoSave({
+				id,
+				content: html,
+				contentJson: json,
+				expectedVersion: currentVersion,
+			})
 		},
-		[id, updateMutation]
+		[id, autoSave, currentVersion]
 	)
 
 	const handleToggleStar = useCallback(() => {
 		if (!entry) {
 			return
 		}
-		updateMutation.mutate({ id, isStarred: !entry.isStarred })
-	}, [entry, id, updateMutation])
+		updateMutation.mutate({
+			id,
+			isStarred: !entry.isStarred,
+			expectedVersion: currentVersion,
+		})
+	}, [entry, id, updateMutation, currentVersion])
 
 	const handleTogglePin = useCallback(() => {
 		if (!entry) {
 			return
 		}
-		updateMutation.mutate({ id, isPinned: !entry.isPinned })
-	}, [entry, id, updateMutation])
+		updateMutation.mutate({
+			id,
+			isPinned: !entry.isPinned,
+			expectedVersion: currentVersion,
+		})
+	}, [entry, id, updateMutation, currentVersion])
 
 	const handleMoveToLibrary = useCallback(() => {
 		if (!entry) {
 			return
 		}
 		updateMutation.mutate(
-			{ id, isInbox: false },
+			{ id, isInbox: false, expectedVersion: currentVersion },
 			{
 				onSuccess: () => {
-					toast.success('已移至资料库')
+					toast.success(t('entry.movedToLibrary'))
 				},
 			}
 		)
-	}, [entry, id, updateMutation])
+	}, [entry, id, updateMutation, currentVersion, t])
 
 	const handleMoveToInbox = useCallback(() => {
 		if (!entry) {
 			return
 		}
 		updateMutation.mutate(
-			{ id, isInbox: true },
+			{ id, isInbox: true, expectedVersion: currentVersion },
 			{
 				onSuccess: () => {
-					toast.success('已移至收件箱')
+					toast.success(t('entry.movedToInbox'))
 				},
 			}
 		)
-	}, [entry, id, updateMutation])
+	}, [entry, id, updateMutation, currentVersion, t])
 
-	const handleDelete = useCallback(() => {
-		deleteMutation.mutate({ id })
+	const handleDeleteClick = useCallback(() => {
+		setShowDeleteDialog(true)
+	}, [])
+
+	const handleConfirmDelete = useCallback(() => {
+		deleteMutation.mutate(
+			{ id },
+			{
+				onSuccess: () => {
+					setShowDeleteDialog(false)
+				},
+			}
+		)
 	}, [deleteMutation, id])
 
 	const handleGoBack = useCallback(() => {
 		navigate({ to: entry?.isInbox ? '/inbox' : '/library' })
 	}, [entry, navigate])
+
+	// 计算显示的保存状态
+	const displaySaveStatus: SaveStatus = updateMutation.isPending
+		? 'saving'
+		: saveStatus
 
 	if (isLoading) {
 		return (
@@ -218,9 +297,9 @@ function EntryEditPage() {
 	if (!entry) {
 		return (
 			<div className="flex h-full flex-col items-center justify-center gap-4">
-				<p className="text-muted-foreground">笔记不存在或已被删除</p>
+				<p className="text-muted-foreground">{t('entry.notExist')}</p>
 				<Button onClick={() => navigate({ to: '/inbox' })} variant="outline">
-					返回收件箱
+					{t('entry.backToInbox')}
 				</Button>
 			</div>
 		)
@@ -236,24 +315,19 @@ function EntryEditPage() {
 			<div className="mb-6 flex items-center justify-between">
 				<Button onClick={handleGoBack} size="sm" variant="ghost">
 					<HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
-					返回
+					{t('common.back')}
 				</Button>
 
 				<div className="flex items-center gap-1">
-					{/* Save indicator */}
-					{updateMutation.isPending ? (
-						<span className="mr-2 flex items-center gap-1 text-muted-foreground text-xs">
-							<HugeiconsIcon className="size-3 animate-spin" icon={Loading02Icon} />
-							保存中...
-						</span>
-					) : null}
+					{/* Save status indicator */}
+					<SaveStatusIndicator className="mr-2" status={displaySaveStatus} />
 
 					{/* Move to library/inbox */}
 					{entry.isInbox ? (
 						<Button
 							onClick={handleMoveToLibrary}
 							size="icon"
-							title="移至资料库"
+							title={t('entry.moveToLibrary')}
 							variant="ghost"
 						>
 							<HugeiconsIcon className="size-4" icon={ArchiveIcon} />
@@ -262,7 +336,7 @@ function EntryEditPage() {
 						<Button
 							onClick={handleMoveToInbox}
 							size="icon"
-							title="移至收件箱"
+							title={t('entry.moveToInbox')}
 							variant="ghost"
 						>
 							<HugeiconsIcon className="size-4" icon={InboxIcon} />
@@ -273,7 +347,7 @@ function EntryEditPage() {
 					<Button
 						onClick={handleToggleStar}
 						size="icon"
-						title={entry.isStarred ? '取消收藏' : '收藏'}
+						title={t('entry.starred')}
 						variant="ghost"
 					>
 						<HugeiconsIcon
@@ -288,7 +362,7 @@ function EntryEditPage() {
 					<Button
 						onClick={handleTogglePin}
 						size="icon"
-						title={entry.isPinned ? '取消置顶' : '置顶'}
+						title={t('entry.pinned')}
 						variant="ghost"
 					>
 						<HugeiconsIcon
@@ -302,9 +376,9 @@ function EntryEditPage() {
 					{/* Delete */}
 					<Button
 						className="text-destructive hover:text-destructive"
-						onClick={handleDelete}
+						onClick={handleDeleteClick}
 						size="icon"
-						title="删除"
+						title={t('common.delete')}
 						variant="ghost"
 					>
 						<HugeiconsIcon className="size-4" icon={Delete02Icon} />
@@ -316,7 +390,7 @@ function EntryEditPage() {
 			<Input
 				className="mb-4 border-none font-bold text-2xl shadow-none focus-visible:ring-0"
 				onChange={handleTitleChange}
-				placeholder="标题"
+				placeholder={t('entry.title')}
 				value={title}
 			/>
 
@@ -337,14 +411,14 @@ function EntryEditPage() {
 				content={content}
 				contentFormat={entry.contentJson ? 'json' : 'html'}
 				onChange={handleContentChange}
-				placeholder="开始写作... 输入 / 打开命令菜单"
+				placeholder={t('editor.placeholderWithSlash')}
 			/>
 
 			{/* Metadata footer */}
 			<div className="mt-8 border-t pt-4 text-muted-foreground text-xs">
 				<p>
-					创建于{' '}
-					{new Intl.DateTimeFormat('zh-CN', {
+					{t('entry.createdAt')}{' '}
+					{new Intl.DateTimeFormat(undefined, {
 						year: 'numeric',
 						month: 'long',
 						day: 'numeric',
@@ -353,8 +427,8 @@ function EntryEditPage() {
 					}).format(new Date(entry.createdAt))}
 				</p>
 				<p>
-					最后更新于{' '}
-					{new Intl.DateTimeFormat('zh-CN', {
+					{t('entry.updatedAt')}{' '}
+					{new Intl.DateTimeFormat(undefined, {
 						year: 'numeric',
 						month: 'long',
 						day: 'numeric',
@@ -375,6 +449,16 @@ function EntryEditPage() {
 					}
 				}}
 				ref={entryPickerRef}
+			/>
+
+			{/* Delete confirmation dialog */}
+			<ConfirmDeleteDialog
+				description={t('entry.deleteConfirmDesc')}
+				isLoading={deleteMutation.isPending}
+				onConfirm={handleConfirmDelete}
+				onOpenChange={setShowDeleteDialog}
+				open={showDeleteDialog}
+				title={t('entry.deleteConfirmTitle')}
 			/>
 		</div>
 	)

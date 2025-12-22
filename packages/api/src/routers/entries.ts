@@ -35,6 +35,9 @@ const CreateEntryInputSchema = z.object({
  * 支持两种内容格式：
  * - contentJson: ProseMirror JSON（推荐，用于富文本编辑器）
  * - content: HTML 字符串（向后兼容）
+ *
+ * 乐观锁：
+ * - expectedVersion: 期望的版本号，用于并发控制
  */
 const UpdateEntryInputSchema = z.object({
 	id: z.string(),
@@ -46,6 +49,8 @@ const UpdateEntryInputSchema = z.object({
 	isInbox: z.boolean().optional(),
 	isStarred: z.boolean().optional(),
 	isPinned: z.boolean().optional(),
+	/** 期望的版本号，用于乐观锁并发控制 */
+	expectedVersion: z.string().optional(),
 })
 
 /**
@@ -119,12 +124,14 @@ export const createEntry = protectedProcedure
  *
  * 优先使用 contentJson，自动派生 contentText 用于搜索
  * 如果只提供 content（HTML），则从 HTML 提取纯文本
+ *
+ * 乐观锁：如果提供 expectedVersion，则只有版本匹配时才更新
  */
 export const updateEntry = protectedProcedure
 	.input(UpdateEntryInputSchema)
 	.handler(async ({ context, input }) => {
 		const userId = context.session.user.id
-		const { id, ...updateData } = input
+		const { id, expectedVersion, ...updateData } = input
 
 		// Only include defined fields in the update
 		const fieldsToUpdate: Record<string, unknown> = {}
@@ -155,19 +162,52 @@ export const updateEntry = protectedProcedure
 			fieldsToUpdate.isPinned = updateData.isPinned
 		}
 
+		// 构建更新条件
+		const conditions = [
+			eq(entries.id, id),
+			eq(entries.userId, userId),
+			isNull(entries.deletedAt),
+		]
+
+		// 乐观锁：如果提供了期望版本，添加版本检查条件
+		if (expectedVersion !== undefined) {
+			conditions.push(eq(entries.version, expectedVersion))
+			// 更新版本号
+			const newVersion = String(Number(expectedVersion) + 1)
+			fieldsToUpdate.version = newVersion
+		}
+
 		const [entry] = await db
 			.update(entries)
 			.set(fieldsToUpdate)
-			.where(
-				and(
-					eq(entries.id, id),
-					eq(entries.userId, userId),
-					isNull(entries.deletedAt)
-				)
-			)
+			.where(and(...conditions))
 			.returning()
 
 		if (!entry) {
+			// 检查是否因为版本冲突导致更新失败
+			if (expectedVersion !== undefined) {
+				const [existingEntry] = await db
+					.select()
+					.from(entries)
+					.where(
+						and(
+							eq(entries.id, id),
+							eq(entries.userId, userId),
+							isNull(entries.deletedAt)
+						)
+					)
+					.limit(1)
+
+				if (existingEntry) {
+					throw new ORPCError('CONFLICT', {
+						message: 'Version conflict: entry has been modified by another client',
+						data: {
+							currentVersion: existingEntry.version,
+							expectedVersion,
+						},
+					})
+				}
+			}
 			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
 		}
 

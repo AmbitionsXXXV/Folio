@@ -41,6 +41,7 @@
     "loading": "加载中...",
     "confirm": "确认",
     "delete": "删除",
+    "deleting": "删除中...",
     "edit": "编辑",
     "create": "创建",
     "search": "搜索",
@@ -62,7 +63,8 @@
     "item_one": "{{count}} 项",
     "item_other": "{{count}} 项",
     "selected_one": "已选择 {{count}} 项",
-    "selected_other": "已选择 {{count}} 项"
+    "selected_other": "已选择 {{count}} 项",
+    "confirmDelete": "确认删除"
   },
   "auth": {
     "signIn": "登录",
@@ -94,6 +96,7 @@
     "placeholder": "开始写作...",
     "untitled": "无标题",
     "moveToLibrary": "移至资料库",
+    "moveToInbox": "移至收件箱",
     "starred": "已加星标",
     "pinned": "已置顶",
     "createdAt": "创建于",
@@ -101,8 +104,17 @@
     "count_one": "{{count}} 条目",
     "count_other": "{{count}} 条目",
     "deleteConfirm": "确定要删除此条目吗？",
+    "deleteConfirmTitle": "确认删除笔记",
+    "deleteConfirmDesc": "此操作将把笔记移至回收站。您可以稍后从回收站中恢复。",
+    "notExist": "笔记不存在或已被删除",
+    "backToInbox": "返回收件箱",
     "saveSuccess": "条目已保存",
-    "deleteSuccess": "条目已删除"
+    "saveFailed": "保存失败，请重试",
+    "deleteSuccess": "条目已删除",
+    "movedToLibrary": "已移至资料库",
+    "movedToInbox": "已移至收件箱",
+    "movedToTrash": "已移至回收站",
+    "versionConflict": "内容已被其他客户端修改，请刷新页面"
   },
   "tag": {
     "tags": "标签",
@@ -114,7 +126,17 @@
     "tagName": "标签名称",
     "tagColor": "标签颜色",
     "count_one": "{{count}} 个标签",
-    "count_other": "{{count}} 个标签"
+    "count_other": "{{count}} 个标签",
+    "deleteConfirmTitle": "确认删除标签",
+    "deleteConfirmDesc": "确定要删除标签「{{name}}」吗？此操作不可撤销，但不会影响已使用该标签的笔记。",
+    "created": "标签已创建",
+    "updated": "标签已更新",
+    "deleted": "标签已删除",
+    "createFailed": "创建失败",
+    "updateFailed": "更新失败",
+    "deleteFailed": "删除失败",
+    "nameExists": "标签名称已存在",
+    "preview": "预览"
   },
   "source": {
     "sources": "来源",
@@ -133,7 +155,11 @@
     "author": "作者",
     "publishedAt": "发布于",
     "count_one": "{{count}} 个来源",
-    "count_other": "{{count}} 个来源"
+    "count_other": "{{count}} 个来源",
+    "deleteConfirmTitle": "确认删除来源",
+    "deleteConfirmDesc": "确定要删除来源「{{title}}」吗？此操作不可撤销。",
+    "deleted": "来源已删除",
+    "deleteFailed": "删除失败"
   },
   "review": {
     "today": "今日复习",
@@ -182,6 +208,7 @@
   },
   "editor": {
     "placeholder": "开始写作...",
+    "placeholderWithSlash": "开始写作... 输入 / 打开命令菜单",
     "heading1": "一级标题",
     "heading2": "二级标题",
     "heading3": "三级标题",
@@ -192,7 +219,10 @@
     "divider": "分割线",
     "insertTag": "插入标签",
     "insertSource": "插入来源",
-    "insertReference": "插入引用"
+    "insertReference": "插入引用",
+    "saving": "保存中...",
+    "saved": "已保存",
+    "saveFailed": "保存失败"
   },
   "error": {
     "unauthorized": "请登录后继续",

@@ -11,9 +11,10 @@ import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
 import { SourceCard } from '@/components/source-card'
 import { SourceDialog } from '@/components/source-dialog'
 import { Button } from '@/components/ui/button'
@@ -54,6 +55,11 @@ function SourcesPage() {
 		publishedAt?: Date | null
 		metadata?: string | null
 	} | null>(null)
+	// 删除确认对话框状态
+	const [deleteTarget, setDeleteTarget] = useState<{
+		id: string
+		title: string
+	} | null>(null)
 
 	const queryClient = useQueryClient()
 
@@ -84,12 +90,23 @@ function SourcesPage() {
 		mutationFn: (id: string) => orpc.sources.delete.call({ id }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['sources'] })
-			toast.success('来源已删除')
+			toast.success(t('source.deleted'))
+			setDeleteTarget(null)
 		},
 		onError: () => {
-			toast.error('删除失败')
+			toast.error(t('source.deleteFailed'))
 		},
 	})
+
+	const handleDeleteClick = useCallback((source: { id: string; title: string }) => {
+		setDeleteTarget(source)
+	}, [])
+
+	const handleConfirmDelete = useCallback(() => {
+		if (deleteTarget) {
+			deleteMutation.mutate(deleteTarget.id)
+		}
+	}, [deleteTarget, deleteMutation])
 
 	const sources =
 		data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
@@ -189,7 +206,9 @@ function SourcesPage() {
 							icon={
 								SOURCE_TYPE_CONFIG[source.type as SourceType]?.icon || Link01Icon
 							}
-							onDelete={() => deleteMutation.mutate(source.id)}
+							onDelete={() =>
+								handleDeleteClick({ id: source.id, title: source.title })
+							}
 							onEdit={() => handleEdit(source)}
 							typeLabel={
 								SOURCE_TYPE_CONFIG[source.type as SourceType]?.label || '其他'
@@ -257,6 +276,18 @@ function SourcesPage() {
 				onClose={handleDialogClose}
 				open={isDialogOpen}
 				source={editingSource}
+			/>
+
+			{/* Delete confirmation dialog */}
+			<ConfirmDeleteDialog
+				description={t('source.deleteConfirmDesc', {
+					title: deleteTarget?.title || '',
+				})}
+				isLoading={deleteMutation.isPending}
+				onConfirm={handleConfirmDelete}
+				onOpenChange={(open) => !open && setDeleteTarget(null)}
+				open={!!deleteTarget}
+				title={t('source.deleteConfirmTitle')}
 			/>
 		</div>
 	)

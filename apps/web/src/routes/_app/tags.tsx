@@ -8,9 +8,10 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -65,6 +66,8 @@ function TagsPage() {
 	const [editingTag, setEditingTag] = useState<Tag | null>(null)
 	const [tagName, setTagName] = useState('')
 	const [tagColor, setTagColor] = useState<string | null>(null)
+	// 删除确认对话框状态
+	const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null)
 
 	// Fetch all tags
 	const {
@@ -85,14 +88,14 @@ function TagsPage() {
 			orpc.tags.create.call(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['tags'] })
-			toast.success('标签已创建')
+			toast.success(t('tag.created'))
 			handleCloseDialog()
 		},
 		onError: (mutationError: Error) => {
 			if (mutationError.message.includes('already exists')) {
-				toast.error('标签名称已存在')
+				toast.error(t('tag.nameExists'))
 			} else {
-				toast.error('创建失败')
+				toast.error(t('tag.createFailed'))
 			}
 		},
 	})
@@ -103,14 +106,14 @@ function TagsPage() {
 			orpc.tags.update.call(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['tags'] })
-			toast.success('标签已更新')
+			toast.success(t('tag.updated'))
 			handleCloseDialog()
 		},
 		onError: (mutationError: Error) => {
 			if (mutationError.message.includes('already exists')) {
-				toast.error('标签名称已存在')
+				toast.error(t('tag.nameExists'))
 			} else {
-				toast.error('更新失败')
+				toast.error(t('tag.updateFailed'))
 			}
 		},
 	})
@@ -120,10 +123,11 @@ function TagsPage() {
 		mutationFn: (id: string) => orpc.tags.delete.call({ id }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['tags'] })
-			toast.success('标签已删除')
+			toast.success(t('tag.deleted'))
+			setDeleteTarget(null)
 		},
 		onError: () => {
-			toast.error('删除失败')
+			toast.error(t('tag.deleteFailed'))
 		},
 	})
 
@@ -169,10 +173,15 @@ function TagsPage() {
 		}
 	}
 
-	const handleDelete = (tag: Tag) => {
-		// Direct delete without confirmation for better UX
-		deleteMutation.mutate(tag.id)
-	}
+	const handleDeleteClick = useCallback((tag: Tag) => {
+		setDeleteTarget(tag)
+	}, [])
+
+	const handleConfirmDelete = useCallback(() => {
+		if (deleteTarget) {
+			deleteMutation.mutate(deleteTarget.id)
+		}
+	}, [deleteTarget, deleteMutation])
 
 	const isPending = createMutation.isPending || updateMutation.isPending
 
@@ -202,7 +211,7 @@ function TagsPage() {
 			{/* Tag list */}
 			<TagListContent
 				error={error}
-				handleDelete={handleDelete}
+				handleDelete={handleDeleteClick}
 				handleOpenCreate={handleOpenCreate}
 				handleOpenEdit={handleOpenEdit}
 				isError={isError}
@@ -272,13 +281,13 @@ function TagsPage() {
 
 						{/* Preview */}
 						<div className="space-y-2">
-							<Label>预览</Label>
+							<Label>{t('tag.preview')}</Label>
 							<div className="flex items-center gap-2">
 								<Badge
 									style={tagColor ? { backgroundColor: tagColor } : undefined}
 									variant="secondary"
 								>
-									{tagName || '标签名称'}
+									{tagName || t('tag.tagName')}
 								</Badge>
 							</div>
 						</div>
@@ -299,6 +308,16 @@ function TagsPage() {
 					</form>
 				</DialogContent>
 			</Dialog>
+
+			{/* Delete confirmation dialog */}
+			<ConfirmDeleteDialog
+				description={t('tag.deleteConfirmDesc', { name: deleteTarget?.name || '' })}
+				isLoading={deleteMutation.isPending}
+				onConfirm={handleConfirmDelete}
+				onOpenChange={(open) => !open && setDeleteTarget(null)}
+				open={!!deleteTarget}
+				title={t('tag.deleteConfirmTitle')}
+			/>
 		</div>
 	)
 }

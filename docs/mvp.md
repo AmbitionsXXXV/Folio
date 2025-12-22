@@ -123,10 +123,17 @@ Done - 实现说明：
 
 #### A3. 粘贴与链接处理（编辑器可靠性）
 
-* [ ] 粘贴 URL 自动识别为链接 mark
-* [ ] 粘贴富文本策略明确（保留结构或转纯文本），并写入测试/回归用例清单
-* [ ] 自动保存（节流）与保存状态提示（Saving/Saved/Error）
-* [ ] 乐观锁/版本控制（避免并发覆盖，最小实现即可）
+* [x] 粘贴 URL 自动识别为链接 mark
+* [x] 粘贴富文本策略明确（保留结构或转纯文本），并写入测试/回归用例清单
+* [x] 自动保存（节流）与保存状态提示（Saving/Saved/Error）
+* [x] 乐观锁/版本控制（避免并发覆盖，最小实现即可）
+
+Done - 实现说明：
+
+1. **粘贴 URL 自动链接**：创建 `link-extension.ts`，配置 Tiptap Link 扩展支持 `linkOnPaste` 和 `autolink`
+2. **粘贴富文本策略**：创建 `paste-handler-extension.ts`，支持 `preserve`（保留结构）和 `plain`（转纯文本）两种策略
+3. **自动保存与状态提示**：创建 `use-auto-save.ts` hook 和 `SaveStatusIndicator` 组件，支持 Saving/Saved/Error 状态显示
+4. **乐观锁/版本控制**：在 entries schema 添加 `version` 字段，API 更新时校验版本号，冲突时返回 CONFLICT 错误
 
 ---
 

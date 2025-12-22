@@ -57,6 +57,8 @@
   },
   "dependencies": {
     "dotenv": "catalog:",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.41.4",
     "zod": "catalog:"
   },
   "devDependencies": {

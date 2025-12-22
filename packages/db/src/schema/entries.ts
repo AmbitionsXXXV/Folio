@@ -38,6 +38,8 @@ export const entries = pgTable(
 			.defaultNow()
 			.$onUpdate(() => new Date())
 			.notNull(),
+		/** 版本号，用于乐观锁并发控制 */
+		version: text('version').notNull().default('1'),
 		/** soft-delete 字段 */
 		deletedAt: timestamp('deleted_at', { withTimezone: true }),
 	},

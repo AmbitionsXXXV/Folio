@@ -4,6 +4,8 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { CodeBlockShiki } from './editor/code-block-extension'
+import { CustomLink } from './editor/link-extension'
+import { PasteHandler, type PasteStrategy } from './editor/paste-handler-extension'
 import {
 	getDefaultSlashCommands,
 	SlashCommand,
@@ -30,6 +32,8 @@ type EntryEditorProps = {
 	className?: string
 	/** Additional slash commands to include */
 	additionalCommands?: SlashCommandItem[]
+	/** 粘贴策略：'preserve' 保留富文本结构，'plain' 转换为纯文本 */
+	pasteStrategy?: PasteStrategy
 }
 
 /**
@@ -74,8 +78,11 @@ export function EntryEditor({
 	autoFocus = false,
 	className = '',
 	additionalCommands = [],
+	pasteStrategy = 'preserve',
 }: EntryEditorProps) {
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	// 跟踪是否是内部更新导致的 content 变化
+	const isInternalUpdateRef = useRef(false)
 
 	// Combine default commands with additional commands
 	const commands = useMemo(() => {
@@ -102,6 +109,12 @@ export function EntryEditor({
 			CodeBlockShiki.configure({
 				defaultLanguage: 'plaintext',
 			}),
+			// Link 扩展：支持粘贴 URL 自动转换为链接
+			CustomLink,
+			// 粘贴处理扩展：处理富文本粘贴策略
+			PasteHandler.configure({
+				strategy: pasteStrategy,
+			}),
 			Placeholder.configure({
 				placeholder,
 				emptyEditorClass: 'is-editor-empty',
@@ -125,6 +138,8 @@ export function EntryEditor({
 					clearTimeout(debounceRef.current)
 				}
 				debounceRef.current = setTimeout(() => {
+					// 标记为内部更新，避免 useEffect 重复设置内容
+					isInternalUpdateRef.current = true
 					const html = editorInstance.getHTML()
 					const json = JSON.stringify(editorInstance.getJSON())
 					onChange(html, json)
@@ -140,9 +155,20 @@ export function EntryEditor({
 		}
 	}, [autoFocus, editor])
 
-	// Update content when it changes externally
+	// Update content when it changes externally (not from user input)
 	useEffect(() => {
 		if (!editor) {
+			return
+		}
+
+		// 如果是内部更新导致的变化，跳过 setContent
+		if (isInternalUpdateRef.current) {
+			isInternalUpdateRef.current = false
+			return
+		}
+
+		// 只有当编辑器没有焦点时才更新内容（避免干扰用户输入）
+		if (editor.isFocused) {
 			return
 		}
 
