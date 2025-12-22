@@ -27,15 +27,15 @@ type FilterType = SourceType | 'all'
 
 const SOURCE_TYPE_CONFIG: Record<
 	SourceType,
-	{ label: string; icon: IconSvgElement }
+	{ labelKey: string; icon: IconSvgElement }
 > = {
-	link: { label: '链接', icon: Link01Icon },
-	pdf: { label: 'PDF', icon: Pdf01Icon },
-	book: { label: '书籍', icon: Book02Icon },
-	article: { label: '文章', icon: News01Icon },
-	video: { label: '视频', icon: Video01Icon },
-	podcast: { label: '播客', icon: MusicNote01Icon },
-	other: { label: '其他', icon: Link01Icon },
+	link: { labelKey: 'source.link', icon: Link01Icon },
+	pdf: { labelKey: 'source.pdf', icon: Pdf01Icon },
+	book: { labelKey: 'source.book', icon: Book02Icon },
+	article: { labelKey: 'source.article', icon: News01Icon },
+	video: { labelKey: 'source.video', icon: Video01Icon },
+	podcast: { labelKey: 'source.podcast', icon: MusicNote01Icon },
+	other: { labelKey: 'source.other', icon: Link01Icon },
 }
 
 export const Route = createFileRoute('/_app/sources')({
@@ -211,7 +211,9 @@ function SourcesPage() {
 							}
 							onEdit={() => handleEdit(source)}
 							typeLabel={
-								SOURCE_TYPE_CONFIG[source.type as SourceType]?.label || '其他'
+								SOURCE_TYPE_CONFIG[source.type as SourceType]?.labelKey
+									? t(SOURCE_TYPE_CONFIG[source.type as SourceType].labelKey)
+									: t('source.other')
 							}
 						/>
 					))}
