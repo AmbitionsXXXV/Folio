@@ -93,7 +93,7 @@ const requireAuth = o.middleware(({ context, next }) => {
 
 - 使用 camelCase
 - 保持简洁明确
-- 示例：`auth.signIn`、`entry.emptyInbox`、`error.unauthorized`
+- 示例：`auth.signIn`、`entry.emptyInbox`、`entry.created`、`error.unauthorized`
 
 ## 添加新的翻译
 

@@ -109,7 +109,7 @@ export function AppSidebar() {
 		<Sidebar collapsible="icon" variant="sidebar">
 			<SidebarHeader className="p-4">
 				<Link
-					className="flex items-center gap-3 font-bold font-script text-2xl text-primary"
+					className="flex items-center gap-3 font-bold font-script font-script-en text-2xl text-primary"
 					to="/"
 				>
 					<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">

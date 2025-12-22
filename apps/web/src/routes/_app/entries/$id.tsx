@@ -3,7 +3,6 @@ import {
 	ArrowLeft01Icon,
 	Delete02Icon,
 	InboxIcon,
-	Loading02Icon,
 	PinIcon,
 	StarIcon,
 } from '@hugeicons/core-free-icons'
@@ -28,11 +27,17 @@ import { EntryTags, type EntryTagsRef } from '@/components/entry-tags'
 import { SaveStatusIndicator } from '@/components/save-status-indicator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import { type SaveStatus, useAutoSave } from '@/hooks/use-auto-save'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/entries/$id')({
 	loader: async ({ params }) => {
+		// SSR / 刷新时，服务端没有 API 层的 Hono 请求上下文，直接调用会触发 req 为空的报错。
+		if (typeof window === 'undefined') {
+			return { entry: undefined }
+		}
+
 		const entry = await orpc.entries.get.call({ id: params.id })
 		return { entry }
 	},
@@ -306,11 +311,8 @@ function EntryEditPage() {
 
 	if (isLoading) {
 		return (
-			<div className="flex h-full items-center justify-center">
-				<HugeiconsIcon
-					className="size-8 animate-spin text-muted-foreground"
-					icon={Loading02Icon}
-				/>
+			<div className="flex min-h-svh items-center justify-center">
+				<Spinner className="size-8 text-muted-foreground" />
 			</div>
 		)
 	}
@@ -436,7 +438,7 @@ function EntryEditPage() {
 			/>
 
 			{/* Metadata footer */}
-			<div className="mt-8 border-t pt-4 text-muted-foreground text-xs">
+			<div className="mt-8 border-t pt-4 font-bold font-script text-muted-foreground text-sm">
 				<p>
 					{t('entry.createdAt')}{' '}
 					{new Intl.DateTimeFormat(undefined, {

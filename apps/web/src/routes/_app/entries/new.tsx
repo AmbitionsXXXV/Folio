@@ -3,6 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { EntryEditor } from '@/components/entry-editor'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ export const Route = createFileRoute('/_app/entries/new')({
  * @returns The rendered JSX for the New Entry page component
  */
 function NewEntryPage() {
+	const { t } = useTranslation()
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
 
@@ -38,14 +40,14 @@ function NewEntryPage() {
 		}) => orpc.entries.create.call(data),
 		onSuccess: (entry) => {
 			queryClient.invalidateQueries({ queryKey: ['entries'] })
-			toast.success('笔记已创建')
+			toast.success(t('entry.created'))
 			// Navigate to the new entry's edit page
 			if (entry) {
 				navigate({ to: '/entries/$id', params: { id: entry.id } })
 			}
 		},
 		onError: () => {
-			toast.error('创建失败，请重试')
+			toast.error(t('entry.createFailed'))
 		},
 	})
 
@@ -73,7 +75,7 @@ function NewEntryPage() {
 			<div className="mb-6 flex items-center justify-between">
 				<Button onClick={handleGoBack} size="sm" variant="ghost">
 					<HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
-					返回
+					{t('common.back')}
 				</Button>
 
 				<Button
@@ -86,10 +88,10 @@ function NewEntryPage() {
 								className="mr-2 size-4 animate-spin"
 								icon={Loading02Icon}
 							/>
-							保存中...
+							{t('editor.saving')}
 						</>
 					) : (
-						'保存'
+						t('common.save')
 					)}
 				</Button>
 			</div>
@@ -99,7 +101,7 @@ function NewEntryPage() {
 				autoFocus
 				className="mb-4 border-none font-bold text-2xl shadow-none focus-visible:ring-0"
 				onChange={(e) => setTitle(e.target.value)}
-				placeholder="标题"
+				placeholder={t('entry.title')}
 				value={title}
 			/>
 
@@ -108,7 +110,7 @@ function NewEntryPage() {
 				content={contentJson}
 				contentFormat="json"
 				onChange={handleContentChange}
-				placeholder="开始写作..."
+				placeholder={t('editor.placeholder')}
 			/>
 		</div>
 	)

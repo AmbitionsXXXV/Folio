@@ -1,6 +1,7 @@
 import { AlertCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { orpc } from '@/utils/orpc'
 import { EntryCard } from './entry-card'
 import { Button } from './ui/button'
@@ -41,11 +42,13 @@ export function EntryList({
 	hasMore = false,
 	onLoadMore,
 	isLoadingMore = false,
-	emptyMessage = '暂无笔记',
+	emptyMessage,
 	errorMessage,
 	onRetry,
 }: EntryListProps) {
+	const { t } = useTranslation()
 	const queryClient = useQueryClient()
+	const resolvedEmptyMessage = emptyMessage ?? t('entry.empty')
 
 	// Update entry mutation (for star/pin actions)
 	const updateMutation = useMutation({
@@ -102,11 +105,11 @@ export function EntryList({
 					className="mb-4 size-12 text-destructive/50"
 					icon={AlertCircleIcon}
 				/>
-				<p className="mb-2 font-medium text-destructive">加载失败</p>
+				<p className="mb-2 font-medium text-destructive">{t('common.loadFailed')}</p>
 				<p className="mb-4 text-muted-foreground text-sm">{errorMessage}</p>
 				{onRetry ? (
 					<Button onClick={onRetry} variant="outline">
-						重试
+						{t('common.retry')}
 					</Button>
 				) : null}
 			</div>
@@ -116,7 +119,7 @@ export function EntryList({
 	if (entries.length === 0) {
 		return (
 			<div className="flex flex-col items-center justify-center py-12 text-center">
-				<p className="text-muted-foreground">{emptyMessage}</p>
+				<p className="text-muted-foreground">{resolvedEmptyMessage}</p>
 			</div>
 		)
 	}
@@ -130,7 +133,9 @@ export function EntryList({
 			{/* Pinned entries section */}
 			{pinnedEntries.length > 0 ? (
 				<div className="space-y-3">
-					<h2 className="font-medium text-muted-foreground text-sm">置顶</h2>
+					<h2 className="font-medium text-muted-foreground text-sm">
+						{t('entry.pinnedSection')}
+					</h2>
 					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						{pinnedEntries.map((entry) => (
 							<EntryCard
@@ -155,7 +160,9 @@ export function EntryList({
 			{regularEntries.length > 0 ? (
 				<div className="space-y-3">
 					{pinnedEntries.length > 0 ? (
-						<h2 className="font-medium text-muted-foreground text-sm">其他</h2>
+						<h2 className="font-medium text-muted-foreground text-sm">
+							{t('common.other')}
+						</h2>
 					) : null}
 					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						{regularEntries.map((entry) => (
@@ -192,10 +199,10 @@ export function EntryList({
 									className="size-4 animate-spin"
 									icon={Loading02Icon}
 								/>
-								加载中...
+								{t('common.loading')}
 							</>
 						) : (
-							'加载更多'
+							t('common.loadMore')
 						)}
 					</button>
 				</div>

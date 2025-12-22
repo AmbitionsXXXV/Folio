@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Story+Script&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Story+Script&display=swap,wght@400;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Outfit:wght@100..900&family=Spline+Sans:wght@300..700&family=Zen+Maru+Gothic&display=swap&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Outfit:wght@100..900&family=Spline+Sans:wght@300..700&family=ZCOOL+QingKe+HuangYou&family=Zen+Maru+Gothic&display=swap");
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -15,6 +15,9 @@
 		"Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 	--font-display: "Fraunces", Georgia, serif;
 	--font-script: "Story Script", cursive;
+	--font-script-ja: "Zen Maru Gothic", serif;
+	--font-script-zh: "ZCOOL QingKe HuangYou", cursive;
+	--font-serif: "Zen Maru Gothic", serif;
 }
 
 html,
@@ -271,6 +274,8 @@ body::after {
 	--font-mono: var(--font-mono);
 	--font-serif: var(--font-serif);
 	--font-display: var(--font-display);
+	--font-script-ja: var(--font-script-ja);
+	--font-script-zh: var(--font-script-zh);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -303,4 +308,18 @@ body::after {
 	&::-webkit-scrollbar {
 		display: none;
 	}
+}
+
+/* Language-specific font-script overrides */
+.lang-zh .font-script:not(.font-script-en) {
+	font-family: var(--font-script-zh);
+}
+
+.lang-ja .font-script:not(.font-script-en) {
+	font-family: var(--font-script-ja);
+}
+
+/* Force English script font regardless of language */
+.font-script-en {
+	font-family: var(--font-script) !important;
 }
