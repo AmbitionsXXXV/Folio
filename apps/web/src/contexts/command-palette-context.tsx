@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, use, useCallback, useMemo, useState } from 'react'
 
 type CommandPaletteContextType = {
 	open: boolean
@@ -24,15 +24,11 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
 		[open, toggle]
 	)
 
-	return (
-		<CommandPaletteContext.Provider value={value}>
-			{children}
-		</CommandPaletteContext.Provider>
-	)
+	return <CommandPaletteContext value={value}>{children}</CommandPaletteContext>
 }
 
 export function useCommandPalette() {
-	const context = useContext(CommandPaletteContext)
+	const context = use(CommandPaletteContext)
 	if (!context) {
 		throw new Error('useCommandPalette must be used within CommandPaletteProvider')
 	}
