@@ -1,5 +1,5 @@
-import { LANGUAGE_LABELS } from '@folio/constants'
-import { type SupportedLanguage, supportedLanguages } from '@folio/locales'
+import { LANGUAGE_LABELS } from '@folionote/constants'
+import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import {
 	LanguageCircleIcon,
 	Logout03Icon,

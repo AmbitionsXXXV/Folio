@@ -1,5 +1,5 @@
-import type { SupportedLanguage } from '@folio/locales'
-import { getI18nConfig, supportedLanguages } from '@folio/locales'
+import type { SupportedLanguage } from '@folionote/locales'
+import { getI18nConfig, supportedLanguages } from '@folionote/locales'
 import * as Localization from 'expo-localization'
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'

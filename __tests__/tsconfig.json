@@ -4,8 +4,8 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@folio/test-utils": ["./utils/index"],
-      "@folio/test-utils/*": ["./utils/*"]
+      "@folionote/test-utils": ["./utils/index"],
+      "@folionote/test-utils/*": ["./utils/*"]
     }
   },
   "include": ["./**/*.ts"],

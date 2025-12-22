@@ -1,5 +1,5 @@
 {
-  "name": "@folio/db",
+  "name": "@folionote/db",
   "type": "module",
   "exports": {
     ".": {
@@ -26,7 +26,7 @@
     "drizzle-kit": "^0.31.8",
     "@types/pg": "^8.15.6",
     "typescript": "catalog:",
-    "@folio/config": "workspace:*"
+    "@folionote/config": "workspace:*"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",

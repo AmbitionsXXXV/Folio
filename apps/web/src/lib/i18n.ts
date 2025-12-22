@@ -1,4 +1,4 @@
-import { getI18nConfig } from '@folio/locales'
+import { getI18nConfig } from '@folionote/locales'
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 

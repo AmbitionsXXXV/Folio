@@ -74,13 +74,28 @@ CREATE TABLE "entries" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"title" text DEFAULT '' NOT NULL,
-	"content" text DEFAULT '' NOT NULL,
+	"content_json" text,
+	"content_text" text,
 	"is_inbox" boolean DEFAULT true NOT NULL,
 	"is_starred" boolean DEFAULT false NOT NULL,
 	"is_pinned" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"version" text DEFAULT '1' NOT NULL,
 	"deleted_at" timestamp with time zone
+);
+--> statement-breakpoint
+CREATE TABLE "entry_review_state" (
+	"entry_id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"due_at" timestamp with time zone NOT NULL,
+	"last_reviewed_at" timestamp with time zone,
+	"interval_days" integer DEFAULT 0 NOT NULL,
+	"ease" real DEFAULT 2.5 NOT NULL,
+	"reps" integer DEFAULT 0 NOT NULL,
+	"lapses" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "entry_sources" (
@@ -103,6 +118,8 @@ CREATE TABLE "review_events" (
 	"user_id" text NOT NULL,
 	"entry_id" text NOT NULL,
 	"note" text,
+	"rating" text DEFAULT 'good' NOT NULL,
+	"scheduled_due_at" timestamp with time zone,
 	"reviewed_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -136,6 +153,8 @@ ALTER TABLE "attachments" ADD CONSTRAINT "attachments_user_id_user_id_fk" FOREIG
 ALTER TABLE "attachments" ADD CONSTRAINT "attachments_entry_id_entries_id_fk" FOREIGN KEY ("entry_id") REFERENCES "public"."entries"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "daily_logs" ADD CONSTRAINT "daily_logs_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entries" ADD CONSTRAINT "entries_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "entry_review_state" ADD CONSTRAINT "entry_review_state_entry_id_entries_id_fk" FOREIGN KEY ("entry_id") REFERENCES "public"."entries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "entry_review_state" ADD CONSTRAINT "entry_review_state_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entry_sources" ADD CONSTRAINT "entry_sources_entry_id_entries_id_fk" FOREIGN KEY ("entry_id") REFERENCES "public"."entries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entry_sources" ADD CONSTRAINT "entry_sources_source_id_sources_id_fk" FOREIGN KEY ("source_id") REFERENCES "public"."sources"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "entry_tags" ADD CONSTRAINT "entry_tags_entry_id_entries_id_fk" FOREIGN KEY ("entry_id") REFERENCES "public"."entries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -155,6 +174,7 @@ CREATE INDEX "entries_user_id_updated_at_idx" ON "entries" USING btree ("user_id
 CREATE INDEX "entries_user_id_is_inbox_idx" ON "entries" USING btree ("user_id","is_inbox");--> statement-breakpoint
 CREATE INDEX "entries_user_id_is_starred_idx" ON "entries" USING btree ("user_id","is_starred");--> statement-breakpoint
 CREATE INDEX "entries_user_id_deleted_at_idx" ON "entries" USING btree ("user_id","deleted_at");--> statement-breakpoint
+CREATE INDEX "entry_review_state_user_due_idx" ON "entry_review_state" USING btree ("user_id","due_at");--> statement-breakpoint
 CREATE INDEX "entry_sources_entry_id_source_id_idx" ON "entry_sources" USING btree ("entry_id","source_id");--> statement-breakpoint
 CREATE INDEX "entry_sources_source_id_idx" ON "entry_sources" USING btree ("source_id");--> statement-breakpoint
 CREATE INDEX "entry_tags_entry_id_tag_id_idx" ON "entry_tags" USING btree ("entry_id","tag_id");--> statement-breakpoint

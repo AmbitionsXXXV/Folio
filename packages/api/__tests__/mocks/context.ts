@@ -1,4 +1,4 @@
-import type { session, user } from '@folio/db/schema/auth'
+import type { session, user } from '@folionote/db/schema/auth'
 import type { Context } from '../../src/context'
 
 type User = typeof user.$inferSelect

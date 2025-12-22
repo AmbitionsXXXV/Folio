@@ -44,7 +44,7 @@ The database connection uses the following environment variables from `apps/serv
 Example `.env` configuration:
 
 ```env
-DATABASE_URL=postgresql://postgres:password@localhost:5432/ai_start
+DATABASE_URL=postgresql://postgres:password@localhost:5432/folio_note
 ```
 
 ## Docker Setup (Recommended for Development)
@@ -70,8 +70,8 @@ bun run db:stop:docker
 
 ### Database Details
 
-- **Container Name**: `ai-start-postgres`
-- **Database**: `ai_start`
+- **Container Name**: `folio-note-postgres`
+- **Database**: `folio_note`
 - **User**: `postgres`
 - **Password**: `password`
 - **Port**: `5432`
@@ -98,7 +98,7 @@ brew install postgresql@16
 brew services start postgresql@16
 
 # Create database (optional, script will handle this)
-createdb ai_start
+createdb folio_note
 ```
 
 #### Linux (Ubuntu/Debian)
@@ -115,7 +115,7 @@ sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
 # Create database (optional, script will handle this)
-sudo -u postgres createdb ai_start
+sudo -u postgres createdb folio_note
 ```
 
 #### Linux (CentOS/RHEL/Fedora)
@@ -132,7 +132,7 @@ sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
 # Create database (optional, script will handle this)
-sudo -u postgres createdb ai_start
+sudo -u postgres createdb folio_note
 ```
 
 ### Start Local Database
@@ -163,7 +163,7 @@ bun run db:init:local
 This script will:
 
 - Create the `postgres` user with password `password`
-- Create the `ai_start` database
+- Create the `folio_note` database
 - Grant proper permissions
 - Test the connection
 

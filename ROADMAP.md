@@ -5,7 +5,7 @@
 ### 0) Repo & product baseline
 
 * [x] Rename visible product references to **FolioNote** (app titles, meta titles, package display names)
-  > Done: 更新了所有 package.json 中的包名从 `@ai-start/*` 到 `@folio/*`，更新了 app.json 中的应用名称和 scheme，更新了 Web 应用标题
+  > Done: 更新了所有 package.json 中的包名从 `@ai-start/*` 到 `@folionote/*`，更新了 app.json 中的应用名称和 scheme，更新了 Web 应用标题
 * [x] Define MVP scope in `docs/mvp.md` (what's in / out)
   > Done: 创建了 `docs/mvp.md`，定义了 MVP 范围内外的功能、成功标准和技术栈
 * [x] Add basic `CONTRIBUTING.md` (run, format, commit conventions)

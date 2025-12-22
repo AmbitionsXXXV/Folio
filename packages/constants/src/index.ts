@@ -1,4 +1,4 @@
-import type { SupportedLanguage } from '@folio/locales'
+import type { SupportedLanguage } from '@folionote/locales'
 
 export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
 	'en-US': 'English',

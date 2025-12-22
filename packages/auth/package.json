@@ -1,5 +1,5 @@
 {
-  "name": "@folio/auth",
+  "name": "@folionote/auth",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -12,13 +12,13 @@
   "scripts": {},
   "devDependencies": {
     "typescript": "catalog:",
-    "@folio/config": "workspace:*"
+    "@folionote/config": "workspace:*"
   },
   "dependencies": {
     "better-auth": "catalog:",
     "@better-auth/expo": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:",
-    "@folio/db": "workspace:*"
+    "@folionote/db": "workspace:*"
   }
 }

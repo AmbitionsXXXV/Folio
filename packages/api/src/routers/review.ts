@@ -1,4 +1,4 @@
-import { db, entries, entryReviewState, reviewEvents } from '@folio/db'
+import { db, entries, entryReviewState, reviewEvents } from '@folionote/db'
 import { ORPCError } from '@orpc/server'
 import {
 	and,

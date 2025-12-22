@@ -1,5 +1,5 @@
 {
-  "name": "@folio/api",
+  "name": "@folionote/api",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -12,12 +12,12 @@
   "scripts": {},
   "devDependencies": {
     "typescript": "catalog:",
-    "@folio/config": "workspace:*"
+    "@folionote/config": "workspace:*"
   },
   "dependencies": {
-    "@folio/auth": "workspace:*",
-    "@folio/db": "workspace:*",
-    "@folio/locales": "workspace:*",
+    "@folionote/auth": "workspace:*",
+    "@folionote/db": "workspace:*",
+    "@folionote/locales": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

@@ -1,5 +1,5 @@
-import { auth } from '@folio/auth'
-import { parseAcceptLanguage, type SupportedLanguage } from '@folio/locales'
+import { auth } from '@folionote/auth'
+import { parseAcceptLanguage, type SupportedLanguage } from '@folionote/locales'
 import type { Context as HonoContext } from 'hono'
 
 export type CreateContextOptions = {

@@ -1,5 +1,9 @@
-import type { SupportedLanguage } from '@folio/locales'
-import { defaultLanguage, getI18nConfig, parseAcceptLanguage } from '@folio/locales'
+import type { SupportedLanguage } from '@folionote/locales'
+import {
+	defaultLanguage,
+	getI18nConfig,
+	parseAcceptLanguage,
+} from '@folionote/locales'
 import i18next, { type i18n } from 'i18next'
 
 let i18nInstance: i18n | null = null

@@ -769,7 +769,7 @@ flowchart LR
 ### Drizzle 事务代码
 
 ```typescript
-import { db } from '@folio/db'
+import { db } from '@folionote/db'
 
 // 创建笔记并关联标签的事务
 async function createEntryWithTags(

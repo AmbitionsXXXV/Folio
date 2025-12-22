@@ -1,5 +1,5 @@
 {
-  "extends": "@folio/config/tsconfig.base.json",
+  "extends": "@folionote/config/tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
@@ -10,7 +10,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@folio/api/__tests__/*": ["__tests__/*"]
+      "@folionote/api/__tests__/*": ["__tests__/*"]
     }
   },
   "include": ["src/**/*.ts", "__tests__/**/*.ts"],

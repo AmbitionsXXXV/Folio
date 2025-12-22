@@ -35,9 +35,9 @@
         "@expo-google-fonts/inter": "^0.4.2",
         "@expo/metro-runtime": "~6.1.2",
         "@expo/vector-icons": "^15.0.3",
-        "@folio/api": "workspace:*",
-        "@folio/constants": "workspace:*",
-        "@folio/locales": "workspace:*",
+        "@folionote/api": "workspace:*",
+        "@folionote/constants": "workspace:*",
+        "@folionote/locales": "workspace:*",
         "@gorhom/bottom-sheet": "^5.2.6",
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react-native": "^1.0.9",
@@ -89,7 +89,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "@types/node": "^24.10.0",
         "@types/react": "~19.1.0",
         "typescript": "catalog:",
@@ -98,10 +98,10 @@
     "apps/server": {
       "name": "server",
       "dependencies": {
-        "@folio/api": "workspace:*",
-        "@folio/auth": "workspace:*",
-        "@folio/db": "workspace:*",
-        "@folio/locales": "workspace:*",
+        "@folionote/api": "workspace:*",
+        "@folionote/auth": "workspace:*",
+        "@folionote/db": "workspace:*",
+        "@folionote/locales": "workspace:*",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
@@ -112,7 +112,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "@types/bun": "catalog:",
         "msw": "catalog:",
         "tsdown": "^0.18.0",
@@ -123,10 +123,10 @@
       "name": "web",
       "dependencies": {
         "@base-ui/react": "^1.0.0",
-        "@folio/api": "workspace:*",
-        "@folio/auth": "workspace:*",
-        "@folio/constants": "workspace:*",
-        "@folio/locales": "workspace:*",
+        "@folionote/api": "workspace:*",
+        "@folionote/auth": "workspace:*",
+        "@folionote/constants": "workspace:*",
+        "@folionote/locales": "workspace:*",
         "@hugeicons/core-free-icons": "catalog:",
         "@hugeicons/react": "^1.1.3",
         "@orpc/client": "catalog:",
@@ -170,7 +170,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "@tanstack/react-query-devtools": "^5.91.1",
         "@tanstack/react-router-devtools": "^1.142.8",
         "@testing-library/dom": "^10.4.0",
@@ -186,11 +186,11 @@
       },
     },
     "packages/api": {
-      "name": "@folio/api",
+      "name": "@folionote/api",
       "dependencies": {
-        "@folio/auth": "workspace:*",
-        "@folio/db": "workspace:*",
-        "@folio/locales": "workspace:*",
+        "@folionote/auth": "workspace:*",
+        "@folionote/db": "workspace:*",
+        "@folionote/locales": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
@@ -202,40 +202,40 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/auth": {
-      "name": "@folio/auth",
+      "name": "@folionote/auth",
       "dependencies": {
         "@better-auth/expo": "catalog:",
-        "@folio/db": "workspace:*",
+        "@folionote/db": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/config": {
-      "name": "@folio/config",
+      "name": "@folionote/config",
       "version": "0.0.0",
     },
     "packages/constants": {
-      "name": "@folio/constants",
+      "name": "@folionote/constants",
       "version": "1.0.0",
       "dependencies": {
-        "@folio/locales": "workspace:*",
+        "@folionote/locales": "workspace:*",
       },
       "devDependencies": {
         "typescript": "catalog:",
       },
     },
     "packages/db": {
-      "name": "@folio/db",
+      "name": "@folionote/db",
       "dependencies": {
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
@@ -243,20 +243,20 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "@types/pg": "^8.15.6",
         "drizzle-kit": "^0.31.8",
         "typescript": "catalog:",
       },
     },
     "packages/locales": {
-      "name": "@folio/locales",
+      "name": "@folionote/locales",
       "version": "0.1.0",
       "dependencies": {
         "i18next": "catalog:",
       },
       "devDependencies": {
-        "@folio/config": "workspace:*",
+        "@folionote/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
@@ -686,17 +686,17 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
 
-    "@folio/api": ["@folio/api@workspace:packages/api"],
+    "@folionote/api": ["@folionote/api@workspace:packages/api"],
 
-    "@folio/auth": ["@folio/auth@workspace:packages/auth"],
+    "@folionote/auth": ["@folionote/auth@workspace:packages/auth"],
 
-    "@folio/config": ["@folio/config@workspace:packages/config"],
+    "@folionote/config": ["@folionote/config@workspace:packages/config"],
 
-    "@folio/constants": ["@folio/constants@workspace:packages/constants"],
+    "@folionote/constants": ["@folionote/constants@workspace:packages/constants"],
 
-    "@folio/db": ["@folio/db@workspace:packages/db"],
+    "@folionote/db": ["@folionote/db@workspace:packages/db"],
 
-    "@folio/locales": ["@folio/locales@workspace:packages/locales"],
+    "@folionote/locales": ["@folionote/locales@workspace:packages/locales"],
 
     "@gorhom/bottom-sheet": ["@gorhom/bottom-sheet@5.2.8", "", { "dependencies": { "@gorhom/portal": "1.0.14", "invariant": "^2.2.4" }, "peerDependencies": { "@types/react": "*", "@types/react-native": "*", "react": "*", "react-native": "*", "react-native-gesture-handler": ">=2.16.1", "react-native-reanimated": ">=3.16.0 || >=4.0.0-" }, "optionalPeers": ["@types/react", "@types/react-native"] }, "sha512-+N27SMpbBxXZQ/IA2nlEV6RGxL/qSFHKfdFKcygvW+HqPG5jVNb1OqehLQsGfBP+Up42i0gW5ppI+DhpB7UCzA=="],
 

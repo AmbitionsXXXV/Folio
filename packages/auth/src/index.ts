@@ -1,5 +1,5 @@
 import { expo } from '@better-auth/expo'
-import { db } from '@folio/db'
+import { db } from '@folionote/db'
 import {
 	account,
 	accountRelations,
@@ -8,7 +8,7 @@ import {
 	user,
 	userRelations,
 	verification,
-} from '@folio/db/schema/auth'
+} from '@folionote/db/schema/auth'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 

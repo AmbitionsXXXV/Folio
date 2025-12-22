@@ -1,5 +1,5 @@
 {
-  "name": "@folio/constants",
+  "name": "@folionote/constants",
   "version": "1.0.0",
   "description": "FolioNote 国际化常量定义",
   "type": "module",
@@ -14,7 +14,7 @@
     "check-keys": "bun run scripts/check-keys.ts"
   },
   "dependencies": {
-    "@folio/locales": "workspace:*"
+    "@folionote/locales": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:"

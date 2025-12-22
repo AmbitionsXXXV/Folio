@@ -1,5 +1,5 @@
-import { createContext } from '@folio/api/context'
-import { appRouter } from '@folio/api/routers/index'
+import { createContext } from '@folionote/api/context'
+import { appRouter } from '@folionote/api/routers/index'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import type { RouterClient } from '@orpc/server'

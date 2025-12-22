@@ -21,16 +21,16 @@
     "dotenv": "catalog:",
     "i18next": "catalog:",
     "zod": "catalog:",
-    "@folio/api": "workspace:*",
-    "@folio/auth": "workspace:*",
-    "@folio/db": "workspace:*",
-    "@folio/locales": "workspace:*"
+    "@folionote/api": "workspace:*",
+    "@folionote/auth": "workspace:*",
+    "@folionote/db": "workspace:*",
+    "@folionote/locales": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
     "typescript": "catalog:",
     "tsdown": "^0.18.0",
-    "@folio/config": "workspace:*",
+    "@folionote/config": "workspace:*",
     "msw": "catalog:"
   }
 }

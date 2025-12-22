@@ -1,5 +1,5 @@
 {
-  "name": "@folio/locales",
+  "name": "@folionote/locales",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -21,7 +21,7 @@
     "i18next": "catalog:"
   },
   "devDependencies": {
-    "@folio/config": "workspace:*",
+    "@folionote/config": "workspace:*",
     "typescript": "catalog:"
   }
 }

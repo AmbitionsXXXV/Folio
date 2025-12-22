@@ -1,11 +1,11 @@
 {
-  "extends": "@folio/config/tsconfig.base.json",
+  "extends": "@folionote/config/tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@folio/db/__tests__/*": ["../../packages/db/__tests__/*"]
+      "@folionote/db/__tests__/*": ["../../packages/db/__tests__/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",

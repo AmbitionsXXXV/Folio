@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll } from 'bun:test'
 import {
 	cleanupDatabase,
 	setupTestDatabase,
-} from '@folio/db/__tests__/utils/db-helper'
+} from '@folionote/db/__tests__/utils/db-helper'
 
 beforeAll(() => {
 	setupTestDatabase()

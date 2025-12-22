@@ -1,4 +1,4 @@
-import { db, entries, entrySources, sources } from '@folio/db'
+import { db, entries, entrySources, sources } from '@folionote/db'
 import { ORPCError } from '@orpc/server'
 import { and, desc, eq, isNull, lt } from 'drizzle-orm'
 import { nanoid } from 'nanoid'

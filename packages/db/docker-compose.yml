@@ -1,9 +1,9 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: ai-start-postgres
+    container_name: folio-note-postgres
     environment:
-      POSTGRES_DB: ai_start
+      POSTGRES_DB: folio_note
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:

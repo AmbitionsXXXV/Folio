@@ -16,9 +16,9 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
-    "@folio/api": "workspace:*",
-    "@folio/constants": "workspace:*",
-    "@folio/locales": "workspace:*",
+    "@folionote/api": "workspace:*",
+    "@folionote/constants": "workspace:*",
+    "@folionote/locales": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.6",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react-native": "^1.0.9",
@@ -73,7 +73,7 @@
     "@types/node": "^24.10.0",
     "@types/react": "~19.1.0",
     "typescript": "catalog:",
-    "@folio/config": "workspace:*"
+    "@folionote/config": "workspace:*"
   },
   "private": true
 }

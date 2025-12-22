@@ -1,5 +1,5 @@
-import type { SupportedLanguage } from '@folio/locales'
-import { defaultLanguage, enUS, zhCN } from '@folio/locales'
+import type { SupportedLanguage } from '@folionote/locales'
+import { defaultLanguage, enUS, zhCN } from '@folionote/locales'
 
 type ErrorKey = keyof typeof enUS.error
 

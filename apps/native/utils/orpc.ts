@@ -1,4 +1,4 @@
-import type { AppRouterClient } from '@folio/api/routers/index'
+import type { AppRouterClient } from '@folionote/api/routers/index'
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import { createTanstackQueryUtils } from '@orpc/tanstack-query'

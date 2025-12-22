@@ -1,5 +1,5 @@
-import { LANGUAGE_LABELS } from '@folio/constants'
-import { type SupportedLanguage, supportedLanguages } from '@folio/locales'
+import { LANGUAGE_LABELS } from '@folionote/constants'
+import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import { LanguageSkillIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics'

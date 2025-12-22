@@ -1,4 +1,4 @@
-import { db, entries } from '@folio/db'
+import { db, entries } from '@folionote/db'
 import { and, desc, eq, ilike, isNull, lt, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure } from '../index'
