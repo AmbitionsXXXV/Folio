@@ -129,7 +129,7 @@ export function CodeBlockShikiView({ node, updateAttributes }: NodeViewProps) {
 					highlightedHtml ? 'code-block-editable hidden' : 'code-block-editable'
 				}
 			>
-				{/* @ts-ignore */}
+				{/* @ts-ignore - NodeViewContent 'as' prop type definition is incompatible with JSX */}
 				<NodeViewContent as="code" />
 			</pre>
 		</>

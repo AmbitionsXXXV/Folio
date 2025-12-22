@@ -6,7 +6,7 @@ import {
 	UnfoldMoreIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import type * as React from 'react'
+import type { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 
 const Select = SelectPrimitive.Root
@@ -151,7 +151,7 @@ function SelectSeparator({ className, ...props }: SelectPrimitive.Separator.Prop
 function SelectScrollUpButton({
 	className,
 	...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
+}: ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
 	return (
 		<SelectPrimitive.ScrollUpArrow
 			className={cn('cn-select-scroll-up-button top-0 w-full', className)}
@@ -166,7 +166,7 @@ function SelectScrollUpButton({
 function SelectScrollDownButton({
 	className,
 	...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
+}: ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
 	return (
 		<SelectPrimitive.ScrollDownArrow
 			className={cn('cn-select-scroll-down-button bottom-0 w-full', className)}
