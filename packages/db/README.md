@@ -1,10 +1,34 @@
 # Database Setup
 
-This package provides database management scripts for both Docker-based and local PostgreSQL setups.
+This package provides database management scripts for FolioNote, supporting multiple local development options and production deployment.
 
 ## Quick Start
 
-### Option 1: Docker (Fast Setup)
+### Option 1: Local Supabase (Recommended for Development)
+
+Local Supabase provides a complete local development environment with PostgreSQL, Studio UI, and all Supabase services.
+
+```bash
+# Start local Supabase (requires Docker)
+pnpm run db:start:supabase
+
+# Push schema to local database
+pnpm run db:push
+
+# Open Drizzle Studio for database management
+pnpm run db:studio
+
+# Stop local Supabase
+pnpm run db:stop:supabase
+```
+
+**Local Supabase URLs:**
+
+- **Database**: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+- **Studio UI**: <http://127.0.0.1:54323>
+- **API**: <http://127.0.0.1:54321>
+
+### Option 2: Docker (Fast Setup)
 
 ```bash
 # Start database
@@ -17,7 +41,7 @@ pnpm run db:push
 pnpm run db:stop:docker
 ```
 
-### Option 2: Local (Persistent Setup)
+### Option 3: Local PostgreSQL with Homebrew (Persistent Setup)
 
 ```bash
 # Install PostgreSQL (see Prerequisites below)
@@ -37,17 +61,83 @@ pnpm run db:stop:local
 
 ## Database Configuration
 
-The database connection uses the following environment variables from `apps/server/.env`:
+The database connection uses the following environment variables:
 
-- `DATABASE_URL`: PostgreSQL connection string
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | Primary connection string | - |
+| `SUPABASE_DB_URL` | Supabase-specific URL (fallback) | - |
+| - | Local Supabase default | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 
-Example `.env` configuration:
+### Environment Setup
+
+Create `.env` file in `apps/server/`:
 
 ```env
+# Local Supabase (default, no configuration needed)
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+# OR Docker
 DATABASE_URL=postgresql://postgres:password@localhost:5432/folio_note
+
+# OR Local PostgreSQL (Homebrew)
+DATABASE_URL=postgresql://postgres:password@localhost:5432/folio_note
+
+# OR Production Supabase
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
 ```
 
-## Docker Setup (Recommended for Development)
+## Local Supabase Development
+
+### Prerequisites
+
+1. **Docker Desktop** (or compatible runtime like OrbStack, Rancher Desktop)
+2. **Supabase CLI** (installed as dev dependency)
+
+### Starting Local Supabase
+
+```bash
+# From project root
+pnpm run db:start
+
+# Or from packages/db directory
+cd packages/db
+pnpm run db:start:supabase
+```
+
+This starts:
+
+- PostgreSQL database on port `54322`
+- Supabase Studio on port `54323`
+- API server on port `54321`
+- Inbucket (email testing) on port `54324`
+
+### Stopping Local Supabase
+
+```bash
+pnpm run db:stop:supabase
+```
+
+### Viewing Local Database
+
+1. **Supabase Studio**: <http://127.0.0.1:54323>
+2. **Drizzle Studio**: `pnpm run db:studio`
+
+### Local Supabase Status
+
+```bash
+cd packages/db
+pnpm exec supabase status
+```
+
+### Reset Local Database
+
+```bash
+cd packages/db
+pnpm exec supabase db reset
+```
+
+## Docker Setup
 
 Docker setup provides an isolated PostgreSQL instance with persistent data storage.
 
@@ -77,7 +167,7 @@ pnpm run db:stop:docker
 - **Port**: `5432`
 - **Data Volume**: Persistent volume for data storage
 
-## Local Setup (Recommended for Production)
+## Local PostgreSQL Setup (Homebrew)
 
 Local setup uses system-installed PostgreSQL for better performance and data persistence.
 
@@ -171,17 +261,23 @@ This script will:
 
 ### Push Schema Changes
 
+Directly sync schema to database (for development):
+
 ```bash
 pnpm run db:push
 ```
 
 ### Generate Migrations
 
+Create SQL migration files (for production):
+
 ```bash
 pnpm run db:generate
 ```
 
 ### Run Migrations
+
+Apply migrations to database:
 
 ```bash
 pnpm run db:migrate
@@ -195,15 +291,43 @@ pnpm run db:studio
 
 ## Troubleshooting
 
+### Local Supabase Issues
+
+1. **Docker not running**:
+
+   ```bash
+   # Ensure Docker is running
+   docker info
+   ```
+
+2. **Port conflicts**:
+
+   ```bash
+   # Check if ports are in use
+   lsof -i :54322
+   lsof -i :54323
+   ```
+
+3. **Reset Supabase**:
+
+   ```bash
+   cd packages/db
+   pnpm exec supabase stop --no-backup
+   pnpm exec supabase start
+   ```
+
 ### Connection Issues
 
 1. **Check if database is running**:
 
    ```bash
+   # Local Supabase
+   cd packages/db && pnpm exec supabase status
+
    # Docker
    docker ps | grep postgres
 
-   # Local
+   # Local PostgreSQL
    pg_isready -h localhost -p 5432
    ```
 
@@ -213,7 +337,8 @@ pnpm run db:studio
 
 3. **Database not created**:
    - Docker: The database is automatically created when the container starts
-   - Local: The startup script will create the database if it doesn't exist
+   - Local Supabase: Database is created automatically on `supabase start`
+   - Local PostgreSQL: The startup script will create the database if it doesn't exist
 
 ### Permission Issues (Local Setup)
 
@@ -233,3 +358,15 @@ On Linux:
 sudo -u postgres psql
 # Then create database and user as needed
 ```
+
+## Comparison: Local Supabase vs Docker vs Local PostgreSQL
+
+| Feature | Local Supabase | Docker | Local PostgreSQL |
+|---------|---------------|--------|------------------|
+| Setup Complexity | Medium | Low | High |
+| Studio UI | ✅ Built-in | ❌ | ❌ |
+| Full Supabase Features | ✅ | ❌ | ❌ |
+| Resource Usage | High | Medium | Low |
+| Persistence | ✅ | ✅ | ✅ |
+| Production Parity | ✅ High | ⚠️ Medium | ⚠️ Low |
+| Recommended For | Development | Quick Testing | CI/CD |

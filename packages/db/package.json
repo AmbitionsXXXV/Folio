@@ -14,6 +14,10 @@
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
+    "db:start:supabase": "supabase start",
+    "db:stop:supabase": "supabase stop",
+    "db:status:supabase": "supabase status",
+    "db:reset:supabase": "supabase db reset",
     "db:start:docker": "docker-compose up -d",
     "db:stop:docker": "docker-compose down",
     "db:init:local": "./scripts/init-local-db.sh",
@@ -23,11 +27,12 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.8",
+    "@folionote/config": "workspace:*",
     "@types/pg": "^8.15.6",
+    "drizzle-kit": "^0.31.8",
+    "supabase": "^2.70.5",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "@folionote/config": "workspace:*"
+    "vitest": "catalog:"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",

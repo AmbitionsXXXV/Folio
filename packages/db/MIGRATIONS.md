@@ -53,16 +53,41 @@ pnpm run db:migrate
 
 ## 本地数据库管理
 
+### Local Supabase（推荐）
+
 ```bash
-# Docker 方式
+pnpm run db:start:supabase   # 启动
+pnpm run db:stop:supabase    # 停止
+pnpm run db:status:supabase  # 查看状态
+pnpm run db:reset:supabase   # 重置数据库
+```
+
+### Docker 方式
+
+```bash
 pnpm run db:start:docker   # 启动
 pnpm run db:stop:docker    # 停止
+```
 
-# 本地 PostgreSQL
+### 本地 PostgreSQL（Homebrew）
+
+```bash
 pnpm run db:init:local     # 初始化
 pnpm run db:start:local    # 启动
 pnpm run db:stop:local     # 停止
 ```
+
+## 数据库连接配置
+
+根据你选择的开发环境，设置对应的 `DATABASE_URL`：
+
+| 环境 | DATABASE_URL |
+|------|-------------|
+| Local Supabase | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| Docker | `postgresql://postgres:password@localhost:5432/folio_note` |
+| Local PostgreSQL | `postgresql://postgres:password@localhost:5432/folio_note` |
+
+**注意**：如果不设置 `DATABASE_URL`，默认使用 Local Supabase 连接。
 
 ## 最佳实践
 
@@ -71,3 +96,4 @@ pnpm run db:stop:local     # 停止
 3. 在 PR 中包含迁移文件的 review
 4. 保持迁移文件的原子性（一个功能一个迁移）
 5. 为破坏性变更（删除列/表）添加警告注释
+6. 开发时推荐使用 Local Supabase，可以获得完整的 Supabase 功能和 Studio UI
