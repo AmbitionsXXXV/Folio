@@ -18,11 +18,13 @@ await initI18n()
 
 const app = new Hono()
 
+console.log('CORS_ORIGIN', process.env.CORS_ORIGIN)
+
 app.use(logger())
 app.use(
 	'/*',
 	cors({
-		origin: process.env.CORS_ORIGIN || '',
+		origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
 		allowMethods: ['GET', 'POST', 'OPTIONS'],
 		allowHeaders: ['Content-Type', 'Authorization', 'X-Locale', 'Accept-Language'],
 		credentials: true,

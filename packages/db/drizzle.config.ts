@@ -1,10 +1,5 @@
-import dotenv from 'dotenv'
+import 'dotenv/config'
 import { defineConfig } from 'drizzle-kit'
-
-// Load environment variables from multiple sources
-dotenv.config({ path: '.env' })
-dotenv.config({ path: '../../apps/server/.env' })
-dotenv.config({ path: '../../.env' })
 
 /**
  * Get database URL with fallback options
