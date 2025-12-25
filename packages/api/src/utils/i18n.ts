@@ -1,11 +1,12 @@
 import type { SupportedLanguage } from '@folionote/locales'
-import { defaultLanguage, enUS, zhCN } from '@folionote/locales'
+import { defaultLanguage, enUS, jaJP, zhCN } from '@folionote/locales'
 
 type ErrorKey = keyof typeof enUS.error
 
 const errorResources: Record<SupportedLanguage, Record<ErrorKey, string>> = {
 	'en-US': enUS.error,
 	'zh-CN': zhCN.error,
+	'ja-JP': jaJP.error,
 }
 
 function interpolate(
