@@ -6,7 +6,13 @@
     "feature2": "复习学习",
     "feature2Desc": "使用间隔复习永久记忆",
     "feature3": "随时同步",
-    "feature3Desc": "随时随地访问您的笔记"
+    "feature3Desc": "随时随地访问您的笔记",
+    "skipLogin": "无需账号使用",
+    "localModeHint": "数据将存储在本地。您可以稍后登录以同步数据。",
+    "localModeTitle": "本地模式",
+    "localModeFeatureComingSoon": "离线功能即将推出",
+    "localModeFeatureDesc": "登录即可使用云同步、复习调度等功能。本地存储支持正在开发中。",
+    "signInNow": "立即登录"
   },
   "home": {
     "systemReady": "系统就绪",

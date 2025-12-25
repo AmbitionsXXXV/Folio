@@ -375,7 +375,13 @@
     "feature2": "Review & Learn",
     "feature2Desc": "Use spaced repetition to remember forever",
     "feature3": "Sync Everywhere",
-    "feature3Desc": "Access your notes anywhere, anytime"
+    "feature3Desc": "Access your notes anywhere, anytime",
+    "skipLogin": "Use without account",
+    "localModeHint": "Your data will be stored locally. You can sign in later to sync.",
+    "localModeTitle": "Local Mode",
+    "localModeFeatureComingSoon": "Offline features coming soon",
+    "localModeFeatureDesc": "Sign in to access cloud sync, review scheduling, and more. Local storage support is being developed.",
+    "signInNow": "Sign In Now"
   },
   "home": {
     "systemReady": "System Ready",

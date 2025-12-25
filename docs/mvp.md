@@ -426,9 +426,20 @@ Done: 实现了 iOS 端完整功能闭环（C1 + C2 部分），包括认证、�
 
 #### E1. Skip Login 流程
 
-* [ ] 启动页/登录页增加「跳过登录」或「本地模式」入口
-* [ ] 跳过后进入完整 App 功能（Inbox、复习、条目编辑等）
-* [ ] 本地存储用户偏好（是否跳过登录、本地 userId 标识）
+* [x] 启动页/登录页增加「跳过登录」或「本地模式」入口
+* [x] 跳过后进入完整 App 功能（Inbox、复习、条目编辑等）
+* [x] 本地存储用户偏好（是否跳过登录、本地 userId 标识）
+
+Done: 实现了 Skip Login 功能：
+
+1. **LocalModeContext**：创建 `contexts/local-mode-context.tsx`，使用 SecureStore 持久化存储本地模式状态和本地用户 ID
+2. **Onboarding 页面**：在登录/注册按钮下方添加「无需账号使用」按钮，点击后启用本地模式
+3. **路由守卫**：更新 `_layout.tsx`，支持 `isAuthenticated || isLocalMode` 双重判断，本地模式用户可访问 App
+4. **本地模式占位符**：创建 `LocalModePlaceholder` 组件，在需要认证的页面（Inbox、Today、Review）显示友好提示
+5. **首页本地模式横幅**：在 Home 页面显示本地模式状态和登录入口
+6. **国际化**：添加 `onboarding.skipLogin`、`localModeHint`、`localModeTitle`、`localModeFeatureComingSoon`、`localModeFeatureDesc`、`signInNow` 翻译 key（中英文）
+
+注意：E1 完成了 Skip Login 流程的基础架构。完整的离线功能（本地数据存储和操作）需要 E2（SQLite 本地存储）的实现。
 
 #### E2. SQLite 本地存储
 
@@ -472,7 +483,7 @@ Done: 实现了 iOS 端完整功能闭环（C1 + C2 部分），包括认证、�
 
 ### 🔜 Iteration 3：第三方登录（优先级：中）
 
-* [ ] Web 端：Google、Github OAuth
+* [ ] Web 端：Google（已支持）、Github OAuth(暂不)
 * [ ] iOS 端：Google、Apple Sign In
 * [ ] 账号关联（已有邮箱账号关联 OAuth）
 

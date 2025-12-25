@@ -8,16 +8,20 @@ import type { IconSvgElement } from '@hugeicons/react-native'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { router } from 'expo-router'
 import { Button, useThemeColor } from 'heroui-native'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, View } from 'react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Container } from '@/components/container'
+import { useLocalMode } from '@/contexts/local-mode-context'
 
 export default function OnboardingScreen() {
 	const { t } = useTranslation()
 	const insets = useSafeAreaInsets()
 	const accentColor = useThemeColor('accent')
+	const mutedColor = useThemeColor('muted')
+	const { enableLocalMode } = useLocalMode()
+	const [isSkipping, setIsSkipping] = useState(false)
 
 	const handleSignIn = useCallback(() => {
 		router.push('/(auth)/sign-in')
@@ -26,6 +30,18 @@ export default function OnboardingScreen() {
 	const handleSignUp = useCallback(() => {
 		router.push('/(auth)/sign-up')
 	}, [])
+
+	const handleSkipLogin = useCallback(async () => {
+		setIsSkipping(true)
+		try {
+			await enableLocalMode()
+			// Stack.Protected will automatically navigate when isLocalMode becomes true
+			// No need to manually call router.replace
+		} catch {
+			// Error is logged in context
+			setIsSkipping(false)
+		}
+	}, [enableLocalMode])
 
 	return (
 		<Container className="flex-1">
@@ -87,13 +103,34 @@ export default function OnboardingScreen() {
 
 					{/* Sign In Button (Secondary) */}
 					<Button
-						className="flex-row items-center justify-center border border-divider bg-surface active:opacity-80"
+						className="mb-3 flex-row items-center justify-center border border-divider bg-surface active:opacity-80"
 						onPress={handleSignIn}
 					>
 						<Text className="font-semibold text-foreground text-lg">
 							{t('auth.signIn')}
 						</Text>
 					</Button>
+
+					{/* Skip Login Button (Tertiary) */}
+					<Button
+						className="flex-row items-center justify-center active:opacity-80"
+						isDisabled={isSkipping}
+						onPress={handleSkipLogin}
+						variant="ghost"
+					>
+						{isSkipping ? (
+							<ActivityIndicator color={mutedColor} size="small" />
+						) : (
+							<Text className="font-medium text-muted">
+								{t('onboarding.skipLogin')}
+							</Text>
+						)}
+					</Button>
+
+					{/* Local Mode Hint */}
+					<Text className="mt-2 px-4 text-center text-muted text-xs">
+						{t('onboarding.localModeHint')}
+					</Text>
 				</View>
 			</View>
 		</Container>

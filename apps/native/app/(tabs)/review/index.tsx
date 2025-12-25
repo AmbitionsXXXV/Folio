@@ -1,7 +1,6 @@
 import {
 	Cancel01Icon,
 	CheckmarkCircle02Icon,
-	LockIcon,
 	PlayIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
@@ -17,9 +16,11 @@ import {
 	View,
 } from 'react-native'
 import { Container } from '@/components/container'
+import { LocalModePlaceholder } from '@/components/local-mode-placeholder'
 import { ReviewCard } from '@/components/review-card'
 import { ReviewRatingButtons } from '@/components/review-rating-buttons'
 import { ReviewRuleCard } from '@/components/review-rule-card'
+import { useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { client, orpc, queryClient } from '@/utils/orpc'
 import { getTzOffset } from '@/utils/time'
@@ -116,12 +117,12 @@ function ReviewCompletedView({
 export default function ReviewScreen() {
 	const { t } = useTranslation()
 	const { data: session } = authClient.useSession()
+	const { isLocalMode } = useLocalMode()
 	const [currentRule, setCurrentRule] = useState<ReviewRule>('due')
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isReviewing, setIsReviewing] = useState(false)
 
 	const accentColor = useThemeColor('accent')
-	const mutedColor = useThemeColor('muted')
 
 	const {
 		data: queueData,
@@ -171,15 +172,14 @@ export default function ReviewScreen() {
 		setIsReviewing(false)
 	}, [])
 
+	// Show local mode placeholder for unauthenticated users in local mode
+	if (!session?.user && isLocalMode) {
+		return <LocalModePlaceholder />
+	}
+
+	// This shouldn't happen but handle edge case
 	if (!session?.user) {
-		return (
-			<Container className="flex-1 items-center justify-center p-6">
-				<HugeiconsIcon color={mutedColor} icon={LockIcon} size={64} />
-				<Text className="mt-4 text-center text-lg text-muted">
-					{t('error.unauthorized')}
-				</Text>
-			</Container>
-		)
+		return <LocalModePlaceholder />
 	}
 
 	if (isLoading) {

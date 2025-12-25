@@ -1,13 +1,13 @@
-import { LockIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useThemeColor } from 'heroui-native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Text } from 'react-native'
+import { ActivityIndicator } from 'react-native'
 import { Container } from '@/components/container'
+import { LocalModePlaceholder } from '@/components/local-mode-placeholder'
 import { TodayContent } from '@/components/today-content'
+import { useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { orpc } from '@/utils/orpc'
 import { getTzOffset } from '@/utils/time'
@@ -15,8 +15,8 @@ import { getTzOffset } from '@/utils/time'
 export default function TodayScreen() {
 	const { t } = useTranslation()
 	const { data: session } = authClient.useSession()
+	const { isLocalMode } = useLocalMode()
 	const accentColor = useThemeColor('accent')
-	const mutedColor = useThemeColor('muted')
 
 	const {
 		data: todayStats,
@@ -51,15 +51,14 @@ export default function TodayScreen() {
 		router.push('/review' as never)
 	}, [])
 
+	// Show local mode placeholder for unauthenticated users in local mode
+	if (!session?.user && isLocalMode) {
+		return <LocalModePlaceholder />
+	}
+
+	// This shouldn't happen but handle edge case
 	if (!session?.user) {
-		return (
-			<Container className="flex-1 items-center justify-center p-6">
-				<HugeiconsIcon color={mutedColor} icon={LockIcon} size={64} />
-				<Text className="mt-4 text-center text-lg text-muted">
-					{t('error.unauthorized')}
-				</Text>
-			</Container>
-		)
+		return <LocalModePlaceholder />
 	}
 
 	const isLoading = isLoadingTodayStats || isLoadingDueStats

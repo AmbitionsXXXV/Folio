@@ -8,6 +8,9 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, RefreshControl, Text, View } from 'react-native'
 import { Container } from '@/components/container'
 import { EntryCard } from '@/components/entry-card'
+import { LocalModePlaceholder } from '@/components/local-mode-placeholder'
+import { useLocalMode } from '@/contexts/local-mode-context'
+import { authClient } from '@/lib/auth-client'
 import { client, orpc, queryClient } from '@/utils/orpc'
 
 type QuickCaptureProps = {
@@ -61,13 +64,26 @@ function QuickCapture({ onCapture, isPending }: QuickCaptureProps) {
 
 export default function InboxScreen() {
 	const { t } = useTranslation()
+	const { data: session } = authClient.useSession()
+	const { isLocalMode } = useLocalMode()
 	const mutedColor = useThemeColor('muted')
 	const accentColor = useThemeColor('accent')
 
-	// Fetch inbox entries
-	const { data, isLoading, isRefetching, refetch } = useQuery(
-		orpc.entries.list.queryOptions({ input: { filter: 'inbox', limit: 50 } })
-	)
+	// Fetch inbox entries (only when authenticated)
+	const { data, isLoading, isRefetching, refetch } = useQuery({
+		...orpc.entries.list.queryOptions({ input: { filter: 'inbox', limit: 50 } }),
+		enabled: !!session?.user,
+	})
+
+	// Show local mode placeholder for unauthenticated users in local mode
+	if (!session?.user && isLocalMode) {
+		return <LocalModePlaceholder />
+	}
+
+	// This shouldn't happen but handle edge case
+	if (!session?.user) {
+		return <LocalModePlaceholder />
+	}
 
 	// Create entry mutation
 	const createEntryMutation = useMutation({

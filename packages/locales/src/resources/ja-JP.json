@@ -375,7 +375,13 @@
     "feature2": "レビュー＆学習",
     "feature2Desc": "分散反復を使って永久に記憶",
     "feature3": "どこでも同期",
-    "feature3Desc": "いつでもどこでもノートにアクセス"
+    "feature3Desc": "いつでもどこでもノートにアクセス",
+    "skipLogin": "アカウントなしで使用",
+    "localModeHint": "データはローカルに保存されます。後でサインインして同期できます。",
+    "localModeTitle": "ローカルモード",
+    "localModeFeatureComingSoon": "オフライン機能は近日公開",
+    "localModeFeatureDesc": "サインインしてクラウド同期、復習スケジュールなどを利用できます。ローカルストレージのサポートは開発中です。",
+    "signInNow": "今すぐサインイン"
   },
   "home": {
     "systemReady": "システム準備完了",
