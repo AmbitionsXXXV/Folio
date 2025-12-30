@@ -499,13 +499,13 @@ Done: 实现了完整的离线优先体验：
 
 ### 🔜 Iteration 2：iOS 分享扩展（优先级：中）
 
-* [ ] iOS Share Extension 接收文本/URL
+* [ ] iOS Share Extension 接收文本/URL (with expo-sharing)
 * [ ] 写入本地 SQLite（或调用 API）
 * [ ] 去重策略（URL 相同时提示或合并）
 
 ---
 
-### 🔜 Iteration 3：第三方登录（优先级：中）
+### 🔜 Iteration 3：第三方登录（优先级：低）暂不考虑
 
 * [ ] Web 端：Google（已支持）、Github OAuth(暂不)
 * [ ] iOS 端：Google、Apple Sign In
@@ -513,7 +513,7 @@ Done: 实现了完整的离线优先体验：
 
 ---
 
-### 🔮 Iteration 4：高级搜索（优先级：低）
+### 🔮 Iteration 4：高级搜索（优先级：中）
 
 * [ ] Postgres 全文搜索（FTS）
 * [ ] 搜索过滤器（按标签、来源、时间范围）
