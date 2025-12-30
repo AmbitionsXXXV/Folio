@@ -26,6 +26,17 @@ import type {
 	UpdateTagInput,
 } from './types'
 
+const DEFAULT_ENTRIES_LIMIT = 20
+const DEFAULT_TAGS_LIMIT = 50
+const DEFAULT_SOURCES_LIMIT = 20
+const MAX_REMOTE_LIMIT = 100
+
+interface CursorPage<T> {
+	items: T[]
+	hasMore: boolean
+	nextCursor?: string
+}
+
 interface ServerEntry {
 	id: string
 	userId: string
@@ -125,25 +136,173 @@ function toLocalSource(serverSource: ServerSource): Source {
 	}
 }
 
+function normalizeSearchQuery(search: string | undefined): string | undefined {
+	const trimmed = search?.trim()
+	return trimmed ? trimmed.toLowerCase() : undefined
+}
+
+function includesInsensitive(
+	value: string | null | undefined,
+	query: string
+): boolean {
+	if (!value) {
+		return false
+	}
+	return value.toLowerCase().includes(query)
+}
+
+function doesEntryMatchFilter(
+	entry: Entry,
+	filter: ListEntriesInput['filter']
+): boolean {
+	switch (filter) {
+		case 'inbox':
+			return entry.isInbox
+		case 'starred':
+			return entry.isStarred
+		case 'library':
+			return !entry.isInbox
+		default:
+			return true
+	}
+}
+
+function doesEntryMatchSearch(entry: Entry, query: string): boolean {
+	return (
+		includesInsensitive(entry.title, query) ||
+		includesInsensitive(entry.contentText, query)
+	)
+}
+
+function doesTagMatchSearch(tag: Tag, query: string): boolean {
+	return includesInsensitive(tag.name, query)
+}
+
+function doesSourceMatchSearch(source: Source, query: string): boolean {
+	return includesInsensitive(source.title, query)
+}
+
+async function collectPaginatedIdItems<
+	TServerItem,
+	TLocalItem extends { id: string },
+>(options: {
+	initialCursor: string | undefined
+	limit: number
+	serverLimit: number
+	fetchPage: (
+		cursor: string | undefined,
+		limit: number
+	) => Promise<CursorPage<TServerItem>>
+	toLocal: (item: TServerItem) => TLocalItem
+	shouldInclude: (item: TLocalItem) => boolean
+}): Promise<PaginatedList<TLocalItem>> {
+	let cursor = options.initialCursor
+	const items: TLocalItem[] = []
+	let hasMore = true
+	let nextCursor: string | undefined
+
+	while (items.length < options.limit && hasMore) {
+		const result = await options.fetchPage(cursor, options.serverLimit)
+
+		for (const serverItem of result.items) {
+			const localItem = options.toLocal(serverItem)
+			if (!options.shouldInclude(localItem)) {
+				continue
+			}
+			items.push(localItem)
+			nextCursor = localItem.id
+			if (items.length >= options.limit) {
+				break
+			}
+		}
+
+		if (items.length >= options.limit) {
+			return { items, hasMore: true, cursor: nextCursor }
+		}
+
+		hasMore = result.hasMore
+		cursor = result.nextCursor
+		if (!cursor) {
+			break
+		}
+	}
+
+	return { items, hasMore, cursor: nextCursor }
+}
+
 /**
  * Create a remote data service
  */
 export function createRemoteDataService(): DataService {
 	return {
 		entries: {
-			async list(input: ListEntriesInput): Promise<PaginatedList<Entry>> {
-				const result = await client.entries.list({
-					filter: input.filter,
-					search: input.search,
-					tagId: input.tagId,
-					limit: input.limit,
-					cursor: input.cursor,
-				})
-				return {
-					items: result.items.map((item) => toLocalEntry(item as ServerEntry)),
-					hasMore: result.hasMore,
-					cursor: result.cursor,
+			list(input: ListEntriesInput): Promise<PaginatedList<Entry>> {
+				const limit = input.limit ?? DEFAULT_ENTRIES_LIMIT
+				const rawSearchQuery = input.search?.trim()
+				const normalizedSearchQuery = normalizeSearchQuery(rawSearchQuery)
+
+				// Prefer server-side search when possible (tagId + search is not supported remotely)
+				if (rawSearchQuery && !input.tagId) {
+					const serverLimit = Math.min(limit * 5, MAX_REMOTE_LIMIT)
+					return collectPaginatedIdItems<ServerEntry, Entry>({
+						initialCursor: input.cursor,
+						limit,
+						serverLimit,
+						fetchPage: async (cursor, pageLimit) => {
+							const result = await client.search.entries({
+								query: rawSearchQuery,
+								limit: pageLimit,
+								cursor,
+							})
+							return {
+								items: result.items as ServerEntry[],
+								hasMore: result.hasMore,
+								nextCursor: result.nextCursor,
+							}
+						},
+						toLocal: (serverEntry) => toLocalEntry(serverEntry),
+						shouldInclude: (entry) => doesEntryMatchFilter(entry, input.filter),
+					})
 				}
+
+				// Map 'library' filter to server 'all' + client-side filtering
+				const serverFilter = input.filter === 'library' ? 'all' : input.filter
+				const needsClientSideFiltering =
+					input.filter === 'library' ||
+					(normalizedSearchQuery !== undefined && input.tagId !== undefined)
+				const serverLimit = Math.min(
+					needsClientSideFiltering ? limit * 5 : limit,
+					MAX_REMOTE_LIMIT
+				)
+
+				return collectPaginatedIdItems<ServerEntry, Entry>({
+					initialCursor: input.cursor,
+					limit,
+					serverLimit,
+					fetchPage: async (cursor, pageLimit) => {
+						const result = await client.entries.list({
+							filter: serverFilter,
+							tagId: input.tagId,
+							limit: pageLimit,
+							cursor,
+						})
+						return {
+							items: result.items as ServerEntry[],
+							hasMore: result.hasMore,
+							nextCursor: result.nextCursor,
+						}
+					},
+					toLocal: (serverEntry) => toLocalEntry(serverEntry),
+					shouldInclude: (entry) => {
+						if (!doesEntryMatchFilter(entry, input.filter)) {
+							return false
+						}
+						if (!normalizedSearchQuery) {
+							return true
+						}
+						return doesEntryMatchSearch(entry, normalizedSearchQuery)
+					},
+				})
 			},
 
 			async get(id: string): Promise<Entry | null> {
@@ -162,7 +321,12 @@ export function createRemoteDataService(): DataService {
 
 			async update(id: string, input: UpdateEntryInput): Promise<Entry | null> {
 				try {
-					const result = await client.entries.update({ id, ...input })
+					const { version, ...updateData } = input
+					const result = await client.entries.update({
+						id,
+						...updateData,
+						expectedVersion: version,
+					})
 					return toLocalEntry(result as ServerEntry)
 				} catch {
 					return null
@@ -213,14 +377,27 @@ export function createRemoteDataService(): DataService {
 
 		tags: {
 			async list(input: ListTagsInput): Promise<PaginatedList<Tag>> {
-				const result = await client.tags.list({
-					search: input.search,
-					limit: input.limit,
-					cursor: input.cursor,
-				})
+				const limit = input.limit ?? DEFAULT_TAGS_LIMIT
+				const normalizedSearchQuery = normalizeSearchQuery(input.search)
+
+				const result = await client.tags.list()
+				const allTags = result.map((tag) => toLocalTag(tag as ServerTag))
+				const filteredTags = normalizedSearchQuery
+					? allTags.filter((tag) => doesTagMatchSearch(tag, normalizedSearchQuery))
+					: allTags
+
+				const startIndex = input.cursor
+					? Math.max(0, filteredTags.findIndex((tag) => tag.id === input.cursor) + 1)
+					: 0
+
+				const items = filteredTags.slice(startIndex, startIndex + limit)
+				const hasMore = startIndex + limit < filteredTags.length
+				const cursor = hasMore ? items.at(-1)?.id : undefined
+
 				return {
-					items: result.items.map((item) => toLocalTag(item as ServerTag)),
-					hasMore: result.hasMore,
+					items,
+					hasMore,
+					cursor,
 				}
 			},
 
@@ -257,8 +434,8 @@ export function createRemoteDataService(): DataService {
 			},
 
 			async getForEntry(entryId: string): Promise<Tag[]> {
-				const result = await client.entries.getTags({ entryId })
-				return result.map((item) => toLocalTag(item as ServerTag))
+				const result = await client.entries.getTags({ id: entryId })
+				return result.map((tag) => toLocalTag(tag as ServerTag))
 			},
 
 			async addToEntry(entryId: string, tagId: string): Promise<void> {
@@ -271,17 +448,36 @@ export function createRemoteDataService(): DataService {
 		},
 
 		sources: {
-			async list(input: ListSourcesInput): Promise<PaginatedList<Source>> {
-				const result = await client.sources.list({
-					type: input.type,
-					search: input.search,
-					limit: input.limit,
-					cursor: input.cursor,
+			list(input: ListSourcesInput): Promise<PaginatedList<Source>> {
+				const limit = input.limit ?? DEFAULT_SOURCES_LIMIT
+				const normalizedSearchQuery = normalizeSearchQuery(input.search)
+				const serverLimit = Math.min(
+					normalizedSearchQuery ? limit * 5 : limit,
+					MAX_REMOTE_LIMIT
+				)
+
+				return collectPaginatedIdItems<ServerSource, Source>({
+					initialCursor: input.cursor,
+					limit,
+					serverLimit,
+					fetchPage: async (cursor, pageLimit) => {
+						const result = await client.sources.list({
+							type: input.type,
+							limit: pageLimit,
+							cursor,
+						})
+						return {
+							items: result.items as ServerSource[],
+							hasMore: result.hasMore,
+							nextCursor: result.nextCursor,
+						}
+					},
+					toLocal: (serverSource) => toLocalSource(serverSource),
+					shouldInclude: (source) =>
+						normalizedSearchQuery
+							? doesSourceMatchSearch(source, normalizedSearchQuery)
+							: true,
 				})
-				return {
-					items: result.items.map((item) => toLocalSource(item as ServerSource)),
-					hasMore: result.hasMore,
-				}
 			},
 
 			async get(id: string): Promise<Source | null> {
@@ -317,8 +513,8 @@ export function createRemoteDataService(): DataService {
 			},
 
 			async getForEntry(entryId: string): Promise<Source[]> {
-				const result = await client.entries.getSources({ entryId })
-				return result.map((item) => toLocalSource(item as ServerSource))
+				const result = await client.sources.getEntrySources({ entryId })
+				return result.map((source) => toLocalSource(source as ServerSource))
 			},
 
 			async addToEntry(
@@ -326,22 +522,22 @@ export function createRemoteDataService(): DataService {
 				sourceId: string,
 				position?: string
 			): Promise<void> {
-				await client.entries.addSource({ entryId, sourceId, position })
+				await client.sources.addToEntry({ entryId, sourceId, position })
 			},
 
 			async removeFromEntry(entryId: string, sourceId: string): Promise<void> {
-				await client.entries.removeSource({ entryId, sourceId })
+				await client.sources.removeFromEntry({ entryId, sourceId })
 			},
 		},
 
 		review: {
 			async getQueue(input: GetQueueInput): Promise<Entry[]> {
 				const result = await client.review.getQueue({
-					mode: input.mode,
+					rule: input.mode ?? 'due',
 					limit: input.limit,
 					tzOffset: input.tzOffset,
 				})
-				return result.map((item) => toLocalEntry(item as ServerEntry))
+				return result.items.map((item) => toLocalEntry(item as ServerEntry))
 			},
 
 			async markReviewed(

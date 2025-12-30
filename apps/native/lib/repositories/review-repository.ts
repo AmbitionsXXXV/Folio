@@ -35,22 +35,25 @@ export interface GetQueueOptions {
 
 /**
  * Today stats result
+ * Matches the remote API response format
  */
 export interface TodayStats {
-	dueCount: number
-	reviewedCount: number
-	newCount: number
+	reviewedToday: number
+	totalEntries: number
+	starredEntries: number
+	unreviewedEntries: number
 	streak: number
 }
 
 /**
  * Due stats result
+ * Matches the remote API response format
  */
 export interface DueStats {
-	dueNow: number
 	overdue: number
 	dueToday: number
-	dueTomorrow: number
+	upcoming: number
+	newCount: number
 }
 
 /**
@@ -389,26 +392,13 @@ export class ReviewRepository {
 	 * Get today's review stats
 	 */
 	async getTodayStats(userId: string, tzOffset = 0): Promise<TodayStats> {
-		const nowDate = new Date()
-
 		// Calculate today's start/end based on timezone offset
-		const todayStart = new Date(nowDate)
+		const todayStart = new Date()
 		todayStart.setHours(0, 0, 0, 0)
 		todayStart.setMinutes(todayStart.getMinutes() + tzOffset)
 
 		const todayEnd = new Date(todayStart)
 		todayEnd.setDate(todayEnd.getDate() + 1)
-
-		// Count due entries
-		const dueResult = await localDb
-			.select({ count: count() })
-			.from(entryReviewState)
-			.where(
-				and(
-					eq(entryReviewState.userId, userId),
-					lte(entryReviewState.dueAt, nowDate)
-				)
-			)
 
 		// Count reviewed today
 		const reviewedResult = await localDb
@@ -422,8 +412,26 @@ export class ReviewRepository {
 				)
 			)
 
-		// Count new entries (without review state)
-		const newResult = await localDb
+		// Count total entries
+		const totalResult = await localDb
+			.select({ count: count() })
+			.from(entries)
+			.where(and(eq(entries.userId, userId), sql`${entries.deletedAt} IS NULL`))
+
+		// Count starred entries
+		const starredResult = await localDb
+			.select({ count: count() })
+			.from(entries)
+			.where(
+				and(
+					eq(entries.userId, userId),
+					sql`${entries.deletedAt} IS NULL`,
+					eq(entries.isStarred, true)
+				)
+			)
+
+		// Count unreviewed entries (entries that have never been reviewed)
+		const unreviewedResult = await localDb
 			.select({ count: count() })
 			.from(entries)
 			.leftJoin(entryReviewState, eq(entries.id, entryReviewState.entryId))
@@ -439,9 +447,10 @@ export class ReviewRepository {
 		const streak = await this.calculateStreak(userId, tzOffset)
 
 		return {
-			dueCount: dueResult[0]?.count ?? 0,
-			reviewedCount: reviewedResult[0]?.count ?? 0,
-			newCount: newResult[0]?.count ?? 0,
+			reviewedToday: reviewedResult[0]?.count ?? 0,
+			totalEntries: totalResult[0]?.count ?? 0,
+			starredEntries: starredResult[0]?.count ?? 0,
+			unreviewedEntries: unreviewedResult[0]?.count ?? 0,
 			streak,
 		}
 	}
@@ -450,10 +459,8 @@ export class ReviewRepository {
 	 * Get due stats
 	 */
 	async getDueStats(userId: string, tzOffset = 0): Promise<DueStats> {
-		const nowDate = new Date()
-
 		// Calculate today's start/end based on timezone offset
-		const todayStart = new Date(nowDate)
+		const todayStart = new Date()
 		todayStart.setHours(0, 0, 0, 0)
 		todayStart.setMinutes(todayStart.getMinutes() + tzOffset)
 
@@ -471,17 +478,6 @@ export class ReviewRepository {
 				and(
 					eq(entryReviewState.userId, userId),
 					lt(entryReviewState.dueAt, todayStart)
-				)
-			)
-
-		// Count due now (dueAt <= now)
-		const dueNowResult = await localDb
-			.select({ count: count() })
-			.from(entryReviewState)
-			.where(
-				and(
-					eq(entryReviewState.userId, userId),
-					lte(entryReviewState.dueAt, nowDate)
 				)
 			)
 
@@ -509,11 +505,24 @@ export class ReviewRepository {
 				)
 			)
 
+		// Count new entries (without review state)
+		const newResult = await localDb
+			.select({ count: count() })
+			.from(entries)
+			.leftJoin(entryReviewState, eq(entries.id, entryReviewState.entryId))
+			.where(
+				and(
+					eq(entries.userId, userId),
+					sql`${entries.deletedAt} IS NULL`,
+					sql`${entryReviewState.entryId} IS NULL`
+				)
+			)
+
 		return {
-			dueNow: dueNowResult[0]?.count ?? 0,
 			overdue: overdueResult[0]?.count ?? 0,
 			dueToday: dueTodayResult[0]?.count ?? 0,
-			dueTomorrow: dueTomorrowResult[0]?.count ?? 0,
+			upcoming: dueTomorrowResult[0]?.count ?? 0,
+			newCount: newResult[0]?.count ?? 0,
 		}
 	}
 
@@ -604,6 +613,59 @@ export class ReviewRepository {
 			.limit(1)
 
 		return result[0] ?? null
+	}
+
+	/**
+	 * Get review states pending sync
+	 */
+	getPendingSyncStates(userId: string): Promise<EntryReviewState[]> {
+		return localDb
+			.select()
+			.from(entryReviewState)
+			.where(
+				and(
+					eq(entryReviewState.userId, userId),
+					eq(entryReviewState.syncStatus, 'pending')
+				)
+			)
+	}
+
+	/**
+	 * Mark review state as synced
+	 */
+	async markStateSynced(entryId: string): Promise<void> {
+		const timestamp = now()
+		await localDb
+			.update(entryReviewState)
+			.set({
+				syncStatus: 'synced',
+				updatedAt: timestamp,
+			})
+			.where(eq(entryReviewState.entryId, entryId))
+	}
+
+	/**
+	 * Get review events pending sync
+	 */
+	getPendingSyncEvents(userId: string): Promise<ReviewEvent[]> {
+		return localDb
+			.select()
+			.from(reviewEvents)
+			.where(
+				and(eq(reviewEvents.userId, userId), eq(reviewEvents.syncStatus, 'pending'))
+			)
+	}
+
+	/**
+	 * Mark review event as synced
+	 */
+	async markEventSynced(eventId: string): Promise<void> {
+		await localDb
+			.update(reviewEvents)
+			.set({
+				syncStatus: 'synced',
+			})
+			.where(eq(reviewEvents.id, eventId))
 	}
 }
 

@@ -27,7 +27,7 @@ export interface ListTagsOptions {
 export interface CreateTagInput {
 	userId: string
 	name: string
-	color?: string
+	color?: string | null
 }
 
 /**
@@ -136,7 +136,7 @@ export class TagsRepository implements BaseRepository<Tag, NewTag, UpdateTagInpu
 			id,
 			userId: data.userId,
 			name: data.name,
-			color: data.color,
+			color: data.color ?? null,
 			createdAt: timestamp,
 			updatedAt: timestamp,
 			syncStatus: 'pending',

@@ -5,17 +5,15 @@ import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator } from 'react-native'
 import { Container } from '@/components/container'
-import { LocalModePlaceholder } from '@/components/local-mode-placeholder'
 import { TodayContent } from '@/components/today-content'
-import { useLocalMode } from '@/contexts/local-mode-context'
+import { useDataServiceContext } from '@/contexts/data-service-context'
 import { authClient } from '@/lib/auth-client'
-import { orpc } from '@/utils/orpc'
 import { getTzOffset } from '@/utils/time'
 
 export default function TodayScreen() {
 	const { t } = useTranslation()
 	const { data: session } = authClient.useSession()
-	const { isLocalMode } = useLocalMode()
+	const { dataService, isMigrating } = useDataServiceContext()
 	const accentColor = useThemeColor('accent')
 
 	const {
@@ -24,10 +22,9 @@ export default function TodayScreen() {
 		refetch: refetchTodayStats,
 		isRefetching: isRefetchingTodayStats,
 	} = useQuery({
-		...orpc.review.getTodayStats.queryOptions({
-			input: { tzOffset: getTzOffset() },
-		}),
-		enabled: !!session?.user,
+		queryKey: ['review', 'todayStats'],
+		queryFn: () => dataService?.review.getTodayStats(getTzOffset()),
+		enabled: !!dataService,
 	})
 
 	const {
@@ -36,10 +33,9 @@ export default function TodayScreen() {
 		refetch: refetchDueStats,
 		isRefetching: isRefetchingDueStats,
 	} = useQuery({
-		...orpc.review.getDueStats.queryOptions({
-			input: { tzOffset: getTzOffset() },
-		}),
-		enabled: !!session?.user,
+		queryKey: ['review', 'dueStats'],
+		queryFn: () => dataService?.review.getDueStats(getTzOffset()),
+		enabled: !!dataService,
 	})
 
 	const handleRefresh = useCallback(() => {
@@ -51,17 +47,9 @@ export default function TodayScreen() {
 		router.push('/review' as never)
 	}, [])
 
-	// Show local mode placeholder for unauthenticated users in local mode
-	if (!session?.user && isLocalMode) {
-		return <LocalModePlaceholder />
-	}
-
-	// This shouldn't happen but handle edge case
-	if (!session?.user) {
-		return <LocalModePlaceholder />
-	}
-
-	const isLoading = isLoadingTodayStats || isLoadingDueStats
+	// Show loading while migrating or loading data
+	const isLoading =
+		isMigrating || isLoadingTodayStats || isLoadingDueStats || !dataService
 	if (isLoading) {
 		return (
 			<Container className="flex-1 items-center justify-center">
@@ -71,7 +59,7 @@ export default function TodayScreen() {
 	}
 
 	const isRefetching = isRefetchingTodayStats || isRefetchingDueStats
-	const userName = session.user.name?.split(' ')[0] ?? t('common.other')
+	const userName = session?.user?.name?.split(' ')[0] ?? t('common.other')
 
 	return (
 		<Container className="flex-1">

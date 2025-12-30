@@ -6,6 +6,7 @@
  */
 
 export { createLocalDataService } from './local-data-service'
+export { createOfflineFirstDataService } from './offline-first-data-service'
 export { createRemoteDataService } from './remote-data-service'
 export type {
 	CreateEntryInput,

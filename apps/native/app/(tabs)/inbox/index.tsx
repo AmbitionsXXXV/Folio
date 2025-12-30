@@ -1,17 +1,14 @@
 import { Add01Icon, MailOpen01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { FlashList } from '@shopify/flash-list'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, TextField, useThemeColor } from 'heroui-native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, RefreshControl, Text, View } from 'react-native'
 import { Container } from '@/components/container'
 import { EntryCard } from '@/components/entry-card'
-import { LocalModePlaceholder } from '@/components/local-mode-placeholder'
-import { useLocalMode } from '@/contexts/local-mode-context'
-import { authClient } from '@/lib/auth-client'
-import { client, orpc, queryClient } from '@/utils/orpc'
+import { useDataServiceContext } from '@/contexts/data-service-context'
 
 type QuickCaptureProps = {
 	onCapture: (value: string) => void
@@ -64,34 +61,28 @@ function QuickCapture({ onCapture, isPending }: QuickCaptureProps) {
 
 export default function InboxScreen() {
 	const { t } = useTranslation()
-	const { data: session } = authClient.useSession()
-	const { isLocalMode } = useLocalMode()
+	const { dataService, isMigrating } = useDataServiceContext()
+	const queryClient = useQueryClient()
 	const mutedColor = useThemeColor('muted')
 	const accentColor = useThemeColor('accent')
 
-	// Fetch inbox entries (only when authenticated)
+	// Fetch inbox entries using DataService
 	const { data, isLoading, isRefetching, refetch } = useQuery({
-		...orpc.entries.list.queryOptions({ input: { filter: 'inbox', limit: 50 } }),
-		enabled: !!session?.user,
+		queryKey: ['entries', 'list', 'inbox'],
+		queryFn: () => dataService?.entries.list({ filter: 'inbox', limit: 50 }),
+		enabled: !!dataService,
 	})
 
-	// Create entry mutation - must be called before any early returns
+	// Create entry mutation using DataService
 	const createEntryMutation = useMutation({
-		mutationFn: (title: string) => client.entries.create({ title, isInbox: true }),
+		mutationFn: (title: string) => {
+			if (!dataService) throw new Error('DataService not available')
+			return dataService.entries.create({ title, isInbox: true })
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['entries', 'list'] })
 		},
 	})
-
-	// Show local mode placeholder for unauthenticated users in local mode
-	if (!session?.user && isLocalMode) {
-		return <LocalModePlaceholder />
-	}
-
-	// This shouldn't happen but handle edge case
-	if (!session?.user) {
-		return <LocalModePlaceholder />
-	}
 
 	const handleCapture = (text: string) => {
 		createEntryMutation.mutate(text)
@@ -99,7 +90,8 @@ export default function InboxScreen() {
 
 	const entries = data?.items ?? []
 
-	if (isLoading) {
+	// Show loading while migrating or loading data
+	if (isMigrating || isLoading || !dataService) {
 		return (
 			<Container className="flex-1 items-center justify-center" disableTopInset>
 				<ActivityIndicator color={accentColor} size="large" />

@@ -462,16 +462,32 @@ Done: 实现了完整的 SQLite 本地存储功能：
 
 #### E3. 数据同步策略（登录后）
 
-* [ ] 用户登录后触发本地数据上传
-* [ ] 冲突处理策略（最简：以本地为准 / 以服务端为准 / 提示用户选择）
-* [ ] 同步状态指示（同步中 / 已同步 / 冲突）
-* [ ] 增量同步（基于 updatedAt 或 version）
+* [x] 用户登录后触发本地数据上传
+* [x] 冲突处理策略（最简：以本地为准 / 以服务端为准 / 提示用户选择）
+* [x] 同步状态指示（同步中 / 已同步 / 冲突）
+* [x] 增量同步（基于 updatedAt 或 version）
+
+Done: 实现了完整的数据同步策略：
+
+1. **SyncService 核心模块**：创建 `lib/sync/sync-service.ts`，实现双向同步、冲突检测和解决
+2. **登录后自动同步**：在 `SyncContext` 中监听认证状态变化，用户登录后自动触发 `uploadAllLocalData`
+3. **冲突处理策略**：支持三种策略 - `local`（本地优先）、`remote`（服务端优先）、`manual`（用户手动选择）
+4. **同步状态指示**：创建 `SyncStatusIndicator` 和 `SyncStatusBadge` 组件，显示同步中/已同步/冲突/离线状态
+5. **增量同步**：基于 `lastSyncAt` 时间戳和 `syncStatus` 字段实现增量同步
 
 #### E4. 离线优先体验
 
-* [ ] 网络不可用时自动切换为本地模式
-* [ ] 操作队列（Pending Operations）：离线时记录操作，联网后批量同步
-* [ ] 乐观更新：操作立即生效，后台同步
+* [x] 网络不可用时自动切换为本地模式
+* [x] 操作队列（Pending Operations）：离线时记录操作，联网后批量同步
+* [x] 乐观更新：操作立即生效，后台同步
+
+Done: 实现了完整的离线优先体验：
+
+1. **网络状态检测**：创建 `useNetworkState` 和 `useIsOnline` hooks，使用 `expo-network` 监控网络状态
+2. **自动切换本地模式**：`DataServiceContext` 根据网络状态自动选择 `OfflineFirstDataService` 或 `RemoteDataService`
+3. **操作队列**：创建 `lib/sync/pending-operations.ts`，使用 SecureStore 持久化存储待同步操作
+4. **乐观更新**：`OfflineFirstDataService` 先执行本地操作，再异步同步到服务器，失败时操作仍保留在队列
+5. **智能操作合并**：同一实体的多次操作会智能合并（如 create+update=create，create+delete=移除）
 
 验收标准：
 

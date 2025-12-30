@@ -241,7 +241,7 @@ importers:
         specifier: ~17.0.8
         version: 17.0.8(expo@54.0.30)(react@19.1.0)
       expo-network:
-        specifier: ~8.0.7
+        specifier: ~8.0.8
         version: 8.0.8(expo@54.0.30)(react@19.1.0)
       expo-notifications:
         specifier: ~0.32.15
@@ -12275,7 +12275,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@22.19.3)(@vitest/ui@4.0.16)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(msw@2.12.4(@types/node@22.19.3)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(msw@2.12.4(@types/node@24.10.4)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/utils@4.0.16':
     dependencies:

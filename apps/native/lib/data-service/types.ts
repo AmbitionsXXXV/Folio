@@ -126,22 +126,25 @@ export interface GetQueueInput {
 
 /**
  * Today stats result
+ * Matches the remote API response format
  */
 export interface TodayStats {
-	dueCount: number
-	reviewedCount: number
-	newCount: number
+	reviewedToday: number
+	totalEntries: number
+	starredEntries: number
+	unreviewedEntries: number
 	streak: number
 }
 
 /**
  * Due stats result
+ * Matches the remote API response format
  */
 export interface DueStats {
-	dueNow: number
 	overdue: number
 	dueToday: number
-	dueTomorrow: number
+	upcoming: number
+	newCount: number
 }
 
 /**

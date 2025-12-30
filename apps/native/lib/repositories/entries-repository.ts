@@ -27,9 +27,9 @@ export interface ListEntriesOptions {
  */
 export interface CreateEntryInput {
 	userId: string
-	title: string
-	contentJson?: string
-	contentText?: string
+	title?: string
+	contentJson?: string | null
+	contentText?: string | null
 	isInbox?: boolean
 	isStarred?: boolean
 	isPinned?: boolean
@@ -176,9 +176,9 @@ export class EntriesRepository
 		const newEntry: NewEntry = {
 			id,
 			userId: data.userId,
-			title: data.title,
-			contentJson: data.contentJson,
-			contentText: data.contentText,
+			title: data.title ?? '',
+			contentJson: data.contentJson ?? null,
+			contentText: data.contentText ?? null,
 			isInbox: data.isInbox ?? true,
 			isStarred: data.isStarred ?? false,
 			isPinned: data.isPinned ?? false,

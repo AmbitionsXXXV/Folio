@@ -39,12 +39,12 @@ export interface ListSourcesOptions {
  */
 export interface CreateSourceInput {
 	userId: string
-	type?: SourceType
+	type?: string
 	title: string
-	url?: string
-	author?: string
-	publishedAt?: Date
-	metadata?: string
+	url?: string | null
+	author?: string | null
+	publishedAt?: Date | null
+	metadata?: string | null
 }
 
 /**
@@ -160,10 +160,10 @@ export class SourcesRepository
 			userId: data.userId,
 			type: data.type ?? 'link',
 			title: data.title,
-			url: data.url,
-			author: data.author,
-			publishedAt: data.publishedAt,
-			metadata: data.metadata,
+			url: data.url ?? null,
+			author: data.author ?? null,
+			publishedAt: data.publishedAt ?? null,
+			metadata: data.metadata ?? null,
 			createdAt: timestamp,
 			updatedAt: timestamp,
 			syncStatus: 'pending',

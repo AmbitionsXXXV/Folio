@@ -58,5 +58,6 @@
     "springify",
     "workerd",
     "ZCOOL"
-  ]
+  ],
+  "sweetpad.build.xcodeWorkspacePath": "apps/native/ios/FolioNote.xcodeproj/project.xcworkspace"
 }
