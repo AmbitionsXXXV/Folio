@@ -3,13 +3,14 @@ import {
 	AlertCircleIcon,
 	ArrowRight01Icon,
 	Calendar03Icon,
+	CloudIcon,
 	Mail01Icon,
 	RefreshIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
-import { Card, useThemeColor } from 'heroui-native'
+import { Button, Card, useThemeColor } from 'heroui-native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -21,6 +22,7 @@ import {
 	View,
 } from 'react-native'
 import { Container } from '@/components/container'
+import { useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { orpc } from '@/utils/orpc'
 import { getTzOffset } from '@/utils/time'
@@ -28,12 +30,18 @@ import { getTzOffset } from '@/utils/time'
 export default function HomeScreen() {
 	const { t } = useTranslation()
 	const { data: session } = authClient.useSession()
+	const { isLocalMode, disableLocalMode } = useLocalMode()
 	const healthCheck = useQuery(orpc.healthCheck.queryOptions())
 
 	const accentColor = useThemeColor('accent')
 	const mutedColor = useThemeColor('muted')
 	const successColor = useThemeColor('success')
 	const warningColor = useThemeColor('warning')
+
+	const handleSignIn = useCallback(async () => {
+		await disableLocalMode()
+		router.replace('/(auth)/sign-in')
+	}, [disableLocalMode])
 
 	// Fetch stats if logged in
 	const {
@@ -110,6 +118,36 @@ export default function HomeScreen() {
 						{session?.user ? t('home.subtitleUser') : t('home.subtitleGuest')}
 					</Text>
 				</Card>
+
+				{/* Local Mode Banner */}
+				{isLocalMode && !session?.user && (
+					<Card
+						className="mb-4 border border-accent-soft-hover bg-accent/5 p-4"
+						variant="secondary"
+					>
+						<View className="flex-row items-center">
+							<View className="mr-3 size-10 items-center justify-center rounded-full bg-accent/10">
+								<HugeiconsIcon color={accentColor} icon={CloudIcon} size={20} />
+							</View>
+							<View className="flex-1">
+								<Text className="font-medium text-foreground">
+									{t('onboarding.localModeTitle')}
+								</Text>
+								<Text className="text-muted text-xs">
+									{t('onboarding.localModeHint')}
+								</Text>
+							</View>
+							<Button
+								className="bg-accent px-3 py-2 active:opacity-70"
+								onPress={handleSignIn}
+							>
+								<Text className="font-medium text-white text-xs">
+									{t('auth.signIn')}
+								</Text>
+							</Button>
+						</View>
+					</Card>
+				)}
 
 				{/* Quick Stats for logged in users */}
 				{session?.user && !isLoadingStats && (

@@ -1148,3 +1148,5 @@ flowchart TB
    - [PostgreSQL 官方文档 - 事务](https://www.postgresql.org/docs/current/tutorial-transactions.html)
    - [Drizzle Migrations 指南](https://orm.drizzle.team/docs/migrations)
    - [node-postgres 连接池配置](https://node-postgres.com/features/pooling)
+
+Local data are backed up to docker volume. Use docker to show them: `docker volume ls --filter label=com.supabase.cli.project=folionote`

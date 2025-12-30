@@ -17,6 +17,7 @@ const config: ExpoConfig = {
 		'expo-web-browser',
 		'expo-notifications',
 		'expo-localization',
+		'expo-sqlite',
 		[
 			'expo-secure-store',
 			{

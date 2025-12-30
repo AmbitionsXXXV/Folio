@@ -375,7 +375,13 @@
     "feature2": "レビュー＆学習",
     "feature2Desc": "分散反復を使って永久に記憶",
     "feature3": "どこでも同期",
-    "feature3Desc": "いつでもどこでもノートにアクセス"
+    "feature3Desc": "いつでもどこでもノートにアクセス",
+    "skipLogin": "アカウントなしで使用",
+    "localModeHint": "データはローカルに保存されます。後でサインインして同期できます。",
+    "localModeTitle": "ローカルモード",
+    "localModeFeatureComingSoon": "オフライン機能は近日公開",
+    "localModeFeatureDesc": "サインインしてクラウド同期、復習スケジュールなどを利用できます。ローカルストレージのサポートは開発中です。",
+    "signInNow": "今すぐサインイン"
   },
   "home": {
     "systemReady": "システム準備完了",
@@ -412,5 +418,42 @@
       "desc": "今すぐ FolioNote に参加して、個人知識システムを構築しましょう。",
       "getStarted": "開始する"
     }
+  },
+  "sync": {
+    "syncing": "同期中...",
+    "synced": "同期済み",
+    "offline": "オフライン",
+    "error": "同期エラー",
+    "conflict": "競合",
+    "conflictCount_one": "{{count}} 件の競合",
+    "conflictCount_other": "{{count}} 件の競合",
+    "pending": "{{count}} 件保留中",
+    "pending_one": "{{count}} 件保留中",
+    "pending_other": "{{count}} 件保留中",
+    "pendingCount_one": "{{count}} 件の変更が保留中",
+    "pendingCount_other": "{{count}} 件の変更が保留中",
+    "lastSyncAt": "最終同期 {{time}}",
+    "neverSynced": "同期されていません",
+    "syncNow": "今すぐ同期",
+    "uploadingData": "ローカルデータをアップロード中...",
+    "downloadingData": "データをダウンロード中...",
+    "resolvingConflicts": "競合を解決中...",
+    "syncComplete": "同期完了",
+    "syncFailed": "同期失敗",
+    "conflictResolution": "競合の解決",
+    "keepLocal": "ローカル版を保持",
+    "keepRemote": "サーバー版を保持",
+    "resolveManually": "手動で解決",
+    "localVersion": "ローカル版",
+    "remoteVersion": "サーバー版",
+    "modifiedAt": "{{time}} に変更",
+    "conflictDescription": "この項目はローカルとサーバーの両方で変更されました。",
+    "offlineBanner": "オフラインです。オンラインに戻ると変更が同期されます。",
+    "pendingChanges": "{{count}} 件の変更が同期待ちです。",
+    "syncOnLogin": "ログイン後にローカルデータが同期されます。",
+    "uploadComplete_one": "{{count}} 件アップロード完了",
+    "uploadComplete_other": "{{count}} 件アップロード完了",
+    "downloadComplete_one": "{{count}} 件ダウンロード完了",
+    "downloadComplete_other": "{{count}} 件ダウンロード完了"
   }
 }

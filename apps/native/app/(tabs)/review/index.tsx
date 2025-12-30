@@ -1,11 +1,10 @@
 import {
 	Cancel01Icon,
 	CheckmarkCircle02Icon,
-	LockIcon,
 	PlayIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, useThemeColor } from 'heroui-native'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,8 +19,7 @@ import { Container } from '@/components/container'
 import { ReviewCard } from '@/components/review-card'
 import { ReviewRatingButtons } from '@/components/review-rating-buttons'
 import { ReviewRuleCard } from '@/components/review-rule-card'
-import { authClient } from '@/lib/auth-client'
-import { client, orpc, queryClient } from '@/utils/orpc'
+import { useDataServiceContext } from '@/contexts/data-service-context'
 import { getTzOffset } from '@/utils/time'
 
 type ReviewRule = 'due' | 'new' | 'starred' | 'unreviewed' | 'all'
@@ -115,13 +113,13 @@ function ReviewCompletedView({
 
 export default function ReviewScreen() {
 	const { t } = useTranslation()
-	const { data: session } = authClient.useSession()
+	const { dataService, isMigrating } = useDataServiceContext()
+	const queryClient = useQueryClient()
 	const [currentRule, setCurrentRule] = useState<ReviewRule>('due')
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isReviewing, setIsReviewing] = useState(false)
 
 	const accentColor = useThemeColor('accent')
-	const mutedColor = useThemeColor('muted')
 
 	const {
 		data: queueData,
@@ -129,15 +127,25 @@ export default function ReviewScreen() {
 		refetch,
 		isRefetching,
 	} = useQuery({
-		...orpc.review.getQueue.queryOptions({
-			input: { rule: currentRule, limit: 50, tzOffset: getTzOffset() },
-		}),
-		enabled: !!session?.user,
+		queryKey: ['review', 'queue', currentRule],
+		queryFn: async () => {
+			if (!dataService) return { items: [], reviewedTodayCount: 0 }
+			const items = await dataService.review.getQueue({
+				mode: currentRule,
+				limit: 50,
+				tzOffset: getTzOffset(),
+			})
+			const todayStats = await dataService.review.getTodayStats(getTzOffset())
+			return { items, reviewedTodayCount: todayStats.reviewedToday }
+		},
+		enabled: !!dataService,
 	})
 
 	const markReviewedMutation = useMutation({
-		mutationFn: ({ entryId, rating }: { entryId: string; rating: Rating }) =>
-			client.review.markReviewed({ entryId, rating }),
+		mutationFn: ({ entryId, rating }: { entryId: string; rating: Rating }) => {
+			if (!dataService) throw new Error('DataService not available')
+			return dataService.review.markReviewed(entryId, rating)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['review'] })
 			setCurrentIndex((prev) => prev + 1)
@@ -171,18 +179,8 @@ export default function ReviewScreen() {
 		setIsReviewing(false)
 	}, [])
 
-	if (!session?.user) {
-		return (
-			<Container className="flex-1 items-center justify-center p-6">
-				<HugeiconsIcon color={mutedColor} icon={LockIcon} size={64} />
-				<Text className="mt-4 text-center text-lg text-muted">
-					{t('error.unauthorized')}
-				</Text>
-			</Container>
-		)
-	}
-
-	if (isLoading) {
+	// Show loading while migrating or loading data
+	if (isMigrating || isLoading || !dataService) {
 		return (
 			<Container className="flex-1 items-center justify-center">
 				<ActivityIndicator color={accentColor} size="large" />

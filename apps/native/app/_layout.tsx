@@ -16,6 +16,8 @@ import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppThemeProvider } from '@/contexts/app-theme-context'
+import { DataServiceProvider } from '@/contexts/data-service-context'
+import { LocalModeProvider, useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { i18n } from '@/lib/i18n'
 
@@ -30,13 +32,18 @@ export const unstable_settings = {
  * Uses Stack.Protected for declarative route guarding (SDK 53+)
  * - Automatically handles deep link protection
  * - Navigates automatically when auth state changes
+ * - Supports local mode (skip login) for offline-first usage
  */
 function StackLayout() {
-	const { data: session, isPending } = authClient.useSession()
-	const isAuthenticated = !!session?.user
+	const { data: session, isPending: isAuthPending } = authClient.useSession()
+	const { isLocalMode, isLoading: isLocalModeLoading } = useLocalMode()
 
-	// Show loading while checking auth state
-	if (isPending) {
+	const isAuthenticated = !!session?.user
+	// User can access protected routes if authenticated OR in local mode
+	const canAccessApp = isAuthenticated || isLocalMode
+
+	// Show loading while checking auth state or local mode state
+	if (isAuthPending || isLocalModeLoading) {
 		return (
 			<View className="flex-1 items-center justify-center bg-background">
 				<ActivityIndicator size="large" />
@@ -46,8 +53,8 @@ function StackLayout() {
 
 	return (
 		<Stack screenOptions={{}}>
-			{/* Protected routes for authenticated users */}
-			<Stack.Protected guard={isAuthenticated}>
+			{/* Protected routes for authenticated users or local mode */}
+			<Stack.Protected guard={canAccessApp}>
 				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 				<Stack.Screen
 					name="modal"
@@ -55,8 +62,8 @@ function StackLayout() {
 				/>
 			</Stack.Protected>
 
-			{/* Protected routes for unauthenticated users */}
-			<Stack.Protected guard={!isAuthenticated}>
+			{/* Protected routes for unauthenticated users (not in local mode) */}
+			<Stack.Protected guard={!canAccessApp}>
 				<Stack.Screen name="(auth)" options={{ headerShown: false }} />
 			</Stack.Protected>
 		</Stack>
@@ -81,9 +88,13 @@ export default function Layout() {
 				<GestureHandlerRootView style={{ flex: 1 }}>
 					<KeyboardProvider>
 						<AppThemeProvider>
-							<HeroUINativeProvider>
-								<StackLayout />
-							</HeroUINativeProvider>
+							<LocalModeProvider>
+								<DataServiceProvider>
+									<HeroUINativeProvider>
+										<StackLayout />
+									</HeroUINativeProvider>
+								</DataServiceProvider>
+							</LocalModeProvider>
 						</AppThemeProvider>
 					</KeyboardProvider>
 				</GestureHandlerRootView>

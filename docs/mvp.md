@@ -426,33 +426,68 @@ Done: 实现了 iOS 端完整功能闭环（C1 + C2 部分），包括认证、�
 
 #### E1. Skip Login 流程
 
-* [ ] 启动页/登录页增加「跳过登录」或「本地模式」入口
-* [ ] 跳过后进入完整 App 功能（Inbox、复习、条目编辑等）
-* [ ] 本地存储用户偏好（是否跳过登录、本地 userId 标识）
+* [x] 启动页/登录页增加「跳过登录」或「本地模式」入口
+* [x] 跳过后进入完整 App 功能（Inbox、复习、条目编辑等）
+* [x] 本地存储用户偏好（是否跳过登录、本地 userId 标识）
+
+Done: 实现了 Skip Login 功能：
+
+1. **LocalModeContext**：创建 `contexts/local-mode-context.tsx`，使用 SecureStore 持久化存储本地模式状态和本地用户 ID
+2. **Onboarding 页面**：在登录/注册按钮下方添加「无需账号使用」按钮，点击后启用本地模式
+3. **路由守卫**：更新 `_layout.tsx`，支持 `isAuthenticated || isLocalMode` 双重判断，本地模式用户可访问 App
+4. **本地模式占位符**：创建 `LocalModePlaceholder` 组件，在需要认证的页面（Inbox、Today、Review）显示友好提示
+5. **首页本地模式横幅**：在 Home 页面显示本地模式状态和登录入口
+6. **国际化**：添加 `onboarding.skipLogin`、`localModeHint`、`localModeTitle`、`localModeFeatureComingSoon`、`localModeFeatureDesc`、`signInNow` 翻译 key（中英文）
+
+注意：E1 完成了 Skip Login 流程的基础架构。完整的离线功能（本地数据存储和操作）需要 E2（SQLite 本地存储）的实现。
 
 #### E2. SQLite 本地存储
 
-* [ ] 集成 `expo-sqlite` 或 `@op-engineering/op-sqlite`
-* [ ] 本地 Schema 设计（与服务端 Schema 保持一致结构）
-  * [ ] entries（含 contentJson、contentText）
-  * [ ] tags + entry_tags
-  * [ ] sources + entry_sources
-  * [ ] entry_review_state + review_events
-* [ ] 本地 CRUD 操作封装（Repository 层）
-* [ ] 数据访问层抽象：根据登录状态切换 Remote API / Local SQLite
+* [x] 集成 `expo-sqlite` 或 `@op-engineering/op-sqlite` (可参考 <https://orm.drizzle.team/docs/get-started/expo-new> 文档)
+* [x] 本地 Schema 设计（与服务端 Schema 保持一致结构）
+  * [x] entries（含 contentJson、contentText）
+  * [x] tags + entry_tags
+  * [x] sources + entry_sources
+  * [x] entry_review_state + review_events
+* [x] 本地 CRUD 操作封装（Repository 层）
+* [x] 数据访问层抽象：根据登录状态切换 Remote API / Local SQLite
+
+Done: 实现了完整的 SQLite 本地存储功能：
+
+1. **数据库集成**：使用 `expo-sqlite` + `drizzle-orm` 实现本地数据库，支持 Live Queries
+2. **本地 Schema**：在 `lib/db/schema.ts` 定义了与服务端一致的 SQLite 表结构，包含 `syncStatus` 和 `lastSyncedAt` 字段用于未来同步
+3. **Repository 层**：实现了四个 Repository（entries、tags、sources、review），封装完整的 CRUD 操作
+4. **数据访问抽象**：创建 `DataService` 接口和 `DataServiceContext`，根据认证状态自动切换 Remote API / Local SQLite
+5. **SM-2 算法**：本地实现了弱化版 SM-2 间隔复习算法，支持 again/hard/good/easy 四档评分
 
 #### E3. 数据同步策略（登录后）
 
-* [ ] 用户登录后触发本地数据上传
-* [ ] 冲突处理策略（最简：以本地为准 / 以服务端为准 / 提示用户选择）
-* [ ] 同步状态指示（同步中 / 已同步 / 冲突）
-* [ ] 增量同步（基于 updatedAt 或 version）
+* [x] 用户登录后触发本地数据上传
+* [x] 冲突处理策略（最简：以本地为准 / 以服务端为准 / 提示用户选择）
+* [x] 同步状态指示（同步中 / 已同步 / 冲突）
+* [x] 增量同步（基于 updatedAt 或 version）
+
+Done: 实现了完整的数据同步策略：
+
+1. **SyncService 核心模块**：创建 `lib/sync/sync-service.ts`，实现双向同步、冲突检测和解决
+2. **登录后自动同步**：在 `SyncContext` 中监听认证状态变化，用户登录后自动触发 `uploadAllLocalData`
+3. **冲突处理策略**：支持三种策略 - `local`（本地优先）、`remote`（服务端优先）、`manual`（用户手动选择）
+4. **同步状态指示**：创建 `SyncStatusIndicator` 和 `SyncStatusBadge` 组件，显示同步中/已同步/冲突/离线状态
+5. **增量同步**：基于 `lastSyncAt` 时间戳和 `syncStatus` 字段实现增量同步
 
 #### E4. 离线优先体验
 
-* [ ] 网络不可用时自动切换为本地模式
-* [ ] 操作队列（Pending Operations）：离线时记录操作，联网后批量同步
-* [ ] 乐观更新：操作立即生效，后台同步
+* [x] 网络不可用时自动切换为本地模式
+* [x] 操作队列（Pending Operations）：离线时记录操作，联网后批量同步
+* [x] 乐观更新：操作立即生效，后台同步
+
+Done: 实现了完整的离线优先体验：
+
+1. **网络状态检测**：创建 `useNetworkState` 和 `useIsOnline` hooks，使用 `expo-network` 监控网络状态
+2. **自动切换本地模式**：`DataServiceContext` 根据网络状态自动选择 `OfflineFirstDataService` 或 `RemoteDataService`
+3. **操作队列**：创建 `lib/sync/pending-operations.ts`，使用 SecureStore 持久化存储待同步操作
+4. **乐观更新**：`OfflineFirstDataService` 先执行本地操作，再异步同步到服务器，失败时操作仍保留在队列
+5. **智能操作合并**：同一实体的多次操作会智能合并（如 create+update=create，create+delete=移除）
 
 验收标准：
 
@@ -464,21 +499,21 @@ Done: 实现了 iOS 端完整功能闭环（C1 + C2 部分），包括认证、�
 
 ### 🔜 Iteration 2：iOS 分享扩展（优先级：中）
 
-* [ ] iOS Share Extension 接收文本/URL
+* [ ] iOS Share Extension 接收文本/URL (with expo-sharing)
 * [ ] 写入本地 SQLite（或调用 API）
 * [ ] 去重策略（URL 相同时提示或合并）
 
 ---
 
-### 🔜 Iteration 3：第三方登录（优先级：中）
+### 🔜 Iteration 3：第三方登录（优先级：低）暂不考虑
 
-* [ ] Web 端：Google、Github OAuth
+* [ ] Web 端：Google（已支持）、Github OAuth(暂不)
 * [ ] iOS 端：Google、Apple Sign In
 * [ ] 账号关联（已有邮箱账号关联 OAuth）
 
 ---
 
-### 🔮 Iteration 4：高级搜索（优先级：低）
+### 🔮 Iteration 4：高级搜索（优先级：中）
 
 * [ ] Postgres 全文搜索（FTS）
 * [ ] 搜索过滤器（按标签、来源、时间范围）

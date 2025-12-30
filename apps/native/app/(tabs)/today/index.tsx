@@ -1,22 +1,20 @@
-import { LockIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useThemeColor } from 'heroui-native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Text } from 'react-native'
+import { ActivityIndicator } from 'react-native'
 import { Container } from '@/components/container'
 import { TodayContent } from '@/components/today-content'
+import { useDataServiceContext } from '@/contexts/data-service-context'
 import { authClient } from '@/lib/auth-client'
-import { orpc } from '@/utils/orpc'
 import { getTzOffset } from '@/utils/time'
 
 export default function TodayScreen() {
 	const { t } = useTranslation()
 	const { data: session } = authClient.useSession()
+	const { dataService, isMigrating } = useDataServiceContext()
 	const accentColor = useThemeColor('accent')
-	const mutedColor = useThemeColor('muted')
 
 	const {
 		data: todayStats,
@@ -24,10 +22,9 @@ export default function TodayScreen() {
 		refetch: refetchTodayStats,
 		isRefetching: isRefetchingTodayStats,
 	} = useQuery({
-		...orpc.review.getTodayStats.queryOptions({
-			input: { tzOffset: getTzOffset() },
-		}),
-		enabled: !!session?.user,
+		queryKey: ['review', 'todayStats'],
+		queryFn: () => dataService?.review.getTodayStats(getTzOffset()),
+		enabled: !!dataService,
 	})
 
 	const {
@@ -36,10 +33,9 @@ export default function TodayScreen() {
 		refetch: refetchDueStats,
 		isRefetching: isRefetchingDueStats,
 	} = useQuery({
-		...orpc.review.getDueStats.queryOptions({
-			input: { tzOffset: getTzOffset() },
-		}),
-		enabled: !!session?.user,
+		queryKey: ['review', 'dueStats'],
+		queryFn: () => dataService?.review.getDueStats(getTzOffset()),
+		enabled: !!dataService,
 	})
 
 	const handleRefresh = useCallback(() => {
@@ -51,18 +47,9 @@ export default function TodayScreen() {
 		router.push('/review' as never)
 	}, [])
 
-	if (!session?.user) {
-		return (
-			<Container className="flex-1 items-center justify-center p-6">
-				<HugeiconsIcon color={mutedColor} icon={LockIcon} size={64} />
-				<Text className="mt-4 text-center text-lg text-muted">
-					{t('error.unauthorized')}
-				</Text>
-			</Container>
-		)
-	}
-
-	const isLoading = isLoadingTodayStats || isLoadingDueStats
+	// Show loading while migrating or loading data
+	const isLoading =
+		isMigrating || isLoadingTodayStats || isLoadingDueStats || !dataService
 	if (isLoading) {
 		return (
 			<Container className="flex-1 items-center justify-center">
@@ -72,7 +59,7 @@ export default function TodayScreen() {
 	}
 
 	const isRefetching = isRefetchingTodayStats || isRefetchingDueStats
-	const userName = session.user.name?.split(' ')[0] ?? t('common.other')
+	const userName = session?.user?.name?.split(' ')[0] ?? t('common.other')
 
 	return (
 		<Container className="flex-1">

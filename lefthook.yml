@@ -10,6 +10,10 @@ pre-commit:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: pnpm exec ultracite check {staged_files}
       stage_fixed: true
+    type-check:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm run check-types
+      stage_fixed: true
 
 commit-msg:
   commands:
