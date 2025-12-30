@@ -16,6 +16,7 @@ import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppThemeProvider } from '@/contexts/app-theme-context'
+import { DataServiceProvider } from '@/contexts/data-service-context'
 import { LocalModeProvider, useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { i18n } from '@/lib/i18n'
@@ -88,9 +89,11 @@ export default function Layout() {
 					<KeyboardProvider>
 						<AppThemeProvider>
 							<LocalModeProvider>
-								<HeroUINativeProvider>
-									<StackLayout />
-								</HeroUINativeProvider>
+								<DataServiceProvider>
+									<HeroUINativeProvider>
+										<StackLayout />
+									</HeroUINativeProvider>
+								</DataServiceProvider>
 							</LocalModeProvider>
 						</AppThemeProvider>
 					</KeyboardProvider>

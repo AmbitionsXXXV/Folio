@@ -443,14 +443,22 @@ Done: 实现了 Skip Login 功能：
 
 #### E2. SQLite 本地存储
 
-* [ ] 集成 `expo-sqlite` 或 `@op-engineering/op-sqlite`
-* [ ] 本地 Schema 设计（与服务端 Schema 保持一致结构）
-  * [ ] entries（含 contentJson、contentText）
-  * [ ] tags + entry_tags
-  * [ ] sources + entry_sources
-  * [ ] entry_review_state + review_events
-* [ ] 本地 CRUD 操作封装（Repository 层）
-* [ ] 数据访问层抽象：根据登录状态切换 Remote API / Local SQLite
+* [x] 集成 `expo-sqlite` 或 `@op-engineering/op-sqlite` (可参考 <https://orm.drizzle.team/docs/get-started/expo-new> 文档)
+* [x] 本地 Schema 设计（与服务端 Schema 保持一致结构）
+  * [x] entries（含 contentJson、contentText）
+  * [x] tags + entry_tags
+  * [x] sources + entry_sources
+  * [x] entry_review_state + review_events
+* [x] 本地 CRUD 操作封装（Repository 层）
+* [x] 数据访问层抽象：根据登录状态切换 Remote API / Local SQLite
+
+Done: 实现了完整的 SQLite 本地存储功能：
+
+1. **数据库集成**：使用 `expo-sqlite` + `drizzle-orm` 实现本地数据库，支持 Live Queries
+2. **本地 Schema**：在 `lib/db/schema.ts` 定义了与服务端一致的 SQLite 表结构，包含 `syncStatus` 和 `lastSyncedAt` 字段用于未来同步
+3. **Repository 层**：实现了四个 Repository（entries、tags、sources、review），封装完整的 CRUD 操作
+4. **数据访问抽象**：创建 `DataService` 接口和 `DataServiceContext`，根据认证状态自动切换 Remote API / Local SQLite
+5. **SM-2 算法**：本地实现了弱化版 SM-2 间隔复习算法，支持 again/hard/good/easy 四档评分
 
 #### E3. 数据同步策略（登录后）
 

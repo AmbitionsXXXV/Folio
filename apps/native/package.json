@@ -9,7 +9,10 @@
     "ios": "expo run:ios",
     "prebuild": "expo prebuild",
     "prebuild:clean": "expo prebuild --clean",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
@@ -34,6 +37,7 @@
     "@tiptap/starter-kit": "^3.14.0",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
     "expo": "^54.0.30",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.10",
@@ -51,6 +55,7 @@
     "expo-router": "~6.0.21",
     "expo-secure-store": "~15.0.7",
     "expo-sharing": "~14.0.8",
+    "expo-sqlite": "^16.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-web-browser": "~15.0.10",
     "heroui-native": "1.0.0-beta.9",
@@ -78,6 +83,8 @@
     "@folionote/config": "workspace:*",
     "@types/node": "^24.10.0",
     "@types/react": "~19.1.0",
+    "babel-plugin-inline-import": "^3.0.0",
+    "drizzle-kit": "catalog:",
     "typescript": "catalog:"
   },
   "private": true

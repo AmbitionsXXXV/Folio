@@ -75,6 +75,14 @@ export default function InboxScreen() {
 		enabled: !!session?.user,
 	})
 
+	// Create entry mutation - must be called before any early returns
+	const createEntryMutation = useMutation({
+		mutationFn: (title: string) => client.entries.create({ title, isInbox: true }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['entries', 'list'] })
+		},
+	})
+
 	// Show local mode placeholder for unauthenticated users in local mode
 	if (!session?.user && isLocalMode) {
 		return <LocalModePlaceholder />
@@ -84,14 +92,6 @@ export default function InboxScreen() {
 	if (!session?.user) {
 		return <LocalModePlaceholder />
 	}
-
-	// Create entry mutation
-	const createEntryMutation = useMutation({
-		mutationFn: (title: string) => client.entries.create({ title, isInbox: true }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['entries', 'list'] })
-		},
-	})
 
 	const handleCapture = (text: string) => {
 		createEntryMutation.mutate(text)

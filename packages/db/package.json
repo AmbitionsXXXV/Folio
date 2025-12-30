@@ -29,13 +29,13 @@
   "devDependencies": {
     "@folionote/config": "workspace:*",
     "@types/pg": "^8.15.6",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "catalog:",
     "supabase": "^2.70.5",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "catalog:",
     "pg": "^8.16.3",
     "dotenv": "catalog:",
     "zod": "catalog:"
