@@ -2,6 +2,7 @@ import type { ExpoConfig } from 'expo/config'
 import pkg from './package.json'
 
 const config: ExpoConfig = {
+	owner: 'etcetera',
 	scheme: 'folio-note',
 	userInterfaceStyle: 'automatic',
 	orientation: 'default',
@@ -39,12 +40,12 @@ const config: ExpoConfig = {
 	},
 	updates: {
 		enabled: true,
-		url: 'https://u.expo.dev/c556a12d-ec22-44e6-950b-3fb286b4252f',
+		url: 'https://u.expo.dev/4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1',
 	},
 	extra: {
 		router: {},
 		eas: {
-			projectId: 'c556a12d-ec22-44e6-950b-3fb286b4252f',
+			projectId: '4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1',
 		},
 	},
 }
