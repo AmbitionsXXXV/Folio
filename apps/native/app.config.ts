@@ -48,6 +48,9 @@ const config: ExpoConfig = {
 			projectId: '4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1',
 		},
 	},
+	runtimeVersion: {
+		policy: 'appVersion',
+	},
 }
 
 export default config
