@@ -3,7 +3,7 @@ import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import { LanguageSkillIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics'
-import { useThemeColor } from 'heroui-native'
+import { cn, useThemeColor } from 'heroui-native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, Platform, Pressable, Text } from 'react-native'
@@ -12,9 +12,6 @@ export function SettingsButton() {
 	const { t, i18n } = useTranslation()
 	const [visible, setVisible] = useState(false)
 	const foregroundColor = useThemeColor('foreground')
-	const backgroundColor = useThemeColor('background')
-	const surfaceColor = useThemeColor('surface')
-	const accentColor = useThemeColor('accent')
 
 	const currentLanguage = i18n.language as SupportedLanguage
 
@@ -51,26 +48,21 @@ export function SettingsButton() {
 					onPress={() => setVisible(false)}
 				>
 					<Pressable
-						className="mx-6 w-72 rounded-2xl p-4"
+						className="mx-6 w-72 rounded-2xl bg-surface p-4"
 						onPress={(e) => e.stopPropagation()}
-						style={{ backgroundColor: surfaceColor }}
 					>
-						<Text
-							className="mb-4 text-center font-semibold text-lg"
-							style={{ color: foregroundColor }}
-						>
+						<Text className="mb-4 text-center font-semibold text-foreground text-lg">
 							{t('common.language')}
 						</Text>
 
 						{supportedLanguages.map((lang) => (
 							<Pressable
-								className="flex-row items-center justify-between rounded-xl px-4 py-3"
+								className={cn(
+									'flex-row items-center justify-between rounded-xl px-4 py-3',
+									currentLanguage === lang ? 'bg-accent' : 'bg-transparent'
+								)}
 								key={lang}
 								onPress={() => handleLanguageChange(lang)}
-								style={{
-									backgroundColor:
-										currentLanguage === lang ? accentColor : 'transparent',
-								}}
 							>
 								<Text
 									className="text-base"
@@ -92,9 +84,8 @@ export function SettingsButton() {
 						))}
 
 						<Pressable
-							className="mt-4 items-center rounded-xl py-3"
+							className="mt-4 items-center rounded-xl bg-background py-3"
 							onPress={() => setVisible(false)}
-							style={{ backgroundColor }}
 						>
 							<Text className="font-medium" style={{ color: foregroundColor }}>
 								{t('common.close')}

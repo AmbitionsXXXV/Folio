@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements'
 import { useForm } from '@tanstack/react-form'
 import { router } from 'expo-router'
 import { Button, TextField } from 'heroui-native'
@@ -14,17 +15,32 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { z } from 'zod'
 import { Container } from '@/components/container'
 import { authClient } from '@/lib/auth-client'
+import { prettifyFormErrors } from '@/utils/form-error'
 import { queryClient } from '@/utils/orpc'
+
+// 声明 Expo/React Native 的全局 __DEV__ 变量
+declare const __DEV__: boolean
 
 export default function SignInScreen() {
 	const { t } = useTranslation()
 	const insets = useSafeAreaInsets()
+	const headerHeight = useHeaderHeight()
+	console.log('headerHeight', headerHeight)
 	const [submitError, setSubmitError] = useState<string | null>(null)
+
+	// 创建带有国际化错误消息的 schema
+	const signInSchema = z.object({
+		email: z.email(t('auth.invalidEmail')),
+		password: z.string().min(1, t('auth.passwordRequired')),
+	})
 
 	const form = useForm({
 		defaultValues: {
 			email: '',
 			password: '',
+		},
+		validators: {
+			onSubmit: signInSchema,
 		},
 		onSubmit: async ({ value }) => {
 			setSubmitError(null)
@@ -36,7 +52,10 @@ export default function SignInScreen() {
 				},
 				{
 					onError(signInError) {
-						console.log(signInError)
+						// 使用 prettifyError 格式化日志输出
+						if (__DEV__) {
+							console.warn('[SignIn] Auth error:', signInError.error?.message)
+						}
 						setSubmitError(signInError.error?.message || t('auth.signInFailed'))
 					},
 					onSuccess() {
@@ -47,6 +66,22 @@ export default function SignInScreen() {
 				}
 			)
 		},
+		onSubmitInvalid: ({ formApi }) => {
+			// 表单验证失败时，记录格式化的错误日志
+			if (__DEV__) {
+				const errors = formApi.state.errors
+				if (errors.length > 0) {
+					console.warn('[SignIn] Form validation failed:')
+					for (const error of errors) {
+						if (error && typeof error === 'object' && 'issues' in error) {
+							// 使用 prettifyError 格式化输出
+							console.warn(prettifyFormErrors(error as unknown as z.ZodError))
+							break
+						}
+					}
+				}
+			}
+		},
 	})
 
 	const navigateToSignUp = useCallback(() => {
@@ -54,14 +89,22 @@ export default function SignInScreen() {
 	}, [])
 
 	return (
-		<Container className="flex-1" disableBottomInset disableTopInset>
+		<Container
+			className="flex-1"
+			disableBottomInset
+			disableContentInsetAdjustment
+			disableTopInset
+		>
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				className="flex-1"
 			>
-				<View className="flex-1 px-6" style={{ paddingBottom: insets.bottom + 16 }}>
+				<View
+					className="flex-1 px-6"
+					style={{ paddingBottom: insets.bottom, paddingTop: headerHeight }}
+				>
 					{/* Form */}
-					<View className="flex-1 pt-4">
+					<View className="flex-1 pt-2">
 						{/* Welcome Text */}
 						<Text className="mb-2 font-semibold text-foreground text-xl">
 							{t('auth.welcomeBack')}
@@ -79,31 +122,39 @@ export default function SignInScreen() {
 						<form.Field
 							name="email"
 							validators={{
-								onBlur: z.email(),
+								onBlur: z.email(t('auth.invalidEmail')),
 							}}
 						>
-							{(field) => (
-								<TextField
-									className="mb-4"
-									isInvalid={
-										field.state.meta.isTouched && field.state.meta.errors.length > 0
-									}
-								>
-									<TextField.Label>{t('auth.email')}</TextField.Label>
-									<TextField.Input
-										autoCapitalize="none"
-										autoComplete="email"
-										keyboardType="email-address"
-										onBlur={field.handleBlur}
-										onChangeText={field.handleChange}
-										placeholder={t('auth.emailPlaceholder')}
-										value={field.state.value}
-									/>
-									<TextField.ErrorMessage>
-										{field.state.meta.errors[0]?.message}
-									</TextField.ErrorMessage>
-								</TextField>
-							)}
+							{(field) => {
+								// 提取第一个错误消息，支持 Zod v4 的 flattenError 格式
+								const errorMessage = field.state.meta.errors[0]
+								const displayError =
+									typeof errorMessage === 'string'
+										? errorMessage
+										: errorMessage?.message
+
+								return (
+									<TextField
+										className="mb-4"
+										isInvalid={
+											field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0
+										}
+									>
+										<TextField.Label>{t('auth.email')}</TextField.Label>
+										<TextField.Input
+											autoCapitalize="none"
+											autoComplete="email"
+											keyboardType="email-address"
+											onBlur={field.handleBlur}
+											onChangeText={field.handleChange}
+											placeholder={t('auth.emailPlaceholder')}
+											value={field.state.value}
+										/>
+										<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+									</TextField>
+								)
+							}}
 						</form.Field>
 
 						{/* Password Input */}
@@ -113,30 +164,36 @@ export default function SignInScreen() {
 								onBlur: z.string().min(1, t('auth.passwordRequired')),
 							}}
 						>
-							{(field) => (
-								<TextField
-									className="mb-6"
-									isInvalid={
-										field.state.meta.isTouched && field.state.meta.errors.length > 0
-									}
-								>
-									<TextField.Label>{t('auth.password')}</TextField.Label>
-									<TextField.Input
-										autoCapitalize="none"
-										autoComplete="password"
-										onBlur={field.handleBlur}
-										onChangeText={field.handleChange}
-										onSubmitEditing={() => form.handleSubmit()}
-										placeholder={t('auth.passwordPlaceholder')}
-										returnKeyType="done"
-										secureTextEntry
-										value={field.state.value}
-									/>
-									<TextField.ErrorMessage>
-										{field.state.meta.errors[0]?.message}
-									</TextField.ErrorMessage>
-								</TextField>
-							)}
+							{(field) => {
+								const errorMessage = field.state.meta.errors[0]
+								const displayError =
+									typeof errorMessage === 'string'
+										? errorMessage
+										: errorMessage?.message
+
+								return (
+									<TextField
+										isInvalid={
+											field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0
+										}
+									>
+										<TextField.Label>{t('auth.password')}</TextField.Label>
+										<TextField.Input
+											autoCapitalize="none"
+											autoComplete="password"
+											onBlur={field.handleBlur}
+											onChangeText={field.handleChange}
+											onSubmitEditing={() => form.handleSubmit()}
+											placeholder={t('auth.passwordPlaceholder')}
+											returnKeyType="done"
+											secureTextEntry
+											value={field.state.value}
+										/>
+										<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+									</TextField>
+								)
+							}}
 						</form.Field>
 					</View>
 
@@ -165,7 +222,7 @@ export default function SignInScreen() {
 						<View className="flex-row items-center justify-center">
 							<Text className="text-muted">{t('auth.noAccount')} </Text>
 							<Button onPress={navigateToSignUp} size="sm" variant="ghost">
-								{t('auth.signUp')}
+								<Text className="text-accent">{t('auth.signUp')}</Text>
 							</Button>
 						</View>
 					</View>

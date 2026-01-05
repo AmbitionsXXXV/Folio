@@ -1,4 +1,4 @@
-import { cn, useThemeColor } from 'heroui-native'
+import { cn } from 'heroui-native'
 import type { PropsWithChildren } from 'react'
 import { Platform, ScrollView, View, type ViewProps } from 'react-native'
 import Animated, { type AnimatedProps } from 'react-native-reanimated'
@@ -8,21 +8,23 @@ const AnimatedView = Animated.createAnimatedComponent(View)
 
 type Props = AnimatedProps<ViewProps> & {
 	className?: string
-	/**
-	 * When true, disables the internal ScrollView.
-	 * Use this when the container contains a FlatList or other VirtualizedList.
-	 */
 	disableScroll?: boolean
-	/**
-	 * When true, disables the top safe area padding.
-	 * Use this when the screen has a transparent header that handles its own insets.
-	 */
 	disableTopInset?: boolean
-	/**
-	 * When true, disables the bottom safe area padding.
-	 * Use this when the screen has a transparent header that handles its own insets.
-	 */
 	disableBottomInset?: boolean
+	/**
+	 * When true, disables automatic content inset adjustment for transparent headers.
+	 * Use this for pages that don't need extra space for transparent navigation bars.
+	 */
+	disableContentInsetAdjustment?: boolean
+}
+
+function getContentInsetAdjustmentBehavior(
+	disableContentInsetAdjustment: boolean
+): 'never' | 'automatic' | undefined {
+	if (Platform.OS !== 'ios') {
+		return undefined
+	}
+	return disableContentInsetAdjustment ? 'never' : 'automatic'
 }
 
 export function Container({
@@ -31,16 +33,15 @@ export function Container({
 	disableScroll = false,
 	disableTopInset = false,
 	disableBottomInset = false,
+	disableContentInsetAdjustment = false,
 	...props
 }: PropsWithChildren<Props>) {
 	const insets = useSafeAreaInsets()
-	const backgroundColor = useThemeColor('background')
 
 	return (
 		<AnimatedView
-			className={cn('flex-1', className)}
+			className={cn('flex-1 bg-background', className)}
 			style={{
-				backgroundColor,
 				paddingBottom: disableBottomInset ? 0 : insets.bottom,
 				paddingTop: disableTopInset ? 0 : insets.top,
 			}}
@@ -51,10 +52,9 @@ export function Container({
 			) : (
 				<ScrollView
 					contentContainerStyle={{ flexGrow: 1 }}
-					// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
-					contentInsetAdjustmentBehavior={
-						Platform.OS === 'ios' ? 'automatic' : undefined
-					}
+					contentInsetAdjustmentBehavior={getContentInsetAdjustmentBehavior(
+						disableContentInsetAdjustment
+					)}
 				>
 					{children}
 				</ScrollView>

@@ -3,6 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { DynamicColorIOS, Platform } from 'react-native'
 
 /**
+ * Router settings for NativeTabs
+ * - initialRouteName: 'home' ensures deep links can navigate back to home tab
+ */
+export const unstable_settings = {
+	initialRouteName: 'home',
+}
+
+/**
  * Native Tabs Layout with iOS 26 Liquid Glass support
  *
  * Features:
@@ -35,7 +43,7 @@ export default function TabLayout() {
 			}}
 			tintColor={dynamicTintColor}
 		>
-			<NativeTabs.Trigger name="index">
+			<NativeTabs.Trigger name="home">
 				<Label>{t('nav.home')}</Label>
 				{/* SF Symbols: house / house.fill for iOS */}
 				<Icon drawable="ic_home" sf={{ default: 'house', selected: 'house.fill' }} />

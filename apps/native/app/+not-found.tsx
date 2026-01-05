@@ -17,7 +17,7 @@ export default function NotFoundScreen() {
 						<Card.Description className="mb-6 text-center">
 							Sorry, the page you're looking for doesn't exist.
 						</Card.Description>
-						<Link asChild href="/(tabs)/index">
+						<Link asChild href="/(tabs)/home">
 							<Button className="bg-accent active:opacity-70">
 								<Text className="font-medium text-accent-foreground text-base">
 									Go to Home

@@ -14,7 +14,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react-native'
 import { HugeiconsIcon } from '@hugeicons/react-native'
-import { cn } from 'heroui-native'
+import { cn, useThemeColor } from 'heroui-native'
 import { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Pressable, Text, View } from 'react-native'
@@ -42,6 +42,13 @@ export function SyncStatusIndicator({
 }: SyncStatusIndicatorProps) {
 	const { t } = useTranslation()
 	const { syncState, isOnline, metadata, conflicts, sync } = useSync()
+
+	// Theme colors
+	const mutedColor = useThemeColor('muted')
+	const accentColor = useThemeColor('accent')
+	const warningColor = useThemeColor('warning')
+	const dangerColor = useThemeColor('danger')
+	const successColor = useThemeColor('success')
 
 	const rotateAnim = useRef(new Animated.Value(0)).current
 
@@ -82,7 +89,7 @@ export function SyncStatusIndicator({
 		if (!isOnline) {
 			return {
 				icon: WifiDisconnected01Icon,
-				color: '#9CA3AF', // gray-400
+				color: mutedColor,
 				label: t('sync.offline'),
 			}
 		}
@@ -90,7 +97,7 @@ export function SyncStatusIndicator({
 		if (syncState === 'syncing') {
 			return {
 				icon: Loading03Icon,
-				color: '#3B82F6', // blue-500
+				color: accentColor,
 				label: t('sync.syncing'),
 				animated: true,
 			}
@@ -99,7 +106,7 @@ export function SyncStatusIndicator({
 		if (syncState === 'conflict' || conflicts.length > 0) {
 			return {
 				icon: Alert02Icon,
-				color: '#F59E0B', // amber-500
+				color: warningColor,
 				label: t('sync.conflict'),
 			}
 		}
@@ -107,7 +114,7 @@ export function SyncStatusIndicator({
 		if (syncState === 'error') {
 			return {
 				icon: Alert02Icon,
-				color: '#EF4444', // red-500
+				color: dangerColor,
 				label: t('sync.error'),
 			}
 		}
@@ -116,14 +123,14 @@ export function SyncStatusIndicator({
 		if (metadata && metadata.pendingOperationsCount > 0) {
 			return {
 				icon: CloudIcon,
-				color: '#F59E0B', // amber-500
+				color: warningColor,
 				label: t('sync.pending', { count: metadata.pendingOperationsCount }),
 			}
 		}
 
 		return {
 			icon: CheckmarkCircle02Icon,
-			color: '#10B981', // green-500
+			color: successColor,
 			label: t('sync.synced'),
 		}
 	}
@@ -152,7 +159,7 @@ export function SyncStatusIndicator({
 			<Pressable
 				accessibilityLabel={config.label}
 				accessibilityRole="button"
-				className="rounded-lg p-2 active:bg-gray-100 dark:active:bg-gray-800"
+				className="rounded-lg p-2 active:bg-muted/20"
 				onPress={handlePress}
 			>
 				{content}
@@ -188,40 +195,40 @@ export function SyncStatusBadge() {
 		if (!isOnline) {
 			return {
 				text: t('sync.offline'),
-				bgColor: 'bg-gray-200 dark:bg-gray-700',
-				textColor: 'text-gray-600 dark:text-gray-400',
+				bgColor: 'bg-muted/20',
+				textColor: 'text-muted',
 			}
 		}
 
 		if (syncState === 'syncing') {
 			return {
 				text: t('sync.syncing'),
-				bgColor: 'bg-blue-100 dark:bg-blue-900',
-				textColor: 'text-blue-600 dark:text-blue-400',
+				bgColor: 'bg-accent/10',
+				textColor: 'text-accent',
 			}
 		}
 
 		if (syncState === 'conflict' || conflicts.length > 0) {
 			return {
 				text: t('sync.conflictCount', { count: conflicts.length }),
-				bgColor: 'bg-amber-100 dark:bg-amber-900',
-				textColor: 'text-amber-600 dark:text-amber-400',
+				bgColor: 'bg-warning/10',
+				textColor: 'text-warning',
 			}
 		}
 
 		if (syncState === 'error') {
 			return {
 				text: t('sync.error'),
-				bgColor: 'bg-red-100 dark:bg-red-900',
-				textColor: 'text-red-600 dark:text-red-400',
+				bgColor: 'bg-danger/10',
+				textColor: 'text-danger',
 			}
 		}
 
 		if (metadata && metadata.pendingOperationsCount > 0) {
 			return {
 				text: t('sync.pendingCount', { count: metadata.pendingOperationsCount }),
-				bgColor: 'bg-amber-100 dark:bg-amber-900',
-				textColor: 'text-amber-600 dark:text-amber-400',
+				bgColor: 'bg-warning/10',
+				textColor: 'text-warning',
 			}
 		}
 

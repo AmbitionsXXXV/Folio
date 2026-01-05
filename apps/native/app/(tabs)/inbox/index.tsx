@@ -2,7 +2,7 @@ import { Add01Icon, MailOpen01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, TextField, useThemeColor } from 'heroui-native'
+import { Button, Card, cn, TextField, useThemeColor } from 'heroui-native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, RefreshControl, Text, View } from 'react-native'
@@ -41,12 +41,12 @@ function QuickCapture({ onCapture, isPending }: QuickCaptureProps) {
 					/>
 				</TextField>
 				<Button
-					className="size-12 items-center justify-center bg-accent active:opacity-70"
+					className={cn(
+						'size-12 items-center justify-center bg-accent active:opacity-70',
+						(!inputValue.trim() || isPending) && 'opacity-50'
+					)}
 					isDisabled={!inputValue.trim() || isPending}
 					onPress={handleSubmit}
-					style={{
-						opacity: !inputValue.trim() || isPending ? 0.5 : 1,
-					}}
 				>
 					{isPending ? (
 						<ActivityIndicator color={foregroundColor} size="small" />

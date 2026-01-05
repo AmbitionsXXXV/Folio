@@ -1,6 +1,6 @@
 import { PlayIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
-import { Button, Card } from 'heroui-native'
+import { Button, Card, cn } from 'heroui-native'
 import { useTranslation } from 'react-i18next'
 import { Text } from 'react-native'
 import { TodayStatsGrid } from './today-stats-grid'
@@ -44,10 +44,12 @@ export function TodayReviewCard({
 			/>
 
 			<Button
-				className="flex-row items-center justify-center bg-accent active:opacity-70"
+				className={cn(
+					'flex-row items-center justify-center bg-accent active:opacity-70',
+					!hasItemsToReview && 'opacity-50'
+				)}
 				isDisabled={!hasItemsToReview}
 				onPress={onStartReview}
-				style={{ opacity: hasItemsToReview ? 1 : 0.5 }}
 			>
 				<HugeiconsIcon color="white" icon={PlayIcon} size={20} />
 				<Text className="ml-2 font-semibold text-white">{buttonText}</Text>
