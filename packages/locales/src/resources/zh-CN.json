@@ -78,6 +78,8 @@
     "submit": "提交",
     "submitting": "提交中...",
     "retry": "重试",
+    "error": "错误",
+    "unknownError": "发生未知错误",
     "noResults": "未找到结果",
     "item_one": "{{count}} 项",
     "item_other": "{{count}} 项",

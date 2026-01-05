@@ -81,7 +81,8 @@ const SnoozeInputSchema = z.object({
 	entryId: z.string(),
 	preset: SnoozePresetSchema.optional(),
 	/** Custom snooze date (ISO string), required when preset is 'custom' */
-	untilAt: z.string().datetime().optional(),
+	/** Custom snooze date (ISO 8601 datetime string), required when preset is 'custom' */
+	untilAt: z.iso.datetime({ offset: true }).optional(),
 	tzOffset: z.number().int().min(-720).max(840).default(0),
 })
 

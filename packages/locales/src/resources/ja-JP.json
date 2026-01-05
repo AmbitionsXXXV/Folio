@@ -27,6 +27,8 @@
     "submit": "送信",
     "submitting": "送信中...",
     "retry": "再試行",
+    "error": "エラー",
+    "unknownError": "不明なエラーが発生しました",
     "noResults": "結果が見つかりません",
     "item_one": "{{count}} 項目",
     "item_other": "{{count}} 項目",

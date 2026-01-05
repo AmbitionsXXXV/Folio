@@ -2,28 +2,43 @@ import { Add01Icon, BookOpen01Icon, StarIcon } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { z } from 'zod'
 import { EntryList } from '@/components/entry-list'
 import { Button } from '@/components/ui/button'
 import { orpc } from '@/utils/orpc'
 
 type FilterType = 'all' | 'starred' | 'pinned'
 
+/**
+ * Library page URL params schema
+ * - tagId: Optional tag filter from tags page navigation
+ */
+const librarySearchSchema = z.object({
+	tagId: z.string().optional(),
+})
+
+export type LibrarySearchParams = z.infer<typeof librarySearchSchema>
+
 export const Route = createFileRoute('/_app/library')({
 	component: LibraryPage,
+	validateSearch: librarySearchSchema,
 })
 
 /**
  * Display the library view with a header, filter tabs, and a paginated list of user entries.
  *
- * Supports switching between filters (e.g., all, starred) and loading additional pages of entries; shows an appropriate empty-state message per active filter.
+ * Supports switching between filters (e.g., all, starred) and loading additional pages of entries;
+ * shows an appropriate empty-state message per active filter.
+ * Also supports filtering by tagId from URL search params.
  *
  * @returns The React element for the library page UI.
  */
 function LibraryPage() {
 	const { t } = useTranslation()
+	const { tagId } = useSearch({ from: '/_app/library' })
 	const [filter, setFilter] = useState<FilterType>('all')
 
 	const {
@@ -36,10 +51,11 @@ function LibraryPage() {
 		isFetchingNextPage,
 		refetch,
 	} = useInfiniteQuery({
-		queryKey: ['entries', 'library', filter],
+		queryKey: ['entries', 'library', filter, tagId],
 		queryFn: ({ pageParam }) =>
 			orpc.entries.list.call({
 				filter: filter === 'all' ? 'all' : filter,
+				tagId,
 				cursor: pageParam,
 				limit: 20,
 			}),

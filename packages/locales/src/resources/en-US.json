@@ -27,6 +27,8 @@
     "submit": "Submit",
     "submitting": "Submitting...",
     "retry": "Retry",
+    "error": "Error",
+    "unknownError": "An unknown error occurred",
     "noResults": "No results found",
     "item_one": "{{count}} item",
     "item_other": "{{count}} items",

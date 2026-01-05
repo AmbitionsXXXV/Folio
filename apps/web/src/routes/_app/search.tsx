@@ -7,13 +7,12 @@ import { useTranslation } from 'react-i18next'
 import { EntryList } from '@/components/entry-list'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { searchQuerySchema } from '@/lib/search-schemas'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/search')({
 	component: SearchPage,
-	validateSearch: (search: Record<string, unknown>) => ({
-		q: typeof search.q === 'string' ? search.q : '',
-	}),
+	validateSearch: searchQuerySchema,
 })
 
 function SearchPage() {
