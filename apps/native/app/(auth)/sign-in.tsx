@@ -6,7 +6,6 @@ import {
 	ActivityIndicator,
 	KeyboardAvoidingView,
 	Platform,
-	Pressable,
 	Text,
 	TextInput,
 	View,
@@ -63,14 +62,14 @@ export default function SignInScreen() {
 	}, [])
 
 	return (
-		<Container className="flex-1">
+		<Container className="flex-1" disableBottomInset disableTopInset>
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				className="flex-1"
 			>
 				<View className="flex-1 px-6" style={{ paddingBottom: insets.bottom + 16 }}>
 					{/* Form */}
-					<View className="flex-1">
+					<View className="flex-1 pt-4">
 						{/* Welcome Text */}
 						<Text className="mb-2 font-semibold text-foreground text-xl">
 							{t('auth.welcomeBack')}
@@ -124,26 +123,23 @@ export default function SignInScreen() {
 					{/* Bottom Actions */}
 					<View>
 						{/* Sign In Button */}
-						<Pressable
-							className="mb-4 flex-row items-center justify-center rounded-xl bg-accent p-4 active:opacity-80"
-							disabled={isLoading}
+						<Button
+							className="mb-4 w-full"
+							isDisabled={isLoading}
 							onPress={handleSignIn}
-							style={{ opacity: isLoading ? 0.7 : 1 }}
 						>
 							{isLoading ? (
 								<ActivityIndicator color="white" size="small" />
 							) : (
-								<Text className="font-semibold text-lg text-white">
-									{t('auth.signIn')}
-								</Text>
+								t('auth.signIn')
 							)}
-						</Pressable>
+						</Button>
 
 						{/* Sign Up Link */}
 						<View className="flex-row items-center justify-center">
 							<Text className="text-muted">{t('auth.noAccount')} </Text>
-							<Button onPress={navigateToSignUp} variant="ghost">
-								<Text className="font-semibold text-accent">{t('auth.signUp')}</Text>
+							<Button onPress={navigateToSignUp} size="sm" variant="ghost">
+								{t('auth.signUp')}
 							</Button>
 						</View>
 					</View>

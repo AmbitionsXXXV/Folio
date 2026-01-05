@@ -18,6 +18,11 @@ type Props = AnimatedProps<ViewProps> & {
 	 * Use this when the screen has a transparent header that handles its own insets.
 	 */
 	disableTopInset?: boolean
+	/**
+	 * When true, disables the bottom safe area padding.
+	 * Use this when the screen has a transparent header that handles its own insets.
+	 */
+	disableBottomInset?: boolean
 }
 
 export function Container({
@@ -25,6 +30,7 @@ export function Container({
 	className,
 	disableScroll = false,
 	disableTopInset = false,
+	disableBottomInset = false,
 	...props
 }: PropsWithChildren<Props>) {
 	const insets = useSafeAreaInsets()
@@ -33,7 +39,7 @@ export function Container({
 		<AnimatedView
 			className={cn('flex-1 bg-background', className)}
 			style={{
-				paddingBottom: insets.bottom,
+				paddingBottom: disableBottomInset ? 0 : insets.bottom,
 				paddingTop: disableTopInset ? 0 : insets.top,
 			}}
 			{...props}
