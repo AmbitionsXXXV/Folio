@@ -268,8 +268,8 @@ importers:
         specifier: ~15.0.10
         version: 15.0.10(expo@54.0.30)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
       heroui-native:
-        specifier: 1.0.0-beta.9
-        version: 1.0.0-beta.9(50d3e319026312e42f6b9c923688c9b8)
+        specifier: 1.0.0-beta.10
+        version: 1.0.0-beta.10(50d3e319026312e42f6b9c923688c9b8)
       i18next:
         specifier: 'catalog:'
         version: 25.7.3(typescript@5.9.3)
@@ -5499,8 +5499,8 @@ packages:
   hermes-parser@0.32.0:
     resolution: {integrity: sha512-g4nBOWFpuiTqjR3LZdRxKUkij9iyveWeuks7INEsMX741f3r9xxrOe8TeQfUxtda0eXmiIFiMQzoeSQEno33Hw==}
 
-  heroui-native@1.0.0-beta.9:
-    resolution: {integrity: sha512-3TMjTDl7JJw+q5XYaEPZ8MvErbdmUkb98B7+TKYfHhzPE4/VbpXq4lUpvzP6hXFMMe60TvGlt6Djn+DRwIjPew==}
+  heroui-native@1.0.0-beta.10:
+    resolution: {integrity: sha512-8mH0fwV7yEbR1u5+nBvgmJ73PGq4DsUhVUHNfw5/op8Lq7Ia5y635lSDvri/wsAHQ7KJvWj5GhhOeCJwSfWHFw==}
     peerDependencies:
       '@gorhom/bottom-sheet': ^5
       react: '>=19.0.0'
@@ -12308,7 +12308,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(msw@2.12.4(@types/node@24.10.4)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.0.16(@types/node@22.19.3)(@vitest/ui@4.0.16)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(msw@2.12.4(@types/node@22.19.3)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/utils@4.0.16':
     dependencies:
@@ -14059,7 +14059,7 @@ snapshots:
     dependencies:
       hermes-estree: 0.32.0
 
-  heroui-native@1.0.0-beta.9(50d3e319026312e42f6b9c923688c9b8):
+  heroui-native@1.0.0-beta.10(50d3e319026312e42f6b9c923688c9b8):
     dependencies:
       '@gorhom/bottom-sheet': 5.2.8(@types/react@19.1.17)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.1(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       react: 19.1.0

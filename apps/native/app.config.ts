@@ -34,6 +34,9 @@ const config: ExpoConfig = {
 	},
 	ios: {
 		bundleIdentifier: 'com.etcetera.folio-note',
+		infoPlist: {
+			ITSAppUsesNonExemptEncryption: false,
+		},
 	},
 	android: {
 		package: 'com.etcetera.folio-note',

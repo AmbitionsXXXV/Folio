@@ -12,12 +12,17 @@ import { HugeiconsIcon } from '@hugeicons/react-native'
 import Constants from 'expo-constants'
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics'
 import { router } from 'expo-router'
-import { Card, Switch, useThemeColor } from 'heroui-native'
+import {
+	BottomSheet,
+	Card,
+	PressableFeedback,
+	Switch,
+	useThemeColor,
+} from 'heroui-native'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
 	ActivityIndicator,
-	Modal,
 	Platform,
 	Pressable,
 	ScrollView,
@@ -245,66 +250,65 @@ export default function SettingsScreen() {
 				</View>
 			</ScrollView>
 
-			{/* Language Selection Modal */}
-			<Modal
-				animationType="fade"
-				onRequestClose={() => setLanguageModalVisible(false)}
-				transparent
-				visible={languageModalVisible}
+			{/* Language Selection BottomSheet */}
+			<BottomSheet
+				isOpen={languageModalVisible}
+				onOpenChange={setLanguageModalVisible}
 			>
-				<Pressable
-					className="flex-1 items-center justify-center bg-black/50"
-					onPress={() => setLanguageModalVisible(false)}
-				>
-					<Pressable
-						className="mx-6 w-72 rounded-2xl bg-surface p-4"
-						onPress={(e) => e.stopPropagation()}
-					>
-						<Text className="mb-4 text-center font-semibold text-foreground text-lg">
+				<BottomSheet.Portal>
+					<BottomSheet.Overlay />
+					<BottomSheet.Content>
+						<BottomSheet.Title className="mb-4 text-center font-semibold text-lg">
 							{t('common.language')}
-						</Text>
+						</BottomSheet.Title>
 
-						{supportedLanguages.map((lang) => (
-							<Pressable
-								className="flex-row items-center justify-between rounded-xl px-4 py-3"
-								key={lang}
-								onPress={() => handleLanguageChange(lang)}
-								style={{
-									backgroundColor:
-										currentLanguage === lang ? accentColor : 'transparent',
-								}}
-							>
-								<Text
-									className="text-base"
+						<View className="gap-1">
+							{supportedLanguages.map((lang) => (
+								<PressableFeedback
+									className="flex-row items-center justify-between rounded-xl px-4 py-3"
+									key={lang}
+									onPress={() => handleLanguageChange(lang)}
 									style={{
-										color: foregroundColor,
-										fontWeight: currentLanguage === lang ? '600' : '400',
+										backgroundColor:
+											currentLanguage === lang ? accentColor : 'transparent',
 									}}
 								>
-									{LANGUAGE_LABELS[lang]}
-								</Text>
-								{currentLanguage === lang && (
-									<HugeiconsIcon
-										color={foregroundColor}
-										icon={Tick02Icon}
-										size={20}
-									/>
-								)}
-							</Pressable>
-						))}
+									<PressableFeedback.Highlight />
+									<Text
+										className="text-base"
+										style={{
+											color: foregroundColor,
+											fontWeight: currentLanguage === lang ? '600' : '400',
+										}}
+									>
+										{LANGUAGE_LABELS[lang]}
+									</Text>
+									{currentLanguage === lang && (
+										<HugeiconsIcon
+											color={foregroundColor}
+											icon={Tick02Icon}
+											size={20}
+										/>
+									)}
+								</PressableFeedback>
+							))}
+						</View>
 
-						<Pressable
-							className="mt-4 items-center rounded-xl py-3"
-							onPress={() => setLanguageModalVisible(false)}
-							style={{ backgroundColor: `${mutedColor}20` }}
-						>
-							<Text className="font-medium" style={{ color: foregroundColor }}>
-								{t('common.close')}
-							</Text>
-						</Pressable>
-					</Pressable>
-				</Pressable>
-			</Modal>
+						<View className="mt-4 gap-3">
+							<PressableFeedback
+								className="items-center rounded-xl py-3"
+								onPress={() => setLanguageModalVisible(false)}
+								style={{ backgroundColor: `${mutedColor}20` }}
+							>
+								<PressableFeedback.Highlight />
+								<Text className="font-medium" style={{ color: foregroundColor }}>
+									{t('common.close')}
+								</Text>
+							</PressableFeedback>
+						</View>
+					</BottomSheet.Content>
+				</BottomSheet.Portal>
+			</BottomSheet>
 		</Container>
 	)
 }

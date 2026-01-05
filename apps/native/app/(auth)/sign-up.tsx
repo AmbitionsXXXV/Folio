@@ -1,5 +1,3 @@
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react-native'
 import { router } from 'expo-router'
 import { Button, useThemeColor } from 'heroui-native'
 import { useCallback, useState } from 'react'
@@ -29,11 +27,6 @@ export default function SignUpScreen() {
 	const [error, setError] = useState<string | null>(null)
 
 	const mutedColor = useThemeColor('muted')
-	const foregroundColor = useThemeColor('foreground')
-
-	const handleBack = useCallback(() => {
-		router.back()
-	}, [])
 
 	const handleSignUp = useCallback(async () => {
 		if (!(name.trim() && email.trim() && password.trim())) {
@@ -84,107 +77,92 @@ export default function SignUpScreen() {
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				className="flex-1"
 			>
-				<ScrollView
-					className="flex-1"
-					contentContainerStyle={{
-						flexGrow: 1,
-						paddingHorizontal: 24,
-						paddingTop: insets.top,
-						paddingBottom: insets.bottom + 16,
-					}}
-					keyboardShouldPersistTaps="handled"
-				>
-					{/* Header */}
-					<View className="mb-8 flex-row items-center pt-4">
-						<Pressable
-							className="mr-4 size-10 items-center justify-center rounded-full active:opacity-70"
-							onPress={handleBack}
-						>
-							<HugeiconsIcon
-								color={foregroundColor}
-								icon={ArrowLeft01Icon}
-								size={24}
-							/>
-						</Pressable>
-						<Text className="font-bold text-2xl text-foreground">
-							{t('auth.createAccount')}
-						</Text>
-					</View>
+				<View className="flex-1">
+					<ScrollView
+						className="flex-1"
+						contentContainerStyle={{
+							paddingHorizontal: 24,
+						}}
+						keyboardShouldPersistTaps="handled"
+					>
+						{/* Form */}
+						<View>
+							{/* Welcome Text */}
+							<Text className="mb-2 font-semibold text-foreground text-xl">
+								{t('auth.getStarted')}
+							</Text>
+							<Text className="mb-8 text-muted">{t('auth.signUpSubtitle')}</Text>
 
-					{/* Form */}
-					<View className="flex-1">
-						{/* Welcome Text */}
-						<Text className="mb-2 font-semibold text-foreground text-xl">
-							{t('auth.getStarted')}
-						</Text>
-						<Text className="mb-8 text-muted">{t('auth.signUpSubtitle')}</Text>
+							{/* Error Message */}
+							{error ? (
+								<View className="mb-4 rounded-xl bg-danger/10 p-4">
+									<Text className="text-danger text-sm">{error}</Text>
+								</View>
+							) : null}
 
-						{/* Error Message */}
-						{error ? (
-							<View className="mb-4 rounded-xl bg-danger/10 p-4">
-								<Text className="text-danger text-sm">{error}</Text>
+							{/* Name Input */}
+							<View className="mb-4">
+								<Text className="mb-2 font-medium text-foreground text-sm">
+									{t('auth.name')}
+								</Text>
+								<TextInput
+									autoCapitalize="words"
+									autoComplete="name"
+									className="rounded-xl border border-divider bg-surface p-4 text-foreground"
+									onChangeText={setName}
+									placeholder={t('auth.namePlaceholder')}
+									placeholderTextColor={mutedColor}
+									value={name}
+								/>
 							</View>
-						) : null}
 
-						{/* Name Input */}
-						<View className="mb-4">
-							<Text className="mb-2 font-medium text-foreground text-sm">
-								{t('auth.name')}
-							</Text>
-							<TextInput
-								autoCapitalize="words"
-								autoComplete="name"
-								className="rounded-xl border border-divider bg-surface p-4 text-foreground"
-								onChangeText={setName}
-								placeholder={t('auth.namePlaceholder')}
-								placeholderTextColor={mutedColor}
-								value={name}
-							/>
+							{/* Email Input */}
+							<View className="mb-4">
+								<Text className="mb-2 font-medium text-foreground text-sm">
+									{t('auth.email')}
+								</Text>
+								<TextInput
+									autoCapitalize="none"
+									autoComplete="email"
+									className="rounded-xl border border-divider bg-surface p-4 text-foreground"
+									keyboardType="email-address"
+									onChangeText={setEmail}
+									placeholder={t('auth.emailPlaceholder', {
+										defaultValue: 'Enter your email',
+									})}
+									placeholderTextColor={mutedColor}
+									value={email}
+								/>
+							</View>
+
+							{/* Password Input */}
+							<View className="mb-2">
+								<Text className="mb-2 font-medium text-foreground text-sm">
+									{t('auth.password')}
+								</Text>
+								<TextInput
+									autoCapitalize="none"
+									autoComplete="password-new"
+									className="rounded-xl border border-divider bg-surface p-4 text-foreground"
+									onChangeText={setPassword}
+									onSubmitEditing={handleSignUp}
+									placeholder={t('auth.passwordPlaceholder', {
+										defaultValue: 'Create a password',
+									})}
+									placeholderTextColor={mutedColor}
+									returnKeyType="done"
+									secureTextEntry
+									value={password}
+								/>
+							</View>
+
+							{/* Password Hint */}
+							<Text className="text-muted text-xs">{t('auth.passwordHint')}</Text>
 						</View>
+					</ScrollView>
 
-						{/* Email Input */}
-						<View className="mb-4">
-							<Text className="mb-2 font-medium text-foreground text-sm">
-								{t('auth.email')}
-							</Text>
-							<TextInput
-								autoCapitalize="none"
-								autoComplete="email"
-								className="rounded-xl border border-divider bg-surface p-4 text-foreground"
-								keyboardType="email-address"
-								onChangeText={setEmail}
-								placeholder={t('auth.emailPlaceholder', {
-									defaultValue: 'Enter your email',
-								})}
-								placeholderTextColor={mutedColor}
-								value={email}
-							/>
-						</View>
-
-						{/* Password Input */}
-						<View className="mb-2">
-							<Text className="mb-2 font-medium text-foreground text-sm">
-								{t('auth.password')}
-							</Text>
-							<TextInput
-								autoCapitalize="none"
-								autoComplete="password-new"
-								className="rounded-xl border border-divider bg-surface p-4 text-foreground"
-								onChangeText={setPassword}
-								onSubmitEditing={handleSignUp}
-								placeholder={t('auth.passwordPlaceholder', {
-									defaultValue: 'Create a password',
-								})}
-								placeholderTextColor={mutedColor}
-								returnKeyType="done"
-								secureTextEntry
-								value={password}
-							/>
-						</View>
-
-						{/* Password Hint */}
-						<Text className="mb-6 text-muted text-xs">{t('auth.passwordHint')}</Text>
-
+					{/* Bottom Actions */}
+					<View className="px-6" style={{ paddingBottom: insets.bottom + 16 }}>
 						{/* Sign Up Button */}
 						<Pressable
 							className="mb-4 flex-row items-center justify-center rounded-xl bg-accent p-4 active:opacity-80"
@@ -204,12 +182,12 @@ export default function SignUpScreen() {
 						{/* Sign In Link */}
 						<View className="flex-row items-center justify-center">
 							<Text className="text-muted">{t('auth.haveAccount')} </Text>
-							<Button onPress={navigateToSignIn}>
+							<Button onPress={navigateToSignIn} variant="ghost">
 								<Text className="font-semibold text-accent">{t('auth.signIn')}</Text>
 							</Button>
 						</View>
 					</View>
-				</ScrollView>
+				</View>
 			</KeyboardAvoidingView>
 		</Container>
 	)

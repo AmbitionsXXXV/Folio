@@ -1,5 +1,3 @@
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react-native'
 import { router } from 'expo-router'
 import { Button, useThemeColor } from 'heroui-native'
 import { useCallback, useState } from 'react'
@@ -27,11 +25,6 @@ export default function SignInScreen() {
 	const [error, setError] = useState<string | null>(null)
 
 	const mutedColor = useThemeColor('muted')
-	const foregroundColor = useThemeColor('foreground')
-
-	const handleBack = useCallback(() => {
-		router.back()
-	}, [])
 
 	const handleSignIn = useCallback(async () => {
 		if (!(email.trim() && password.trim())) {
@@ -75,27 +68,7 @@ export default function SignInScreen() {
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				className="flex-1"
 			>
-				<View
-					className="flex-1 px-6"
-					style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-				>
-					{/* Header */}
-					<View className="mb-8 flex-row items-center pt-4">
-						<Pressable
-							className="mr-4 size-10 items-center justify-center rounded-full active:opacity-70"
-							onPress={handleBack}
-						>
-							<HugeiconsIcon
-								color={foregroundColor}
-								icon={ArrowLeft01Icon}
-								size={24}
-							/>
-						</Pressable>
-						<Text className="font-bold text-2xl text-foreground">
-							{t('auth.signIn')}
-						</Text>
-					</View>
-
+				<View className="flex-1 px-6" style={{ paddingBottom: insets.bottom + 16 }}>
 					{/* Form */}
 					<View className="flex-1">
 						{/* Welcome Text */}
@@ -146,7 +119,10 @@ export default function SignInScreen() {
 								value={password}
 							/>
 						</View>
+					</View>
 
+					{/* Bottom Actions */}
+					<View>
 						{/* Sign In Button */}
 						<Pressable
 							className="mb-4 flex-row items-center justify-center rounded-xl bg-accent p-4 active:opacity-80"
@@ -166,7 +142,7 @@ export default function SignInScreen() {
 						{/* Sign Up Link */}
 						<View className="flex-row items-center justify-center">
 							<Text className="text-muted">{t('auth.noAccount')} </Text>
-							<Button onPress={navigateToSignUp}>
+							<Button onPress={navigateToSignUp} variant="ghost">
 								<Text className="font-semibold text-accent">{t('auth.signUp')}</Text>
 							</Button>
 						</View>
