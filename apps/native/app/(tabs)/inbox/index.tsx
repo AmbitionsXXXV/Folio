@@ -100,13 +100,13 @@ export default function InboxScreen() {
 	}
 
 	return (
-		<Container className="flex-1" disableScroll>
+		<Container className="flex-1" disableScroll disableTopInset>
 			<FlashList
 				contentContainerStyle={{
 					paddingHorizontal: 16,
-					// paddingBottom: 16,
-					// paddingTop: headerHeight + 8,
 				}}
+				// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
+				contentInsetAdjustmentBehavior="automatic"
 				data={entries}
 				ItemSeparatorComponent={() => <View className="h-3" />}
 				keyExtractor={(item) => item.id}

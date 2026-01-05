@@ -79,9 +79,11 @@ export default function HomeScreen() {
 	const totalDue = (dueStats?.overdue ?? 0) + (dueStats?.dueToday ?? 0)
 
 	return (
-		<Container className="flex-1">
+		<Container className="flex-1" disableScroll disableTopInset>
 			<ScrollView
+				// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
 				contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+				contentInsetAdjustmentBehavior="automatic"
 				refreshControl={
 					<RefreshControl
 						onRefresh={handleRefresh}

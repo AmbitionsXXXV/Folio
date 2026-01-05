@@ -29,17 +29,26 @@ export function TabStack({ children }: { children?: React.ReactNode }) {
 
 	const renderThemeToggle = useCallback(() => <ThemeToggle />, [])
 
+	// iOS 26+ Liquid Glass: 系统会自动应用玻璃效果
+	// 在非 Liquid Glass 环境下使用传统的模糊效果
+	const isLiquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable()
+	const blurEffect = isDark ? 'dark' : 'light'
+
 	return (
-		<View className="flex-1 bg-background">
+		<View className="flex-1" style={{ backgroundColor }}>
 			<Stack
 				screenOptions={{
 					headerTitleAlign: 'center',
+					// iOS 26 Liquid Glass: headerTransparent 让内容可以延伸到 header 下方
 					headerTransparent: true,
-					headerBlurEffect: isDark ? 'dark' : 'light',
+					// 非 Liquid Glass 环境使用模糊效果
+					headerBlurEffect: isLiquidGlass ? undefined : blurEffect,
 					headerTintColor: foregroundColor,
 					headerTitleStyle: {
 						fontFamily: 'Inter_600SemiBold',
 					},
+					// 禁用 header 底部的阴影/分隔线
+					headerShadowVisible: false,
 					headerStyle: {
 						backgroundColor: Platform.select({
 							ios: undefined,
@@ -50,7 +59,7 @@ export function TabStack({ children }: { children?: React.ReactNode }) {
 					headerBackButtonDisplayMode: 'generic',
 					gestureEnabled: true,
 					gestureDirection: 'horizontal',
-					fullScreenGestureEnabled: !isLiquidGlassAvailable(),
+					fullScreenGestureEnabled: !isLiquidGlass,
 					contentStyle: {
 						backgroundColor,
 					},

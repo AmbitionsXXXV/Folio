@@ -62,7 +62,7 @@ export default function TodayScreen() {
 	const userName = session?.user?.name?.split(' ')[0] ?? t('common.other')
 
 	return (
-		<Container className="flex-1">
+		<Container className="flex-1" disableScroll disableTopInset>
 			<TodayContent
 				dueToday={dueStats?.dueToday ?? 0}
 				isRefetching={isRefetching}

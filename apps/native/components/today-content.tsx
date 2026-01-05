@@ -40,7 +40,9 @@ export function TodayContent({
 
 	return (
 		<ScrollView
+			// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
 			contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+			contentInsetAdjustmentBehavior="automatic"
 			refreshControl={
 				<RefreshControl
 					onRefresh={onRefresh}

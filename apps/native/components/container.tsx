@@ -1,6 +1,6 @@
-import { cn } from 'heroui-native'
+import { cn, useThemeColor } from 'heroui-native'
 import type { PropsWithChildren } from 'react'
-import { ScrollView, View, type ViewProps } from 'react-native'
+import { Platform, ScrollView, View, type ViewProps } from 'react-native'
 import Animated, { type AnimatedProps } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -34,11 +34,13 @@ export function Container({
 	...props
 }: PropsWithChildren<Props>) {
 	const insets = useSafeAreaInsets()
+	const backgroundColor = useThemeColor('background')
 
 	return (
 		<AnimatedView
-			className={cn('flex-1 bg-background', className)}
+			className={cn('flex-1', className)}
 			style={{
+				backgroundColor,
 				paddingBottom: disableBottomInset ? 0 : insets.bottom,
 				paddingTop: disableTopInset ? 0 : insets.top,
 			}}
@@ -47,7 +49,15 @@ export function Container({
 			{disableScroll ? (
 				children
 			) : (
-				<ScrollView contentContainerStyle={{ flexGrow: 1 }}>{children}</ScrollView>
+				<ScrollView
+					contentContainerStyle={{ flexGrow: 1 }}
+					// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
+					contentInsetAdjustmentBehavior={
+						Platform.OS === 'ios' ? 'automatic' : undefined
+					}
+				>
+					{children}
+				</ScrollView>
 			)}
 		</AnimatedView>
 	)
