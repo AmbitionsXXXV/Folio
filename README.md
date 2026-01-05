@@ -74,7 +74,7 @@ AUTH_SECRET="replace-me"
 AUTH_URL="http://localhost:3001"
 ```
 
-3. Push the schema to your database:
+1. Push the schema to your database:
 
 ```bash
 pnpm run db:push
@@ -113,4 +113,4 @@ pnpm run dev
 
 ## License
 
-TBD
+MIT License
