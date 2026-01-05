@@ -61,7 +61,11 @@
     "passwordHint": "Password must be at least 8 characters",
     "passwordTooShort": "Password must be at least 8 characters",
     "signUpFailed": "Sign up failed",
-    "haveAccount": "Already have an account?"
+    "haveAccount": "Already have an account?",
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "invalidEmail": "Please enter a valid email",
+    "passwordRequired": "Password is required"
   },
   "entry": {
     "title": "Title",

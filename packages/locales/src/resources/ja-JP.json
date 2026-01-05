@@ -61,7 +61,11 @@
     "passwordHint": "パスワードは最低 8 文字以上にする必要があります",
     "passwordTooShort": "パスワードは最低 8 文字以上にする必要があります",
     "signUpFailed": "サインアップ失敗",
-    "haveAccount": "すでにアカウントをお持ちですか？"
+    "haveAccount": "すでにアカウントをお持ちですか？",
+    "nameRequired": "名前を入力してください",
+    "emailRequired": "メールアドレスを入力してください",
+    "invalidEmail": "有効なメールアドレスを入力してください",
+    "passwordRequired": "パスワードを入力してください"
   },
   "entry": {
     "title": "タイトル",

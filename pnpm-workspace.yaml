@@ -11,6 +11,7 @@ catalog:
   "@orpc/server": ^1.12.3
   "@orpc/tanstack-query": ^1.12.3
   "@orpc/zod": ^1.12.3
+  "@tanstack/react-form": ^1.27.5
   "@tanstack/react-query": ^5.90.12
   "@types/node": ^22.0.0
   "@vitest/coverage-v8": ^4.0.16
@@ -23,6 +24,8 @@ catalog:
   i18next: ^25.2.1
   msw: ^2.12.4
   react-i18next: ^16.4.1
+  tailwind-merge: ^3.4.0
+  tailwindcss: ^4.1.18
   typescript: ^5
   vitest: ^4.0.16
   zod: ^4.1.13

@@ -112,7 +112,11 @@
     "passwordHint": "密码至少需要 8 个字符",
     "passwordTooShort": "密码至少需要 8 个字符",
     "signUpFailed": "注册失败",
-    "haveAccount": "已有账号？"
+    "haveAccount": "已有账号？",
+    "nameRequired": "请输入姓名",
+    "emailRequired": "请输入邮箱",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "passwordRequired": "请输入密码"
   },
   "entry": {
     "title": "标题",

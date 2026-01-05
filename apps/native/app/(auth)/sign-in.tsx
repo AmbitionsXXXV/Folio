@@ -1,5 +1,6 @@
+import { useForm } from '@tanstack/react-form'
 import { router } from 'expo-router'
-import { Button, useThemeColor } from 'heroui-native'
+import { Button, TextField } from 'heroui-native'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -7,10 +8,10 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 	Text,
-	TextInput,
 	View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { z } from 'zod'
 import { Container } from '@/components/container'
 import { authClient } from '@/lib/auth-client'
 import { queryClient } from '@/utils/orpc'
@@ -18,44 +19,35 @@ import { queryClient } from '@/utils/orpc'
 export default function SignInScreen() {
 	const { t } = useTranslation()
 	const insets = useSafeAreaInsets()
-	const [email, setEmail] = useState('')
-	const [password, setPassword] = useState('')
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 
-	const mutedColor = useThemeColor('muted')
+	const form = useForm({
+		defaultValues: {
+			email: '',
+			password: '',
+		},
+		onSubmit: async ({ value }) => {
+			setSubmitError(null)
 
-	const handleSignIn = useCallback(async () => {
-		if (!(email.trim() && password.trim())) {
-			setError(t('auth.fillAllFields'))
-			return
-		}
-
-		setIsLoading(true)
-		setError(null)
-
-		await authClient.signIn.email(
-			{
-				email: email.trim(),
-				password,
-			},
-			{
-				onError(signInError) {
-					setError(signInError.error?.message || t('auth.signInFailed'))
-					setIsLoading(false)
+			await authClient.signIn.email(
+				{
+					email: value.email.trim(),
+					password: value.password,
 				},
-				onSuccess() {
-					setEmail('')
-					setPassword('')
-					queryClient.refetchQueries()
-					router.replace('/(tabs)/index')
-				},
-				onFinished() {
-					setIsLoading(false)
-				},
-			}
-		)
-	}, [email, password, t])
+				{
+					onError(signInError) {
+						console.log(signInError)
+						setSubmitError(signInError.error?.message || t('auth.signInFailed'))
+					},
+					onSuccess() {
+						form.reset()
+						queryClient.refetchQueries()
+						// Stack.Protected will automatically navigate when session state updates
+					},
+				}
+			)
+		},
+	})
 
 	const navigateToSignUp = useCallback(() => {
 		router.replace('/(auth)/sign-up')
@@ -76,64 +68,98 @@ export default function SignInScreen() {
 						</Text>
 						<Text className="mb-8 text-muted">{t('auth.signInSubtitle')}</Text>
 
-						{/* Error Message */}
-						{error ? (
+						{/* Form Error Message */}
+						{submitError ? (
 							<View className="mb-4 rounded-xl bg-danger/10 p-4">
-								<Text className="text-danger text-sm">{error}</Text>
+								<Text className="text-danger text-sm">{submitError}</Text>
 							</View>
 						) : null}
 
 						{/* Email Input */}
-						<View className="mb-4">
-							<Text className="mb-2 font-medium text-foreground text-sm">
-								{t('auth.email')}
-							</Text>
-							<TextInput
-								autoCapitalize="none"
-								autoComplete="email"
-								className="rounded-xl border border-divider bg-surface p-4 text-foreground"
-								keyboardType="email-address"
-								onChangeText={setEmail}
-								placeholder={t('auth.emailPlaceholder')}
-								placeholderTextColor={mutedColor}
-								value={email}
-							/>
-						</View>
+						<form.Field
+							name="email"
+							validators={{
+								onBlur: z.email(),
+							}}
+						>
+							{(field) => (
+								<TextField
+									className="mb-4"
+									isInvalid={
+										field.state.meta.isTouched && field.state.meta.errors.length > 0
+									}
+								>
+									<TextField.Label>{t('auth.email')}</TextField.Label>
+									<TextField.Input
+										autoCapitalize="none"
+										autoComplete="email"
+										keyboardType="email-address"
+										onBlur={field.handleBlur}
+										onChangeText={field.handleChange}
+										placeholder={t('auth.emailPlaceholder')}
+										value={field.state.value}
+									/>
+									<TextField.ErrorMessage>
+										{field.state.meta.errors[0]?.message}
+									</TextField.ErrorMessage>
+								</TextField>
+							)}
+						</form.Field>
 
 						{/* Password Input */}
-						<View className="mb-6">
-							<Text className="mb-2 font-medium text-foreground text-sm">
-								{t('auth.password')}
-							</Text>
-							<TextInput
-								autoCapitalize="none"
-								autoComplete="password"
-								className="rounded-xl border border-divider bg-surface p-4 text-foreground"
-								onChangeText={setPassword}
-								onSubmitEditing={handleSignIn}
-								placeholder={t('auth.passwordPlaceholder')}
-								placeholderTextColor={mutedColor}
-								returnKeyType="done"
-								secureTextEntry
-								value={password}
-							/>
-						</View>
+						<form.Field
+							name="password"
+							validators={{
+								onBlur: z.string().min(1, t('auth.passwordRequired')),
+							}}
+						>
+							{(field) => (
+								<TextField
+									className="mb-6"
+									isInvalid={
+										field.state.meta.isTouched && field.state.meta.errors.length > 0
+									}
+								>
+									<TextField.Label>{t('auth.password')}</TextField.Label>
+									<TextField.Input
+										autoCapitalize="none"
+										autoComplete="password"
+										onBlur={field.handleBlur}
+										onChangeText={field.handleChange}
+										onSubmitEditing={() => form.handleSubmit()}
+										placeholder={t('auth.passwordPlaceholder')}
+										returnKeyType="done"
+										secureTextEntry
+										value={field.state.value}
+									/>
+									<TextField.ErrorMessage>
+										{field.state.meta.errors[0]?.message}
+									</TextField.ErrorMessage>
+								</TextField>
+							)}
+						</form.Field>
 					</View>
 
 					{/* Bottom Actions */}
 					<View>
 						{/* Sign In Button */}
-						<Button
-							className="mb-4 w-full"
-							isDisabled={isLoading}
-							onPress={handleSignIn}
+						<form.Subscribe
+							selector={(state) => [state.canSubmit, state.isSubmitting]}
 						>
-							{isLoading ? (
-								<ActivityIndicator color="white" size="small" />
-							) : (
-								t('auth.signIn')
+							{([canSubmit, isSubmitting]) => (
+								<Button
+									className="mb-4 w-full"
+									isDisabled={!canSubmit || isSubmitting}
+									onPress={() => form.handleSubmit()}
+								>
+									{isSubmitting ? (
+										<ActivityIndicator color="white" size="small" />
+									) : (
+										t('auth.signIn')
+									)}
+								</Button>
 							)}
-						</Button>
+						</form.Subscribe>
 
 						{/* Sign Up Link */}
 						<View className="flex-row items-center justify-center">

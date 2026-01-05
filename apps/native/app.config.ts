@@ -36,6 +36,8 @@ const config: ExpoConfig = {
 		bundleIdentifier: 'com.etcetera.folio-note',
 		infoPlist: {
 			ITSAppUsesNonExemptEncryption: false,
+			// 注意：不要设置 UIDesignRequiresCompatibility: true
+			// 这会禁用 iOS 26 的 Liquid Glass 效果
 		},
 	},
 	android: {
