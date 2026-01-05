@@ -13,14 +13,10 @@ import {
 	FieldSeparator,
 } from '@/components/ui/field'
 import { authClient } from '@/lib/auth-client'
+import { prettifyFormErrors } from '@/lib/form-error'
 import Loader from './loader'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-
-const signInSchema = z.object({
-	email: z.email('Invalid email address'),
-	password: z.string().min(8, 'Password must be at least 8 characters'),
-})
 
 /**
  * Renders the sign-in form and handles user authentication.
@@ -36,6 +32,12 @@ export default function SignInForm() {
 		from: '/',
 	})
 	const { isPending } = authClient.useSession()
+
+	// 创建带有国际化错误消息的 schema
+	const signInSchema = z.object({
+		email: z.email(t('auth.invalidEmail')),
+		password: z.string().min(8, t('auth.passwordTooShort')),
+	})
 
 	const form = useForm({
 		defaultValues: {
@@ -56,13 +58,32 @@ export default function SignInForm() {
 						navigate({
 							to: '/dashboard',
 						})
-						toast.success('Sign in successful')
+						toast.success(t('auth.signInSuccess'))
 					},
 					onError: (error) => {
-						toast.error(error.error.message || error.error.statusText)
+						// 开发环境下打印详细错误
+						if (import.meta.env.DEV) {
+							console.warn('[SignIn] Auth error:', error.error.message)
+						}
+						toast.error(error.error.message || t('auth.signInFailed'))
 					},
 				}
 			)
+		},
+		onSubmitInvalid: ({ formApi }) => {
+			// 表单验证失败时，记录格式化的错误日志
+			if (import.meta.env.DEV) {
+				const errors = formApi.state.errors
+				if (errors.length > 0) {
+					console.warn('[SignIn] Form validation failed:')
+					for (const error of errors) {
+						if (error && typeof error === 'object' && 'issues' in error) {
+							console.warn(prettifyFormErrors(error as unknown as z.ZodError))
+							break
+						}
+					}
+				}
+			}
 		},
 	})
 
@@ -83,7 +104,12 @@ export default function SignInForm() {
 				}}
 			>
 				<FieldGroup className="gap-4">
-					<form.Field name="email">
+					<form.Field
+						name="email"
+						validators={{
+							onBlur: z.email(t('auth.invalidEmail')),
+						}}
+					>
 						{(field) => {
 							const isInvalid =
 								field.state.meta.isTouched && !field.state.meta.isValid
@@ -97,7 +123,7 @@ export default function SignInForm() {
 										name={field.name}
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder="you@example.com"
+										placeholder={t('auth.emailPlaceholder')}
 										type="email"
 										value={field.state.value}
 									/>
@@ -107,7 +133,12 @@ export default function SignInForm() {
 						}}
 					</form.Field>
 
-					<form.Field name="password">
+					<form.Field
+						name="password"
+						validators={{
+							onBlur: z.string().min(1, t('auth.passwordRequired')),
+						}}
+					>
 						{(field) => {
 							const isInvalid =
 								field.state.meta.isTouched && !field.state.meta.isValid
@@ -121,6 +152,7 @@ export default function SignInForm() {
 										name={field.name}
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
+										placeholder={t('auth.passwordPlaceholder')}
 										type="password"
 										value={field.state.value}
 									/>
@@ -157,6 +189,7 @@ export default function SignInForm() {
 						type="button"
 					>
 						<HugeiconsIcon className="size-6 fill-white" icon={GoogleIcon} />
+						<span className="sr-only">Sign in with Google</span>
 					</Button>
 				</FieldGroup>
 			</form>

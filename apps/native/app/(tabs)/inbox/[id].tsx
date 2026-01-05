@@ -137,8 +137,8 @@ export default function EntryDetailScreen() {
 					<ScrollView
 						className="flex-1"
 						// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
-						contentInsetAdjustmentBehavior="automatic"
 						contentContainerStyle={{ flexGrow: 1 }}
+						contentInsetAdjustmentBehavior="automatic"
 					>
 						{contentJson ? (
 							<RichTextViewer

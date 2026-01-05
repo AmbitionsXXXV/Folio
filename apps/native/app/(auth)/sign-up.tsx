@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements'
 import { useForm } from '@tanstack/react-form'
 import { router } from 'expo-router'
 import { Button, TextField } from 'heroui-native'
@@ -15,20 +16,38 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { z } from 'zod'
 import { Container } from '@/components/container'
 import { authClient } from '@/lib/auth-client'
+import { prettifyFormErrors } from '@/utils/form-error'
 import { queryClient } from '@/utils/orpc'
+
+// 声明 Expo/React Native 的全局 __DEV__ 变量
+declare const __DEV__: boolean
 
 const PASSWORD_MIN_LENGTH = 8
 
 export default function SignUpScreen() {
 	const { t } = useTranslation()
 	const insets = useSafeAreaInsets()
+	const headerHeight = useHeaderHeight()
 	const [submitError, setSubmitError] = useState<string | null>(null)
+
+	// 创建带有国际化错误消息的 schema
+	const signUpSchema = z.object({
+		name: z.string().min(1, t('auth.nameRequired')),
+		email: z.email(t('auth.invalidEmail')),
+		password: z
+			.string()
+			.min(1, t('auth.passwordRequired'))
+			.min(PASSWORD_MIN_LENGTH, t('auth.passwordTooShort')),
+	})
 
 	const form = useForm({
 		defaultValues: {
 			name: '',
 			email: '',
 			password: '',
+		},
+		validators: {
+			onSubmit: signUpSchema,
 		},
 		onSubmit: async ({ value }) => {
 			setSubmitError(null)
@@ -41,6 +60,9 @@ export default function SignUpScreen() {
 				},
 				{
 					onError(signUpError) {
+						if (__DEV__) {
+							console.warn('[SignUp] Auth error:', signUpError.error?.message)
+						}
 						setSubmitError(signUpError.error?.message || t('auth.signUpFailed'))
 					},
 					onSuccess() {
@@ -51,6 +73,21 @@ export default function SignUpScreen() {
 				}
 			)
 		},
+		onSubmitInvalid: ({ formApi }) => {
+			// 表单验证失败时，记录格式化的错误日志
+			if (__DEV__) {
+				const errors = formApi.state.errors
+				if (errors.length > 0) {
+					console.warn('[SignUp] Form validation failed:')
+					for (const error of errors) {
+						if (error && typeof error === 'object' && 'issues' in error) {
+							console.warn(prettifyFormErrors(error as unknown as z.ZodError))
+							break
+						}
+					}
+				}
+			}
+		},
 	})
 
 	const navigateToSignIn = useCallback(() => {
@@ -58,19 +95,21 @@ export default function SignUpScreen() {
 	}, [])
 
 	return (
-		<Container className="flex-1" disableBottomInset disableTopInset>
+		<Container
+			className="flex-1"
+			disableBottomInset
+			disableContentInsetAdjustment
+			disableTopInset
+		>
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				className="flex-1"
 			>
-				<View className="flex-1 pt-4">
-					<ScrollView
-						className="flex-1"
-						contentContainerStyle={{
-							paddingHorizontal: 24,
-						}}
-						keyboardShouldPersistTaps="handled"
-					>
+				<View
+					className="flex-1 px-6"
+					style={{ paddingTop: headerHeight, paddingBottom: insets.bottom }}
+				>
+					<ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
 						{/* Form */}
 						<View>
 							{/* Welcome Text */}
@@ -93,60 +132,72 @@ export default function SignUpScreen() {
 									onBlur: z.string().min(1, t('auth.nameRequired')),
 								}}
 							>
-								{(field) => (
-									<TextField
-										className="mb-4"
-										isInvalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
-									>
-										<TextField.Label>{t('auth.name')}</TextField.Label>
-										<TextField.Input
-											autoCapitalize="words"
-											autoComplete="name"
-											onBlur={field.handleBlur}
-											onChangeText={field.handleChange}
-											placeholder={t('auth.namePlaceholder')}
-											value={field.state.value}
-										/>
-										<TextField.ErrorMessage>
-											{field.state.meta.errors[0]?.message}
-										</TextField.ErrorMessage>
-									</TextField>
-								)}
+								{(field) => {
+									const errorMessage = field.state.meta.errors[0]
+									const displayError =
+										typeof errorMessage === 'string'
+											? errorMessage
+											: errorMessage?.message
+
+									return (
+										<TextField
+											className="mb-4"
+											isInvalid={
+												field.state.meta.isTouched &&
+												field.state.meta.errors.length > 0
+											}
+										>
+											<TextField.Label>{t('auth.name')}</TextField.Label>
+											<TextField.Input
+												autoCapitalize="words"
+												autoComplete="name"
+												onBlur={field.handleBlur}
+												onChangeText={field.handleChange}
+												placeholder={t('auth.namePlaceholder')}
+												value={field.state.value}
+											/>
+											<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+										</TextField>
+									)
+								}}
 							</form.Field>
 
 							{/* Email Input */}
 							<form.Field
 								name="email"
 								validators={{
-									onBlur: z.email(),
+									onBlur: z.email(t('auth.invalidEmail')),
 								}}
 							>
-								{(field) => (
-									<TextField
-										className="mb-4"
-										isInvalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
-									>
-										<TextField.Label>{t('auth.email')}</TextField.Label>
-										<TextField.Input
-											autoCapitalize="none"
-											autoComplete="email"
-											keyboardType="email-address"
-											onBlur={field.handleBlur}
-											onChangeText={field.handleChange}
-											placeholder={t('auth.emailPlaceholder')}
-											value={field.state.value}
-										/>
-										<TextField.ErrorMessage>
-											{field.state.meta.errors[0]?.message}
-										</TextField.ErrorMessage>
-									</TextField>
-								)}
+								{(field) => {
+									const errorMessage = field.state.meta.errors[0]
+									const displayError =
+										typeof errorMessage === 'string'
+											? errorMessage
+											: errorMessage?.message
+
+									return (
+										<TextField
+											className="mb-4"
+											isInvalid={
+												field.state.meta.isTouched &&
+												field.state.meta.errors.length > 0
+											}
+										>
+											<TextField.Label>{t('auth.email')}</TextField.Label>
+											<TextField.Input
+												autoCapitalize="none"
+												autoComplete="email"
+												keyboardType="email-address"
+												onBlur={field.handleBlur}
+												onChangeText={field.handleChange}
+												placeholder={t('auth.emailPlaceholder')}
+												value={field.state.value}
+											/>
+											<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+										</TextField>
+									)
+								}}
 							</form.Field>
 
 							{/* Password Input */}
@@ -159,31 +210,37 @@ export default function SignUpScreen() {
 										.min(PASSWORD_MIN_LENGTH, t('auth.passwordTooShort')),
 								}}
 							>
-								{(field) => (
-									<TextField
-										className="mb-2"
-										isInvalid={
-											field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0
-										}
-									>
-										<TextField.Label>{t('auth.password')}</TextField.Label>
-										<TextField.Input
-											autoCapitalize="none"
-											autoComplete="password-new"
-											onBlur={field.handleBlur}
-											onChangeText={field.handleChange}
-											onSubmitEditing={() => form.handleSubmit()}
-											placeholder={t('auth.passwordPlaceholder')}
-											returnKeyType="done"
-											secureTextEntry
-											value={field.state.value}
-										/>
-										<TextField.ErrorMessage>
-											{field.state.meta.errors[0]?.message}
-										</TextField.ErrorMessage>
-									</TextField>
-								)}
+								{(field) => {
+									const errorMessage = field.state.meta.errors[0]
+									const displayError =
+										typeof errorMessage === 'string'
+											? errorMessage
+											: errorMessage?.message
+
+									return (
+										<TextField
+											className="mb-2"
+											isInvalid={
+												field.state.meta.isTouched &&
+												field.state.meta.errors.length > 0
+											}
+										>
+											<TextField.Label>{t('auth.password')}</TextField.Label>
+											<TextField.Input
+												autoCapitalize="none"
+												autoComplete="password-new"
+												onBlur={field.handleBlur}
+												onChangeText={field.handleChange}
+												onSubmitEditing={() => form.handleSubmit()}
+												placeholder={t('auth.passwordPlaceholder')}
+												returnKeyType="done"
+												secureTextEntry
+												value={field.state.value}
+											/>
+											<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+										</TextField>
+									)
+								}}
 							</form.Field>
 
 							{/* Password Hint */}
@@ -192,7 +249,7 @@ export default function SignUpScreen() {
 					</ScrollView>
 
 					{/* Bottom Actions */}
-					<View className="px-6" style={{ paddingBottom: insets.bottom + 16 }}>
+					<View>
 						{/* Sign Up Button */}
 						<form.Subscribe
 							selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -216,7 +273,7 @@ export default function SignUpScreen() {
 						<View className="flex-row items-center justify-center">
 							<Text className="text-muted">{t('auth.haveAccount')} </Text>
 							<Button onPress={navigateToSignIn} size="sm" variant="ghost">
-								{t('auth.signIn')}
+								<Text className="text-accent">{t('auth.signIn')}</Text>
 							</Button>
 						</View>
 					</View>

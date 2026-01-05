@@ -47,7 +47,7 @@ export default function OnboardingScreen() {
 		<Container className="flex-1">
 			<View
 				className="flex-1 justify-between"
-				style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+				style={{ paddingBottom: insets.bottom }}
 			>
 				{/* Hero Section */}
 				<View className="flex-1 items-center justify-center px-8">
@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
 				</View>
 
 				{/* Action Buttons */}
-				<View className="px-6 pb-4">
+				<View className="px-6">
 					{/* Sign Up Button (Primary) */}
 					<Button
 						className="mb-3 flex-row items-center justify-center bg-accent active:opacity-80"
@@ -121,7 +121,7 @@ export default function OnboardingScreen() {
 						{isSkipping ? (
 							<ActivityIndicator color={mutedColor} size="small" />
 						) : (
-							<Text className="font-medium text-muted">
+							<Text className="font-medium text-accent/90">
 								{t('onboarding.skipLogin')}
 							</Text>
 						)}
