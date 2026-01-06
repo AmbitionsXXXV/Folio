@@ -114,7 +114,7 @@ export default function SignUpForm() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
+		<div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
 			<div className="w-full max-w-md">
 				{/* Branding Section */}
 				<div className="mb-8 text-center">
