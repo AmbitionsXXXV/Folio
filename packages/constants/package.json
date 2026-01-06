@@ -14,7 +14,8 @@
     "check-keys": "tsx scripts/check-keys.ts"
   },
   "dependencies": {
-    "@folionote/locales": "workspace:*"
+    "@folionote/locales": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

@@ -1,3 +1,4 @@
+import { StorageKey } from '@folionote/constants'
 import {
 	Book02Icon,
 	CloudIcon,
@@ -7,10 +8,12 @@ import {
 import type { IconSvgElement } from '@hugeicons/react-native'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { router } from 'expo-router'
+import * as SecureStore from 'expo-secure-store'
 import { Button, useThemeColor } from 'heroui-native'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Text, View } from 'react-native'
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Container } from '@/components/container'
 import { useLocalMode } from '@/contexts/local-mode-context'
@@ -22,6 +25,27 @@ export default function OnboardingScreen() {
 	const mutedColor = useThemeColor('muted')
 	const { enableLocalMode } = useLocalMode()
 	const [isSkipping, setIsSkipping] = useState(false)
+	const [isReady, setIsReady] = useState(false)
+	const [shouldAnimate, setShouldAnimate] = useState(false)
+
+	useEffect(() => {
+		async function checkAnimationStatus() {
+			try {
+				const hasSeen = await SecureStore.getItemAsync(
+					StorageKey.HAS_SEEN_ONBOARDING
+				)
+				if (!hasSeen) {
+					setShouldAnimate(true)
+					await SecureStore.setItemAsync(StorageKey.HAS_SEEN_ONBOARDING, 'true')
+				}
+			} catch (error) {
+				console.error('Failed to check onboarding status:', error)
+			} finally {
+				setIsReady(true)
+			}
+		}
+		checkAnimationStatus()
+	}, [])
 
 	const handleSignIn = useCallback(() => {
 		router.push('/(auth)/sign-in')
@@ -43,6 +67,12 @@ export default function OnboardingScreen() {
 		}
 	}, [enableLocalMode])
 
+	const getEntryAnimation = (delay: number, animation = FadeInDown) => {
+		return shouldAnimate ? animation.delay(delay).springify() : undefined
+	}
+
+	if (!isReady) return <Container className="flex-1" />
+
 	return (
 		<Container className="flex-1">
 			<View
@@ -52,45 +82,58 @@ export default function OnboardingScreen() {
 				{/* Hero Section */}
 				<View className="flex-1 items-center justify-center px-8">
 					{/* Logo / Icon */}
-					<View className="mb-8 size-24 items-center justify-center rounded-3xl bg-accent/10">
+					<Animated.View
+						className="mb-8 size-24 items-center justify-center rounded-3xl bg-accent/10"
+						entering={getEntryAnimation(100, ZoomIn)}
+					>
 						<HugeiconsIcon color={accentColor} icon={Book02Icon} size={48} />
-					</View>
+					</Animated.View>
 
 					{/* App Name */}
-					<Text className="mb-3 text-center font-bold text-4xl text-foreground">
-						FolioNote
-					</Text>
+					<Animated.View entering={getEntryAnimation(200)}>
+						<Text className="mb-3 text-center font-bold text-4xl text-foreground">
+							FolioNote
+						</Text>
+					</Animated.View>
 
 					{/* Tagline */}
-					<Text className="mb-8 px-4 text-center text-lg text-muted">
-						{t('onboarding.tagline')}
-					</Text>
+					<Animated.View entering={getEntryAnimation(300)}>
+						<Text className="mb-8 px-4 text-center text-lg text-muted">
+							{t('onboarding.tagline')}
+						</Text>
+					</Animated.View>
 
 					{/* Features */}
 					<View className="w-full max-w-sm">
-						<FeatureItem
-							accentColor={accentColor}
-							description={t('onboarding.feature1Desc')}
-							icon={NoteEditIcon}
-							title={t('onboarding.feature1')}
-						/>
-						<FeatureItem
-							accentColor={accentColor}
-							description={t('onboarding.feature2Desc')}
-							icon={RefreshIcon}
-							title={t('onboarding.feature2')}
-						/>
-						<FeatureItem
-							accentColor={accentColor}
-							description={t('onboarding.feature3Desc')}
-							icon={CloudIcon}
-							title={t('onboarding.feature3')}
-						/>
+						<Animated.View entering={getEntryAnimation(400)}>
+							<FeatureItem
+								accentColor={accentColor}
+								description={t('onboarding.feature1Desc')}
+								icon={NoteEditIcon}
+								title={t('onboarding.feature1')}
+							/>
+						</Animated.View>
+						<Animated.View entering={getEntryAnimation(500)}>
+							<FeatureItem
+								accentColor={accentColor}
+								description={t('onboarding.feature2Desc')}
+								icon={RefreshIcon}
+								title={t('onboarding.feature2')}
+							/>
+						</Animated.View>
+						<Animated.View entering={getEntryAnimation(600)}>
+							<FeatureItem
+								accentColor={accentColor}
+								description={t('onboarding.feature3Desc')}
+								icon={CloudIcon}
+								title={t('onboarding.feature3')}
+							/>
+						</Animated.View>
 					</View>
 				</View>
 
 				{/* Action Buttons */}
-				<View className="px-6">
+				<Animated.View className="px-6" entering={getEntryAnimation(700)}>
 					{/* Sign Up Button (Primary) */}
 					<Button
 						className="mb-3 flex-row items-center justify-center bg-accent active:opacity-80"
@@ -131,7 +174,7 @@ export default function OnboardingScreen() {
 					<Text className="mt-2 px-4 text-center text-muted text-xs">
 						{t('onboarding.localModeHint')}
 					</Text>
-				</View>
+				</Animated.View>
 			</View>
 		</Container>
 	)

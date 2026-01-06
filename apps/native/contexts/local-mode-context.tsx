@@ -1,9 +1,7 @@
+import { StorageKey } from '@folionote/constants'
 import * as SecureStore from 'expo-secure-store'
 import type { ReactNode } from 'react'
 import { createContext, use, useCallback, useEffect, useState } from 'react'
-
-const LOCAL_MODE_KEY = 'folio_local_mode'
-const LOCAL_USER_ID_KEY = 'folio_local_user_id'
 
 interface LocalModeContextValue {
 	/**
@@ -49,8 +47,8 @@ export function LocalModeProvider({ children }: { children: ReactNode }) {
 		async function loadLocalModeState() {
 			try {
 				const [storedMode, storedUserId] = await Promise.all([
-					SecureStore.getItemAsync(LOCAL_MODE_KEY),
-					SecureStore.getItemAsync(LOCAL_USER_ID_KEY),
+					SecureStore.getItemAsync(StorageKey.LOCAL_MODE),
+					SecureStore.getItemAsync(StorageKey.LOCAL_USER_ID),
 				])
 
 				if (storedMode === 'true') {
@@ -70,13 +68,13 @@ export function LocalModeProvider({ children }: { children: ReactNode }) {
 	const enableLocalMode = useCallback(async () => {
 		try {
 			// Generate a local user ID if not exists
-			let userId = await SecureStore.getItemAsync(LOCAL_USER_ID_KEY)
+			let userId = await SecureStore.getItemAsync(StorageKey.LOCAL_USER_ID)
 			if (!userId) {
 				userId = generateLocalUserId()
-				await SecureStore.setItemAsync(LOCAL_USER_ID_KEY, userId)
+				await SecureStore.setItemAsync(StorageKey.LOCAL_USER_ID, userId)
 			}
 
-			await SecureStore.setItemAsync(LOCAL_MODE_KEY, 'true')
+			await SecureStore.setItemAsync(StorageKey.LOCAL_MODE, 'true')
 			setLocalUserId(userId)
 			setIsLocalMode(true)
 		} catch (error) {
@@ -87,7 +85,7 @@ export function LocalModeProvider({ children }: { children: ReactNode }) {
 
 	const disableLocalMode = useCallback(async () => {
 		try {
-			await SecureStore.setItemAsync(LOCAL_MODE_KEY, 'false')
+			await SecureStore.setItemAsync(StorageKey.LOCAL_MODE, 'false')
 			setIsLocalMode(false)
 			// Note: We keep the localUserId for potential future data sync
 		} catch (error) {
