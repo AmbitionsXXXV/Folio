@@ -20,6 +20,7 @@ import {
 	FieldLabel,
 	FieldSeparator,
 } from '@/components/ui/field'
+import { useSocialAuth } from '@/hooks/use-social-auth'
 import { authClient } from '@/lib/auth-client'
 import { prettifyFormErrors } from '@/lib/form-error'
 import Loader from './loader'
@@ -46,7 +47,12 @@ export default function SignUpForm() {
 	})
 	const { isPending } = authClient.useSession()
 	const [showPassword, setShowPassword] = useState(false)
-	const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+
+	const googleAuth = useSocialAuth({
+		provider: 'google',
+		callbackURL: `${import.meta.env.VITE_WEB_URL}/dashboard`,
+		errorMessageKey: 'auth.signUpFailed',
+	})
 
 	const signUpSchema = useMemo(
 		() =>
@@ -298,18 +304,12 @@ export default function SignUpForm() {
 							{/* Google Sign Up */}
 							<Button
 								className="w-full gap-2 transition-all duration-200 hover:shadow-md active:scale-95"
-								disabled={isGoogleLoading}
-								onClick={async () => {
-									setIsGoogleLoading(true)
-									await authClient.signIn.social({
-										provider: 'google',
-										callbackURL: `${import.meta.env.VITE_WEB_URL}/dashboard`,
-									})
-								}}
+								disabled={googleAuth.isPending}
+								onClick={() => googleAuth.mutate()}
 								type="button"
 								variant="outline"
 							>
-								{isGoogleLoading ? (
+								{googleAuth.isPending ? (
 									<Spinner className="size-5" />
 								) : (
 									<HugeiconsIcon className="size-5" icon={GoogleIcon} />
