@@ -15,6 +15,7 @@ import { I18nextProvider } from 'react-i18next'
 import { ActivityIndicator, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
+import { FirstLaunchHandler } from '@/components/first-launch-handler'
 import { AppThemeProvider } from '@/contexts/app-theme-context'
 import { DataServiceProvider } from '@/contexts/data-service-context'
 import { LocalModeProvider, useLocalMode } from '@/contexts/local-mode-context'
@@ -92,6 +93,7 @@ export default function Layout() {
 								<DataServiceProvider>
 									<HeroUINativeProvider>
 										<StackLayout />
+										<FirstLaunchHandler />
 									</HeroUINativeProvider>
 								</DataServiceProvider>
 							</LocalModeProvider>

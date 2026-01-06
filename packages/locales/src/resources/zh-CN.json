@@ -346,6 +346,7 @@
     "inbox": "收件箱",
     "library": "资料库",
     "review": "复习",
+    "today": "今日",
     "search": "搜索",
     "sources": "来源",
     "tags": "标签",
@@ -424,6 +425,14 @@
     "emailInvalid": "请输入有效的邮箱地址",
     "titleRequired": "请输入标题",
     "unknown": "发生未知错误"
+  },
+  "settings": {
+    "languageDetection": {
+      "title": "检测到语言",
+      "description": "您的系统语言为{{language}}，是否切换到该语言？",
+      "confirm": "切换",
+      "cancel": "保持当前"
+    }
   },
   "sync": {
     "syncing": "同步中...",

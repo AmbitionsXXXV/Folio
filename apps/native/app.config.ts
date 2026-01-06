@@ -37,7 +37,7 @@ const config: ExpoConfig = {
 		infoPlist: {
 			ITSAppUsesNonExemptEncryption: false,
 			// 注意：不要设置 UIDesignRequiresCompatibility: true
-			// 这会禁用 iOS 26 的 Liquid Glass 效果
+			// 这会禁用 iOS 26 的 Liquid Glass 效果，并且 IOS27 会被移除
 		},
 	},
 	android: {

@@ -250,6 +250,7 @@
     "inbox": "受信箱",
     "library": "ライブラリ",
     "review": "復習",
+    "today": "今日",
     "search": "検索",
     "sources": "ソース",
     "tags": "タグ",
@@ -423,6 +424,14 @@
       "title": "学習を開始する準備はできましたか？",
       "desc": "今すぐ FolioNote に参加して、個人知識システムを構築しましょう。",
       "getStarted": "開始する"
+    }
+  },
+  "settings": {
+    "languageDetection": {
+      "title": "言語を検出しました",
+      "description": "システム言語は{{language}}です。この言語に切り替えますか？",
+      "confirm": "切り替える",
+      "cancel": "現在のまま"
     }
   },
   "sync": {

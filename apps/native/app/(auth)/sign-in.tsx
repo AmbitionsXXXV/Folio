@@ -25,7 +25,6 @@ export default function SignInScreen() {
 	const { t } = useTranslation()
 	const insets = useSafeAreaInsets()
 	const headerHeight = useHeaderHeight()
-	console.log('headerHeight', headerHeight)
 	const [submitError, setSubmitError] = useState<string | null>(null)
 
 	// 创建带有国际化错误消息的 schema

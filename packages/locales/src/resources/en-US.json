@@ -295,6 +295,7 @@
     "inbox": "Inbox",
     "library": "Library",
     "review": "Review",
+    "today": "Today",
     "search": "Search",
     "sources": "Sources",
     "tags": "Tags",
@@ -423,6 +424,14 @@
       "title": "Ready to start learning?",
       "desc": "Join FolioNote and build your personal knowledge system today.",
       "getStarted": "Get Started"
+    }
+  },
+  "settings": {
+    "languageDetection": {
+      "title": "Language Detected",
+      "description": "Your system language is {{language}}. Would you like to switch to this language?",
+      "confirm": "Switch",
+      "cancel": "Keep Current"
     }
   },
   "sync": {

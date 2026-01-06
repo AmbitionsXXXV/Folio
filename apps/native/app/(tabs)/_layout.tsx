@@ -59,7 +59,7 @@ export default function TabLayout() {
 			</NativeTabs.Trigger>
 
 			<NativeTabs.Trigger name="today">
-				<Label>{t('review.today')}</Label>
+				<Label>{t('nav.today')}</Label>
 				{/* SF Symbols: calendar / calendar.circle.fill for iOS */}
 				<Icon
 					drawable="ic_calendar"
