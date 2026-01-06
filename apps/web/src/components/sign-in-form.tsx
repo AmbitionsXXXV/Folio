@@ -1,7 +1,14 @@
-import { GoogleIcon } from '@hugeicons/core-free-icons'
+import {
+	GoogleIcon,
+	Mail01Icon,
+	SecurityLockIcon,
+	ViewIcon,
+	ViewOffSlashIcon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import z from 'zod'
@@ -17,6 +24,7 @@ import { prettifyFormErrors } from '@/lib/form-error'
 import Loader from './loader'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { Spinner } from './ui/spinner'
 
 /**
  * Renders the sign-in form and handles user authentication.
@@ -32,12 +40,17 @@ export default function SignInForm() {
 		from: '/',
 	})
 	const { isPending } = authClient.useSession()
+	const [showPassword, setShowPassword] = useState(false)
+	const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-	// 创建带有国际化错误消息的 schema
-	const signInSchema = z.object({
-		email: z.email(t('auth.invalidEmail')),
-		password: z.string().min(8, t('auth.passwordTooShort')),
-	})
+	const signInSchema = useMemo(
+		() =>
+			z.object({
+				email: z.email(t('auth.invalidEmail')),
+				password: z.string().min(8, t('auth.passwordTooShort')),
+			}),
+		[t]
+	)
 
 	const form = useForm({
 		defaultValues: {
@@ -61,7 +74,6 @@ export default function SignInForm() {
 						toast.success(t('auth.signInSuccess'))
 					},
 					onError: (error) => {
-						// 开发环境下打印详细错误
 						if (import.meta.env.DEV) {
 							console.warn('[SignIn] Auth error:', error.error.message)
 						}
@@ -71,7 +83,6 @@ export default function SignInForm() {
 			)
 		},
 		onSubmitInvalid: ({ formApi }) => {
-			// 表单验证失败时，记录格式化的错误日志
 			if (import.meta.env.DEV) {
 				const errors = formApi.state.errors
 				if (errors.length > 0) {
@@ -92,112 +103,193 @@ export default function SignInForm() {
 	}
 
 	return (
-		<div className="mx-auto mt-10 w-full max-w-md p-6">
-			<h1 className="mb-6 text-center font-bold text-3xl">{t('auth.welcome')}</h1>
+		<div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
+			<div className="w-full max-w-md">
+				{/* Branding Section */}
+				<div className="mb-8 text-center">
+					<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
+						<HugeiconsIcon
+							className="size-8 text-primary-foreground"
+							icon={SecurityLockIcon}
+						/>
+					</div>
+					<h1 className="mb-2 font-bold text-3xl">{t('auth.welcome')}</h1>
+					<p className="text-muted-foreground text-sm">{t('auth.signInSubtitle')}</p>
+				</div>
 
-			<form
-				id="sign-in-form"
-				onSubmit={(e) => {
-					e.preventDefault()
-					e.stopPropagation()
-					form.handleSubmit()
-				}}
-			>
-				<FieldGroup className="gap-4">
-					<form.Field
-						name="email"
-						validators={{
-							onBlur: z.email(t('auth.invalidEmail')),
+				{/* Card Container */}
+				<div className="rounded-2xl border bg-card p-8 shadow-xl dark:border-border/50 dark:bg-card/50">
+					<form
+						id="sign-in-form"
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							form.handleSubmit()
 						}}
 					>
-						{(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid
-							return (
-								<Field data-invalid={isInvalid || undefined}>
-									<FieldLabel htmlFor={field.name}>{t('auth.email')}</FieldLabel>
-									<Input
-										aria-invalid={isInvalid}
-										autoComplete="email"
-										id={field.name}
-										name={field.name}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder={t('auth.emailPlaceholder')}
-										type="email"
-										value={field.state.value}
-									/>
-									{isInvalid && <FieldError errors={field.state.meta.errors} />}
-								</Field>
-							)
-						}}
-					</form.Field>
-
-					<form.Field
-						name="password"
-						validators={{
-							onBlur: z.string().min(1, t('auth.passwordRequired')),
-						}}
-					>
-						{(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid
-							return (
-								<Field data-invalid={isInvalid || undefined}>
-									<FieldLabel htmlFor={field.name}>{t('auth.password')}</FieldLabel>
-									<Input
-										aria-invalid={isInvalid}
-										autoComplete="current-password"
-										id={field.name}
-										name={field.name}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder={t('auth.passwordPlaceholder')}
-										type="password"
-										value={field.state.value}
-									/>
-									{isInvalid && <FieldError errors={field.state.meta.errors} />}
-								</Field>
-							)
-						}}
-					</form.Field>
-
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-					>
-						{([canSubmit, isSubmitting]) => (
-							<Button
-								className="w-full"
-								disabled={!canSubmit || isSubmitting}
-								type="submit"
+						<FieldGroup className="gap-5">
+							{/* Email Field */}
+							<form.Field
+								name="email"
+								validators={{
+									onBlur: z.string().email(t('auth.invalidEmail')),
+								}}
 							>
-								{isSubmitting ? t('common.loading') : t('auth.signIn')}
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid
+									return (
+										<Field data-invalid={isInvalid || undefined}>
+											<FieldLabel htmlFor={field.name}>{t('auth.email')}</FieldLabel>
+											<div className="relative">
+												<HugeiconsIcon
+													className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+													icon={Mail01Icon}
+												/>
+												<Input
+													aria-invalid={isInvalid}
+													autoComplete="email"
+													className="pl-10 transition-all duration-200 hover:border-primary/50"
+													id={field.name}
+													name={field.name}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													placeholder={t('auth.emailPlaceholder')}
+													type="email"
+													value={field.state.value}
+												/>
+											</div>
+											{isInvalid && <FieldError errors={field.state.meta.errors} />}
+										</Field>
+									)
+								}}
+							</form.Field>
+
+							{/* Password Field */}
+							<form.Field
+								name="password"
+								validators={{
+									onBlur: z.string().min(1, t('auth.passwordRequired')),
+								}}
+							>
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid
+									return (
+										<Field data-invalid={isInvalid || undefined}>
+											<FieldLabel htmlFor={field.name}>
+												{t('auth.password')}
+											</FieldLabel>
+											<div className="relative">
+												<HugeiconsIcon
+													className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+													icon={SecurityLockIcon}
+												/>
+												<Input
+													aria-invalid={isInvalid}
+													autoComplete="current-password"
+													className="pr-10 pl-10 transition-all duration-200 hover:border-primary/50"
+													id={field.name}
+													name={field.name}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													placeholder={t('auth.passwordPlaceholder')}
+													type={showPassword ? 'text' : 'password'}
+													value={field.state.value}
+												/>
+												<button
+													aria-label={
+														showPassword ? 'Hide password' : 'Show password'
+													}
+													className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+													onClick={() => setShowPassword(!showPassword)}
+													type="button"
+												>
+													<HugeiconsIcon
+														className="size-4"
+														icon={showPassword ? ViewOffSlashIcon : ViewIcon}
+													/>
+												</button>
+											</div>
+											{isInvalid && <FieldError errors={field.state.meta.errors} />}
+										</Field>
+									)
+								}}
+							</form.Field>
+
+							{/* Forgot Password Link */}
+							<div className="flex items-center justify-end text-sm">
+								<Link
+									className="text-primary transition-colors hover:underline"
+									to="/forgot-password"
+								>
+									{t('auth.forgotPassword')}
+								</Link>
+							</div>
+
+							{/* Submit Button */}
+							<form.Subscribe
+								selector={(state) => [state.canSubmit, state.isSubmitting]}
+							>
+								{([canSubmit, isSubmitting]) => (
+									<Button
+										className="w-full gap-2 transition-all duration-200 hover:shadow-md active:scale-95"
+										disabled={!canSubmit || isSubmitting}
+										type="submit"
+									>
+										{isSubmitting && <Spinner className="size-4" />}
+										{isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
+									</Button>
+								)}
+							</form.Subscribe>
+
+							{/* Separator */}
+							<FieldSeparator className="my-2">
+								<span className="px-4 text-muted-foreground text-xs uppercase tracking-wider">
+									{t('auth.orContinueWith')}
+								</span>
+							</FieldSeparator>
+
+							{/* Google Sign In */}
+							<Button
+								className="w-full gap-2 transition-all duration-200 hover:shadow-md active:scale-95"
+								disabled={isGoogleLoading}
+								onClick={async () => {
+									setIsGoogleLoading(true)
+									await authClient.signIn.social({
+										provider: 'google',
+										callbackURL: `${import.meta.env.VITE_WEB_URL}/dashboard`,
+									})
+								}}
+								type="button"
+								variant="outline"
+							>
+								{isGoogleLoading ? (
+									<Spinner className="size-5" />
+								) : (
+									<HugeiconsIcon className="size-5" icon={GoogleIcon} />
+								)}
+								<span>{t('auth.continueWithGoogle')}</span>
 							</Button>
-						)}
-					</form.Subscribe>
+						</FieldGroup>
+					</form>
 
-					<FieldSeparator />
+					{/* Sign Up Link */}
+					<div className="mt-6 text-center text-sm">
+						<span className="text-muted-foreground">{t('auth.noAccount')}</span>{' '}
+						<Link
+							className="font-semibold text-primary hover:underline"
+							to="/register"
+						>
+							{t('auth.signUp')}
+						</Link>
+					</div>
+				</div>
 
-					<Button
-						className="w-full"
-						onClick={() =>
-							authClient.signIn.social({
-								provider: 'google',
-								callbackURL: `${import.meta.env.VITE_WEB_URL}/dashboard`,
-							})
-						}
-						type="button"
-					>
-						<HugeiconsIcon className="size-6 fill-white" icon={GoogleIcon} />
-						<span className="sr-only">Sign in with Google</span>
-					</Button>
-				</FieldGroup>
-			</form>
-
-			<div className="mt-4 text-center">
-				<Link className="text-indigo-600 hover:text-indigo-800" to="/register">
-					{t('auth.noAccount')} {t('auth.signUp')}
-				</Link>
+				{/* Trust Badge */}
+				<p className="mt-6 text-center text-muted-foreground text-xs">
+					{t('auth.secureLogin')}
+				</p>
 			</div>
 		</div>
 	)

@@ -67,7 +67,14 @@
     "nameRequired": "名前を入力してください",
     "emailRequired": "メールアドレスを入力してください",
     "invalidEmail": "有効なメールアドレスを入力してください",
-    "passwordRequired": "パスワードを入力してください"
+    "passwordRequired": "パスワードを入力してください",
+    "signingIn": "サインイン中...",
+    "creatingAccount": "アカウント作成中...",
+    "continueWithGoogle": "Google で続ける",
+    "orContinueWith": "または続ける",
+    "secureLogin": "Better Auth による安全なログイン",
+    "passwordRequirements": "8 文字以上である必要があります",
+    "termsAgreement": "サインアップすることで、利用規約とプライバシーポリシーに同意したことになります"
   },
   "entry": {
     "title": "タイトル",
