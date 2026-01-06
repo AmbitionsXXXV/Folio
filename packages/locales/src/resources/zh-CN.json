@@ -118,7 +118,14 @@
     "nameRequired": "请输入姓名",
     "emailRequired": "请输入邮箱",
     "invalidEmail": "请输入有效的邮箱地址",
-    "passwordRequired": "请输入密码"
+    "passwordRequired": "请输入密码",
+    "signingIn": "登录中...",
+    "creatingAccount": "创建账号中...",
+    "continueWithGoogle": "使用 Google 继续",
+    "orContinueWith": "或继续使用",
+    "secureLogin": "由 Better Auth 提供安全登录",
+    "passwordRequirements": "至少需要 8 个字符",
+    "termsAgreement": "注册即表示您同意我们的服务条款和隐私政策"
   },
   "entry": {
     "title": "标题",

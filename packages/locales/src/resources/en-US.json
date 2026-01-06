@@ -67,7 +67,14 @@
     "nameRequired": "Name is required",
     "emailRequired": "Email is required",
     "invalidEmail": "Please enter a valid email",
-    "passwordRequired": "Password is required"
+    "passwordRequired": "Password is required",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "or continue with",
+    "secureLogin": "Secure login powered by Better Auth",
+    "passwordRequirements": "Must be at least 8 characters long",
+    "termsAgreement": "By signing up, you agree to our Terms and Privacy Policy"
   },
   "entry": {
     "title": "Title",

@@ -28,7 +28,11 @@ export const auth = betterAuth({
 			verification,
 		},
 	}),
-	trustedOrigins: [process.env.CORS_ORIGIN || '', 'exp://', 'folio-note://'],
+	trustedOrigins: [
+		...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
+		'exp://',
+		'folio-note://',
+	],
 	socialProviders: {
 		github: {
 			enabled: true,

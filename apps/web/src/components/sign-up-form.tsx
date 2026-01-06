@@ -1,14 +1,31 @@
+import {
+	GoogleIcon,
+	Mail01Icon,
+	SecurityLockIcon,
+	UserIcon,
+	ViewIcon,
+	ViewOffSlashIcon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import z from 'zod'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+	FieldSeparator,
+} from '@/components/ui/field'
 import { authClient } from '@/lib/auth-client'
 import { prettifyFormErrors } from '@/lib/form-error'
 import Loader from './loader'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { Spinner } from './ui/spinner'
 
 const PASSWORD_MIN_LENGTH = 8
 
@@ -28,16 +45,21 @@ export default function SignUpForm() {
 		from: '/',
 	})
 	const { isPending } = authClient.useSession()
+	const [showPassword, setShowPassword] = useState(false)
+	const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-	// 创建带有国际化错误消息的 schema
-	const signUpSchema = z.object({
-		name: z.string().min(1, t('auth.nameRequired')),
-		email: z.email(t('auth.invalidEmail')),
-		password: z
-			.string()
-			.min(1, t('auth.passwordRequired'))
-			.min(PASSWORD_MIN_LENGTH, t('auth.passwordTooShort')),
-	})
+	const signUpSchema = useMemo(
+		() =>
+			z.object({
+				name: z.string().min(1, t('auth.nameRequired')),
+				email: z.email(t('auth.invalidEmail')),
+				password: z
+					.string()
+					.min(1, t('auth.passwordRequired'))
+					.min(PASSWORD_MIN_LENGTH, t('auth.passwordTooShort')),
+			}),
+		[t]
+	)
 
 	const form = useForm({
 		defaultValues: {
@@ -63,7 +85,6 @@ export default function SignUpForm() {
 						toast.success(t('auth.signUpSuccess'))
 					},
 					onError: (error) => {
-						// 开发环境下打印详细错误
 						if (import.meta.env.DEV) {
 							console.warn('[SignUp] Auth error:', error.error.message)
 						}
@@ -73,7 +94,6 @@ export default function SignUpForm() {
 			)
 		},
 		onSubmitInvalid: ({ formApi }) => {
-			// 表单验证失败时，记录格式化的错误日志
 			if (import.meta.env.DEV) {
 				const errors = formApi.state.errors
 				if (errors.length > 0) {
@@ -94,129 +114,224 @@ export default function SignUpForm() {
 	}
 
 	return (
-		<div className="mx-auto mt-10 w-full max-w-md p-6">
-			<h1 className="mb-6 text-center font-bold text-3xl">
-				{t('auth.createAccount')}
-			</h1>
+		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
+			<div className="w-full max-w-md">
+				{/* Branding Section */}
+				<div className="mb-8 text-center">
+					<div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
+						<HugeiconsIcon
+							className="size-8 text-primary-foreground"
+							icon={UserIcon}
+						/>
+					</div>
+					<h1 className="mb-2 font-bold text-3xl">{t('auth.createAccount')}</h1>
+					<p className="text-muted-foreground text-sm">{t('auth.signUpSubtitle')}</p>
+				</div>
 
-			<form
-				id="sign-up-form"
-				onSubmit={(e) => {
-					e.preventDefault()
-					e.stopPropagation()
-					form.handleSubmit()
-				}}
-			>
-				<FieldGroup className="gap-4">
-					<form.Field
-						name="name"
-						validators={{
-							onBlur: z.string().min(1, t('auth.nameRequired')),
+				{/* Card Container */}
+				<div className="rounded-2xl border bg-card p-8 shadow-xl dark:border-border/50 dark:bg-card/50">
+					<form
+						id="sign-up-form"
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							form.handleSubmit()
 						}}
 					>
-						{(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid
-							return (
-								<Field data-invalid={isInvalid || undefined}>
-									<FieldLabel htmlFor={field.name}>{t('auth.name')}</FieldLabel>
-									<Input
-										aria-invalid={isInvalid}
-										autoComplete="name"
-										id={field.name}
-										name={field.name}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder={t('auth.namePlaceholder')}
-										value={field.state.value}
-									/>
-									{isInvalid && <FieldError errors={field.state.meta.errors} />}
-								</Field>
-							)
-						}}
-					</form.Field>
-
-					<form.Field
-						name="email"
-						validators={{
-							onBlur: z.email(t('auth.invalidEmail')),
-						}}
-					>
-						{(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid
-							return (
-								<Field data-invalid={isInvalid || undefined}>
-									<FieldLabel htmlFor={field.name}>{t('auth.email')}</FieldLabel>
-									<Input
-										aria-invalid={isInvalid}
-										autoComplete="email"
-										id={field.name}
-										name={field.name}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder={t('auth.emailPlaceholder')}
-										type="email"
-										value={field.state.value}
-									/>
-									{isInvalid && <FieldError errors={field.state.meta.errors} />}
-								</Field>
-							)
-						}}
-					</form.Field>
-
-					<form.Field
-						name="password"
-						validators={{
-							onBlur: z
-								.string()
-								.min(1, t('auth.passwordRequired'))
-								.min(PASSWORD_MIN_LENGTH, t('auth.passwordTooShort')),
-						}}
-					>
-						{(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid
-							return (
-								<Field data-invalid={isInvalid || undefined}>
-									<FieldLabel htmlFor={field.name}>{t('auth.password')}</FieldLabel>
-									<Input
-										aria-invalid={isInvalid}
-										autoComplete="new-password"
-										id={field.name}
-										name={field.name}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder={t('auth.passwordPlaceholder')}
-										type="password"
-										value={field.state.value}
-									/>
-									{isInvalid && <FieldError errors={field.state.meta.errors} />}
-								</Field>
-							)
-						}}
-					</form.Field>
-
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-					>
-						{([canSubmit, isSubmitting]) => (
-							<Button
-								className="w-full"
-								disabled={!canSubmit || isSubmitting}
-								type="submit"
+						<FieldGroup className="gap-5">
+							{/* Name Field */}
+							<form.Field
+								name="name"
+								validators={{
+									onBlur: z.string().min(1, t('auth.nameRequired')),
+								}}
 							>
-								{isSubmitting ? t('common.loading') : t('auth.signUp')}
-							</Button>
-						)}
-					</form.Subscribe>
-				</FieldGroup>
-			</form>
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid
+									return (
+										<Field data-invalid={isInvalid || undefined}>
+											<FieldLabel htmlFor={field.name}>{t('auth.name')}</FieldLabel>
+											<div className="relative">
+												<HugeiconsIcon
+													className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+													icon={UserIcon}
+												/>
+												<Input
+													aria-invalid={isInvalid}
+													autoComplete="name"
+													className="pl-10 transition-all duration-200 hover:border-primary/50"
+													id={field.name}
+													name={field.name}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													placeholder={t('auth.namePlaceholder')}
+													value={field.state.value}
+												/>
+											</div>
+											{isInvalid && <FieldError errors={field.state.meta.errors} />}
+										</Field>
+									)
+								}}
+							</form.Field>
 
-			<div className="mt-4 text-center">
-				<Link className="text-indigo-600 hover:text-indigo-800" to="/login">
-					{t('auth.hasAccount')} {t('auth.signIn')}
-				</Link>
+							{/* Email Field */}
+							<form.Field
+								name="email"
+								validators={{
+									onBlur: z.string().email(t('auth.invalidEmail')),
+								}}
+							>
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid
+									return (
+										<Field data-invalid={isInvalid || undefined}>
+											<FieldLabel htmlFor={field.name}>{t('auth.email')}</FieldLabel>
+											<div className="relative">
+												<HugeiconsIcon
+													className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+													icon={Mail01Icon}
+												/>
+												<Input
+													aria-invalid={isInvalid}
+													autoComplete="email"
+													className="pl-10 transition-all duration-200 hover:border-primary/50"
+													id={field.name}
+													name={field.name}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													placeholder={t('auth.emailPlaceholder')}
+													type="email"
+													value={field.state.value}
+												/>
+											</div>
+											{isInvalid && <FieldError errors={field.state.meta.errors} />}
+										</Field>
+									)
+								}}
+							</form.Field>
+
+							{/* Password Field */}
+							<form.Field
+								name="password"
+								validators={{
+									onBlur: z
+										.string()
+										.min(1, t('auth.passwordRequired'))
+										.min(PASSWORD_MIN_LENGTH, t('auth.passwordTooShort')),
+								}}
+							>
+								{(field) => {
+									const isInvalid =
+										field.state.meta.isTouched && !field.state.meta.isValid
+									return (
+										<Field data-invalid={isInvalid || undefined}>
+											<FieldLabel htmlFor={field.name}>
+												{t('auth.password')}
+											</FieldLabel>
+											<div className="relative">
+												<HugeiconsIcon
+													className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+													icon={SecurityLockIcon}
+												/>
+												<Input
+													aria-invalid={isInvalid}
+													autoComplete="new-password"
+													className="pr-10 pl-10 transition-all duration-200 hover:border-primary/50"
+													id={field.name}
+													name={field.name}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													placeholder={t('auth.passwordPlaceholder')}
+													type={showPassword ? 'text' : 'password'}
+													value={field.state.value}
+												/>
+												<button
+													aria-label={
+														showPassword ? 'Hide password' : 'Show password'
+													}
+													className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+													onClick={() => setShowPassword(!showPassword)}
+													type="button"
+												>
+													<HugeiconsIcon
+														className="size-4"
+														icon={showPassword ? ViewOffSlashIcon : ViewIcon}
+													/>
+												</button>
+											</div>
+											{isInvalid && <FieldError errors={field.state.meta.errors} />}
+										</Field>
+									)
+								}}
+							</form.Field>
+
+							{/* Password Requirements Hint */}
+							<p className="-mt-3 text-muted-foreground text-xs">
+								{t('auth.passwordRequirements')}
+							</p>
+
+							{/* Submit Button */}
+							<form.Subscribe
+								selector={(state) => [state.canSubmit, state.isSubmitting]}
+							>
+								{([canSubmit, isSubmitting]) => (
+									<Button
+										className="w-full gap-2 transition-all duration-200 hover:shadow-md active:scale-95"
+										disabled={!canSubmit || isSubmitting}
+										type="submit"
+									>
+										{isSubmitting && <Spinner className="size-4" />}
+										{isSubmitting ? t('auth.creatingAccount') : t('auth.signUp')}
+									</Button>
+								)}
+							</form.Subscribe>
+
+							{/* Separator */}
+							<FieldSeparator className="my-2">
+								<span className="px-4 text-muted-foreground text-xs uppercase tracking-wider">
+									{t('auth.orContinueWith')}
+								</span>
+							</FieldSeparator>
+
+							{/* Google Sign Up */}
+							<Button
+								className="w-full gap-2 transition-all duration-200 hover:shadow-md active:scale-95"
+								disabled={isGoogleLoading}
+								onClick={async () => {
+									setIsGoogleLoading(true)
+									await authClient.signIn.social({
+										provider: 'google',
+										callbackURL: `${import.meta.env.VITE_WEB_URL}/dashboard`,
+									})
+								}}
+								type="button"
+								variant="outline"
+							>
+								{isGoogleLoading ? (
+									<Spinner className="size-5" />
+								) : (
+									<HugeiconsIcon className="size-5" icon={GoogleIcon} />
+								)}
+								<span>{t('auth.continueWithGoogle')}</span>
+							</Button>
+						</FieldGroup>
+					</form>
+
+					{/* Sign In Link */}
+					<div className="mt-6 text-center text-sm">
+						<span className="text-muted-foreground">{t('auth.hasAccount')}</span>{' '}
+						<Link className="font-semibold text-primary hover:underline" to="/login">
+							{t('auth.signIn')}
+						</Link>
+					</div>
+				</div>
+
+				{/* Terms & Privacy */}
+				<p className="mt-6 text-center text-muted-foreground text-xs">
+					{t('auth.termsAgreement')}
+				</p>
 			</div>
 		</div>
 	)
