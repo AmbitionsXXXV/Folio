@@ -70,11 +70,12 @@ jobs:
     needs: build
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
-      - name: Checkout (for ecosystem config)
+      - name: Checkout (for ecosystem config and Caddyfile)
         uses: actions/checkout@v4
         with:
           sparse-checkout: |
             apps/server/ecosystem.config.cjs
+            apps/server/Caddyfile
           sparse-checkout-cone-mode: false
 
       - name: Download deployment package
@@ -111,6 +112,11 @@ jobs:
           # Upload ecosystem config if exists
           if [ -f "apps/server/ecosystem.config.cjs" ]; then
             scp apps/server/ecosystem.config.cjs ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:$RELEASE_DIR/
+          fi
+
+          # Upload Caddyfile if exists
+          if [ -f "apps/server/Caddyfile" ]; then
+            scp apps/server/Caddyfile ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:$RELEASE_DIR/
           fi
 
           # Link shared .env and update current symlink
@@ -172,6 +178,63 @@ jobs:
 
             # Show status
             pm2 status
+          ENDSSH
+
+      - name: Deploy Caddy configuration
+        env:
+          SERVER_DOMAIN: ${{ secrets.SERVER_DOMAIN }}
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "DOMAIN='$SERVER_DOMAIN'" <<'ENDSSH'
+            set -e
+            
+            CADDYFILE="/opt/folio/server/current/Caddyfile"
+            
+            # Check if Caddyfile exists in deployment
+            if [ ! -f "$CADDYFILE" ]; then
+              echo "No Caddyfile found, skipping Caddy configuration"
+              exit 0
+            fi
+            
+            echo "=== Deploying Caddy configuration ==="
+            
+            # Install Caddy if not present
+            if ! command -v caddy &> /dev/null; then
+              echo "Installing Caddy..."
+              apt-get update
+              apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+              curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+              apt-get update
+              apt-get install -y caddy
+            fi
+            
+            # Create log directory
+            mkdir -p /var/log/caddy
+            chown caddy:caddy /var/log/caddy
+            
+            # Use domain from GitHub Secrets or default to localhost
+            CADDY_DOMAIN="${DOMAIN:-localhost}"
+            echo "Configuring Caddy for domain: $CADDY_DOMAIN"
+            
+            # Replace domain placeholder in Caddyfile and write to system location
+            sed "s/{\\\$DOMAIN:localhost}/$CADDY_DOMAIN/" "$CADDYFILE" > /etc/caddy/Caddyfile
+            
+            # Validate Caddyfile
+            echo "Validating Caddyfile..."
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+            
+            # Reload or start Caddy
+            if systemctl is-active --quiet caddy; then
+              echo "Reloading Caddy..."
+              systemctl reload caddy
+            else
+              echo "Starting Caddy..."
+              systemctl enable caddy
+              systemctl start caddy
+            fi
+            
+            echo "Caddy configuration deployed successfully!"
+            systemctl status caddy --no-pager
           ENDSSH
 
       - name: Health check

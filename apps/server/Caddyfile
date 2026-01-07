@@ -1,0 +1,62 @@
+# Folio Server Caddy Configuration
+# 
+# 使用方法：
+# 1. 部署时会自动复制到 /etc/caddy/Caddyfile
+# 2. 环境变量 DOMAIN 可以覆盖默认域名
+#
+# 本地测试（使用 localhost）:
+#   DOMAIN=localhost:8080 caddy run --config Caddyfile
+#
+# 生产环境会自动获取 HTTPS 证书
+
+# 全局配置
+{
+	# 生产环境使用邮箱接收证书过期通知（取消注释并替换）
+	# email your-email@example.com
+	
+	# 开发环境可以禁用自动 HTTPS
+	# local_certs
+}
+
+# 主站点配置 - 使用环境变量或默认值
+{$DOMAIN:localhost} {
+	# 反向代理到 Node.js 应用
+	reverse_proxy localhost:3000 {
+		# 健康检查
+		health_uri /health
+		health_interval 30s
+		health_timeout 5s
+		
+		# 请求头设置
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	# 启用压缩
+	encode gzip zstd
+
+	# 安全头部
+	header {
+		# 防止 MIME 类型嗅探
+		X-Content-Type-Options nosniff
+		# 防止点击劫持
+		X-Frame-Options DENY
+		# 控制 Referrer 信息
+		Referrer-Policy strict-origin-when-cross-origin
+		# XSS 保护
+		X-XSS-Protection "1; mode=block"
+		# 移除 Server 头
+		-Server
+	}
+
+	# 请求日志
+	log {
+		output file /var/log/caddy/folio-server.log {
+			roll_size 10mb
+			roll_keep 5
+			roll_keep_for 720h
+		}
+		format json
+	}
+}
