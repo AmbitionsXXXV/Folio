@@ -11,14 +11,17 @@
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "typescript": "catalog:",
-    "@folionote/config": "workspace:*"
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "better-auth": "catalog:",
     "@better-auth/expo": "catalog:",
+    "@folionote/db": "workspace:*",
+    "@folionote/transactional": "workspace:*",
+    "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@folionote/db": "workspace:*"
+    "react": "^19.2.3",
+    "resend": "^6.6.0",
+    "zod": "catalog:"
   }
 }

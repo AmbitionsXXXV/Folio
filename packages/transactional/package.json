@@ -1,0 +1,31 @@
+{
+  "name": "@folionote/transactional",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.tsx"
+    }
+  },
+  "scripts": {
+    "dev": "email dev --port 3030",
+    "build": "email build",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "@react-email/preview-server": "^5.1.1",
+    "@types/react": "^19.2.7",
+    "react-email": "^5.1.1",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}

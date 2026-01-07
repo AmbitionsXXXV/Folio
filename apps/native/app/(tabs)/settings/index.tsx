@@ -95,8 +95,8 @@ export default function SettingsScreen() {
 		<Container className="flex-1" disableScroll disableTopInset>
 			<ScrollView
 				// iOS: 自动调整内容偏移以适应透明 header (Liquid Glass)
-				contentInsetAdjustmentBehavior="automatic"
 				contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+				contentInsetAdjustmentBehavior="automatic"
 			>
 				{/* User Info */}
 				{session?.user && (
