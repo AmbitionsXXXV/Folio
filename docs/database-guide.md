@@ -14,6 +14,7 @@
 8. [进阶：事务（Transaction）](#8-进阶事务transaction)
 9. [进阶：迁移（Migration）](#9-进阶迁移migration)
 10. [进阶：连接池（Connection Pool）](#10-进阶连接池connection-pool)
+11. [进阶：行级安全（Row Level Security）](#11-进阶行级安全row-level-security)
 
 ---
 
@@ -45,7 +46,7 @@ mindmap
 ### 核心术语速查
 
 | 术语 | 英文 | 解释 | 例子 |
-|------|------|------|------|
+| ------ | ------ | ------ | ------ |
 | 主键 | Primary Key | 唯一标识一条记录 | `id: "abc123"` |
 | 外键 | Foreign Key | 引用另一个表的主键 | `userId` 引用 `user.id` |
 | 索引 | Index | 加速查询的数据结构 | 类似书的目录 |
@@ -672,7 +673,7 @@ const entries = await db.query.entries.findMany({
 ### Drizzle 常用方法
 
 | 方法 | 用途 | 示例 |
-|------|------|------|
+| ------ | ------ | ------ |
 | `eq()` | 等于 | `eq(entries.userId, 'abc')` |
 | `ne()` | 不等于 | `ne(entries.isInbox, true)` |
 | `gt()` / `gte()` | 大于 / 大于等于 | `gt(entries.createdAt, date)` |
@@ -686,7 +687,7 @@ const entries = await db.query.entries.findMany({
 ### 外键删除行为
 
 | 行为 | 说明 | 使用场景 |
-|------|------|----------|
+| ------ | ------ | ---------- |
 | `cascade` | 级联删除 | 删除用户时删除其所有笔记 |
 | `set null` | 设为 NULL | 删除笔记时保留附件 |
 | `restrict` | 阻止删除 | 有关联数据时禁止删除 |
@@ -1140,6 +1141,389 @@ flowchart TB
 
 ---
 
+## 11. 进阶：行级安全（Row Level Security）
+
+### 什么是 RLS？
+
+行级安全（Row Level Security, RLS）是 PostgreSQL 的一项功能，允许你在数据库层面控制用户对表中特定行的访问权限。
+
+```mermaid
+flowchart TB
+    subgraph NoRLS["❌ 没有 RLS"]
+        NR1["用户 A 可以查询所有数据"]
+        NR2["包括用户 B 的私密数据"]
+        NR3["安全依赖应用层控制"]
+    end
+
+    subgraph WithRLS["✅ 有 RLS"]
+        WR1["用户 A 只能看到自己的数据"]
+        WR2["数据库层面强制隔离"]
+        WR3["即使绕过应用也安全"]
+    end
+
+    NoRLS -.->|启用 RLS| WithRLS
+```
+
+### RLS 工作原理
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant App as 应用
+    participant RLS as RLS 策略
+    participant DB as 数据库
+
+    User->>App: 1. 请求数据
+    App->>DB: 2. SELECT * FROM entries
+    DB->>RLS: 3. 检查 RLS 策略
+    RLS->>RLS: 4. 自动添加条件<br/>WHERE user_id = auth.uid()
+    RLS->>DB: 5. 执行过滤后的查询
+    DB->>App: 6. 返回用户自己的数据
+    App->>User: 7. 展示数据
+```
+
+### 为什么需要 RLS？
+
+```mermaid
+mindmap
+  root((RLS 优势))
+    安全性
+      数据库层面的保护
+      即使应用层有漏洞也安全
+      防止 SQL 注入导致的数据泄露
+    简化开发
+      不需要在每个查询中手动加 WHERE
+      减少代码重复
+      降低遗漏风险
+    合规性
+      数据隔离审计
+      GDPR / 隐私合规
+      多租户架构支持
+    PostgREST / Supabase
+      API 直接暴露数据库
+      必须在数据库层面控制访问
+```
+
+### 启用 RLS 的步骤
+
+#### 步骤 1：启用表的 RLS
+
+```sql
+-- 启用 RLS（默认拒绝所有访问）
+ALTER TABLE public.entry_shares ENABLE ROW LEVEL SECURITY;
+```
+
+```mermaid
+flowchart LR
+    subgraph Before["启用前"]
+        B1["所有人可访问所有行"]
+    end
+
+    subgraph After["启用后"]
+        A1["默认拒绝所有访问"]
+        A2["需要创建策略来允许访问"]
+    end
+
+    Before -->|ENABLE RLS| After
+```
+
+#### 步骤 2：创建访问策略
+
+```sql
+-- 策略：用户只能查看自己创建的分享
+CREATE POLICY "Users can view own shares"
+ON public.entry_shares
+FOR SELECT                           -- 操作类型
+TO authenticated                     -- 目标角色
+USING (user_id = auth.uid()::text);  -- 条件表达式
+```
+
+### 策略语法详解
+
+```mermaid
+flowchart TB
+    subgraph Syntax["策略语法结构"]
+        S1["CREATE POLICY 策略名"]
+        S2["ON 表名"]
+        S3["FOR 操作类型"]
+        S4["TO 角色"]
+        S5["USING (读取条件)"]
+        S6["WITH CHECK (写入条件)"]
+    end
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6
+```
+
+#### 操作类型（FOR）
+
+| 操作 | 说明 | 需要的条件 |
+| ------ | ------ | ----------- |
+| `SELECT` | 读取 | `USING` |
+| `INSERT` | 插入 | `WITH CHECK` |
+| `UPDATE` | 更新 | `USING` + `WITH CHECK` |
+| `DELETE` | 删除 | `USING` |
+| `ALL` | 所有操作 | 两者都需要 |
+
+#### 目标角色（TO）
+
+| 角色 | 说明 |
+| ------ | ------ |
+| `authenticated` | 已登录用户 |
+| `anon` | 匿名用户 |
+| `service_role` | 服务端角色（绕过 RLS） |
+| `PUBLIC` | 所有角色 |
+
+### 完整 RLS 配置示例
+
+以 `entry_shares` 表为例，展示完整的 RLS 配置：
+
+```sql
+-- 1. 启用 RLS
+ALTER TABLE public.entry_shares ENABLE ROW LEVEL SECURITY;
+
+-- 2. 认证用户查看自己的分享
+CREATE POLICY "Users can view own shares"
+ON public.entry_shares
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid()::text);
+
+-- 3. 认证用户创建分享（必须是自己的）
+CREATE POLICY "Users can create own shares"
+ON public.entry_shares
+FOR INSERT
+TO authenticated
+WITH CHECK (user_id = auth.uid()::text);
+
+-- 4. 认证用户更新自己的分享
+CREATE POLICY "Users can update own shares"
+ON public.entry_shares
+FOR UPDATE
+TO authenticated
+USING (user_id = auth.uid()::text)      -- 只能更新自己的
+WITH CHECK (user_id = auth.uid()::text); -- 更新后还是自己的
+
+-- 5. 认证用户删除自己的分享
+CREATE POLICY "Users can delete own shares"
+ON public.entry_shares
+FOR DELETE
+TO authenticated
+USING (user_id = auth.uid()::text);
+
+-- 6. 匿名用户可以查看活跃的分享（公开访问）
+CREATE POLICY "Anyone can view active shares by token"
+ON public.entry_shares
+FOR SELECT
+TO anon
+USING (is_active = true);
+```
+
+### RLS 策略流程图
+
+```mermaid
+flowchart TB
+    subgraph Request["请求类型"]
+        R1["SELECT 查询"]
+        R2["INSERT 插入"]
+        R3["UPDATE 更新"]
+        R4["DELETE 删除"]
+    end
+
+    subgraph Auth["用户身份"]
+        A1["authenticated<br/>已登录"]
+        A2["anon<br/>匿名"]
+    end
+
+    subgraph Policy["应用的策略"]
+        P1["Users can view own shares"]
+        P2["Users can create own shares"]
+        P3["Users can update own shares"]
+        P4["Users can delete own shares"]
+        P5["Anyone can view active shares"]
+    end
+
+    R1 --> A1 --> P1
+    R1 --> A2 --> P5
+    R2 --> A1 --> P2
+    R3 --> A1 --> P3
+    R4 --> A1 --> P4
+```
+
+### 常见 RLS 模式
+
+#### 模式 1：用户数据隔离
+
+```sql
+-- 用户只能访问自己的数据
+USING (user_id = auth.uid()::text)
+```
+
+#### 模式 2：基于关系的访问
+
+```sql
+-- 用户可以访问自己的笔记，或被分享的笔记
+USING (
+  user_id = auth.uid()::text
+  OR id IN (
+    SELECT entry_id FROM entry_shares
+    WHERE is_active = true
+  )
+)
+```
+
+#### 模式 3：基于角色的访问
+
+```sql
+-- 管理员可以访问所有数据
+USING (
+  user_id = auth.uid()::text
+  OR EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid()::text
+    AND role = 'admin'
+  )
+)
+```
+
+#### 模式 4：时间限制访问
+
+```sql
+-- 只能访问未过期的分享
+USING (
+  is_active = true
+  AND (expires_at IS NULL OR expires_at > now())
+)
+```
+
+### 调试 RLS 策略
+
+```sql
+-- 查看表的所有 RLS 策略
+SELECT tablename, policyname, permissive, roles, cmd, qual, with_check
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'entry_shares';
+
+-- 检查 RLS 是否启用
+SELECT relname, relrowsecurity
+FROM pg_class
+WHERE relname = 'entry_shares';
+
+-- 测试策略（模拟特定用户）
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claims = '{"sub": "user_123"}';
+SELECT * FROM entry_shares;  -- 只会返回该用户的数据
+RESET ROLE;
+```
+
+### RLS 与 Supabase
+
+```mermaid
+flowchart TB
+    subgraph Supabase["Supabase 架构"]
+        Client["客户端"]
+        PostgREST["PostgREST API"]
+        RLS["RLS 策略"]
+        DB["PostgreSQL"]
+    end
+
+    subgraph Auth["认证流程"]
+        JWT["JWT Token"]
+        AuthUID["auth.uid()"]
+    end
+
+    Client -->|"带 JWT"| PostgREST
+    PostgREST -->|"设置 auth context"| RLS
+    JWT -->|"解析"| AuthUID
+    RLS -->|"应用策略"| DB
+```
+
+#### Supabase 特有函数
+
+| 函数 | 说明 |
+| ------ | ------ |
+| `auth.uid()` | 当前用户 ID（从 JWT 解析） |
+| `auth.jwt()` | 完整 JWT payload |
+| `auth.role()` | 当前角色（anon/authenticated） |
+
+### 通过 Supabase MCP 管理 RLS
+
+使用 Supabase MCP 工具可以直接在线上数据库执行 RLS 配置：
+
+```typescript
+// 1. 检查安全建议
+const advisors = await supabase.getAdvisors({
+  project_id: 'your-project-id',
+  type: 'security'
+})
+
+// 2. 发现问题：rls_disabled_in_public
+// "Table `public.entry_shares` is public, but RLS has not been enabled."
+
+// 3. 应用迁移修复
+await supabase.applyMigration({
+  project_id: 'your-project-id',
+  name: 'enable_rls_entry_shares',
+  query: `
+    ALTER TABLE public.entry_shares ENABLE ROW LEVEL SECURITY;
+
+    CREATE POLICY "Users can view own shares"
+    ON public.entry_shares FOR SELECT TO authenticated
+    USING (user_id = auth.uid()::text);
+
+    -- ... 更多策略
+  `
+})
+
+// 4. 验证修复
+const policies = await supabase.executeSql({
+  project_id: 'your-project-id',
+  query: `
+    SELECT policyname, cmd, roles
+    FROM pg_policies
+    WHERE tablename = 'entry_shares'
+  `
+})
+```
+
+### RLS 最佳实践
+
+```mermaid
+flowchart TB
+    subgraph Best["✅ 最佳实践"]
+        B1["所有公开表启用 RLS"]
+        B2["最小权限原则"]
+        B3["测试所有策略"]
+        B4["使用 service_role 绑定后端"]
+    end
+
+    subgraph Avoid["❌ 避免"]
+        A1["忘记启用 RLS"]
+        A2["过于宽松的策略"]
+        A3["在策略中执行复杂计算"]
+        A4["客户端直接使用 service_role"]
+    end
+```
+
+### 性能考虑
+
+```mermaid
+flowchart LR
+    subgraph Tips["性能优化技巧"]
+        T1["为 RLS 条件字段创建索引"]
+        T2["避免在 USING 中使用子查询"]
+        T3["使用 EXPLAIN ANALYZE 分析"]
+    end
+
+    subgraph Example["示例"]
+        E1["CREATE INDEX ON entries(user_id)"]
+        E2["预先计算权限到表字段"]
+    end
+
+    Tips --> Example
+```
+
+---
+
 ## 下一步学习
 
 1. **实践**：运行 `pnpm run db:studio` 打开 Drizzle Studio，可视化查看数据库
@@ -1148,5 +1532,8 @@ flowchart TB
    - [PostgreSQL 官方文档 - 事务](https://www.postgresql.org/docs/current/tutorial-transactions.html)
    - [Drizzle Migrations 指南](https://orm.drizzle.team/docs/migrations)
    - [node-postgres 连接池配置](https://node-postgres.com/features/pooling)
+   - [PostgreSQL 官方文档 - Row Level Security](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
+   - [Supabase RLS 指南](https://supabase.com/docs/guides/auth/row-level-security)
+   - [Supabase Database Linter](https://supabase.com/docs/guides/database/database-linter)
 
 Local data are backed up to docker volume. Use docker to show them: `docker volume ls --filter label=com.supabase.cli.project=folionote`

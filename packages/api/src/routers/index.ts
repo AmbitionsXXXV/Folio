@@ -3,6 +3,7 @@ import { protectedProcedure, publicProcedure } from '../index'
 import { entriesRouter } from './entries'
 import { reviewRouter } from './review'
 import { searchRouter } from './search'
+import { sharesRouter } from './shares'
 import { sourcesRouter } from './sources'
 import { tagsRouter } from './tags'
 
@@ -17,6 +18,7 @@ export const appRouter = {
 	sources: sourcesRouter,
 	search: searchRouter,
 	review: reviewRouter,
+	shares: sharesRouter,
 }
 export type AppRouter = typeof appRouter
 export type AppRouterClient = RouterClient<typeof appRouter>

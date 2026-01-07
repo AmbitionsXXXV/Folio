@@ -21,6 +21,8 @@ import {
 	entriesRelations,
 	entryReviewState,
 	entryReviewStateRelations,
+	entryShares,
+	entrySharesRelations,
 	entrySources,
 	entrySourcesRelations,
 	entryTags,
@@ -62,6 +64,8 @@ export const db = drizzle(process.env.DATABASE_URL || '', {
 		entryReviewStateRelations,
 		dailyLogs,
 		dailyLogsRelations,
+		entryShares,
+		entrySharesRelations,
 	},
 })
 
@@ -85,6 +89,8 @@ export {
 	entriesRelations,
 	entryReviewState,
 	entryReviewStateRelations,
+	entryShares,
+	entrySharesRelations,
 	entrySources,
 	entrySourcesRelations,
 	entryTags,

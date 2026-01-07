@@ -1,13 +1,24 @@
-import { ArrowLeft02Icon, Edit02Icon, StarIcon } from '@hugeicons/core-free-icons'
+import {
+	ArrowLeft02Icon,
+	Edit02Icon,
+	LockPasswordIcon,
+	Share01Icon,
+	StarIcon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { Button, useThemeColor } from 'heroui-native'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import { Container } from '@/components/container'
+import {
+	EntryPasswordSheet,
+	type EntryPasswordSheetRef,
+} from '@/components/entry-password-sheet'
 import { RichTextEditor, RichTextViewer } from '@/components/rich-text'
+import { ShareSheet, type ShareSheetRef } from '@/components/share-sheet'
 import { client, orpc, queryClient } from '@/utils/orpc'
 
 export default function EntryDetailScreen() {
@@ -19,6 +30,20 @@ export default function EntryDetailScreen() {
 	const foregroundColor = useThemeColor('foreground')
 	const accentColor = useThemeColor('accent')
 	const warningColor = useThemeColor('warning')
+
+	// Sheet refs
+	const shareSheetRef = useRef<ShareSheetRef>(null)
+	const passwordSheetRef = useRef<EntryPasswordSheetRef>(null)
+
+	// Handle share
+	const handleShare = useCallback(() => {
+		shareSheetRef.current?.open()
+	}, [])
+
+	// Handle password
+	const handlePassword = useCallback(() => {
+		passwordSheetRef.current?.open()
+	}, [])
 
 	// Fetch entry details
 	const { data: entry, isLoading } = useQuery(
@@ -97,6 +122,20 @@ export default function EntryDetailScreen() {
 							{entry.isStarred && (
 								<HugeiconsIcon color={warningColor} icon={StarIcon} size={20} />
 							)}
+							<Pressable className="p-2" onPress={handleShare}>
+								<HugeiconsIcon
+									color={foregroundColor}
+									icon={Share01Icon}
+									size={24}
+								/>
+							</Pressable>
+							<Pressable className="p-2" onPress={handlePassword}>
+								<HugeiconsIcon
+									color={foregroundColor}
+									icon={LockPasswordIcon}
+									size={24}
+								/>
+							</Pressable>
 							<Pressable className="p-2" onPress={toggleEdit}>
 								<HugeiconsIcon
 									color={isEditing ? accentColor : foregroundColor}
@@ -163,6 +202,16 @@ export default function EntryDetailScreen() {
 					</ScrollView>
 				)}
 			</Container>
+
+			{/* Share sheet */}
+			<ShareSheet
+				entryId={id ?? ''}
+				entryTitle={entry.title ?? ''}
+				ref={shareSheetRef}
+			/>
+
+			{/* Password sheet */}
+			<EntryPasswordSheet entryId={id ?? ''} ref={passwordSheetRef} />
 		</>
 	)
 }
