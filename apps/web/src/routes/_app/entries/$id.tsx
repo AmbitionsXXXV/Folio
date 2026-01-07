@@ -35,7 +35,6 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -439,14 +438,6 @@ function EntryEditPage() {
 							<DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
 								<HugeiconsIcon className="mr-2 size-4" icon={LockPasswordIcon} />
 								{t('privacy.title')}
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								className="text-destructive"
-								onClick={handleDeleteClick}
-							>
-								<HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-								{t('common.delete')}
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>

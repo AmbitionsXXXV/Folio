@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { orpc } from '@/utils/orpc'
+import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { Button } from './ui/button'
 import {
 	Dialog,
@@ -36,6 +37,7 @@ export function EntryPasswordDialog({
 
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
+	const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
 
 	// Check if entry has password
 	const { data: passwordStatus, isLoading } = useQuery({
@@ -88,7 +90,12 @@ export function EntryPasswordDialog({
 	}, [password, confirmPassword, setPasswordMutation])
 
 	const handleRemovePassword = useCallback(() => {
+		setShowRemoveConfirm(true)
+	}, [])
+
+	const handleConfirmRemovePassword = useCallback(() => {
 		removePasswordMutation.mutate()
+		setShowRemoveConfirm(false)
 	}, [removePasswordMutation])
 
 	const passwordsMatch = password === confirmPassword
@@ -225,20 +232,35 @@ export function EntryPasswordDialog({
 	}
 
 	return (
-		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle className="flex items-center gap-2">
-						<HugeiconsIcon className="size-5" icon={LockPasswordIcon} />
-						{t('privacy.title')}
-					</DialogTitle>
-					<DialogDescription>
-						{hasPassword ? t('privacy.changeOrRemove') : t('privacy.setDescription')}
-					</DialogDescription>
-				</DialogHeader>
+		<>
+			<Dialog onOpenChange={onOpenChange} open={open}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<HugeiconsIcon className="size-5" icon={LockPasswordIcon} />
+							{t('privacy.title')}
+						</DialogTitle>
+						<DialogDescription>
+							{hasPassword
+								? t('privacy.changeOrRemove')
+								: t('privacy.setDescription')}
+						</DialogDescription>
+					</DialogHeader>
 
-				{renderContent()}
-			</DialogContent>
-		</Dialog>
+					{renderContent()}
+				</DialogContent>
+			</Dialog>
+
+			<ConfirmDeleteDialog
+				cancelText={t('common.cancel')}
+				confirmText={t('privacy.removePassword')}
+				description={t('privacy.removeConfirm')}
+				isLoading={removePasswordMutation.isPending}
+				onConfirm={handleConfirmRemovePassword}
+				onOpenChange={setShowRemoveConfirm}
+				open={showRemoveConfirm}
+				title={t('privacy.removePassword')}
+			/>
+		</>
 	)
 }

@@ -19,6 +19,7 @@ import {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
+	useMemo,
 	useRef,
 	useState,
 } from 'react'
@@ -64,7 +65,7 @@ export function SlashCommandList({ items, command, ref }: CommandListProps) {
 
 	// Build flat items list with correct index mapping (grouped by group)
 	// This ensures the visual order matches the selection index
-	const flatItems = (() => {
+	const flatItems = useMemo(() => {
 		// Group items by their group property
 		const groupedItems = items.reduce<Record<string, SlashCommandItem[]>>(
 			(acc, item) => {
@@ -88,7 +89,7 @@ export function SlashCommandList({ items, command, ref }: CommandListProps) {
 			}
 		}
 		return result
-	})()
+	}, [items, t])
 
 	const selectItem = useCallback(
 		(index: number) => {

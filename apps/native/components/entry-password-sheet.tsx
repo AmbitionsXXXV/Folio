@@ -68,7 +68,7 @@ export const EntryPasswordSheet = forwardRef<
 	}))
 
 	// Check if entry has password
-	const { data: passwordStatus, refetch: refetchStatus } = useQuery(
+	const { data: passwordStatus } = useQuery(
 		orpc.entries.checkPassword.queryOptions({ input: { id: entryId } })
 	)
 
@@ -77,9 +77,8 @@ export const EntryPasswordSheet = forwardRef<
 		mutationFn: (newPassword: string) =>
 			client.entries.setPassword({ id: entryId, password: newPassword }),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['entry-password', entryId] })
-			queryClient.invalidateQueries({ queryKey: ['entries', entryId] })
-			refetchStatus()
+			queryClient.invalidateQueries({ queryKey: [['entries', 'checkPassword']] })
+			queryClient.invalidateQueries({ queryKey: [['entries', 'get']] })
 			Alert.alert(t('common.success'), t('privacy.passwordSet'))
 			bottomSheetRef.current?.close()
 		},
@@ -92,9 +91,8 @@ export const EntryPasswordSheet = forwardRef<
 	const removePasswordMutation = useMutation({
 		mutationFn: () => client.entries.removePassword({ id: entryId }),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['entry-password', entryId] })
-			queryClient.invalidateQueries({ queryKey: ['entries', entryId] })
-			refetchStatus()
+			queryClient.invalidateQueries({ queryKey: [['entries', 'checkPassword']] })
+			queryClient.invalidateQueries({ queryKey: [['entries', 'get']] })
 			Alert.alert(t('common.success'), t('privacy.passwordRemoved'))
 			bottomSheetRef.current?.close()
 		},

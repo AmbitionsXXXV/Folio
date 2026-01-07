@@ -126,7 +126,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 		}))
 
 		// Fetch existing shares
-		const { data: shares, refetch: refetchShares } = useQuery(
+		const { data: shares } = useQuery(
 			orpc.shares.getByEntry.queryOptions({ input: { entryId } })
 		)
 
@@ -139,8 +139,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 				showBranding: boolean
 			}) => client.shares.create(data),
 			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['shares', entryId] })
-				refetchShares()
+				queryClient.invalidateQueries({ queryKey: [['shares', 'getByEntry']] })
 				Alert.alert(t('share.success'), t('share.linkCreated'))
 				// Reset form
 				setPassword('')
@@ -156,8 +155,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 		const deleteShareMutation = useMutation({
 			mutationFn: (id: string) => client.shares.delete({ id }),
 			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ['shares', entryId] })
-				refetchShares()
+				queryClient.invalidateQueries({ queryKey: [['shares', 'getByEntry']] })
 			},
 			onError: () => {
 				Alert.alert(t('common.error'), t('share.deleteError'))
