@@ -32,7 +32,7 @@ const PASSWORD_MIN_LENGTH = 8
 export default function ResetPasswordForm() {
 	const { t } = useTranslation()
 	const navigate = useNavigate()
-	const search = useSearch({ strict: false }) as { token?: string }
+	const search = useSearch({ from: '/reset-password' })
 	const [showPassword, setShowPassword] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 	const [resetSuccess, setResetSuccess] = useState(false)
@@ -94,7 +94,6 @@ export default function ResetPasswordForm() {
 					for (const error of errors) {
 						if (error && typeof error === 'object' && 'issues' in error) {
 							console.warn(prettifyFormErrors(error as unknown as z.ZodError))
-							break
 						}
 					}
 				}

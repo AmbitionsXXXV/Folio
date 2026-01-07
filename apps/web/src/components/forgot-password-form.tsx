@@ -67,7 +67,6 @@ export default function ForgotPasswordForm() {
 					for (const error of errors) {
 						if (error && typeof error === 'object' && 'issues' in error) {
 							console.warn(prettifyFormErrors(error as unknown as z.ZodError))
-							break
 						}
 					}
 				}

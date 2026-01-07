@@ -30,7 +30,6 @@ async function sendResetPasswordEmail({
 }: {
 	user: { email: string; name: string }
 	url: string
-	token: string
 }): Promise<void> {
 	// If Resend is not configured, log to console (development mode)
 	if (!resend) {
@@ -95,8 +94,8 @@ export const auth = betterAuth({
 	},
 	emailAndPassword: {
 		enabled: true,
-		sendResetPassword: async ({ user, url, token }) => {
-			await sendResetPasswordEmail({ user, url, token })
+		sendResetPassword: async ({ user, url }) => {
+			await sendResetPasswordEmail({ user, url })
 		},
 	},
 	advanced: {
