@@ -76,6 +76,9 @@ export const auth = betterAuth({
 	}),
 	trustedOrigins: [
 		...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
+		'http://localhost:3001',
+		'http://localhost:3000',
+		'http://localhost:7890',
 		'exp://',
 		'folio-note://',
 	],
