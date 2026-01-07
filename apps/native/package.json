@@ -61,7 +61,7 @@
     "expo-status-bar": "~3.0.8",
     "expo-updates": "~29.0.15",
     "expo-web-browser": "~15.0.10",
-    "heroui-native": "1.0.0-beta.10",
+    "heroui-native": "1.0.0-beta.11",
     "i18next": "catalog:",
     "react": "19.1.0",
     "react-dom": "19.1.0",
