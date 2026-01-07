@@ -9,7 +9,7 @@ import {
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { getUser } from '@/functions/get-user'
 import { cn } from '@/lib/utils'
@@ -19,6 +19,9 @@ export const Route = createFileRoute('/')({
 	component: HomeComponent,
 	beforeLoad: async () => {
 		const session = await getUser()
+		if (!session) {
+			throw redirect({ to: '/login' })
+		}
 		return { session }
 	},
 })
@@ -91,75 +94,58 @@ function HomeComponent() {
 					</div>
 
 					<h1 className="mb-4 font-display font-semibold text-5xl leading-tight tracking-tight md:text-6xl">
-						{session ? (
-							<>
-								{t('auth.welcome')},
-								<br />
-								<span className="bg-linear-to-br from-primary via-purple-400 to-violet-300 bg-clip-text font-script font-script-en text-transparent">
-									{session.user.name?.split(' ')[0] || 'there'}
-								</span>
-							</>
-						) : (
-							<>
-								{t('home.welcomePersonal')}
-								<br />
-								<span className="bg-linear-to-br from-primary via-purple-400 to-violet-300 bg-clip-text text-transparent">
-									{t('home.learningSystem')}
-								</span>
-							</>
-						)}
+						{t('auth.welcome')},
+						<br />
+						<span className="bg-linear-to-br from-primary via-purple-400 to-violet-300 bg-clip-text font-script font-script-en text-transparent">
+							{session.user.name?.split(' ')[0] || 'there'}
+						</span>
 					</h1>
 
 					<p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
-						{session ? t('home.subtitleUser') : t('home.subtitleGuest')}
+						{t('home.subtitleUser')}
 					</p>
 				</div>
 
 				{/* Quick Actions Grid */}
-				{session && (
-					<div className="mb-16 animate-fade-in delay-100">
-						<div className="mb-6 flex items-center gap-3">
-							<HugeiconsIcon
-								className="h-5 w-5 text-primary"
-								icon={MagicWand01Icon}
-							/>
-							<h2 className="font-script font-semibold text-2xl">
-								{t('home.quickActions')}
-							</h2>
-						</div>
-
-						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-							{quickActions.map((action, index) => (
-								<Link
-									className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6 transition-all hover:border-primary/30 hover:shadow-lg"
-									key={action.href}
-									style={{ animationDelay: `${(index + 2) * 100}ms` }}
-									to={action.href}
-								>
-									<div
-										className={cn(
-											'absolute inset-0 bg-linear-to-br',
-											action.color,
-											'opacity-0 transition-opacity group-hover:opacity-100'
-										)}
-									/>
-									<div className="relative">
-										<div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 transition-transform group-hover:scale-110">
-											<HugeiconsIcon
-												className="size-6 text-primary"
-												icon={action.icon}
-											/>
-										</div>
-										<h3 className="mb-1 font-semibold">{action.label}</h3>
-										<p className="text-muted-foreground text-sm">
-											{action.description}
-										</p>
-									</div>
-								</Link>
-							))}
-						</div>
+				<div className="mb-16 animate-fade-in delay-100">
+					<div className="mb-6 flex items-center gap-3">
+						<HugeiconsIcon className="h-5 w-5 text-primary" icon={MagicWand01Icon} />
+						<h2 className="font-script font-semibold text-2xl">
+							{t('home.quickActions')}
+						</h2>
 					</div>
-				)}
+
+					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+						{quickActions.map((action, index) => (
+							<Link
+								className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6 transition-all hover:border-primary/30 hover:shadow-lg"
+								key={action.href}
+								style={{ animationDelay: `${(index + 2) * 100}ms` }}
+								to={action.href}
+							>
+								<div
+									className={cn(
+										'absolute inset-0 bg-linear-to-br',
+										action.color,
+										'opacity-0 transition-opacity group-hover:opacity-100'
+									)}
+								/>
+								<div className="relative">
+									<div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 transition-transform group-hover:scale-110">
+										<HugeiconsIcon
+											className="size-6 text-primary"
+											icon={action.icon}
+										/>
+									</div>
+									<h3 className="mb-1 font-semibold">{action.label}</h3>
+									<p className="text-muted-foreground text-sm">
+										{action.description}
+									</p>
+								</div>
+							</Link>
+						))}
+					</div>
+				</div>
 
 				{/* Feature Highlights */}
 				<div className="animate-fade-in delay-200">
@@ -214,32 +200,6 @@ function HomeComponent() {
 						</div>
 					</div>
 				</div>
-
-				{/* CTA Section */}
-				{!session && (
-					<div className="mt-16 animate-fade-in text-center delay-300">
-						<div className="mx-auto max-w-xl rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 via-purple-500/5 to-transparent p-8">
-							<h3 className="mb-3 font-display font-semibold text-2xl">
-								{t('home.cta.title')}
-							</h3>
-							<p className="mb-6 text-muted-foreground">{t('home.cta.desc')}</p>
-							<div className="flex flex-wrap justify-center gap-3">
-								<Link
-									className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:scale-105"
-									to="/register"
-								>
-									{t('home.cta.getStarted')}
-								</Link>
-								<Link
-									className="rounded-xl border border-border px-6 py-3 font-semibold transition-colors hover:bg-accent"
-									to="/login"
-								>
-									{t('auth.signIn')}
-								</Link>
-							</div>
-						</div>
-					</div>
-				)}
 			</div>
 		</div>
 	)
