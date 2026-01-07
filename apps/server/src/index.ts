@@ -82,6 +82,9 @@ app.use('/*', async (c, next) => {
 })
 
 app.get('/', (c) => c.text('OK'))
+app.get('/health', (c) =>
+	c.json({ status: 'ok', timestamp: new Date().toISOString() })
+)
 
 const port = Number(process.env.PORT) || 3000
 

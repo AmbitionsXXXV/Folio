@@ -184,13 +184,16 @@ jobs:
         env:
           SERVER_DOMAIN: ${{ secrets.SERVER_DOMAIN }}
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "DOMAIN='$SERVER_DOMAIN'" <<'ENDSSH'
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} <<ENDSSH
             set -e
+            
+            # Domain passed from GitHub Secrets
+            DOMAIN="${SERVER_DOMAIN:-localhost}"
             
             CADDYFILE="/opt/folio/server/current/Caddyfile"
             
             # Check if Caddyfile exists in deployment
-            if [ ! -f "$CADDYFILE" ]; then
+            if [ ! -f "\$CADDYFILE" ]; then
               echo "No Caddyfile found, skipping Caddy configuration"
               exit 0
             fi
@@ -212,12 +215,15 @@ jobs:
             mkdir -p /var/log/caddy
             chown caddy:caddy /var/log/caddy
             
-            # Use domain from GitHub Secrets or default to localhost
-            CADDY_DOMAIN="${DOMAIN:-localhost}"
-            echo "Configuring Caddy for domain: $CADDY_DOMAIN"
+            echo "Configuring Caddy for domain: \$DOMAIN"
             
             # Replace domain placeholder in Caddyfile and write to system location
-            sed "s/{\\\$DOMAIN:localhost}/$CADDY_DOMAIN/" "$CADDYFILE" > /etc/caddy/Caddyfile
+            sed "s/{\\\$DOMAIN:localhost}/\$DOMAIN/" "\$CADDYFILE" > /etc/caddy/Caddyfile
+            
+            # Show the generated Caddyfile
+            echo "=== Generated Caddyfile ==="
+            cat /etc/caddy/Caddyfile
+            echo "==========================="
             
             # Validate Caddyfile
             echo "Validating Caddyfile..."
