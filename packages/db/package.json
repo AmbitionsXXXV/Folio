@@ -10,10 +10,14 @@
     }
   },
   "scripts": {
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate",
+    "db:push": "DOTENV_CONFIG_PATH=../../apps/server/.env drizzle-kit push",
+    "db:push:prod": "DOTENV_CONFIG_PATH=../../apps/server/.env.production drizzle-kit push",
+    "db:generate": "DOTENV_CONFIG_PATH=../../apps/server/.env drizzle-kit generate",
+    "db:generate:prod": "DOTENV_CONFIG_PATH=../../apps/server/.env.production drizzle-kit generate",
+    "db:studio": "DOTENV_CONFIG_PATH=../../apps/server/.env drizzle-kit studio",
+    "db:studio:prod": "DOTENV_CONFIG_PATH=../../apps/server/.env.production drizzle-kit studio",
+    "db:migrate": "DOTENV_CONFIG_PATH=../../apps/server/.env drizzle-kit migrate",
+    "db:migrate:prod": "DOTENV_CONFIG_PATH=../../apps/server/.env.production drizzle-kit migrate",
     "db:start:supabase": "supabase start",
     "db:stop:supabase": "supabase stop",
     "db:status:supabase": "supabase status",

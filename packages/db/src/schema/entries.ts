@@ -45,6 +45,8 @@ export const entries = pgTable(
 			.notNull(),
 		/** 版本号，用于乐观锁并发控制 */
 		version: text('version').notNull().default('1'),
+		/** Entry 密码保护（bcrypt 哈希），null 表示无密码保护 */
+		passwordHash: text('password_hash'),
 		/** soft-delete 字段 */
 		deletedAt: timestamp('deleted_at', { withTimezone: true }),
 	},
@@ -69,6 +71,7 @@ export const entriesRelations = relations(entries, ({ one, many }) => ({
 		fields: [entries.id],
 		references: [entryReviewState.entryId],
 	}),
+	entryShares: many(entryShares),
 }))
 
 /**
@@ -405,6 +408,67 @@ export const dailyLogs = pgTable(
 export const dailyLogsRelations = relations(dailyLogs, ({ one }) => ({
 	user: one(user, {
 		fields: [dailyLogs.userId],
+		references: [user.id],
+	}),
+}))
+
+/**
+ * entry_shares - 条目分享配置
+ * 存储分享链接的配置信息，支持公开/密码保护/过期时间
+ */
+export const entryShares = pgTable(
+	'entry_shares',
+	{
+		id: text('id').primaryKey(),
+		entryId: text('entry_id')
+			.notNull()
+			.references(() => entries.id, { onDelete: 'cascade' }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+
+		/** 分享 token（用于生成公开 URL） */
+		shareToken: text('share_token').notNull().unique(),
+
+		/** 密码保护（bcrypt 哈希），null 表示无密码保护 */
+		passwordHash: text('password_hash'),
+
+		/** 过期时间，null 表示永不过期 */
+		expiresAt: timestamp('expires_at', { withTimezone: true }),
+
+		/** 是否显示 FolioNote 品牌标识 */
+		showBranding: boolean('show_branding').notNull().default(true),
+
+		/** 是否启用分享 */
+		isActive: boolean('is_active').notNull().default(true),
+
+		/** 访问统计：查看次数 */
+		viewCount: integer('view_count').notNull().default(0),
+		/** 访问统计：最后访问时间 */
+		lastViewedAt: timestamp('last_viewed_at', { withTimezone: true }),
+
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index('entry_shares_entry_id_idx').on(table.entryId),
+		index('entry_shares_user_id_idx').on(table.userId),
+		index('entry_shares_share_token_idx').on(table.shareToken),
+	]
+)
+
+export const entrySharesRelations = relations(entryShares, ({ one }) => ({
+	entry: one(entries, {
+		fields: [entryShares.entryId],
+		references: [entries.id],
+	}),
+	user: one(user, {
+		fields: [entryShares.userId],
 		references: [user.id],
 	}),
 }))

@@ -11,8 +11,9 @@
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "typescript": "catalog:",
-    "@folionote/config": "workspace:*"
+    "@folionote/config": "workspace:*",
+    "@types/bcryptjs": "^3.0.0",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@folionote/auth": "workspace:*",
@@ -22,6 +23,7 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
+    "bcryptjs": "^3.0.3",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",

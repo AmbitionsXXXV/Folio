@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShareTokenRouteImport } from './routes/share/$token'
 import { Route as AppTagsRouteImport } from './routes/_app/tags'
 import { Route as AppSourcesRouteImport } from './routes/_app/sources'
 import { Route as AppSearchRouteImport } from './routes/_app/search'
@@ -52,6 +53,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppTagsRoute = AppTagsRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AppSearchRoute
   '/sources': typeof AppSourcesRoute
   '/tags': typeof AppTagsRoute
+  '/share/$token': typeof ShareTokenRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries/new': typeof AppEntriesNewRoute
 }
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/search': typeof AppSearchRoute
   '/sources': typeof AppSourcesRoute
   '/tags': typeof AppTagsRoute
+  '/share/$token': typeof ShareTokenRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries/new': typeof AppEntriesNewRoute
 }
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_app/search': typeof AppSearchRoute
   '/_app/sources': typeof AppSourcesRoute
   '/_app/tags': typeof AppTagsRoute
+  '/share/$token': typeof ShareTokenRoute
   '/_app/entries/$id': typeof AppEntriesIdRoute
   '/_app/entries/new': typeof AppEntriesNewRoute
 }
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sources'
     | '/tags'
+    | '/share/$token'
     | '/entries/$id'
     | '/entries/new'
   fileRoutesByTo: FileRoutesByTo
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/sources'
     | '/tags'
+    | '/share/$token'
     | '/entries/$id'
     | '/entries/new'
   id:
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_app/search'
     | '/_app/sources'
     | '/_app/tags'
+    | '/share/$token'
     | '/_app/entries/$id'
     | '/_app/entries/new'
   fileRoutesById: FileRoutesById
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ShareTokenRoute: typeof ShareTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/$token': {
+      id: '/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/tags': {
@@ -354,6 +374,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

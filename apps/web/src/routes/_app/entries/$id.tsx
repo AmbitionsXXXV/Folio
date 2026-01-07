@@ -3,7 +3,10 @@ import {
 	ArrowLeft01Icon,
 	Delete02Icon,
 	InboxIcon,
+	LockPasswordIcon,
+	MoreHorizontalIcon,
 	PinIcon,
+	Share01Icon,
 	StarIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -21,11 +24,20 @@ import {
 import { createSourceCommandWithEvent } from '@/components/editor/source-command'
 import { createTagCommand } from '@/components/editor/tag-command'
 import { EntryEditor } from '@/components/entry-editor'
+import { EntryPasswordDialog } from '@/components/entry-password-dialog'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import { EntrySources, type EntrySourcesRef } from '@/components/entry-sources'
 import { EntryTags, type EntryTagsRef } from '@/components/entry-tags'
 import { SaveStatusIndicator } from '@/components/save-status-indicator'
+import { ShareDialog } from '@/components/share-dialog'
 import { Button } from '@/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { type SaveStatus, useAutoSave } from '@/hooks/use-auto-save'
@@ -103,6 +115,10 @@ function EntryEditPage() {
 	const [currentVersion, setCurrentVersion] = useState<string>('1')
 	// 删除确认对话框状态
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+	// 分享对话框状态
+	const [showShareDialog, setShowShareDialog] = useState(false)
+	// 密码保护对话框状态
+	const [showPasswordDialog, setShowPasswordDialog] = useState(false)
 
 	// 当 entry 加载完成时，更新版本号
 	useEffect(() => {
@@ -407,6 +423,33 @@ function EntryEditPage() {
 					>
 						<HugeiconsIcon className="size-4" icon={Delete02Icon} />
 					</Button>
+
+					{/* More actions dropdown */}
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button size="icon" title={t('common.more')} variant="ghost">
+								<HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={() => setShowShareDialog(true)}>
+								<HugeiconsIcon className="mr-2 size-4" icon={Share01Icon} />
+								{t('share.title')}
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
+								<HugeiconsIcon className="mr-2 size-4" icon={LockPasswordIcon} />
+								{t('privacy.title')}
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								className="text-destructive"
+								onClick={handleDeleteClick}
+							>
+								<HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
+								{t('common.delete')}
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</div>
 
@@ -483,6 +526,21 @@ function EntryEditPage() {
 				onOpenChange={setShowDeleteDialog}
 				open={showDeleteDialog}
 				title={t('entry.deleteConfirmTitle')}
+			/>
+
+			{/* Share dialog */}
+			<ShareDialog
+				entryId={id}
+				entryTitle={entry.title}
+				onOpenChange={setShowShareDialog}
+				open={showShareDialog}
+			/>
+
+			{/* Entry password dialog */}
+			<EntryPasswordDialog
+				entryId={id}
+				onOpenChange={setShowPasswordDialog}
+				open={showPasswordDialog}
 			/>
 		</div>
 	)

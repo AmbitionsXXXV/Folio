@@ -1,10 +1,13 @@
 import { db, entries, entryTags, tags } from '@folionote/db'
 import { ORPCError } from '@orpc/server'
+import bcrypt from 'bcryptjs'
 import { and, desc, eq, inArray, isNotNull, isNull, lt } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { protectedProcedure } from '../index'
 import { processContentUpdate } from '../utils/content'
+
+const BCRYPT_ROUNDS = 10
 
 /**
  * Entry filter types for list queries
@@ -506,6 +509,178 @@ export const getEntryTags = protectedProcedure
 	})
 
 /**
+ * Input schema for setting entry password
+ */
+const SetEntryPasswordInputSchema = z.object({
+	id: z.string(),
+	password: z.string().min(4),
+})
+
+/**
+ * Input schema for removing entry password
+ */
+const RemoveEntryPasswordInputSchema = z.object({
+	id: z.string(),
+})
+
+/**
+ * Input schema for verifying entry password
+ */
+const VerifyEntryPasswordInputSchema = z.object({
+	id: z.string(),
+	password: z.string(),
+})
+
+/**
+ * entries.setPassword - Set or update password protection for an entry
+ */
+export const setEntryPassword = protectedProcedure
+	.input(SetEntryPasswordInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+		const { id, password } = input
+
+		// Verify the entry belongs to the user
+		const [entry] = await db
+			.select()
+			.from(entries)
+			.where(
+				and(
+					eq(entries.id, id),
+					eq(entries.userId, userId),
+					isNull(entries.deletedAt)
+				)
+			)
+			.limit(1)
+
+		if (!entry) {
+			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
+		}
+
+		// Hash the password
+		const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
+
+		// Update the entry with password hash
+		const [updatedEntry] = await db
+			.update(entries)
+			.set({ passwordHash })
+			.where(eq(entries.id, id))
+			.returning()
+
+		return {
+			id: updatedEntry.id,
+			hasPassword: true,
+		}
+	})
+
+/**
+ * entries.removePassword - Remove password protection from an entry
+ */
+export const removeEntryPassword = protectedProcedure
+	.input(RemoveEntryPasswordInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+		const { id } = input
+
+		// Verify the entry belongs to the user
+		const [entry] = await db
+			.select()
+			.from(entries)
+			.where(
+				and(
+					eq(entries.id, id),
+					eq(entries.userId, userId),
+					isNull(entries.deletedAt)
+				)
+			)
+			.limit(1)
+
+		if (!entry) {
+			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
+		}
+
+		// Remove the password hash
+		const [updatedEntry] = await db
+			.update(entries)
+			.set({ passwordHash: null })
+			.where(eq(entries.id, id))
+			.returning()
+
+		return {
+			id: updatedEntry.id,
+			hasPassword: false,
+		}
+	})
+
+/**
+ * entries.verifyPassword - Verify password for a protected entry
+ */
+export const verifyEntryPassword = protectedProcedure
+	.input(VerifyEntryPasswordInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+		const { id, password } = input
+
+		// Get the entry
+		const [entry] = await db
+			.select()
+			.from(entries)
+			.where(
+				and(
+					eq(entries.id, id),
+					eq(entries.userId, userId),
+					isNull(entries.deletedAt)
+				)
+			)
+			.limit(1)
+
+		if (!entry) {
+			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
+		}
+
+		// If no password is set, return success
+		if (!entry.passwordHash) {
+			return { valid: true, hasPassword: false }
+		}
+
+		// Verify the password
+		const isValid = await bcrypt.compare(password, entry.passwordHash)
+
+		if (!isValid) {
+			throw new ORPCError('UNAUTHORIZED', { message: 'Invalid password' })
+		}
+
+		return { valid: true, hasPassword: true }
+	})
+
+/**
+ * entries.checkPassword - Check if an entry has password protection
+ */
+export const checkEntryPassword = protectedProcedure
+	.input(GetEntryInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+
+		const [entry] = await db
+			.select({ passwordHash: entries.passwordHash })
+			.from(entries)
+			.where(
+				and(
+					eq(entries.id, input.id),
+					eq(entries.userId, userId),
+					isNull(entries.deletedAt)
+				)
+			)
+			.limit(1)
+
+		if (!entry) {
+			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
+		}
+
+		return { hasPassword: !!entry.passwordHash }
+	})
+
+/**
  * Entries router - all entry-related procedures
  */
 export const entriesRouter = {
@@ -518,4 +693,9 @@ export const entriesRouter = {
 	addTag: addTagToEntry,
 	removeTag: removeTagFromEntry,
 	getTags: getEntryTags,
+	// Password protection
+	setPassword: setEntryPassword,
+	removePassword: removeEntryPassword,
+	verifyPassword: verifyEntryPassword,
+	checkPassword: checkEntryPassword,
 }

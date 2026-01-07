@@ -8,6 +8,13 @@
       "when": 1766418158640,
       "tag": "0000_eminent_johnny_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767758297305,
+      "tag": "0001_crazy_deathstrike",
+      "breakpoints": true
     }
   ]
 }
