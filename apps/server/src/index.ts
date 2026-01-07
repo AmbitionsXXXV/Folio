@@ -18,13 +18,26 @@ await initI18n()
 
 const app = new Hono()
 
-console.log('CORS_ORIGIN', process.env.CORS_ORIGIN)
+const corsOrigins = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) || [
+	'http://localhost:3001',
+]
+console.log('CORS_ORIGIN', corsOrigins)
 
 app.use(logger())
 app.use(
 	'/*',
 	cors({
-		origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+		origin: (origin) => {
+			// 允许配置的 origins
+			if (corsOrigins.includes(origin)) {
+				return origin
+			}
+			// 开发环境允许 localhost
+			if (origin.startsWith('http://localhost:')) {
+				return origin
+			}
+			return null
+		},
 		allowMethods: ['GET', 'POST', 'OPTIONS'],
 		allowHeaders: ['Content-Type', 'Authorization', 'X-Locale', 'Accept-Language'],
 		credentials: true,
