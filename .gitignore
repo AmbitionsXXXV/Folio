@@ -47,3 +47,5 @@ coverage
 .cache
 tmp
 temp
+
+.react-email

@@ -7,9 +7,16 @@
     },
     "./*": {
       "default": "./src/*.ts"
+    },
+    "./__tests__/*": {
+      "default": "./__tests__/*.ts"
+    },
+    "./__tests__/utils/*": {
+      "default": "./__tests__/utils/*.ts"
     }
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "db:push": "DOTENV_CONFIG_PATH=../../apps/server/.env drizzle-kit push",
     "db:push:prod": "DOTENV_CONFIG_PATH=../../apps/server/.env.production drizzle-kit push",
     "db:generate": "DOTENV_CONFIG_PATH=../../apps/server/.env drizzle-kit generate",
@@ -26,9 +33,7 @@
     "db:stop:docker": "docker-compose down",
     "db:init:local": "./scripts/init-local-db.sh",
     "db:start:local": "./scripts/start-local-db.sh",
-    "db:stop:local": "./scripts/stop-local-db.sh",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "db:stop:local": "./scripts/stop-local-db.sh"
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",

@@ -567,6 +567,10 @@ export const setEntryPassword = protectedProcedure
 			.where(eq(entries.id, id))
 			.returning()
 
+		if (!updatedEntry) {
+			throw new ORPCError('NOT_FOUND', { message: 'Failed to update entry' })
+		}
+
 		return {
 			id: updatedEntry.id,
 			hasPassword: true,
@@ -605,6 +609,10 @@ export const removeEntryPassword = protectedProcedure
 			.set({ passwordHash: null })
 			.where(eq(entries.id, id))
 			.returning()
+
+		if (!updatedEntry) {
+			throw new ORPCError('NOT_FOUND', { message: 'Failed to update entry' })
+		}
 
 		return {
 			id: updatedEntry.id,

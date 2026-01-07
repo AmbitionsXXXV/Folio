@@ -17,7 +17,7 @@ web-build/
 .metro-health-check*
 
 # UniWind generated types
-uniwind-types.d.ts
+# uniwind-types.d.ts
 
 /ios
 /android

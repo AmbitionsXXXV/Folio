@@ -5,5 +5,12 @@ export default defineConfig({
 	format: 'esm',
 	outDir: './dist',
 	clean: true,
-	noExternal: [/@folionote\/.*/],
+	// Bundle all dependencies into the output (zero-dependency deployment)
+	noExternal: [/.*/],
+	// Exclude Node.js built-in modules
+	external: [
+		/^node:/,
+		// Native modules that can't be bundled
+		'fsevents',
+	],
 })

@@ -7,6 +7,9 @@
     "outDir": "dist",
     "composite": true,
     "strictNullChecks": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

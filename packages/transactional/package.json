@@ -13,7 +13,6 @@
   },
   "scripts": {
     "dev": "email dev --port 3030",
-    "build": "email build",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {

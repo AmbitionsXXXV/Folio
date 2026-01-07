@@ -6,6 +6,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "dev": "vite dev",
+    "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

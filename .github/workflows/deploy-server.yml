@@ -1,0 +1,201 @@
+name: Deploy Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/server/**"
+      - "packages/**"
+      - ".github/workflows/deploy-server.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+concurrency:
+  group: deploy-server-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20"
+  DEPLOY_PATH: /opt/folio/server
+  PM2_APP_NAME: folio-server
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build server
+        run: pnpm turbo -F server build
+
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy-package
+          cp -r apps/server/dist deploy-package/
+          cp apps/server/package.json deploy-package/
+          cp apps/server/ecosystem.config.cjs deploy-package/ 2>/dev/null || true
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy-package
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout (for ecosystem config)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/server/ecosystem.config.cjs
+          sparse-checkout-cone-mode: false
+
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-package
+          path: deploy-package
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create deployment directory
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "
+            mkdir -p ${{ env.DEPLOY_PATH }}
+            mkdir -p ${{ env.DEPLOY_PATH }}/releases
+            mkdir -p ${{ env.DEPLOY_PATH }}/shared
+          "
+
+      - name: Deploy application
+        run: |
+          RELEASE_DIR="${{ env.DEPLOY_PATH }}/releases/$(date +%Y%m%d%H%M%S)"
+
+          # Create release directory
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p $RELEASE_DIR"
+
+          # Upload files
+          scp -r deploy-package/* ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:$RELEASE_DIR/
+
+          # Upload ecosystem config if exists
+          if [ -f "apps/server/ecosystem.config.cjs" ]; then
+            scp apps/server/ecosystem.config.cjs ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:$RELEASE_DIR/
+          fi
+
+          # Link shared .env and update current symlink
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "
+            cd $RELEASE_DIR
+
+            # Link shared environment file
+            if [ -f ${{ env.DEPLOY_PATH }}/shared/.env ]; then
+              ln -sf ${{ env.DEPLOY_PATH }}/shared/.env $RELEASE_DIR/.env
+            fi
+
+            # Update current symlink
+            ln -sfn $RELEASE_DIR ${{ env.DEPLOY_PATH }}/current
+
+            # Cleanup old releases (keep last 5)
+            cd ${{ env.DEPLOY_PATH }}/releases
+            ls -1t | tail -n +6 | xargs -r rm -rf
+          "
+
+      - name: Restart application with PM2
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+            set -e
+            
+            # Initialize fnm directly (bypass .bashrc interactive check)
+            export FNM_PATH="/root/.local/share/fnm"
+            export PATH="$FNM_PATH:$PATH"
+            eval "$(fnm env --shell bash)"
+            
+            # Debug: show PATH and commands location
+            echo "=== Environment Debug ==="
+            echo "PATH: $PATH"
+            which fnm && fnm -V
+            which node && node -v
+            which npm && npm -v
+            which pm2 || echo "pm2 not found"
+            echo "========================="
+            
+            cd /opt/folio/server/current
+
+            # Check if PM2 is installed
+            if ! command -v pm2 &> /dev/null; then
+              echo "PM2 not found, installing..."
+              npm install -g pm2
+            fi
+
+            # Check if ecosystem config exists
+            if [ -f ecosystem.config.cjs ]; then
+              # Use ecosystem config
+              pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
+            else
+              # Start directly
+              pm2 delete folio-server 2>/dev/null || true
+              pm2 start dist/index.mjs --name folio-server --node-args='--env-file=.env'
+            fi
+
+            # Save PM2 process list
+            pm2 save
+
+            # Show status
+            pm2 status
+          ENDSSH
+
+      - name: Health check
+        run: |
+          echo "Waiting for server to start..."
+          sleep 5
+
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+            # Initialize fnm directly
+            export FNM_PATH="/root/.local/share/fnm"
+            export PATH="$FNM_PATH:$PATH"
+            eval "$(fnm env --shell bash)"
+            
+            # Check if the process is running
+            pm2 show folio-server || exit 1
+          ENDSSH
+
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+            echo "Deployed commit: ${{ github.sha }}"
+            echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
+          else
+            echo "❌ Deployment failed!"
+          fi
