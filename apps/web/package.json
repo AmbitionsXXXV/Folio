@@ -6,6 +6,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "dev": "vite dev",
+    "start": "node .output/server/index.mjs",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -45,6 +46,7 @@
     "i18next": "catalog:",
     "motion": "^12.23.26",
     "next-themes": "^0.4.6",
+    "nitro": "3.0.1-alpha.1",
     "react": "19.2.3",
     "react-day-picker": "^9.13.0",
     "react-dom": "19.2.3",
