@@ -62,23 +62,51 @@ export function SlashCommandList({ items, command, ref }: CommandListProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const menuRef = useRef<HTMLDivElement>(null)
 
+	// Build flat items list with correct index mapping (grouped by group)
+	// This ensures the visual order matches the selection index
+	const flatItems = (() => {
+		// Group items by their group property
+		const groupedItems = items.reduce<Record<string, SlashCommandItem[]>>(
+			(acc, item) => {
+				const group = item.group ?? t('editor.slashCommand.basic')
+				if (!acc[group]) {
+					acc[group] = []
+				}
+				acc[group].push(item)
+				return acc
+			},
+			{}
+		)
+
+		// Build flat list with index
+		const result: { item: SlashCommandItem; group: string; index: number }[] = []
+		let idx = 0
+		for (const [group, groupItemsList] of Object.entries(groupedItems)) {
+			for (const item of groupItemsList) {
+				result.push({ item, group, index: idx })
+				idx += 1
+			}
+		}
+		return result
+	})()
+
 	const selectItem = useCallback(
 		(index: number) => {
-			const item = items[index]
-			if (item) {
-				command(item)
+			const flatItem = flatItems[index]
+			if (flatItem) {
+				command(flatItem.item)
 			}
 		},
-		[items, command]
+		[flatItems, command]
 	)
 
 	const upHandler = useCallback(() => {
-		setSelectedIndex((prev) => (prev + items.length - 1) % items.length)
-	}, [items.length])
+		setSelectedIndex((prev) => (prev + flatItems.length - 1) % flatItems.length)
+	}, [flatItems.length])
 
 	const downHandler = useCallback(() => {
-		setSelectedIndex((prev) => (prev + 1) % items.length)
-	}, [items.length])
+		setSelectedIndex((prev) => (prev + 1) % flatItems.length)
+	}, [flatItems.length])
 
 	const enterHandler = useCallback(() => {
 		selectItem(selectedIndex)
@@ -133,30 +161,7 @@ export function SlashCommandList({ items, command, ref }: CommandListProps) {
 		)
 	}
 
-	// Group items by their group property
-	const groupedItems = items.reduce<Record<string, SlashCommandItem[]>>(
-		(acc, item) => {
-			const group = item.group ?? t('editor.slashCommand.basic')
-			if (!acc[group]) {
-				acc[group] = []
-			}
-			acc[group].push(item)
-			return acc
-		},
-		{}
-	)
-
-	// Calculate flat index for each item
-	const flatItems: { item: SlashCommandItem; group: string; index: number }[] = []
-	let idx = 0
-	for (const [group, groupItemsList] of Object.entries(groupedItems)) {
-		for (const item of groupItemsList) {
-			flatItems.push({ item, group, index: idx })
-			idx += 1
-		}
-	}
-
-	// Group flat items back for rendering
+	// Group flat items for rendering
 	const groupedFlat = flatItems.reduce<
 		Record<string, { item: SlashCommandItem; index: number }[]>
 	>((acc, { item, group, index }) => {
@@ -423,6 +428,7 @@ export function createSlashCommand(t: (key: string) => string) {
 				suggestion: {
 					char: '/',
 					startOfLine: false,
+					decorationClass: 'slash-command-suggestion',
 					command: ({
 						editor,
 						range,
