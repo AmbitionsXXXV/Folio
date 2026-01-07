@@ -160,7 +160,7 @@ function EntryEditPage() {
 	const sourceCommand = useMemo(() => createSourceCommandWithEvent(t), [t])
 
 	// Create ref command for slash menu
-	const refCommand = useMemo(() => createRefCommandWithEvent(), [])
+	const refCommand = useMemo(() => createRefCommandWithEvent(t), [t])
 
 	const additionalCommands = useMemo(
 		() => [tagCommand, sourceCommand, refCommand],
@@ -512,7 +512,7 @@ function EntryEditPage() {
 					// Get the editor instance stored by the ref command
 					const editor = getCurrentEditor()
 					if (editor) {
-						insertEntryRef(editor, selectedEntry)
+						insertEntryRef(editor, selectedEntry, t)
 					}
 				}}
 				ref={entryPickerRef}

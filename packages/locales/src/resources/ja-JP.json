@@ -350,6 +350,11 @@
     "tagCommand": {
       "addTag": "タグを追加",
       "addTagDesc": "エントリにタグを追加"
+    },
+    "refCommand": {
+      "refEntry": "エントリを参照",
+      "refEntryDesc": "他のエントリへのリンクを挿入",
+      "untitled": "無題"
     }
   },
   "entryCard": {

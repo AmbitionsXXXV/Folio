@@ -395,6 +395,11 @@
     "tagCommand": {
       "addTag": "Add Tag",
       "addTagDesc": "Add tags to the entry"
+    },
+    "refCommand": {
+      "refEntry": "Reference Entry",
+      "refEntryDesc": "Insert a link to another entry",
+      "untitled": "Untitled"
     }
   },
   "error": {

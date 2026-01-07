@@ -446,6 +446,11 @@
     "tagCommand": {
       "addTag": "添加标签",
       "addTagDesc": "为条目添加标签"
+    },
+    "refCommand": {
+      "refEntry": "引用条目",
+      "refEntryDesc": "插入指向其他条目的链接",
+      "untitled": "无标题"
     }
   },
   "error": {

@@ -74,6 +74,16 @@
 	font-size: 0.875em;
 }
 
+.slash-command-suggestion {
+  background: #3F324A;
+  border-radius: 0.25rem;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.125rem 0.25rem;
+}
+
 /* Code Block Wrapper - Shiki */
 .code-block-wrapper {
 	margin-bottom: 0.75rem;

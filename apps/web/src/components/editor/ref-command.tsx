@@ -15,6 +15,8 @@ type EntryRef = {
  * Options for creating the ref command
  */
 type CreateRefCommandOptions = {
+	/** Translation function */
+	t: (key: string) => string
 	/** Function to get available entries for referencing */
 	getEntries: () => EntryRef[]
 	/** Function to open entry picker dialog */
@@ -32,11 +34,11 @@ type CreateRefCommandOptions = {
 export function createRefCommand(
 	options: CreateRefCommandOptions
 ): SlashCommandItem {
-	const { getEntries, onOpenEntryPicker, currentEntryId } = options
+	const { t, getEntries, onOpenEntryPicker, currentEntryId } = options
 
 	return {
-		title: '引用条目',
-		description: '插入指向其他条目的链接',
+		title: t('editor.refCommand.refEntry'),
+		description: t('editor.refCommand.refEntryDesc'),
 		icon: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
 		keywords: ['ref', 'reference', 'link', 'entry', '引用', '链接', '条目'],
 		group: 'FolioNote',
@@ -65,8 +67,9 @@ export function createRefCommand(
 			// A more sophisticated implementation would show a popup to select
 			const firstEntry = entries[0]
 			if (firstEntry) {
+				const title = firstEntry.title || t('editor.refCommand.untitled')
 				// Insert a clickable link to the entry
-				const linkHtml = `<a href="/entries/${firstEntry.id}" class="entry-ref" data-entry-id="${firstEntry.id}">${firstEntry.title || '无标题'}</a>`
+				const linkHtml = `<a href="/entries/${firstEntry.id}" class="entry-ref" data-entry-id="${firstEntry.id}">${title}</a>`
 				editor.chain().focus().insertContent(linkHtml).run()
 			}
 		},
@@ -87,10 +90,12 @@ export function getCurrentEditor(): Editor | null {
  * Create a ref command that dispatches a custom event
  * This allows the parent component to handle entry selection UI
  */
-export function createRefCommandWithEvent(): SlashCommandItem {
+export function createRefCommandWithEvent(
+	t: (key: string) => string
+): SlashCommandItem {
 	return {
-		title: '引用条目',
-		description: '插入指向其他条目的链接',
+		title: t('editor.refCommand.refEntry'),
+		description: t('editor.refCommand.refEntryDesc'),
 		icon: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
 		keywords: ['ref', 'reference', 'link', 'entry', '引用', '链接', '条目'],
 		group: 'FolioNote',
@@ -115,8 +120,12 @@ export function createRefCommandWithEvent(): SlashCommandItem {
  * Insert an entry reference link into the editor
  * Helper function to be called after user selects an entry
  */
-export function insertEntryRef(editor: Editor, entry: EntryRef): void {
-	const title = entry.title || '无标题'
+export function insertEntryRef(
+	editor: Editor,
+	entry: EntryRef,
+	t: (key: string) => string
+): void {
+	const title = entry.title || t('editor.refCommand.untitled')
 	const linkHtml = `<a href="/entries/${entry.id}" class="entry-ref" data-entry-id="${entry.id}">${title}</a> `
 
 	editor.chain().focus().insertContent(linkHtml).run()
