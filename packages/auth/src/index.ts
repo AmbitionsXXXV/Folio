@@ -20,6 +20,30 @@ const resend = process.env.RESEND_API_KEY
 	? new Resend(process.env.RESEND_API_KEY)
 	: null
 
+const trustedOrigins = process.env.CORS_ORIGIN?.split(',')
+	.map((origin) => origin.trim())
+	.filter((origin) => origin.length > 0)
+
+const cookieDomainFromBaseUrl = (() => {
+	const baseUrl = process.env.BETTER_AUTH_URL
+	if (!baseUrl) return null
+
+	try {
+		const hostname = new URL(baseUrl).hostname
+		if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
+			return null
+		}
+
+		const hostnameParts = hostname.split('.')
+		if (hostnameParts.length < 2) return null
+
+		// For e.g. api.folionote.xyz -> folionote.xyz
+		return hostnameParts.slice(-2).join('.')
+	} catch {
+		return null
+	}
+})()
+
 /**
  * Send password reset email to user using Resend with React Email template.
  * Falls back to console logging in development or when RESEND_API_KEY is not set.
@@ -75,7 +99,7 @@ export const auth = betterAuth({
 		},
 	}),
 	trustedOrigins: [
-		...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
+		...(trustedOrigins ?? []),
 		'http://localhost:3001',
 		'http://localhost:3000',
 		'http://localhost:7890',
@@ -103,10 +127,14 @@ export const auth = betterAuth({
 	},
 	advanced: {
 		disableCSRFCheck: true,
-		// crossSubDomainCookies: {
-		// 	enabled: true,
-		// 	domain: 'http://localhost',
-		// },
+		...(cookieDomainFromBaseUrl
+			? {
+					crossSubDomainCookies: {
+						enabled: true,
+						domain: cookieDomainFromBaseUrl,
+					},
+				}
+			: {}),
 		defaultCookieAttributes: {
 			sameSite: 'none',
 			secure: true,
