@@ -67,14 +67,17 @@ const schema = {
 }
 
 // 延迟初始化数据库连接，避免模块循环依赖导致的初始化问题
-// 使用 getter 确保 drizzle 和 pg 模块在实际使用时才被加载
+// 使用 createRequire 在 ESM 环境中创建 require 函数
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+
 type DbType = ReturnType<typeof import('drizzle-orm/node-postgres').drizzle>
 let _db: DbType | null = null
 
-export const db = new Proxy({} as object, {
+export const db = new Proxy({} as DbType, {
 	get(_, prop) {
 		if (!_db) {
-			// 动态导入，避免模块初始化时的循环依赖
 			const { drizzle } = require('drizzle-orm/node-postgres')
 			_db = drizzle(process.env.DATABASE_URL || '', { schema })
 		}

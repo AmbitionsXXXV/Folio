@@ -7,7 +7,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -37,9 +37,7 @@ import { Spinner } from './ui/spinner'
  */
 export default function SignInForm() {
 	const { t } = useTranslation()
-	const navigate = useNavigate({
-		from: '/',
-	})
+	const router = useRouter()
 	const { isPending } = authClient.useSession()
 	const [showPassword, setShowPassword] = useState(false)
 
@@ -74,10 +72,10 @@ export default function SignInForm() {
 				},
 				{
 					onSuccess: () => {
-						navigate({
-							to: '/dashboard',
-						})
 						toast.success(t('auth.signInSuccess'))
+						// Use reloadDocument to trigger a full page reload
+						// This ensures cookies are properly sent with the new request
+						router.navigate({ to: '/dashboard', reloadDocument: true })
 					},
 					onError: (error) => {
 						if (import.meta.env.DEV) {

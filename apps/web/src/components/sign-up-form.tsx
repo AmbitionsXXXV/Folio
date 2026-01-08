@@ -8,7 +8,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -42,9 +42,7 @@ const PASSWORD_MIN_LENGTH = 8
  */
 export default function SignUpForm() {
 	const { t } = useTranslation()
-	const navigate = useNavigate({
-		from: '/',
-	})
+	const router = useRouter()
 	const { isPending } = authClient.useSession()
 	const [showPassword, setShowPassword] = useState(false)
 
@@ -85,10 +83,10 @@ export default function SignUpForm() {
 				},
 				{
 					onSuccess: () => {
-						navigate({
-							to: '/dashboard',
-						})
 						toast.success(t('auth.signUpSuccess'))
+						// Use reloadDocument to trigger a full page reload
+						// This ensures cookies are properly sent with the new request
+						router.navigate({ to: '/dashboard', reloadDocument: true })
 					},
 					onError: (error) => {
 						if (import.meta.env.DEV) {
