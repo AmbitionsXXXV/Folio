@@ -1,28 +1,44 @@
 #!/usr/bin/env bun
 
 /**
- * Cross-platform clean script for the Vodhorizon project using Bun Shell.
+ * Cross-platform clean script for the Folio project using Bun Shell.
  * Usage:
  *   - Basic: bun tools/clean.js
  *   - With target directory: bun tools/clean.js target
  *   - With multiple directories: bun tools/clean.js dist node_modules .turbo
  *
  * This script cleans specified directories in the project root and in each
- * workspace package defined in the root package.json.
+ * workspace package defined in pnpm-workspace.yaml or package.json.
  */
 
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cwd } from 'node:process'
 import { $ } from 'bun'
 
 // Default directories to clean if none specified
 const DEFAULT_DIRS = [
+	// Build outputs
 	'dist',
-	'node_modules',
-	'.turbo',
 	'build',
-	'*.zip',
+	'.next',
+	'.output',
+	// Dependencies
+	'node_modules',
+	// Turbo cache
+	'.turbo',
+	// TanStack cache
 	'.tanstack',
+	// TypeScript build info
+	'*.tsbuildinfo',
+	// Coverage reports
+	'coverage',
+	// Zip archives
+	'*.zip',
+	// Expo cache
+	'.expo',
+	// Cache directories
+	'.cache',
 ]
 
 // Get directories to clean from command line arguments
@@ -32,40 +48,88 @@ const dirsToClean = args.length > 0 ? args : DEFAULT_DIRS
 const projectRoot = cwd()
 
 /**
+ * Parse YAML content simply (handles basic pnpm-workspace.yaml format)
+ * @param {string} content - YAML content
+ * @returns {string[]} Array of package patterns
+ */
+function parseWorkspaceYaml(content) {
+	const patterns = []
+	const lines = content.split('\n')
+	let inPackages = false
+
+	for (const line of lines) {
+		const trimmed = line.trim()
+
+		if (trimmed === 'packages:') {
+			inPackages = true
+			continue
+		}
+
+		if (inPackages) {
+			// Stop if we hit another top-level key (doesn't start with space/dash)
+			if (trimmed && !line.startsWith(' ') && !line.startsWith('-')) {
+				break
+			}
+
+			// Parse list item
+			if (trimmed.startsWith('-')) {
+				const pattern = trimmed.slice(1).trim()
+				if (pattern) {
+					patterns.push(pattern)
+				}
+			}
+		}
+	}
+
+	return patterns
+}
+
+/**
  * Retrieves the paths of all workspace packages.
+ * Supports both pnpm-workspace.yaml and package.json workspaces.
  * @param {string} rootDir - The project root directory.
  * @returns {Promise<string[]>} A promise that resolves to an array of absolute paths to workspace packages.
  */
 async function getWorkspacePackagePaths(rootDir) {
 	try {
-		const packageJsonPath = join(rootDir, 'package.json')
-		const packageJson = await Bun.file(packageJsonPath).json()
-
 		let workspacePatterns = []
-		if (Array.isArray(packageJson.workspaces)) {
-			workspacePatterns = packageJson.workspaces
-		} else if (
-			packageJson.workspaces &&
-			Array.isArray(packageJson.workspaces.packages)
-		) {
-			workspacePatterns = packageJson.workspaces.packages
-		} else {
-			console.warn(
-				"⚠️ Could not find 'workspaces' array in package.json. Only cleaning project root."
+
+		// First, try pnpm-workspace.yaml
+		const pnpmWorkspacePath = join(rootDir, 'pnpm-workspace.yaml')
+		if (existsSync(pnpmWorkspacePath)) {
+			const content = readFileSync(pnpmWorkspacePath, 'utf-8')
+			workspacePatterns = parseWorkspaceYaml(content)
+			console.log(
+				`📦 Found pnpm workspace with patterns: [${workspacePatterns.join(', ')}]`
 			)
-			return []
+		}
+
+		// Fallback to package.json workspaces
+		if (workspacePatterns.length === 0) {
+			const packageJsonPath = join(rootDir, 'package.json')
+			if (existsSync(packageJsonPath)) {
+				const packageJson = await Bun.file(packageJsonPath).json()
+				if (Array.isArray(packageJson.workspaces)) {
+					workspacePatterns = packageJson.workspaces
+				} else if (
+					packageJson.workspaces &&
+					Array.isArray(packageJson.workspaces.packages)
+				) {
+					workspacePatterns = packageJson.workspaces.packages
+				}
+			}
 		}
 
 		if (workspacePatterns.length === 0) {
+			console.warn(
+				'⚠️ Could not find workspace configuration. Only cleaning project root.'
+			)
 			return []
 		}
 
 		const collectedPaths = []
 		for (const pattern of workspacePatterns) {
 			const glob = new Bun.Glob(pattern)
-			// Scan for directories matching the pattern within the rootDir
-			// onlyFiles: false ensures that directories are included.
-			// For workspace patterns like "packages/*", this should yield directory paths.
 			for await (const path of glob.scan({
 				cwd: rootDir,
 				absolute: true,
@@ -75,12 +139,13 @@ async function getWorkspacePackagePaths(rootDir) {
 				collectedPaths.push(path)
 			}
 		}
-		// Deduplicate paths in case of overlapping patterns
+
+		// Deduplicate paths
 		const packagePaths = [...new Set(collectedPaths)]
 		return packagePaths
 	} catch (error) {
 		console.error(
-			`❌ Error reading or parsing root package.json or scanning workspaces: ${error.message}`
+			`❌ Error reading workspace configuration: ${error.message}`
 		)
 		console.warn('⚠️ Proceeding to clean only the project root.')
 		return []
@@ -96,11 +161,9 @@ async function cleanDirInPath(basePath, dirName) {
 	// Check if the dirName contains wildcards
 	if (dirName.includes('*') || dirName.includes('?')) {
 		try {
-			console.log(`  Attempting to remove pattern '${dirName}' in '${basePath}'...`)
 			const glob = new Bun.Glob(dirName)
 			let foundFiles = false
 
-			// Scan for files/directories matching the pattern
 			for await (const path of glob.scan({
 				cwd: basePath,
 				absolute: true,
@@ -116,14 +179,8 @@ async function cleanDirInPath(basePath, dirName) {
 				}
 			}
 
-			if (foundFiles) {
-				console.log(
-					`    ✅ Successfully processed pattern '${dirName}' in '${basePath}'`
-				)
-			} else {
-				console.log(
-					`    ℹ️ No files matching pattern '${dirName}' found in '${basePath}'`
-				)
+			if (!foundFiles) {
+				// Silent skip for patterns with no matches
 			}
 		} catch (error) {
 			console.error(
@@ -131,18 +188,16 @@ async function cleanDirInPath(basePath, dirName) {
 			)
 		}
 	} else {
-		// Handle non-wildcard paths (original logic)
 		const fullPath = join(basePath, dirName)
-		try {
-			console.log(`  Attempting to remove '${dirName}' in '${basePath}'...`)
-			await $`rm -rf ${fullPath}`.quiet()
-			console.log(
-				`    ✅ Successfully processed '${dirName}' in '${basePath}' (removed if it existed).`
-			)
-		} catch (error) {
-			console.error(
-				`    ❌ Error removing '${dirName}' in '${basePath}': ${error.message}`
-			)
+		if (existsSync(fullPath)) {
+			try {
+				await $`rm -rf ${fullPath}`.quiet()
+				console.log(`    ✅ Removed: ${fullPath}`)
+			} catch (error) {
+				console.error(
+					`    ❌ Error removing '${dirName}' in '${basePath}': ${error.message}`
+				)
+			}
 		}
 	}
 }
@@ -151,23 +206,25 @@ async function cleanDirInPath(basePath, dirName) {
  * Main function to orchestrate the cleaning process.
  */
 async function main() {
-	console.log(
-		`🧹 Starting clean process. Directories to target: [${dirsToClean.join(', ')}]`
-	)
+	console.log('🧹 Starting clean process...')
+	console.log(`📋 Targets: [${dirsToClean.join(', ')}]\n`)
 
 	const workspacePaths = await getWorkspacePackagePaths(projectRoot)
 	const allPathsToScan = [projectRoot, ...workspacePaths]
 
+	let totalRemoved = 0
+
 	for (const basePath of allPathsToScan) {
-		console.log(`
-ℹ️ Scanning in: ${basePath}`)
+		const relativePath =
+			basePath === projectRoot ? '.' : basePath.replace(projectRoot + '/', '')
+		console.log(`\n📁 Cleaning: ${relativePath}`)
+
 		for (const dir of dirsToClean) {
 			await cleanDirInPath(basePath, dir)
 		}
 	}
 
-	console.log(`
-🎉 Clean completed!`)
+	console.log('\n🎉 Clean completed!')
 }
 
 // Run the cleaner

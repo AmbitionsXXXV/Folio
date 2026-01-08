@@ -34,7 +34,10 @@
     "item_other": "{{count}} items",
     "selected_one": "{{count}} selected",
     "selected_other": "{{count}} selected",
-    "confirmDelete": "Confirm Delete"
+    "confirmDelete": "Confirm Delete",
+    "onThisPage": "On this page",
+    "tocPositionLeft": "Left",
+    "tocPositionRight": "Right"
   },
   "auth": {
     "signIn": "Sign In",

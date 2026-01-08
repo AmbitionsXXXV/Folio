@@ -173,3 +173,147 @@ version: text('version').notNull().default('1'),
 - [ ] 正常保存应更新版本号
 - [ ] 并发编辑时应检测版本冲突
 - [ ] 版本冲突时应提示用户刷新
+
+## 页面内目录（TOC）
+
+### 概述
+
+在分享页、编辑页和新建页显示"本页目录"侧边栏，帮助用户快速导航长文档。
+
+基于 [fumadocs-core/toc](https://www.fumadocs.dev/docs/headless/components/toc) 实现，提供开箱即用的 IntersectionObserver 追踪和自动滚动功能。
+
+**相关文件**：
+
+- `apps/web/src/lib/toc.ts` - TOC 提取与 slug 生成工具（输出 `TOCItemType` 格式）
+- `apps/web/src/hooks/use-toc-position.ts` - TOC 位置设置 Hook
+- `apps/web/src/components/table-of-contents.tsx` - TOC 组件（使用 fumadocs-core）
+
+### 功能特性
+
+- **标题提取**：从 ProseMirror JSON 内容中提取 H1-H3 标题
+- **稳定锚点**：为每个标题生成 URL 友好的 slug，重复标题自动追加序号
+- **滚动高亮**：使用 fumadocs `AnchorProvider` + IntersectionObserver 追踪当前可见章节
+- **自动滚动**：使用 fumadocs `ScrollProvider` 自动滚动 TOC 容器到活跃条目
+- **平滑滚动**：点击目录条目平滑滚动到对应标题
+- **位置可配置**：用户可选择 TOC 显示在左侧或右侧（localStorage 持久化）
+- **响应式隐藏**：移动端（< lg 断点）自动隐藏
+
+### 样式参考
+
+TOC 样式参考 fumadocs UI（`packages/ui/src/components/toc/index.tsx`、`packages/ui/src/components/toc/default.tsx`、`packages/radix-ui/src/layouts/docs/page/index.tsx`），并将 `fd` 前缀的 CSS 变量/token 翻译为 Folio 自有的：
+
+| fumadocs | Folio |
+| -------- | ----- |
+| `--fd-nav-height` | `--folio-nav-height` |
+| `text-fd-muted-foreground` | `text-muted-foreground` |
+| `text-fd-primary` | `text-primary` |
+| `border-fd-foreground/10` | `border-foreground/10` |
+| `bg-fd-primary` | `bg-primary` |
+
+### 配置
+
+**CSS 变量**（`apps/web/src/index.css`）：
+
+```css
+:root {
+  /* TOC sidebar sticky positioning - set to actual nav height if you have a fixed header */
+  --folio-nav-height: 0px;
+}
+```
+
+**localStorage Key**：`folio-toc-position`
+
+- 值：`'left'` 或 `'right'`
+- 默认值：`'right'`
+
+### 编辑页更新节奏
+
+为避免编辑时 TOC 密集更新：
+
+1. 编辑页复用 `useAutoSave` 的 1000ms 防抖
+2. 仅在 `onSave` 回调完成后更新 TOC items
+3. 新建页使用独立的 500ms 防抖更新 TOC
+
+### 使用示例
+
+```tsx
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { TableOfContents } from '@/components/table-of-contents'
+import { useTocPosition } from '@/hooks/use-toc-position'
+import { parseTocFromContent, assignHeadingIds } from '@/lib/toc'
+
+function MyPage() {
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [tocPosition] = useTocPosition()
+  const [tocRenderKey, setTocRenderKey] = useState(0)
+  // parseTocFromContent 返回 TOCItemType[] 格式，兼容 fumadocs-core/toc
+  const tocItems = useMemo(() => parseTocFromContent(contentJson), [contentJson])
+
+  // TipTap 可能延迟把 heading 渲染进 DOM（例如 immediatelyRender: false），
+  // 所以需要在 heading 出现后再触发一次 TOC remount，确保 IntersectionObserver 能 observe 到元素。
+  useEffect(() => {
+    const container = contentRef.current
+    if (!container || tocItems.length === 0) return
+
+    let didRemount = false
+
+    const assignAndMaybeRemount = () => {
+      assignHeadingIds(container, tocItems)
+
+      const hasAnyObservedHeading = tocItems.some((item) => {
+        const id = item.url.split('#')[1] ?? item.url.slice(1)
+        if (!id) return false
+        const element = document.getElementById(id)
+        return element !== null && container.contains(element)
+      })
+
+      if (hasAnyObservedHeading && !didRemount) {
+        didRemount = true
+        setTocRenderKey((prev) => prev + 1)
+        return true
+      }
+
+      return hasAnyObservedHeading
+    }
+
+    if (typeof MutationObserver === 'undefined') {
+      assignAndMaybeRemount()
+      return
+    }
+
+    if (assignAndMaybeRemount()) return
+
+    const observer = new MutationObserver(() => {
+      if (assignAndMaybeRemount()) observer.disconnect()
+    })
+
+    observer.observe(container, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [tocItems])
+
+  const hasToc = tocItems.length > 0
+
+  return (
+    <div className="flex">
+      {hasToc && tocPosition === 'left' && (
+        <TableOfContents key={tocRenderKey} items={tocItems} position={tocPosition} />
+      )}
+      <main ref={contentRef}>
+        {/* content */}
+      </main>
+      {hasToc && tocPosition === 'right' && (
+        <TableOfContents key={tocRenderKey} items={tocItems} position={tocPosition} />
+      )}
+    </div>
+  )
+}
+```
+
+### 回归测试用例
+
+- [ ] 文档包含 H1-H3 时显示 TOC，无标题时不显示
+- [ ] 点击 TOC 条目能平滑滚动到对应标题
+- [ ] 滚动页面时高亮当前可见章节
+- [ ] 切换左右位置后刷新页面仍保持设置
+- [ ] 移动端（< lg）不显示 TOC
+- [ ] 编辑时 TOC 不会在每次按键时更新（有防抖）

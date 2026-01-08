@@ -1,12 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Story+Script&display=swap,wght@400;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Outfit:wght@100..900&family=Spline+Sans:wght@300..700&family=Zen+Maru+Gothic&display=swap&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Outfit:wght@100..900&family=Spline+Sans:wght@300..700&family=ZCOOL+QingKe+HuangYou&family=Zen+Maru+Gothic&display=swap");
 
 @import "tailwindcss";
+
 @import "tw-animate-css";
 
 @import "./styles/animate.css";
 @import "./styles/component.css";
 @import "./styles/tiptap.css";
 @import "./styles/caret.css";
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -116,6 +119,8 @@ body::after {
 }
 
 :root {
+	/* TOC sidebar sticky positioning - set to actual nav height if you have a fixed header */
+	--folio-nav-height: 0px;
 	--background: oklch(0.9689 0.009 314.7819);
 	--foreground: oklch(0.3729 0.0306 259.7328);
 	--card: oklch(1 0 0);

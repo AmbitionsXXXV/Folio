@@ -34,7 +34,10 @@
     "item_other": "{{count}} 項目",
     "selected_one": "{{count}} 選択済み",
     "selected_other": "{{count}} 選択済み",
-    "confirmDelete": "削除の確認"
+    "confirmDelete": "削除の確認",
+    "onThisPage": "このページの目次",
+    "tocPositionLeft": "左",
+    "tocPositionRight": "右"
   },
   "auth": {
     "signIn": "サインイン",
