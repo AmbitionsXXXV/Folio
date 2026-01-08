@@ -177,7 +177,7 @@ function ShareViewPage() {
 	const { entry, share } = entryData
 
 	return (
-		<div className="min-h-svh bg-background">
+		<div className="flex min-h-svh flex-col bg-background">
 			{/* Header */}
 			<header className="border-b">
 				<div className="container mx-auto flex items-center justify-between px-4 py-4">
@@ -199,7 +199,7 @@ function ShareViewPage() {
 			</header>
 
 			{/* Content */}
-			<main className="container mx-auto max-w-3xl px-4 py-8">
+			<main className="container mx-auto max-w-3xl flex-1 px-4 py-8">
 				<article>
 					{/* Title */}
 					<h1 className="mb-6 font-bold text-3xl">

@@ -21,8 +21,8 @@ const resend = process.env.RESEND_API_KEY
 	: null
 
 const trustedOrigins = process.env.CORS_ORIGIN?.split(',')
-	.map((origin) => origin.trim())
-	.filter((origin) => origin.length > 0)
+	.map((origin: string) => origin.trim())
+	.filter((origin: string) => origin.length > 0)
 
 const cookieDomainFromBaseUrl = (() => {
 	const baseUrl = process.env.BETTER_AUTH_URL

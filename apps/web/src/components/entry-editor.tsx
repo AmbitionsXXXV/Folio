@@ -125,9 +125,9 @@ export function EntryEditor({
 			createSlashCommand(t).configure({
 				commands,
 			}),
-			// 自定义光标：带彗星尾巴动画效果
+			// 自定义光标：带彗星尾巴动画效果（只在可编辑模式下启用）
 			CustomCaret.configure({
-				enabled: true,
+				enabled: editable,
 			}),
 		],
 		content: initialContent,
