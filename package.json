@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "clean": "bun tools/clean.js",
+    "clean:all": "bun tools/clean.js && pnpm store prune",
     "check": "ultracite check",
     "check:fix": "ultracite fix",
     "dev": "turbo dev",

@@ -9,6 +9,7 @@ import {
 	Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { RootProvider } from 'fumadocs-ui/provider/tanstack'
 import { ThemeProvider } from 'next-themes'
 import { I18nextProvider, useTranslation } from 'react-i18next'
 import { CommandPalette } from '@/components/command-palette'
@@ -95,8 +96,10 @@ function RootDocumentInner() {
 
 function RootDocument() {
 	return (
-		<I18nextProvider i18n={i18n}>
-			<RootDocumentInner />
-		</I18nextProvider>
+		<RootProvider>
+			<I18nextProvider i18n={i18n}>
+				<RootDocumentInner />
+			</I18nextProvider>
+		</RootProvider>
 	)
 }

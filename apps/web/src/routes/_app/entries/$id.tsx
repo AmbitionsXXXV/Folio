@@ -30,6 +30,7 @@ import { EntrySources, type EntrySourcesRef } from '@/components/entry-sources'
 import { EntryTags, type EntryTagsRef } from '@/components/entry-tags'
 import { SaveStatusIndicator } from '@/components/save-status-indicator'
 import { ShareDialog } from '@/components/share-dialog'
+import { TableOfContents } from '@/components/table-of-contents'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -40,6 +41,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { type SaveStatus, useAutoSave } from '@/hooks/use-auto-save'
+import { useTocPosition } from '@/hooks/use-toc-position'
+import { assignHeadingIds, parseTocFromContent } from '@/lib/toc'
+import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/entries/$id')({
@@ -100,6 +104,9 @@ function EntryEditPage() {
 	const entryTagsRef = useRef<EntryTagsRef>(null)
 	const entrySourcesRef = useRef<EntrySourcesRef>(null)
 	const entryPickerRef = useRef<EntryPickerRef>(null)
+	const contentRef = useRef<HTMLDivElement>(null)
+	const [tocPosition] = useTocPosition()
+	const [tocRenderKey, setTocRenderKey] = useState(0)
 
 	// Fetch entry data
 	const { data: entry, isLoading } = useQuery({
@@ -118,6 +125,8 @@ function EntryEditPage() {
 	const [showShareDialog, setShowShareDialog] = useState(false)
 	// 密码保护对话框状态
 	const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+	// Debounced content for TOC (updated via autoSave debounce)
+	const [debouncedContent, setDebouncedContent] = useState<string | null>(null)
 
 	// 当 entry 加载完成时，更新版本号
 	useEffect(() => {
@@ -135,6 +144,10 @@ function EntryEditPage() {
 				setCurrentVersion(result.version)
 			}
 			queryClient.invalidateQueries({ queryKey: ['entries'] })
+			// Update debounced content for TOC after save completes
+			if (data.contentJson) {
+				setDebouncedContent(data.contentJson)
+			}
 		},
 		debounceMs: 1000,
 		savedDurationMs: 2000,
@@ -325,6 +338,64 @@ function EntryEditPage() {
 		? 'saving'
 		: saveStatus
 
+	// Parse TOC items from debounced content (uses autoSave's 1000ms debounce)
+	const editorContent = localContent ?? entry?.contentJson ?? ''
+	const tocContent = debouncedContent ?? entry?.contentJson ?? ''
+	const tocItems = useMemo(() => parseTocFromContent(tocContent), [tocContent])
+
+	// TipTap uses `immediatelyRender: false`, so headings may not exist in the DOM
+	// when fumadocs AnchorProvider tries to observe them. We assign heading ids and
+	// remount the TOC once headings are present so IntersectionObserver can attach.
+	useEffect(() => {
+		const container = contentRef.current
+		if (!container || tocItems.length === 0) {
+			return
+		}
+
+		let didRemount = false
+
+		const assignAndMaybeRemount = () => {
+			assignHeadingIds(container, tocItems)
+
+			const hasAnyObservedHeading = tocItems.some((item) => {
+				// URL is always prefixed with # by makeUniqueItems
+				const id = item.url.slice(1)
+				if (!id) {
+					return false
+				}
+
+				const element = document.getElementById(id)
+				return element !== null && container.contains(element)
+			})
+
+			if (hasAnyObservedHeading && !didRemount) {
+				didRemount = true
+				setTocRenderKey((prev) => prev + 1)
+				return true
+			}
+
+			return hasAnyObservedHeading
+		}
+
+		if (typeof MutationObserver === 'undefined') {
+			assignAndMaybeRemount()
+			return
+		}
+
+		if (assignAndMaybeRemount()) {
+			return
+		}
+
+		const observer = new MutationObserver(() => {
+			if (assignAndMaybeRemount()) {
+				observer.disconnect()
+			}
+		})
+
+		observer.observe(container, { childList: true, subtree: true })
+		return () => observer.disconnect()
+	}, [tocItems])
+
 	if (isLoading) {
 		return (
 			<div className="flex min-h-svh items-center justify-center">
@@ -345,194 +416,218 @@ function EntryEditPage() {
 	}
 
 	const title = localTitle ?? entry.title
-	// 使用 contentJson
-	const editorContent = localContent ?? entry.contentJson ?? ''
+	const hasToc = tocItems.length > 0
 
 	return (
-		<div className="container mx-auto max-w-4xl px-4 py-6">
-			{/* Header toolbar */}
-			<div className="mb-6 flex items-center justify-between">
-				<Button onClick={handleGoBack} size="sm" variant="ghost">
-					<HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
-					{t('common.back')}
-				</Button>
+		<div
+			className={cn('container mx-auto flex', hasToc ? 'max-w-6xl' : 'max-w-4xl')}
+		>
+			{/* TOC on left side */}
+			{hasToc && tocPosition === 'left' && (
+				<TableOfContents
+					items={tocItems}
+					key={tocRenderKey}
+					position={tocPosition}
+				/>
+			)}
 
-				<div className="flex items-center gap-1">
-					{/* Save status indicator */}
-					<SaveStatusIndicator className="mr-2" status={displaySaveStatus} />
-
-					{/* Move to library/inbox */}
-					{entry.isInbox ? (
-						<Button
-							onClick={handleMoveToLibrary}
-							size="icon"
-							title={t('entry.moveToLibrary')}
-							variant="ghost"
-						>
-							<HugeiconsIcon className="size-4" icon={ArchiveIcon} />
-						</Button>
-					) : (
-						<Button
-							onClick={handleMoveToInbox}
-							size="icon"
-							title={t('entry.moveToInbox')}
-							variant="ghost"
-						>
-							<HugeiconsIcon className="size-4" icon={InboxIcon} />
-						</Button>
-					)}
-
-					{/* Star */}
-					<Button
-						onClick={handleToggleStar}
-						size="icon"
-						title={t('entry.starred')}
-						variant="ghost"
-					>
-						<HugeiconsIcon
-							className={`size-4 ${
-								entry.isStarred ? 'fill-amber-500 text-amber-500' : ''
-							}`}
-							icon={StarIcon}
-						/>
+			{/* Main content */}
+			<div className="min-w-0 flex-1 px-4 py-6">
+				{/* Header toolbar */}
+				<div className="mb-6 flex items-center justify-between">
+					<Button onClick={handleGoBack} size="sm" variant="ghost">
+						<HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
+						{t('common.back')}
 					</Button>
 
-					{/* Pin */}
-					<Button
-						onClick={handleTogglePin}
-						size="icon"
-						title={t('entry.pinned')}
-						variant="ghost"
-					>
-						<HugeiconsIcon
-							className={`size-4 ${
-								entry.isPinned ? 'fill-primary text-primary' : ''
-							}`}
-							icon={PinIcon}
-						/>
-					</Button>
+					<div className="flex items-center gap-1">
+						{/* Save status indicator */}
+						<SaveStatusIndicator className="mr-2" status={displaySaveStatus} />
 
-					{/* Delete */}
-					<Button
-						className="text-destructive hover:text-destructive"
-						onClick={handleDeleteClick}
-						size="icon"
-						title={t('common.delete')}
-						variant="ghost"
-					>
-						<HugeiconsIcon className="size-4" icon={Delete02Icon} />
-					</Button>
-
-					{/* More actions dropdown */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button size="icon" title={t('common.more')} variant="ghost">
-								<HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
+						{/* Move to library/inbox */}
+						{entry.isInbox ? (
+							<Button
+								onClick={handleMoveToLibrary}
+								size="icon"
+								title={t('entry.moveToLibrary')}
+								variant="ghost"
+							>
+								<HugeiconsIcon className="size-4" icon={ArchiveIcon} />
 							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => setShowShareDialog(true)}>
-								<HugeiconsIcon className="mr-2 size-4" icon={Share01Icon} />
-								{t('share.title')}
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
-								<HugeiconsIcon className="mr-2 size-4" icon={LockPasswordIcon} />
-								{t('privacy.title')}
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+						) : (
+							<Button
+								onClick={handleMoveToInbox}
+								size="icon"
+								title={t('entry.moveToInbox')}
+								variant="ghost"
+							>
+								<HugeiconsIcon className="size-4" icon={InboxIcon} />
+							</Button>
+						)}
+
+						{/* Star */}
+						<Button
+							onClick={handleToggleStar}
+							size="icon"
+							title={t('entry.starred')}
+							variant="ghost"
+						>
+							<HugeiconsIcon
+								className={`size-4 ${
+									entry.isStarred ? 'fill-amber-500 text-amber-500' : ''
+								}`}
+								icon={StarIcon}
+							/>
+						</Button>
+
+						{/* Pin */}
+						<Button
+							onClick={handleTogglePin}
+							size="icon"
+							title={t('entry.pinned')}
+							variant="ghost"
+						>
+							<HugeiconsIcon
+								className={`size-4 ${
+									entry.isPinned ? 'fill-primary text-primary' : ''
+								}`}
+								icon={PinIcon}
+							/>
+						</Button>
+
+						{/* Delete */}
+						<Button
+							className="text-destructive hover:text-destructive"
+							onClick={handleDeleteClick}
+							size="icon"
+							title={t('common.delete')}
+							variant="ghost"
+						>
+							<HugeiconsIcon className="size-4" icon={Delete02Icon} />
+						</Button>
+
+						{/* More actions dropdown */}
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button size="icon" title={t('common.more')} variant="ghost">
+									<HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem onClick={() => setShowShareDialog(true)}>
+									<HugeiconsIcon className="mr-2 size-4" icon={Share01Icon} />
+									{t('share.title')}
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setShowPasswordDialog(true)}>
+									<HugeiconsIcon className="mr-2 size-4" icon={LockPasswordIcon} />
+									{t('privacy.title')}
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				</div>
+
+				{/* Title input */}
+				<Input
+					className="mb-4 border-none font-bold text-2xl shadow-none focus-visible:ring-0"
+					onChange={handleTitleChange}
+					placeholder={t('entry.title')}
+					value={title}
+				/>
+
+				{/* Tags */}
+				<div className="mb-4">
+					<EntryTags entryId={id} ref={entryTagsRef} />
+				</div>
+
+				{/* Sources */}
+				<div className="mb-4">
+					<EntrySources entryId={id} ref={entrySourcesRef} />
+				</div>
+
+				{/* Editor */}
+				<div ref={contentRef}>
+					<EntryEditor
+						additionalCommands={additionalCommands}
+						autoFocus
+						content={editorContent}
+						contentFormat="json"
+						onChange={handleContentChange}
+						placeholder={t('editor.placeholderWithSlash')}
+					/>
+				</div>
+
+				{/* Metadata footer */}
+				<div className="mt-8 border-t pt-4 font-bold font-script text-muted-foreground text-sm">
+					<p>
+						{t('entry.createdAt')}{' '}
+						{new Intl.DateTimeFormat(undefined, {
+							year: 'numeric',
+							month: 'long',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit',
+						}).format(new Date(entry.createdAt))}
+					</p>
+					<p>
+						{t('entry.updatedAt')}{' '}
+						{new Intl.DateTimeFormat(undefined, {
+							year: 'numeric',
+							month: 'long',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit',
+						}).format(new Date(entry.updatedAt))}
+					</p>
+				</div>
+
+				{/* Entry picker dialog for /ref command */}
+				<EntryPicker
+					excludeId={id}
+					onSelect={(selectedEntry) => {
+						// Get the editor instance stored by the ref command
+						const editor = getCurrentEditor()
+						if (editor) {
+							insertEntryRef(editor, selectedEntry, t)
+						}
+					}}
+					ref={entryPickerRef}
+				/>
+
+				{/* Delete confirmation dialog */}
+				<ConfirmDeleteDialog
+					description={t('entry.deleteConfirmDesc')}
+					isLoading={deleteMutation.isPending}
+					onConfirm={handleConfirmDelete}
+					onOpenChange={setShowDeleteDialog}
+					open={showDeleteDialog}
+					title={t('entry.deleteConfirmTitle')}
+				/>
+
+				{/* Share dialog */}
+				<ShareDialog
+					entryId={id}
+					entryTitle={entry.title}
+					onOpenChange={setShowShareDialog}
+					open={showShareDialog}
+				/>
+
+				{/* Entry password dialog */}
+				<EntryPasswordDialog
+					entryId={id}
+					onOpenChange={setShowPasswordDialog}
+					open={showPasswordDialog}
+				/>
 			</div>
 
-			{/* Title input */}
-			<Input
-				className="mb-4 border-none font-bold text-2xl shadow-none focus-visible:ring-0"
-				onChange={handleTitleChange}
-				placeholder={t('entry.title')}
-				value={title}
-			/>
-
-			{/* Tags */}
-			<div className="mb-4">
-				<EntryTags entryId={id} ref={entryTagsRef} />
-			</div>
-
-			{/* Sources */}
-			<div className="mb-4">
-				<EntrySources entryId={id} ref={entrySourcesRef} />
-			</div>
-
-			{/* Editor */}
-			<EntryEditor
-				additionalCommands={additionalCommands}
-				autoFocus
-				content={editorContent}
-				contentFormat="json"
-				onChange={handleContentChange}
-				placeholder={t('editor.placeholderWithSlash')}
-			/>
-
-			{/* Metadata footer */}
-			<div className="mt-8 border-t pt-4 font-bold font-script text-muted-foreground text-sm">
-				<p>
-					{t('entry.createdAt')}{' '}
-					{new Intl.DateTimeFormat(undefined, {
-						year: 'numeric',
-						month: 'long',
-						day: 'numeric',
-						hour: '2-digit',
-						minute: '2-digit',
-					}).format(new Date(entry.createdAt))}
-				</p>
-				<p>
-					{t('entry.updatedAt')}{' '}
-					{new Intl.DateTimeFormat(undefined, {
-						year: 'numeric',
-						month: 'long',
-						day: 'numeric',
-						hour: '2-digit',
-						minute: '2-digit',
-					}).format(new Date(entry.updatedAt))}
-				</p>
-			</div>
-
-			{/* Entry picker dialog for /ref command */}
-			<EntryPicker
-				excludeId={id}
-				onSelect={(selectedEntry) => {
-					// Get the editor instance stored by the ref command
-					const editor = getCurrentEditor()
-					if (editor) {
-						insertEntryRef(editor, selectedEntry, t)
-					}
-				}}
-				ref={entryPickerRef}
-			/>
-
-			{/* Delete confirmation dialog */}
-			<ConfirmDeleteDialog
-				description={t('entry.deleteConfirmDesc')}
-				isLoading={deleteMutation.isPending}
-				onConfirm={handleConfirmDelete}
-				onOpenChange={setShowDeleteDialog}
-				open={showDeleteDialog}
-				title={t('entry.deleteConfirmTitle')}
-			/>
-
-			{/* Share dialog */}
-			<ShareDialog
-				entryId={id}
-				entryTitle={entry.title}
-				onOpenChange={setShowShareDialog}
-				open={showShareDialog}
-			/>
-
-			{/* Entry password dialog */}
-			<EntryPasswordDialog
-				entryId={id}
-				onOpenChange={setShowPasswordDialog}
-				open={showPasswordDialog}
-			/>
+			{/* TOC on right side */}
+			{hasToc && tocPosition === 'right' && (
+				<TableOfContents
+					items={tocItems}
+					key={tocRenderKey}
+					position={tocPosition}
+				/>
+			)}
 		</div>
 	)
 }
