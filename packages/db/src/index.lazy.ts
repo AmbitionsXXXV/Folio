@@ -66,10 +66,27 @@ const schema = {
 	entrySharesRelations,
 }
 
-// 数据库连接初始化
-import { drizzle } from 'drizzle-orm/node-postgres'
+// 延迟初始化数据库连接，避免模块循环依赖导致的初始化问题
+import { createRequire } from 'node:module'
 
-export const db = drizzle(process.env.DATABASE_URL || '', { schema })
+const require = createRequire(import.meta.url)
+
+type DrizzleNodePostgresModule = typeof import('drizzle-orm/node-postgres')
+type DbType = ReturnType<DrizzleNodePostgresModule['drizzle']>
+
+let dbInstance: DbType | null = null
+
+export const db = new Proxy({} as DbType, {
+	get(_target, prop) {
+		if (!dbInstance) {
+			const { drizzle } =
+				require('drizzle-orm/node-postgres') as DrizzleNodePostgresModule
+			dbInstance = drizzle(process.env.DATABASE_URL || '', { schema })
+		}
+
+		return (dbInstance as unknown as Record<string | symbol, unknown>)[prop]
+	},
+}) as DbType
 
 // Re-export schema for external use
 export {

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
@@ -7,6 +8,16 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
 	plugins: [tsconfigPaths(), tailwindcss(), tanstackStart(), nitro(), viteReact()],
+	resolve: {
+		alias: [
+			{
+				find: /^@folionote\/db$/,
+				replacement: fileURLToPath(
+					new URL('../../packages/db/src/index.lazy.ts', import.meta.url)
+				),
+			},
+		],
+	},
 	server: {
 		port: 3001,
 	},
