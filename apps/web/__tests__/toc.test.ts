@@ -11,7 +11,7 @@ describe('TOC utilities', () => {
 			expect(slugifyHeading('Hello   World')).toBe('hello-world')
 		})
 
-		it('removes special characters', () => {
+		it('converts special characters to hyphens', () => {
 			expect(slugifyHeading('Hello, World!')).toBe('hello-world')
 		})
 
@@ -34,6 +34,30 @@ describe('TOC utilities', () => {
 
 		it('removes leading and trailing hyphens', () => {
 			expect(slugifyHeading('- Hello -')).toBe('hello')
+		})
+
+		it('handles C++ correctly', () => {
+			expect(slugifyHeading('C++ Programming')).toBe('c-plus-plus-programming')
+			expect(slugifyHeading('Introduction to C++')).toBe(
+				'introduction-to-c-plus-plus'
+			)
+		})
+
+		it('handles Node.js and similar dotted names', () => {
+			expect(slugifyHeading('Node.js Guide')).toBe('node-js-guide')
+			expect(slugifyHeading('Vue.js Basics')).toBe('vue-js-basics')
+		})
+
+		it('handles C# correctly', () => {
+			expect(slugifyHeading('C# Tutorial')).toBe('c-sharp-tutorial')
+		})
+
+		it('handles .NET correctly', () => {
+			expect(slugifyHeading('.NET Framework')).toBe('dot-net-framework')
+		})
+
+		it('handles F# correctly', () => {
+			expect(slugifyHeading('F# Functional')).toBe('f-sharp-functional')
 		})
 	})
 

@@ -358,7 +358,8 @@ function EntryEditPage() {
 			assignHeadingIds(container, tocItems)
 
 			const hasAnyObservedHeading = tocItems.some((item) => {
-				const id = item.url.split('#')[1] ?? item.url.slice(1)
+				// URL is always prefixed with # by makeUniqueItems
+				const id = item.url.slice(1)
 				if (!id) {
 					return false
 				}

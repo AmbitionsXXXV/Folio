@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-	extractTocItemsFromContentJson,
-	makeUniqueHeadingIds,
-	parseTocFromContent,
-	slugifyHeading,
-} from '../src/lib/toc'
+import { parseTocFromContent, slugifyHeading } from '../src/lib/toc'
 
 describe('TOC utilities', () => {
 	describe('slugifyHeading', () => {
@@ -16,7 +11,7 @@ describe('TOC utilities', () => {
 			expect(slugifyHeading('Hello   World')).toBe('hello-world')
 		})
 
-		it('removes special characters', () => {
+		it('converts special characters to hyphens', () => {
 			expect(slugifyHeading('Hello, World!')).toBe('hello-world')
 		})
 
@@ -40,9 +35,33 @@ describe('TOC utilities', () => {
 		it('removes leading and trailing hyphens', () => {
 			expect(slugifyHeading('- Hello -')).toBe('hello')
 		})
+
+		it('handles C++ correctly', () => {
+			expect(slugifyHeading('C++ Programming')).toBe('c-plus-plus-programming')
+			expect(slugifyHeading('Introduction to C++')).toBe(
+				'introduction-to-c-plus-plus'
+			)
+		})
+
+		it('handles Node.js and similar dotted names', () => {
+			expect(slugifyHeading('Node.js Guide')).toBe('node-js-guide')
+			expect(slugifyHeading('Vue.js Basics')).toBe('vue-js-basics')
+		})
+
+		it('handles C# correctly', () => {
+			expect(slugifyHeading('C# Tutorial')).toBe('c-sharp-tutorial')
+		})
+
+		it('handles .NET correctly', () => {
+			expect(slugifyHeading('.NET Framework')).toBe('dot-net-framework')
+		})
+
+		it('handles F# correctly', () => {
+			expect(slugifyHeading('F# Functional')).toBe('f-sharp-functional')
+		})
 	})
 
-	describe('extractTocItemsFromContentJson', () => {
+	describe('parseTocFromContent', () => {
 		it('extracts H1-H3 headings from ProseMirror JSON', () => {
 			const json = {
 				type: 'doc',
@@ -69,25 +88,22 @@ describe('TOC utilities', () => {
 				],
 			}
 
-			const items = extractTocItemsFromContentJson(JSON.stringify(json))
+			const items = parseTocFromContent(JSON.stringify(json))
 
 			expect(items).toHaveLength(3)
 			expect(items[0]).toEqual({
-				id: 'introduction',
 				title: 'Introduction',
-				level: 1,
+				depth: 1,
 				url: '#introduction',
 			})
 			expect(items[1]).toEqual({
-				id: 'getting-started',
 				title: 'Getting Started',
-				level: 2,
+				depth: 2,
 				url: '#getting-started',
 			})
 			expect(items[2]).toEqual({
-				id: 'installation',
 				title: 'Installation',
-				level: 3,
+				depth: 3,
 				url: '#installation',
 			})
 		})
@@ -109,25 +125,25 @@ describe('TOC utilities', () => {
 				],
 			}
 
-			const items = extractTocItemsFromContentJson(JSON.stringify(json))
+			const items = parseTocFromContent(JSON.stringify(json))
 
 			expect(items).toHaveLength(1)
-			expect(items[0].title).toBe('Valid')
+			expect(items[0]?.title).toBe('Valid')
 		})
 
 		it('handles empty content', () => {
-			expect(extractTocItemsFromContentJson('')).toEqual([])
-			expect(extractTocItemsFromContentJson(null)).toEqual([])
-			expect(extractTocItemsFromContentJson(undefined)).toEqual([])
+			expect(parseTocFromContent('')).toEqual([])
+			expect(parseTocFromContent(null)).toEqual([])
+			expect(parseTocFromContent(undefined)).toEqual([])
 		})
 
 		it('handles invalid JSON gracefully', () => {
-			expect(extractTocItemsFromContentJson('not valid json')).toEqual([])
+			expect(parseTocFromContent('not valid json')).toEqual([])
 		})
 
 		it('handles document without content array', () => {
-			expect(extractTocItemsFromContentJson('{}')).toEqual([])
-			expect(extractTocItemsFromContentJson('{"type": "doc"}')).toEqual([])
+			expect(parseTocFromContent('{}')).toEqual([])
+			expect(parseTocFromContent('{"type": "doc"}')).toEqual([])
 		})
 
 		it('skips headings without text', () => {
@@ -147,10 +163,10 @@ describe('TOC utilities', () => {
 				],
 			}
 
-			const items = extractTocItemsFromContentJson(JSON.stringify(json))
+			const items = parseTocFromContent(JSON.stringify(json))
 
 			expect(items).toHaveLength(1)
-			expect(items[0].title).toBe('Has Text')
+			expect(items[0]?.title).toBe('Has Text')
 		})
 
 		it('extracts text from nested content', () => {
@@ -171,10 +187,10 @@ describe('TOC utilities', () => {
 				],
 			}
 
-			const items = extractTocItemsFromContentJson(JSON.stringify(json))
+			const items = parseTocFromContent(JSON.stringify(json))
 
 			expect(items).toHaveLength(1)
-			expect(items[0].title).toBe('Hello World')
+			expect(items[0]?.title).toBe('Hello World')
 		})
 
 		it('accepts object input directly', () => {
@@ -189,62 +205,13 @@ describe('TOC utilities', () => {
 				],
 			}
 
-			const items = extractTocItemsFromContentJson(json)
+			const items = parseTocFromContent(json)
 
 			expect(items).toHaveLength(1)
-			expect(items[0].title).toBe('Direct Object')
-		})
-	})
-
-	describe('makeUniqueHeadingIds', () => {
-		it('keeps unique IDs unchanged', () => {
-			const items = [
-				{ id: 'intro', title: 'Intro', level: 1, url: '#intro' },
-				{ id: 'setup', title: 'Setup', level: 2, url: '#setup' },
-			]
-
-			const result = makeUniqueHeadingIds(items)
-
-			expect(result[0].id).toBe('intro')
-			expect(result[1].id).toBe('setup')
+			expect(items[0]?.title).toBe('Direct Object')
 		})
 
-		it('appends numeric suffix for duplicates', () => {
-			const items = [
-				{ id: 'intro', title: 'Intro', level: 1, url: '#intro' },
-				{ id: 'intro', title: 'Intro', level: 2, url: '#intro' },
-				{ id: 'intro', title: 'Intro', level: 3, url: '#intro' },
-			]
-
-			const result = makeUniqueHeadingIds(items)
-
-			expect(result[0].id).toBe('intro')
-			expect(result[0].url).toBe('#intro')
-			expect(result[1].id).toBe('intro-1')
-			expect(result[1].url).toBe('#intro-1')
-			expect(result[2].id).toBe('intro-2')
-			expect(result[2].url).toBe('#intro-2')
-		})
-
-		it('handles empty array', () => {
-			expect(makeUniqueHeadingIds([])).toEqual([])
-		})
-
-		it('handles items with empty id', () => {
-			const items = [
-				{ id: '', title: 'No ID', level: 1, url: '#' },
-				{ id: '', title: 'No ID 2', level: 2, url: '#' },
-			]
-
-			const result = makeUniqueHeadingIds(items)
-
-			expect(result[0].id).toBe('heading')
-			expect(result[1].id).toBe('heading-1')
-		})
-	})
-
-	describe('parseTocFromContent', () => {
-		it('combines extraction and deduplication', () => {
+		it('handles duplicate headings with unique URLs', () => {
 			const json = {
 				type: 'doc',
 				content: [
@@ -258,15 +225,44 @@ describe('TOC utilities', () => {
 						attrs: { level: 2 },
 						content: [{ type: 'text', text: 'Setup' }],
 					},
+					{
+						type: 'heading',
+						attrs: { level: 3 },
+						content: [{ type: 'text', text: 'Setup' }],
+					},
+				],
+			}
+
+			const items = parseTocFromContent(JSON.stringify(json))
+
+			expect(items).toHaveLength(3)
+			expect(items[0]?.url).toBe('#setup')
+			expect(items[1]?.url).toBe('#setup-1')
+			expect(items[2]?.url).toBe('#setup-2')
+		})
+
+		it('handles items with empty slug by using fallback', () => {
+			const json = {
+				type: 'doc',
+				content: [
+					{
+						type: 'heading',
+						attrs: { level: 1 },
+						content: [{ type: 'text', text: '...' }],
+					},
+					{
+						type: 'heading',
+						attrs: { level: 2 },
+						content: [{ type: 'text', text: '!!!' }],
+					},
 				],
 			}
 
 			const items = parseTocFromContent(JSON.stringify(json))
 
 			expect(items).toHaveLength(2)
-			// parseTocFromContent now returns TOCItemType format (url instead of id)
-			expect(items[0].url).toBe('#setup')
-			expect(items[1].url).toBe('#setup-1')
+			expect(items[0]?.url).toBe('#heading')
+			expect(items[1]?.url).toBe('#heading-1')
 		})
 
 		it('returns empty array for invalid input', () => {

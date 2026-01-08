@@ -24,7 +24,7 @@ type ProseMirrorNode = {
 
 /**
  * Slugify a heading text to create a URL-friendly anchor ID.
- * Handles Unicode characters and normalizes the string.
+ * Handles Unicode characters, technical terms (C++, Node.js), and normalizes the string.
  *
  * @param text - The heading text to slugify
  * @returns A URL-friendly slug
@@ -34,10 +34,20 @@ export function slugifyHeading(text: string): string {
 		text
 			.toLowerCase()
 			.trim()
+			// Handle common technical patterns before general processing:
+			// - C++ → c-plus-plus
+			// - C# → c-sharp
+			// - .NET → dot-net
+			// - F# → f-sharp
+			.replace(/\+\+/g, '-plus-plus')
+			.replace(/#(?=\s|$)/g, '-sharp')
+			.replace(/\.(?=net)/gi, 'dot-')
+			// Replace dots between words with hyphens (e.g., Node.js → node-js)
+			.replace(/\.(?=\w)/g, '-')
 			// Replace spaces and underscores with hyphens
 			.replace(/[\s_]+/g, '-')
-			// Remove characters that are not alphanumeric, hyphens, or Unicode letters
-			.replace(/[^\p{L}\p{N}-]/gu, '')
+			// Replace other special characters with hyphens instead of removing
+			.replace(/[^\p{L}\p{N}-]/gu, '-')
 			// Remove consecutive hyphens
 			.replace(/-+/g, '-')
 			// Remove leading/trailing hyphens
@@ -201,16 +211,17 @@ export function assignHeadingIds(
 
 		if (matchIndex !== -1) {
 			const item = itemsCopy[matchIndex]
-			if (!item) continue
-			// Extract ID from URL (remove leading #)
-			const newId = item.url.slice(1)
-			// Only update if ID is different to avoid unnecessary DOM mutations
-			if (heading.id !== newId) {
-				heading.id = newId
+			if (item) {
+				// Extract ID from URL (remove leading #)
+				const newId = item.url.slice(1)
+				// Only update if ID is different to avoid unnecessary DOM mutations
+				if (heading.id !== newId) {
+					heading.id = newId
+				}
+				assignedCount++
+				// Remove from copy to handle duplicates correctly
+				itemsCopy.splice(matchIndex, 1)
 			}
-			assignedCount++
-			// Remove from copy to handle duplicates correctly
-			itemsCopy.splice(matchIndex, 1)
 		}
 	}
 
