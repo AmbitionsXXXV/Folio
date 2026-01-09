@@ -1,5 +1,15 @@
 # @folionote/api
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [5a5262f]
+  - @folionote/locales@0.1.3
+  - @folionote/auth@0.1.3
+  - @folionote/db@0.1.3
+  - @folionote/storage@0.1.0
+
 ## 0.1.2
 
 ### Patch Changes
