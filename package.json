@@ -44,6 +44,7 @@
     "changeset": "changeset",
     "changeset:status": "changeset status",
     "version": "changeset version",
+    "version:tag": "changeset version && changeset tag",
     "postinstall": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
   "dependencies": {

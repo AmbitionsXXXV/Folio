@@ -92,11 +92,12 @@ pnpm changeset:status
 
 ## 常用命令
 
-| 命令                    | 说明                     |
-| ----------------------- | ------------------------ |
-| `pnpm changeset`        | 创建新的 changeset       |
-| `pnpm changeset:status` | 查看待处理的变更         |
-| `pnpm version`          | 更新版本号（消费 changeset） |
+| 命令                    | 说明                           |
+| ----------------------- | ------------------------------ |
+| `pnpm changeset`        | 创建新的 changeset             |
+| `pnpm changeset:status` | 查看待处理的变更               |
+| `pnpm run version`      | 更新版本号（消费 changeset）   |
+| `pnpm run version:tag`  | 更新版本号并创建 Git tags      |
 
 ## 配置说明
 
