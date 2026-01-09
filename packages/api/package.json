@@ -21,6 +21,7 @@
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
+    "@folionote/storage": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

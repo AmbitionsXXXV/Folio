@@ -354,7 +354,8 @@
     "search": "Search",
     "sources": "Sources",
     "tags": "Tags",
-    "settings": "Settings"
+    "settings": "Settings",
+    "profile": "Profile"
   },
   "search": {
     "placeholder": "Search entries...",
@@ -493,6 +494,47 @@
       "confirm": "Switch",
       "cancel": "Keep Current"
     }
+  },
+  "profile": {
+    "title": "Profile",
+    "settings": "Profile Settings",
+    "settingsDescription": "Update your profile picture and information.",
+    "editProfile": "Edit Profile",
+    "avatarHelp": "Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 20MB.",
+    "accountInfo": "Account Information",
+    "memberSince": "Member since",
+    "lastUpdated": "Last updated",
+    "appearance": "Appearance",
+    "languageAndRegion": "Language & Region",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "deleteAccountDescription": "Permanently delete your account and all associated data.",
+    "signOutAllDevices": "Sign Out All Devices",
+    "signOutAllDevicesDescription": "Sign out from all devices and sessions."
+  },
+  "avatar": {
+    "uploadSuccess": "Avatar uploaded successfully",
+    "uploadError": "Failed to upload avatar: {{message}}",
+    "deleteSuccess": "Avatar deleted successfully",
+    "deleteError": "Failed to delete avatar: {{message}}",
+    "invalidType": "Invalid file type. Please use JPEG, PNG, GIF, or WebP.",
+    "fileTooLarge": "File is too large. Maximum size is {{size}}MB.",
+    "delete": "Delete",
+    "deleteTitle": "Delete Avatar",
+    "deleteConfirmation": "Are you sure you want to delete your avatar? This action cannot be undone.",
+    "deleting": "Deleting...",
+    "cropTitle": "Crop Avatar",
+    "cropDescription": "Drag to reposition and use the slider to zoom. The image will be cropped to a circle.",
+    "zoom": "Zoom",
+    "cropAndUpload": "Crop & Upload",
+    "uploading": "Uploading...",
+    "cropError": "Failed to crop image. Please try again.",
+    "actions": "Avatar Actions",
+    "actionsDescription": "Choose an action for your avatar.",
+    "reupload": "Update",
+    "rateLimited": "Too many update attempts. Please try again in {{seconds}} seconds.",
+    "rateLimitedWait": "Update limit reached. Please wait {{seconds}}s.",
+    "remainingUploads": "{{remaining}}/{{limit}} updates remaining"
   },
   "share": {
     "title": "Share",

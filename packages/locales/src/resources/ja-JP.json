@@ -494,6 +494,36 @@
       "cancel": "現在のまま"
     }
   },
+  "profile": {
+    "settings": "プロフィール設定",
+    "settingsDescription": "プロフィール画像と情報を更新します。",
+    "editProfile": "プロフィールを編集",
+    "avatarHelp": "クリックまたはドラッグして画像をアップロードします。対応形式：JPEG、PNG、GIF、WebP。最大5MB。"
+  },
+  "avatar": {
+    "uploadSuccess": "アバターのアップロードに成功しました",
+    "uploadError": "アバターのアップロードに失敗しました：{{message}}",
+    "deleteSuccess": "アバターの削除に成功しました",
+    "deleteError": "アバターの削除に失敗しました：{{message}}",
+    "invalidType": "無効なファイル形式です。JPEG、PNG、GIF、またはWebPを使用してください。",
+    "fileTooLarge": "ファイルが大きすぎます。最大サイズは{{size}}MBです。",
+    "delete": "削除",
+    "deleteTitle": "アバターを削除",
+    "deleteConfirmation": "アバターを削除してもよろしいですか？この操作は元に戻せません。",
+    "deleting": "削除中...",
+    "cropTitle": "アバターをクロップ",
+    "cropDescription": "ドラッグして位置を調整し、スライダーでズームします。画像は円形にクロップされます。",
+    "zoom": "ズーム",
+    "cropAndUpload": "クロップしてアップロード",
+    "uploading": "アップロード中...",
+    "cropError": "画像のクロップに失敗しました。再度お試しください。",
+    "actions": "アバター操作",
+    "actionsDescription": "アバターの操作を選択してください。",
+    "reupload": "更新",
+    "rateLimited": "更新回数が多すぎます。{{seconds}}秒後に再試行してください。",
+    "rateLimitedWait": "更新制限に達しました。{{seconds}}秒お待ちください。",
+    "remainingUploads": "残り{{remaining}}/{{limit}}回更新可能"
+  },
   "share": {
     "title": "共有",
     "description": "「{{title}}」を他の人と共有",

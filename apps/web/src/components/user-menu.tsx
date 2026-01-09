@@ -7,6 +7,7 @@ import {
 	MoreVerticalIcon,
 	Settings01Icon,
 	Sun03Icon,
+	UserCircle02Icon,
 	UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -14,6 +15,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -38,19 +40,42 @@ type UserMenuProps = {
 	side?: 'top' | 'bottom' | 'left' | 'right'
 }
 
-function UserAvatar({ size = 'sm' }: { size?: 'sm' | 'md' }) {
+/**
+ * Get initials from a name string
+ */
+function getInitials(name?: string | null): string {
+	if (!name) return ''
+	return name
+		.split(' ')
+		.map((part) => part[0])
+		.join('')
+		.toUpperCase()
+		.slice(0, 2)
+}
+
+function UserAvatar({
+	size = 'sm',
+	imageUrl,
+	userName,
+}: {
+	size?: 'sm' | 'md'
+	imageUrl?: string | null
+	userName?: string | null
+}) {
 	const sizeClass = size === 'md' ? 'size-10' : 'size-8'
 	const iconSize = size === 'md' ? 'size-6' : 'size-5'
 
 	return (
-		<div
-			className={cn(
-				'flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary',
-				sizeClass
-			)}
-		>
-			<HugeiconsIcon className={iconSize} icon={UserCircleIcon} />
-		</div>
+		<Avatar className={cn('rounded-full', sizeClass)}>
+			{imageUrl ? <AvatarImage alt={userName || 'Avatar'} src={imageUrl} /> : null}
+			<AvatarFallback className="bg-primary/10 text-primary">
+				{userName ? (
+					<span className="font-medium text-xs">{getInitials(userName)}</span>
+				) : (
+					<HugeiconsIcon className={iconSize} icon={UserCircleIcon} />
+				)}
+			</AvatarFallback>
+		</Avatar>
 	)
 }
 
@@ -159,10 +184,12 @@ function UserMenuTrigger({
 	collapsed,
 	userName,
 	userEmail,
+	imageUrl,
 }: {
 	collapsed: boolean
 	userName: string
 	userEmail: string
+	imageUrl?: string | null
 }) {
 	return (
 		<div
@@ -171,7 +198,7 @@ function UserMenuTrigger({
 				collapsed && 'size-10 justify-center p-0'
 			)}
 		>
-			<UserAvatar size="sm" />
+			<UserAvatar imageUrl={imageUrl} size="sm" userName={userName} />
 			{!collapsed && (
 				<>
 					<div className="flex min-w-0 flex-1 flex-col items-start text-left">
@@ -193,13 +220,15 @@ function UserMenuTrigger({
 function UserMenuHeader({
 	userName,
 	userEmail,
+	imageUrl,
 }: {
 	userName: string
 	userEmail: string
+	imageUrl?: string | null
 }) {
 	return (
 		<div className="flex items-center gap-3 px-2 py-2">
-			<UserAvatar size="md" />
+			<UserAvatar imageUrl={imageUrl} size="md" userName={userName} />
 			<div className="flex min-w-0 flex-col">
 				<span className="truncate font-medium text-sm">{userName}</span>
 				<span className="truncate text-muted-foreground text-xs">{userEmail}</span>
@@ -270,6 +299,7 @@ export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 			<DropdownMenuTrigger>
 				<UserMenuTrigger
 					collapsed={collapsed}
+					imageUrl={session.user.image}
 					userEmail={session.user.email}
 					userName={session.user.name}
 				/>
@@ -281,11 +311,19 @@ export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 				sideOffset={8}
 			>
 				<UserMenuHeader
+					imageUrl={session.user.image}
 					userEmail={session.user.email}
 					userName={session.user.name}
 				/>
 
 				<DropdownMenuSeparator />
+
+				<DropdownMenuItem>
+					<Link className="flex w-full items-center gap-2" to="/profile">
+						<HugeiconsIcon className="mr-2 size-4" icon={UserCircle02Icon} />
+						{t('nav.profile', 'Profile')}
+					</Link>
+				</DropdownMenuItem>
 
 				<SettingsSubmenu />
 
