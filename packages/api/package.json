@@ -1,6 +1,6 @@
 {
   "name": "@folionote/api",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -21,6 +21,7 @@
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
+    "@folionote/storage": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

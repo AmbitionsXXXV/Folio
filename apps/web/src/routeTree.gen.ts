@@ -20,6 +20,7 @@ import { Route as AppTagsRouteImport } from './routes/_app/tags'
 import { Route as AppSourcesRouteImport } from './routes/_app/sources'
 import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
+import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
 import { Route as AppActivityRouteImport } from './routes/_app/activity'
@@ -80,6 +81,11 @@ const AppReviewRoute = AppReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLibraryRoute = AppLibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/activity': typeof AppActivityRoute
   '/inbox': typeof AppInboxRoute
   '/library': typeof AppLibraryRoute
+  '/profile': typeof AppProfileRoute
   '/review': typeof AppReviewRoute
   '/search': typeof AppSearchRoute
   '/sources': typeof AppSourcesRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/activity': typeof AppActivityRoute
   '/inbox': typeof AppInboxRoute
   '/library': typeof AppLibraryRoute
+  '/profile': typeof AppProfileRoute
   '/review': typeof AppReviewRoute
   '/search': typeof AppSearchRoute
   '/sources': typeof AppSourcesRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/_app/activity': typeof AppActivityRoute
   '/_app/inbox': typeof AppInboxRoute
   '/_app/library': typeof AppLibraryRoute
+  '/_app/profile': typeof AppProfileRoute
   '/_app/review': typeof AppReviewRoute
   '/_app/search': typeof AppSearchRoute
   '/_app/sources': typeof AppSourcesRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/inbox'
     | '/library'
+    | '/profile'
     | '/review'
     | '/search'
     | '/sources'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/inbox'
     | '/library'
+    | '/profile'
     | '/review'
     | '/search'
     | '/sources'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/_app/activity'
     | '/_app/inbox'
     | '/_app/library'
+    | '/_app/profile'
     | '/_app/review'
     | '/_app/search'
     | '/_app/sources'
@@ -303,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReviewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/library': {
       id: '/_app/library'
       path: '/library'
@@ -345,6 +364,7 @@ interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
   AppInboxRoute: typeof AppInboxRoute
   AppLibraryRoute: typeof AppLibraryRoute
+  AppProfileRoute: typeof AppProfileRoute
   AppReviewRoute: typeof AppReviewRoute
   AppSearchRoute: typeof AppSearchRoute
   AppSourcesRoute: typeof AppSourcesRoute
@@ -357,6 +377,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
   AppInboxRoute: AppInboxRoute,
   AppLibraryRoute: AppLibraryRoute,
+  AppProfileRoute: AppProfileRoute,
   AppReviewRoute: AppReviewRoute,
   AppSearchRoute: AppSearchRoute,
   AppSourcesRoute: AppSourcesRoute,

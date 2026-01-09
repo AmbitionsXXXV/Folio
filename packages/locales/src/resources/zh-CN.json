@@ -405,7 +405,8 @@
     "search": "搜索",
     "sources": "来源",
     "tags": "标签",
-    "settings": "设置"
+    "settings": "设置",
+    "profile": "个人资料"
   },
   "search": {
     "placeholder": "搜索条目...",
@@ -493,6 +494,47 @@
       "confirm": "切换",
       "cancel": "保持当前"
     }
+  },
+  "profile": {
+    "title": "个人资料",
+    "settings": "个人资料设置",
+    "settingsDescription": "更新您的头像和个人信息。",
+    "editProfile": "编辑资料",
+    "avatarHelp": "点击或拖拽图片上传。支持格式：JPEG、PNG、GIF、WebP。最大 20MB。",
+    "accountInfo": "账户信息",
+    "memberSince": "注册时间",
+    "lastUpdated": "最后更新",
+    "appearance": "外观设置",
+    "languageAndRegion": "语言与地区",
+    "dangerZone": "危险区域",
+    "deleteAccount": "删除账户",
+    "deleteAccountDescription": "永久删除您的账户和所有相关数据。",
+    "signOutAllDevices": "登出所有设备",
+    "signOutAllDevicesDescription": "从所有设备和会话中登出。"
+  },
+  "avatar": {
+    "uploadSuccess": "头像上传成功",
+    "uploadError": "头像上传失败：{{message}}",
+    "deleteSuccess": "头像删除成功",
+    "deleteError": "头像删除失败：{{message}}",
+    "invalidType": "文件类型不支持，请使用 JPEG、PNG、GIF 或 WebP 格式。",
+    "fileTooLarge": "文件过大，最大支持 {{size}}MB。",
+    "delete": "删除",
+    "deleteTitle": "删除头像",
+    "deleteConfirmation": "确定要删除头像吗？此操作无法撤销。",
+    "deleting": "删除中...",
+    "cropTitle": "裁剪头像",
+    "cropDescription": "拖动调整位置，使用滑块缩放。图片将被裁剪为圆形。",
+    "zoom": "缩放",
+    "cropAndUpload": "裁剪并上传",
+    "uploading": "上传中...",
+    "cropError": "裁剪图片失败，请重试。",
+    "actions": "头像操作",
+    "actionsDescription": "选择一个操作。",
+    "reupload": "更新",
+    "rateLimited": "更新次数过多，请在 {{seconds}} 秒后重试。",
+    "rateLimitedWait": "已达到更新限制，请等待 {{seconds}} 秒。",
+    "remainingUploads": "剩余 {{remaining}}/{{limit}} 次更新"
   },
   "share": {
     "title": "分享",

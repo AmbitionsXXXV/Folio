@@ -5,6 +5,7 @@ import { reviewRouter } from './review'
 import { searchRouter } from './search'
 import { sharesRouter } from './shares'
 import { sourcesRouter } from './sources'
+import { storageRouter } from './storage'
 import { tagsRouter } from './tags'
 
 export const appRouter = {
@@ -19,6 +20,7 @@ export const appRouter = {
 	search: searchRouter,
 	review: reviewRouter,
 	shares: sharesRouter,
+	storage: storageRouter,
 }
 export type AppRouter = typeof appRouter
 export type AppRouterClient = RouterClient<typeof appRouter>

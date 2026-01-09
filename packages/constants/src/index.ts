@@ -1,5 +1,6 @@
 import type { SupportedLanguage } from '@folionote/locales'
 
+export * from './avatar'
 export * from './storage'
 
 export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {

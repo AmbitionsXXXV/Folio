@@ -1,5 +1,24 @@
 # web
 
+## 0.1.3
+
+### Patch Changes
+
+- 5a5262f: feat: add Activity page replacing Dashboard
+  - Add new Activity page with greeting based on time of day
+  - Display recent entries with EntryCard component
+  - Add Quick Capture section for fast note creation
+  - Add Quick Access cards for Inbox, Library, and Review
+  - Update i18n resources for en-US, ja-JP, zh-CN
+  - Enhance EntryCard component with improved layout
+  - Update sidebar navigation to use Activity instead of Dashboard
+
+- Updated dependencies [5a5262f]
+  - @folionote/locales@0.1.3
+  - @folionote/api@0.1.3
+  - @folionote/constants@0.1.3
+  - @folionote/auth@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
