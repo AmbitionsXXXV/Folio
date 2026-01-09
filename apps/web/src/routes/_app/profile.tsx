@@ -12,7 +12,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AvatarUploader } from '@/components/avatar-uploader'
 import { Button } from '@/components/ui/button'
@@ -32,6 +32,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { useAvatarState } from '@/hooks/use-avatar-state'
 import { authClient } from '@/lib/auth-client'
 
 export const Route = createFileRoute('/_app/profile')({
@@ -53,28 +54,14 @@ function formatDate(date: Date | string | undefined): string {
 
 function ProfilePage() {
 	const { t, i18n } = useTranslation()
-	const { data: session } = authClient.useSession()
 	const { theme, setTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
-	const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(
-		undefined
-	)
+	const { currentImageUrl, setLocalImageUrl, user } = useAvatarState()
 
 	// Avoid hydration mismatch
 	useEffect(() => {
 		setMounted(true)
 	}, [])
-
-	// Get the current image URL (local state takes precedence if set)
-	const currentImageUrl =
-		localImageUrl !== undefined ? localImageUrl : session?.user?.image
-
-	// Handle avatar change
-	const handleAvatarChange = useCallback((newUrl: string | null) => {
-		setLocalImageUrl(newUrl)
-	}, [])
-
-	const user = session?.user
 
 	return (
 		<div className="container mx-auto max-w-3xl px-4 py-8">
@@ -112,7 +99,7 @@ function ProfilePage() {
 						<AvatarUploader
 							avatarClassName="size-20!"
 							currentImageUrl={currentImageUrl}
-							onAvatarChange={handleAvatarChange}
+							onAvatarChange={setLocalImageUrl}
 							size="lg"
 							userName={user?.name}
 						/>

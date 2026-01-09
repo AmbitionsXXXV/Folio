@@ -43,6 +43,100 @@ const deleteRateLimitMiddleware = createRateLimitMiddleware(
 )
 
 /**
+ * Get current user's avatar image URL from database
+ */
+async function getCurrentUserImage(
+	userId: string
+): Promise<string | null | undefined> {
+	const [currentUser] = await db
+		.select({ image: user.image })
+		.from(user)
+		.where(eq(user.id, userId))
+		.limit(1)
+	return currentUser?.image
+}
+
+/**
+ * Safely delete old avatar from storage (non-blocking)
+ * Old avatar cleanup failure should not block the operation
+ */
+async function safeDeleteOldAvatar(
+	imageUrl: string | null | undefined
+): Promise<void> {
+	if (!imageUrl) return
+
+	const oldPath = getPathFromPublicUrl(imageUrl)
+	if (!oldPath) return
+
+	try {
+		await deleteAvatar(oldPath)
+	} catch {
+		// Silently ignore - old avatar cleanup is not critical
+		// In production, consider logging to a proper logging service
+	}
+}
+
+type ProcessAvatarUploadParams = {
+	userId: string
+	fileData: string
+	contentType: string
+	filename?: string
+}
+
+type ProcessAvatarUploadResult = {
+	imageUrl: string
+	path: string
+}
+
+/**
+ * Shared logic for processing avatar upload
+ * Used by both uploadUserAvatar and updateUserAvatar
+ */
+async function processAvatarUpload({
+	userId,
+	fileData,
+	contentType,
+	filename,
+}: ProcessAvatarUploadParams): Promise<ProcessAvatarUploadResult> {
+	// Decode base64 to buffer
+	const buffer = Buffer.from(fileData, 'base64')
+
+	// Validate file
+	const validation = validateAvatarFile(contentType, buffer.length)
+	if (!validation.valid) {
+		throw new ORPCError('BAD_REQUEST', { message: validation.error })
+	}
+
+	// Get current user's avatar and clean up old one
+	const currentImage = await getCurrentUserImage(userId)
+	await safeDeleteOldAvatar(currentImage)
+
+	// Upload new avatar
+	const result = await uploadAvatar({
+		userId,
+		file: buffer,
+		contentType: contentType as AllowedAvatarType,
+		filename,
+	})
+
+	// Update user.image in database
+	const [updatedUser] = await db
+		.update(user)
+		.set({ image: result.publicUrl })
+		.where(eq(user.id, userId))
+		.returning({ id: user.id, image: user.image })
+
+	if (!updatedUser) {
+		throw new ORPCError('NOT_FOUND', { message: 'User not found' })
+	}
+
+	return {
+		imageUrl: result.publicUrl,
+		path: result.path,
+	}
+}
+
+/**
  * storage.uploadAvatar - Upload a new avatar image
  *
  * Process:
@@ -56,62 +150,11 @@ const deleteRateLimitMiddleware = createRateLimitMiddleware(
 export const uploadUserAvatar = protectedProcedure
 	.use(uploadRateLimitMiddleware)
 	.input(UploadAvatarInputSchema)
-	.handler(async ({ context, input }) => {
-		const userId = context.session.user.id
-		const { fileData, contentType, filename } = input
-
-		// Decode base64 to buffer
-		const buffer = Buffer.from(fileData, 'base64')
-
-		// Validate file
-		const validation = validateAvatarFile(contentType, buffer.length)
-		if (!validation.valid) {
-			throw new ORPCError('BAD_REQUEST', { message: validation.error })
-		}
-
-		// Get current user to check for existing avatar
-		const [currentUser] = await db
-			.select({ image: user.image })
-			.from(user)
-			.where(eq(user.id, userId))
-			.limit(1)
-
-		// Delete old avatar if exists
-		if (currentUser?.image) {
-			const oldPath = getPathFromPublicUrl(currentUser.image)
-			if (oldPath) {
-				try {
-					await deleteAvatar(oldPath)
-				} catch (error) {
-					// Log but don't fail - old avatar cleanup is not critical
-					console.warn('Failed to delete old avatar:', error)
-				}
-			}
-		}
-
-		// Upload new avatar
-		const result = await uploadAvatar({
-			userId,
-			file: buffer,
-			contentType: contentType as AllowedAvatarType,
-			filename,
+	.handler(({ context, input }) => {
+		return processAvatarUpload({
+			userId: context.session.user.id,
+			...input,
 		})
-
-		// Update user.image in database
-		const [updatedUser] = await db
-			.update(user)
-			.set({ image: result.publicUrl })
-			.where(eq(user.id, userId))
-			.returning({ id: user.id, image: user.image })
-
-		if (!updatedUser) {
-			throw new ORPCError('NOT_FOUND', { message: 'User not found' })
-		}
-
-		return {
-			imageUrl: result.publicUrl,
-			path: result.path,
-		}
 	})
 
 /**
@@ -125,25 +168,14 @@ export const deleteUserAvatar = protectedProcedure
 		const userId = context.session.user.id
 
 		// Get current user avatar
-		const [currentUser] = await db
-			.select({ image: user.image })
-			.from(user)
-			.where(eq(user.id, userId))
-			.limit(1)
+		const currentImage = await getCurrentUserImage(userId)
 
-		if (!currentUser?.image) {
+		if (!currentImage) {
 			return { success: true, message: 'No avatar to delete' }
 		}
 
-		// Delete from storage
-		const path = getPathFromPublicUrl(currentUser.image)
-		if (path) {
-			try {
-				await deleteAvatar(path)
-			} catch (error) {
-				console.warn('Failed to delete avatar from storage:', error)
-			}
-		}
+		// Delete from storage (non-blocking failure)
+		await safeDeleteOldAvatar(currentImage)
 
 		// Clear user.image in database
 		await db.update(user).set({ image: null }).where(eq(user.id, userId))
@@ -162,62 +194,11 @@ export const deleteUserAvatar = protectedProcedure
 export const updateUserAvatar = protectedProcedure
 	.use(updateRateLimitMiddleware)
 	.input(UploadAvatarInputSchema)
-	.handler(async ({ context, input }) => {
-		const userId = context.session.user.id
-		const { fileData, contentType, filename } = input
-
-		// Decode base64 to buffer
-		const buffer = Buffer.from(fileData, 'base64')
-
-		// Validate file
-		const validation = validateAvatarFile(contentType, buffer.length)
-		if (!validation.valid) {
-			throw new ORPCError('BAD_REQUEST', { message: validation.error })
-		}
-
-		// Get current user to check for existing avatar
-		const [currentUser] = await db
-			.select({ image: user.image })
-			.from(user)
-			.where(eq(user.id, userId))
-			.limit(1)
-
-		// Delete old avatar if exists
-		if (currentUser?.image) {
-			const oldPath = getPathFromPublicUrl(currentUser.image)
-			if (oldPath) {
-				try {
-					await deleteAvatar(oldPath)
-				} catch (error) {
-					// Log but don't fail - old avatar cleanup is not critical
-					console.warn('Failed to delete old avatar:', error)
-				}
-			}
-		}
-
-		// Upload new avatar
-		const result = await uploadAvatar({
-			userId,
-			file: buffer,
-			contentType: contentType as AllowedAvatarType,
-			filename,
+	.handler(({ context, input }) => {
+		return processAvatarUpload({
+			userId: context.session.user.id,
+			...input,
 		})
-
-		// Update user.image in database
-		const [updatedUser] = await db
-			.update(user)
-			.set({ image: result.publicUrl })
-			.where(eq(user.id, userId))
-			.returning({ id: user.id, image: user.image })
-
-		if (!updatedUser) {
-			throw new ORPCError('NOT_FOUND', { message: 'User not found' })
-		}
-
-		return {
-			imageUrl: result.publicUrl,
-			path: result.path,
-		}
 	})
 
 /**

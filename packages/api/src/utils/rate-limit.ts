@@ -1,3 +1,11 @@
+/**
+ * Time unit constants (in milliseconds)
+ */
+const ONE_SECOND_MS = 1000
+const ONE_MINUTE_MS = 60 * ONE_SECOND_MS
+const ONE_WEEK_MS = 7 * 24 * 60 * ONE_MINUTE_MS
+const RATE_LIMIT_CLEANUP_INTERVAL_MS = ONE_MINUTE_MS
+
 import {
 	type ErrorMap,
 	type Meta,
@@ -48,17 +56,6 @@ export interface RateLimitStatus {
  * In production, consider using Redis for distributed rate limiting
  */
 const rateLimitStore = new Map<string, RateLimitEntry>()
-
-/**
- * Clean up expired entries periodically
- */
-const ONE_SECOND_MS = 1000
-const ONE_MINUTE_MS = 60 * ONE_SECOND_MS
-const ONE_HOUR_MS = 60 * ONE_MINUTE_MS
-const ONE_DAY_MS = 24 * ONE_HOUR_MS
-const ONE_WEEK_MS = 7 * ONE_DAY_MS
-
-const CLEANUP_INTERVAL_MS = ONE_MINUTE_MS
 let cleanupTimer: ReturnType<typeof setInterval> | null = null
 
 type IntervalTimer = ReturnType<typeof setInterval>
@@ -79,7 +76,7 @@ function startCleanupTimer() {
 				rateLimitStore.delete(key)
 			}
 		}
-	}, CLEANUP_INTERVAL_MS)
+	}, RATE_LIMIT_CLEANUP_INTERVAL_MS)
 
 	// Don't prevent Node.js from exiting
 	if (cleanupTimer && hasUnref(cleanupTimer)) {

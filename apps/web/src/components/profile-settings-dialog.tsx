@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AvatarUploader } from '@/components/avatar-uploader'
 import {
@@ -9,7 +9,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { authClient } from '@/lib/auth-client'
+import { useAvatarState } from '@/hooks/use-avatar-state'
 
 type ProfileSettingsDialogProps = {
 	/** Trigger element */
@@ -29,29 +29,18 @@ export function ProfileSettingsDialog({
 	onOpenChange,
 }: ProfileSettingsDialogProps) {
 	const { t } = useTranslation()
-	const { data: session } = authClient.useSession()
-	const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(
-		undefined
-	)
-
-	// Get the current image URL (local state takes precedence if set)
-	const currentImageUrl =
-		localImageUrl !== undefined ? localImageUrl : session?.user?.image
-
-	// Handle avatar change
-	const handleAvatarChange = useCallback((newUrl: string | null) => {
-		setLocalImageUrl(newUrl)
-	}, [])
+	const { currentImageUrl, setLocalImageUrl, resetAvatarState, user } =
+		useAvatarState()
 
 	// Reset local state when dialog closes
 	const handleOpenChange = useCallback(
 		(newOpen: boolean) => {
 			if (!newOpen) {
-				setLocalImageUrl(undefined)
+				resetAvatarState()
 			}
 			onOpenChange?.(newOpen)
 		},
-		[onOpenChange]
+		[onOpenChange, resetAvatarState]
 	)
 
 	return (
@@ -72,16 +61,16 @@ export function ProfileSettingsDialog({
 					{/* Avatar uploader */}
 					<AvatarUploader
 						currentImageUrl={currentImageUrl}
-						onAvatarChange={handleAvatarChange}
+						onAvatarChange={setLocalImageUrl}
 						size="lg"
-						userName={session?.user?.name}
+						userName={user?.name}
 					/>
 
 					{/* User info display */}
 					<div className="w-full space-y-4 text-center">
 						<div>
-							<p className="font-medium text-lg">{session?.user?.name}</p>
-							<p className="text-muted-foreground text-sm">{session?.user?.email}</p>
+							<p className="font-medium text-lg">{user?.name}</p>
+							<p className="text-muted-foreground text-sm">{user?.email}</p>
 						</div>
 					</div>
 

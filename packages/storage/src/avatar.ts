@@ -1,5 +1,6 @@
 import {
 	DeleteObjectCommand,
+	DeleteObjectsCommand,
 	ListObjectsV2Command,
 	PutObjectCommand,
 } from '@aws-sdk/client-s3'
@@ -116,7 +117,14 @@ export async function deleteAvatar(path: string): Promise<void> {
 }
 
 /**
- * Delete all avatars for a user
+ * Maximum number of objects to delete in a single batch
+ * S3 allows up to 1000 objects per DeleteObjects request
+ */
+const DELETE_BATCH_SIZE = 1000
+
+/**
+ * Delete all avatars for a user using batch delete
+ * Uses DeleteObjectsCommand for better performance
  */
 export async function deleteUserAvatars(userId: string): Promise<void> {
 	const s3 = getS3Client()
@@ -133,16 +141,28 @@ export async function deleteUserAvatars(userId: string): Promise<void> {
 		return
 	}
 
-	// Delete all files one by one
-	// Note: S3 has DeleteObjects for batch delete, but Supabase S3 compatibility may vary
-	for (const obj of listResult.Contents) {
-		if (obj.Key) {
-			const deleteCommand = new DeleteObjectCommand({
-				Bucket: STORAGE_BUCKETS.AVATARS,
-				Key: obj.Key,
-			})
-			await s3.send(deleteCommand)
-		}
+	// Filter out objects without keys
+	const objectsToDelete = listResult.Contents.filter((obj) => obj.Key).map(
+		(obj) => ({ Key: obj.Key as string })
+	)
+
+	if (objectsToDelete.length === 0) {
+		return
+	}
+
+	// Delete in batches (S3 supports up to 1000 objects per request)
+	for (let i = 0; i < objectsToDelete.length; i += DELETE_BATCH_SIZE) {
+		const batch = objectsToDelete.slice(i, i + DELETE_BATCH_SIZE)
+
+		const deleteCommand = new DeleteObjectsCommand({
+			Bucket: STORAGE_BUCKETS.AVATARS,
+			Delete: {
+				Objects: batch,
+				Quiet: true, // Don't return info about each deleted object
+			},
+		})
+
+		await s3.send(deleteCommand)
 	}
 }
 
