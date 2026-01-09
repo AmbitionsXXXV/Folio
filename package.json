@@ -40,7 +40,11 @@
     "db:start:local": "turbo -F @folionote/db db:start:local",
     "db:stop:local": "turbo -F @folionote/db db:stop:local",
     "commit": "cz",
-    "email:dev": "turbo -F @folionote/transactional dev"
+    "email:dev": "turbo -F @folionote/transactional dev",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "version": "changeset version",
+    "postinstall": "if [ -z \"$CI\" ]; then lefthook install; fi"
   },
   "dependencies": {
     "dotenv": "catalog:",
@@ -50,6 +54,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
+    "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.3.0",
     "@commitlint/config-conventional": "^20.3.0",
     "@types/node": "^22.0.0",
