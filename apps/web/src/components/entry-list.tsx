@@ -1,9 +1,11 @@
 import { AlertCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Entry } from '@/types'
 import { orpc } from '@/utils/orpc'
+import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { EntryCard } from './entry-card'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
@@ -38,6 +40,10 @@ export function EntryList({
 	const queryClient = useQueryClient()
 	const resolvedEmptyMessage = emptyMessage ?? t('entry.empty')
 
+	// Delete confirmation dialog state
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+	const [entryToDelete, setEntryToDelete] = useState<Entry | null>(null)
+
 	// Update entry mutation (for star/pin actions)
 	const updateMutation = useMutation({
 		mutationFn: (data: { id: string; isStarred?: boolean; isPinned?: boolean }) =>
@@ -52,6 +58,8 @@ export function EntryList({
 		mutationFn: (data: { id: string }) => orpc.entries.delete.call(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['entries'] })
+			setDeleteDialogOpen(false)
+			setEntryToDelete(null)
 		},
 	})
 
@@ -69,8 +77,15 @@ export function EntryList({
 		})
 	}
 
-	const handleDelete = (entry: Entry) => {
-		deleteMutation.mutate({ id: entry.id })
+	const handleDeleteClick = (entry: Entry) => {
+		setEntryToDelete(entry)
+		setDeleteDialogOpen(true)
+	}
+
+	const handleDeleteConfirm = () => {
+		if (entryToDelete) {
+			deleteMutation.mutate({ id: entryToDelete.id })
+		}
 	}
 
 	if (isLoading) {
@@ -132,7 +147,7 @@ export function EntryList({
 								isPinned={entry.isPinned}
 								isStarred={entry.isStarred}
 								key={entry.id}
-								onDelete={() => handleDelete(entry)}
+								onDelete={() => handleDeleteClick(entry)}
 								onPin={() => handlePin(entry)}
 								onStar={() => handleStar(entry)}
 								title={entry.title}
@@ -159,7 +174,7 @@ export function EntryList({
 								isPinned={entry.isPinned}
 								isStarred={entry.isStarred}
 								key={entry.id}
-								onDelete={() => handleDelete(entry)}
+								onDelete={() => handleDeleteClick(entry)}
 								onPin={() => handlePin(entry)}
 								onStar={() => handleStar(entry)}
 								title={entry.title}
@@ -193,6 +208,16 @@ export function EntryList({
 					</button>
 				</div>
 			) : null}
+
+			{/* Delete confirmation dialog */}
+			<ConfirmDeleteDialog
+				description={t('entry.deleteConfirmDesc')}
+				isLoading={deleteMutation.isPending}
+				onConfirm={handleDeleteConfirm}
+				onOpenChange={setDeleteDialogOpen}
+				open={deleteDialogOpen}
+				title={t('entry.deleteConfirmTitle')}
+			/>
 		</div>
 	)
 }

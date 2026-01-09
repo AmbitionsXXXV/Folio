@@ -176,6 +176,10 @@
     "moveToInbox": "移至收件箱",
     "starred": "已加星标",
     "pinned": "已置顶",
+    "star": "加星标",
+    "unstar": "取消星标",
+    "pin": "置顶",
+    "unpin": "取消置顶",
     "pinnedSection": "置顶",
     "createdAt": "创建于",
     "updatedAt": "更新于",
@@ -374,13 +378,26 @@
     "snoozeFailed": "延后失败",
     "statsStreak": "连续天数"
   },
-  "dashboard": {
-    "welcome": "欢迎 {{name}}",
-    "apiLabel": "API:"
+  "activity": {
+    "goodMorning": "早上好，{{name}}",
+    "goodAfternoon": "下午好，{{name}}",
+    "goodEvening": "晚上好，{{name}}",
+    "description": "你的学习活动一览",
+    "quickCapture": "快速记录",
+    "quickCapturePlaceholder": "记录一个想法...",
+    "recentEntries": "最近编辑",
+    "viewAll": "查看全部",
+    "quickAccess": "快捷入口",
+    "noRecentEntries": "暂无最近编辑的条目",
+    "startCapturing": "开始记录你的第一条笔记吧",
+    "reviewReminder": "你有 {{count}} 条待复习",
+    "inboxCount": "{{count}} 条待处理",
+    "libraryCount": "{{count}} 条笔记",
+    "dueCount": "{{count}} 条待复习"
   },
   "nav": {
     "home": "首页",
-    "dashboard": "仪表盘",
+    "activity": "活动",
     "inbox": "收件箱",
     "library": "资料库",
     "review": "复习",

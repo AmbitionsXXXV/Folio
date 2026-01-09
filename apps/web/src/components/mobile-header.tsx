@@ -35,7 +35,7 @@ export function MobileHeader() {
 					<span className="sr-only">{t('nav.search')}</span>
 				</Button>
 				<SettingsMenu />
-				<UserMenu />
+				<UserMenu collapsed />
 			</div>
 		</header>
 	)

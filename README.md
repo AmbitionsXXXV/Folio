@@ -114,3 +114,7 @@ pnpm run dev
 ## License
 
 MIT License
+
+## Thanks
+
+Icon Designer: [枯白啃设计](https://x.com/Kubai087)

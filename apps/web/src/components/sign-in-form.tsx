@@ -43,7 +43,7 @@ export default function SignInForm() {
 
 	const googleAuth = useSocialAuth({
 		provider: 'google',
-		callbackURL: `${import.meta.env.VITE_WEB_URL}/dashboard`,
+		callbackURL: `${import.meta.env.VITE_WEB_URL}/activity`,
 		errorMessageKey: 'auth.signInFailed',
 	})
 
@@ -75,7 +75,7 @@ export default function SignInForm() {
 						toast.success(t('auth.signInSuccess'))
 						// Use reloadDocument to trigger a full page reload
 						// This ensures cookies are properly sent with the new request
-						router.navigate({ to: '/dashboard', reloadDocument: true })
+						router.navigate({ to: '/activity', reloadDocument: true })
 					},
 					onError: (error) => {
 						if (import.meta.env.DEV) {

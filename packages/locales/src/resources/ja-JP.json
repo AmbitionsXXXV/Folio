@@ -125,6 +125,10 @@
     "moveToInbox": "受信箱に移動",
     "starred": "スター付き",
     "pinned": "ピン留め",
+    "star": "スターを付ける",
+    "unstar": "スターを外す",
+    "pin": "ピン留めする",
+    "unpin": "ピン留めを解除",
     "pinnedSection": "ピン留め",
     "createdAt": "作成日時",
     "updatedAt": "更新日時",
@@ -278,13 +282,26 @@
     "snoozeFailed": "延期に失敗しました",
     "statsStreak": "連続日数"
   },
-  "dashboard": {
-    "welcome": "{{name}} さん、ようこそ",
-    "apiLabel": "API:"
+  "activity": {
+    "goodMorning": "おはようございます、{{name}}さん",
+    "goodAfternoon": "こんにちは、{{name}}さん",
+    "goodEvening": "こんばんは、{{name}}さん",
+    "description": "あなたの学習アクティビティ",
+    "quickCapture": "クイックキャプチャ",
+    "quickCapturePlaceholder": "アイデアを記録...",
+    "recentEntries": "最近のエントリ",
+    "viewAll": "すべて表示",
+    "quickAccess": "クイックアクセス",
+    "noRecentEntries": "最近のエントリがありません",
+    "startCapturing": "最初のノートを記録しましょう",
+    "reviewReminder": "{{count}} 件の復習待ちがあります",
+    "inboxCount": "{{count}} 件の処理待ち",
+    "libraryCount": "{{count}} 件のノート",
+    "dueCount": "{{count}} 件の復習待ち"
   },
   "nav": {
     "home": "ホーム",
-    "dashboard": "ダッシュボード",
+    "activity": "アクティビティ",
     "inbox": "受信箱",
     "library": "ライブラリ",
     "review": "復習",

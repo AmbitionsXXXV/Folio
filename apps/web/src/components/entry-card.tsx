@@ -1,10 +1,23 @@
-import { Delete02Icon, PinIcon, StarIcon } from '@hugeicons/core-free-icons'
+import {
+	Delete02Icon,
+	MoreVerticalIcon,
+	PinIcon,
+	StarIcon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
+import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 type EntryCardProps = {
 	id: string
@@ -17,6 +30,172 @@ type EntryCardProps = {
 	onStar?: () => void
 	onPin?: () => void
 	onDelete?: () => void
+}
+
+type EntryCardActionsProps = Pick<
+	EntryCardProps,
+	'isStarred' | 'isPinned' | 'onStar' | 'onPin' | 'onDelete'
+>
+
+/**
+ * Mobile dropdown menu for entry card actions
+ */
+function MobileActionsMenu({
+	isStarred,
+	isPinned,
+	onStar,
+	onPin,
+	onDelete,
+}: EntryCardActionsProps) {
+	const { t } = useTranslation()
+
+	const handleTriggerClick = (e: MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+	}
+
+	const handleStarClick = (e: MouseEvent) => {
+		e.stopPropagation()
+		onStar?.()
+	}
+
+	const handlePinClick = (e: MouseEvent) => {
+		e.stopPropagation()
+		onPin?.()
+	}
+
+	const handleDeleteClick = (e: MouseEvent) => {
+		e.stopPropagation()
+		onDelete?.()
+	}
+
+	return (
+		<div className="absolute right-2 bottom-2 md:hidden">
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						className="h-8 w-8"
+						onClick={handleTriggerClick}
+						size="icon"
+						variant="ghost"
+					>
+						<HugeiconsIcon
+							className="size-4 text-muted-foreground"
+							icon={MoreVerticalIcon}
+						/>
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end" sideOffset={4}>
+					{onStar ? (
+						<DropdownMenuItem onClick={handleStarClick}>
+							<HugeiconsIcon
+								className={cn(
+									'mr-2 size-4',
+									isStarred ? 'fill-amber-500 text-amber-500' : ''
+								)}
+								icon={StarIcon}
+							/>
+							{isStarred ? t('entry.unstar') : t('entry.star')}
+						</DropdownMenuItem>
+					) : null}
+					{onPin ? (
+						<DropdownMenuItem onClick={handlePinClick}>
+							<HugeiconsIcon
+								className={cn(
+									'mr-2 size-4',
+									isPinned ? 'fill-primary text-primary' : ''
+								)}
+								icon={PinIcon}
+							/>
+							{isPinned ? t('entry.unpin') : t('entry.pin')}
+						</DropdownMenuItem>
+					) : null}
+					{onDelete ? (
+						<>
+							{(onStar || onPin) && <DropdownMenuSeparator />}
+							<DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
+								<HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
+								{t('common.delete')}
+							</DropdownMenuItem>
+						</>
+					) : null}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	)
+}
+
+/**
+ * Desktop hover action buttons for entry card
+ */
+function DesktopActionButtons({
+	isStarred,
+	isPinned,
+	onStar,
+	onPin,
+	onDelete,
+}: EntryCardActionsProps) {
+	const handleStarClick = (e: MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		onStar?.()
+	}
+
+	const handlePinClick = (e: MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		onPin?.()
+	}
+
+	const handleDeleteClick = (e: MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		onDelete?.()
+	}
+
+	return (
+		<div className="absolute right-2 bottom-2 hidden items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 md:flex">
+			{onStar ? (
+				<Button
+					className="h-8 w-8"
+					onClick={handleStarClick}
+					size="icon"
+					variant="ghost"
+				>
+					<HugeiconsIcon
+						className={cn(
+							'size-4',
+							isStarred ? 'fill-amber-500 text-amber-500' : ''
+						)}
+						icon={StarIcon}
+					/>
+				</Button>
+			) : null}
+			{onPin ? (
+				<Button
+					className="h-8 w-8"
+					onClick={handlePinClick}
+					size="icon"
+					variant="ghost"
+				>
+					<HugeiconsIcon
+						className={cn('size-4', isPinned ? 'fill-primary text-primary' : '')}
+						icon={PinIcon}
+					/>
+				</Button>
+			) : null}
+			{onDelete ? (
+				<Button
+					className="h-8 w-8 text-destructive hover:text-destructive"
+					onClick={handleDeleteClick}
+					size="icon"
+					variant="ghost"
+				>
+					<HugeiconsIcon className="size-4" icon={Delete02Icon} />
+				</Button>
+			) : null}
+		</div>
+	)
 }
 
 /**
@@ -53,6 +232,9 @@ export function EntryCard({
 		minute: '2-digit',
 	}).format(date)
 
+	const hasActions = onStar || onPin || onDelete
+	const actionProps = { isStarred, isPinned, onStar, onPin, onDelete }
+
 	return (
 		<Card className="group relative transition-all hover:shadow-md">
 			<Link className="block" params={{ id }} to="/entries/$id">
@@ -61,7 +243,8 @@ export function EntryCard({
 						<h3 className="line-clamp-1 font-semibold text-foreground">
 							{title || t('entryCard.untitled')}
 						</h3>
-						<div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+						{/* Status indicators - always visible when active */}
+						<div className="flex items-center gap-1">
 							{isPinned ? (
 								<HugeiconsIcon
 									className="size-4 fill-primary text-primary"
@@ -85,60 +268,11 @@ export function EntryCard({
 				</CardContent>
 			</Link>
 
-			{/* Action buttons - shown on hover */}
-			<div className="absolute right-2 bottom-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-				{onStar ? (
-					<Button
-						className="h-8 w-8"
-						onClick={(e) => {
-							e.preventDefault()
-							e.stopPropagation()
-							onStar()
-						}}
-						size="icon"
-						variant="ghost"
-					>
-						<HugeiconsIcon
-							className={cn(
-								'size-4',
-								isStarred ? 'fill-amber-500 text-amber-500' : ''
-							)}
-							icon={StarIcon}
-						/>
-					</Button>
-				) : null}
-				{onPin ? (
-					<Button
-						className="h-8 w-8"
-						onClick={(e) => {
-							e.preventDefault()
-							e.stopPropagation()
-							onPin()
-						}}
-						size="icon"
-						variant="ghost"
-					>
-						<HugeiconsIcon
-							className={cn('size-4', isPinned ? 'fill-primary text-primary' : '')}
-							icon={PinIcon}
-						/>
-					</Button>
-				) : null}
-				{onDelete ? (
-					<Button
-						className="h-8 w-8 text-destructive hover:text-destructive"
-						onClick={(e) => {
-							e.preventDefault()
-							e.stopPropagation()
-							onDelete()
-						}}
-						size="icon"
-						variant="ghost"
-					>
-						<HugeiconsIcon className="size-4" icon={Delete02Icon} />
-					</Button>
-				) : null}
-			</div>
+			{/* Mobile: Dropdown menu trigger - always visible */}
+			{hasActions ? <MobileActionsMenu {...actionProps} /> : null}
+
+			{/* Desktop: Action buttons - shown on hover */}
+			{hasActions ? <DesktopActionButtons {...actionProps} /> : null}
 		</Card>
 	)
 }
