@@ -112,7 +112,7 @@ function MobileActionsMenu({
 					) : null}
 					{onDelete ? (
 						<>
-							<DropdownMenuSeparator />
+							{(onStar || onPin) && <DropdownMenuSeparator />}
 							<DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
 								<HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
 								{t('common.delete')}
