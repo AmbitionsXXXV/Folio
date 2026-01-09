@@ -34,6 +34,8 @@ import { Skeleton } from './ui/skeleton'
 
 type UserMenuProps = {
 	collapsed?: boolean
+	/** Dropdown menu position side, defaults to 'top' for sidebar, 'bottom' for mobile */
+	side?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 function UserAvatar({ size = 'sm' }: { size?: 'sm' | 'md' }) {
@@ -209,7 +211,7 @@ function UserMenuHeader({
 /**
  * Render a user account menu that displays a loading placeholder, a sign-in link when unauthenticated, or a dropdown with account details and a sign-out action when authenticated.
  */
-export default function UserMenu({ collapsed = false }: UserMenuProps) {
+export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 	const { t } = useTranslation()
 	const navigate = useNavigate()
 	const { data: session, isPending } = authClient.useSession()
@@ -260,6 +262,9 @@ export default function UserMenu({ collapsed = false }: UserMenuProps) {
 		})
 	}
 
+	// Default side: 'top' for sidebar (non-collapsed), 'bottom' for mobile (collapsed)
+	const menuSide = side ?? (collapsed ? 'bottom' : 'top')
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger>
@@ -270,9 +275,9 @@ export default function UserMenu({ collapsed = false }: UserMenuProps) {
 				/>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
-				align={collapsed ? 'center' : 'end'}
+				align="end"
 				className="w-56"
-				side="top"
+				side={menuSide}
 				sideOffset={8}
 			>
 				<UserMenuHeader

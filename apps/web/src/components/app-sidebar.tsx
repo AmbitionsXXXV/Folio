@@ -1,4 +1,5 @@
 import {
+	Activity01Icon,
 	BookOpen01Icon,
 	Home01Icon,
 	InboxIcon,
@@ -35,6 +36,7 @@ type NavItem = {
 }
 
 const mainNavItems: NavItem[] = [
+	{ to: '/activity', labelKey: 'nav.activity', icon: Activity01Icon },
 	{ to: '/inbox', labelKey: 'nav.inbox', icon: InboxIcon },
 	{ to: '/library', labelKey: 'nav.library', icon: BookOpen01Icon },
 ]

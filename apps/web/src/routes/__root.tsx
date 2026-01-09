@@ -26,6 +26,8 @@ export type RouterAppContext = {
 	queryClient: QueryClient
 }
 
+const TITLE = import.meta.env.DEV ? 'FolioNote Dev' : 'FolioNote'
+
 export const Route = createRootRouteWithContext<RouterAppContext>()({
 	head: () => ({
 		meta: [
@@ -37,7 +39,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 				content: 'width=device-width, initial-scale=1',
 			},
 			{
-				title: 'FolioNote',
+				title: TITLE,
 			},
 		],
 		links: [

@@ -125,6 +125,10 @@
     "moveToInbox": "Move to Inbox",
     "starred": "Starred",
     "pinned": "Pinned",
+    "star": "Star",
+    "unstar": "Unstar",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "pinnedSection": "Pinned",
     "createdAt": "Created at",
     "updatedAt": "Updated at",
@@ -323,13 +327,26 @@
     "snoozeFailed": "Failed to snooze",
     "statsStreak": "Streak"
   },
-  "dashboard": {
-    "welcome": "Welcome {{name}}",
-    "apiLabel": "API:"
+  "activity": {
+    "goodMorning": "Good morning, {{name}}",
+    "goodAfternoon": "Good afternoon, {{name}}",
+    "goodEvening": "Good evening, {{name}}",
+    "description": "Your learning activity at a glance",
+    "quickCapture": "Quick Capture",
+    "quickCapturePlaceholder": "Capture a thought...",
+    "recentEntries": "Recent Entries",
+    "viewAll": "View All",
+    "quickAccess": "Quick Access",
+    "noRecentEntries": "No recent entries",
+    "startCapturing": "Start capturing your first note",
+    "reviewReminder": "You have {{count}} items due for review",
+    "inboxCount": "{{count}} to process",
+    "libraryCount": "{{count}} notes",
+    "dueCount": "{{count}} due"
   },
   "nav": {
     "home": "Home",
-    "dashboard": "Dashboard",
+    "activity": "Activity",
     "inbox": "Inbox",
     "library": "Library",
     "review": "Review",
