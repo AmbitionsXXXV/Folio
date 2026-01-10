@@ -9,7 +9,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'group/input-group cn-input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto',
+				'group/input-group etc-input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto',
 				className
 			)}
 			data-slot="input-group"
@@ -20,16 +20,16 @@ function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 const inputGroupAddonVariants = cva(
-	'cn-input-group-addon flex cursor-text select-none items-center justify-center',
+	'etc-input-group-addon flex cursor-text select-none items-center justify-center',
 	{
 		variants: {
 			align: {
-				'inline-start': 'cn-input-group-addon-align-inline-start order-first',
-				'inline-end': 'cn-input-group-addon-align-inline-end order-last',
+				'inline-start': 'etc-input-group-addon-align-inline-start order-first',
+				'inline-end': 'etc-input-group-addon-align-inline-end order-last',
 				'block-start':
-					'cn-input-group-addon-align-block-start order-first w-full justify-start',
+					'etc-input-group-addon-align-block-start order-first w-full justify-start',
 				'block-end':
-					'cn-input-group-addon-align-block-end order-last w-full justify-start',
+					'etc-input-group-addon-align-block-end order-last w-full justify-start',
 			},
 		},
 		defaultVariants: {
@@ -68,14 +68,14 @@ function InputGroupAddon({
 }
 
 const inputGroupButtonVariants = cva(
-	'cn-input-group-button flex items-center shadow-none',
+	'etc-input-group-button flex items-center shadow-none',
 	{
 		variants: {
 			size: {
-				xs: 'cn-input-group-button-size-xs',
-				sm: 'cn-input-group-button-size-sm',
-				'icon-xs': 'cn-input-group-button-size-icon-xs',
-				'icon-sm': 'cn-input-group-button-size-icon-sm',
+				xs: 'etc-input-group-button-size-xs',
+				sm: 'etc-input-group-button-size-sm',
+				'icon-xs': 'etc-input-group-button-size-icon-xs',
+				'icon-sm': 'etc-input-group-button-size-icon-sm',
 			},
 		},
 		defaultVariants: {
@@ -109,7 +109,7 @@ function InputGroupText({ className, ...props }: React.ComponentProps<'span'>) {
 	return (
 		<span
 			className={cn(
-				'cn-input-group-text flex items-center [&_svg]:pointer-events-none',
+				'etc-input-group-text flex items-center [&_svg]:pointer-events-none',
 				className
 			)}
 			{...props}
@@ -120,7 +120,7 @@ function InputGroupText({ className, ...props }: React.ComponentProps<'span'>) {
 function InputGroupInput({ className, ...props }: React.ComponentProps<'input'>) {
 	return (
 		<Input
-			className={cn('cn-input-group-input flex-1', className)}
+			className={cn('etc-input-group-input flex-1', className)}
 			data-slot="input-group-control"
 			{...props}
 		/>
@@ -133,7 +133,7 @@ function InputGroupTextarea({
 }: React.ComponentProps<'textarea'>) {
 	return (
 		<Textarea
-			className={cn('cn-input-group-textarea flex-1 resize-none', className)}
+			className={cn('etc-input-group-textarea flex-1 resize-none', className)}
 			data-slot="input-group-control"
 			{...props}
 		/>

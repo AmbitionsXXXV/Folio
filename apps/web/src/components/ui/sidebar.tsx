@@ -213,7 +213,7 @@ function Sidebar({
 			{/* This is what handles the sidebar gap on desktop */}
 			<div
 				className={cn(
-					'cn-sidebar-gap relative w-(--sidebar-width) bg-transparent',
+					'etc-sidebar-gap relative w-(--sidebar-width) bg-transparent',
 					'group-data-[collapsible=offcanvas]:w-0',
 					'group-data-[side=right]:rotate-180',
 					variant === 'floating' || variant === 'inset'
@@ -238,7 +238,7 @@ function Sidebar({
 				{...props}
 			>
 				<div
-					className="cn-sidebar-inner flex size-full flex-col"
+					className="etc-sidebar-inner flex size-full flex-col"
 					data-sidebar="sidebar"
 					data-slot="sidebar-inner"
 				>
@@ -258,7 +258,7 @@ function SidebarTrigger({
 
 	return (
 		<Button
-			className={cn('cn-sidebar-trigger', className)}
+			className={cn('etc-sidebar-trigger', className)}
 			data-sidebar="trigger"
 			data-slot="sidebar-trigger"
 			onClick={(event) => {
@@ -282,7 +282,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
 		<button
 			aria-label="Toggle Sidebar"
 			className={cn(
-				'cn-sidebar-rail absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex',
+				'etc-sidebar-rail absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex',
 				'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
 				'[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
 				'group-data-[collapsible=offcanvas]:translate-x-0 hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:after:left-full',
@@ -304,7 +304,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
 	return (
 		<main
 			className={cn(
-				'cn-sidebar-inset relative flex w-full flex-1 flex-col',
+				'etc-sidebar-inset relative flex w-full flex-1 flex-col',
 				className
 			)}
 			data-slot="sidebar-inset"
@@ -316,7 +316,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
 function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input>) {
 	return (
 		<Input
-			className={cn('cn-sidebar-input', className)}
+			className={cn('etc-sidebar-input', className)}
 			data-sidebar="input"
 			data-slot="sidebar-input"
 			{...props}
@@ -327,7 +327,7 @@ function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input
 function SidebarHeader({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
-			className={cn('cn-sidebar-header flex flex-col', className)}
+			className={cn('etc-sidebar-header flex flex-col', className)}
 			data-sidebar="header"
 			data-slot="sidebar-header"
 			{...props}
@@ -338,7 +338,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<'div'>) {
 function SidebarFooter({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
-			className={cn('cn-sidebar-footer flex flex-col', className)}
+			className={cn('etc-sidebar-footer flex flex-col', className)}
 			data-sidebar="footer"
 			data-slot="sidebar-footer"
 			{...props}
@@ -352,7 +352,7 @@ function SidebarSeparator({
 }: React.ComponentProps<typeof Separator>) {
 	return (
 		<Separator
-			className={cn('cn-sidebar-separator w-auto', className)}
+			className={cn('etc-sidebar-separator w-auto', className)}
 			data-sidebar="separator"
 			data-slot="sidebar-separator"
 			{...props}
@@ -364,7 +364,7 @@ function SidebarContent({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'cn-sidebar-content flex min-h-0 flex-1 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+				'etc-sidebar-content flex min-h-0 flex-1 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden',
 				className
 			)}
 			data-sidebar="content"
@@ -378,7 +378,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'cn-sidebar-group relative flex w-full min-w-0 flex-col',
+				'etc-sidebar-group relative flex w-full min-w-0 flex-col',
 				className
 			)}
 			data-sidebar="group"
@@ -398,7 +398,7 @@ function SidebarGroupLabel({
 		props: mergeProps<'div'>(
 			{
 				className: cn(
-					'cn-sidebar-group-label flex shrink-0 items-center outline-hidden [&>svg]:shrink-0',
+					'etc-sidebar-group-label flex shrink-0 items-center outline-hidden [&>svg]:shrink-0',
 					className
 				),
 			},
@@ -422,7 +422,7 @@ function SidebarGroupAction({
 		props: mergeProps<'button'>(
 			{
 				className: cn(
-					'cn-sidebar-group-action flex aspect-square items-center justify-center outline-hidden transition-transform after:absolute after:-inset-2 group-data-[collapsible=icon]:hidden md:after:hidden [&>svg]:shrink-0',
+					'etc-sidebar-group-action flex aspect-square items-center justify-center outline-hidden transition-transform after:absolute after:-inset-2 group-data-[collapsible=icon]:hidden md:after:hidden [&>svg]:shrink-0',
 					className
 				),
 			},
@@ -439,7 +439,7 @@ function SidebarGroupAction({
 function SidebarGroupContent({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
-			className={cn('cn-sidebar-group-content w-full', className)}
+			className={cn('etc-sidebar-group-content w-full', className)}
 			data-sidebar="group-content"
 			data-slot="sidebar-group-content"
 			{...props}
@@ -450,7 +450,7 @@ function SidebarGroupContent({ className, ...props }: React.ComponentProps<'div'
 function SidebarMenu({ className, ...props }: React.ComponentProps<'ul'>) {
 	return (
 		<ul
-			className={cn('cn-sidebar-menu flex w-full min-w-0 flex-col', className)}
+			className={cn('etc-sidebar-menu flex w-full min-w-0 flex-col', className)}
 			data-sidebar="menu"
 			data-slot="sidebar-menu"
 			{...props}
@@ -470,17 +470,17 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
 }
 
 const sidebarMenuButtonVariants = cva(
-	'cn-sidebar-menu-button peer/menu-button group/menu-button flex w-full items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0',
+	'etc-sidebar-menu-button peer/menu-button group/menu-button flex w-full items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0',
 	{
 		variants: {
 			variant: {
-				default: 'cn-sidebar-menu-button-variant-default',
-				outline: 'cn-sidebar-menu-button-variant-outline',
+				default: 'etc-sidebar-menu-button-variant-default',
+				outline: 'etc-sidebar-menu-button-variant-outline',
 			},
 			size: {
-				default: 'cn-sidebar-menu-button-size-default',
-				sm: 'cn-sidebar-menu-button-size-sm',
-				lg: 'cn-sidebar-menu-button-size-lg',
+				default: 'etc-sidebar-menu-button-size-default',
+				sm: 'etc-sidebar-menu-button-size-sm',
+				lg: 'etc-sidebar-menu-button-size-lg',
 			},
 		},
 		defaultVariants: {
@@ -558,7 +558,7 @@ function SidebarMenuAction({
 		props: mergeProps<'button'>(
 			{
 				className: cn(
-					'cn-sidebar-menu-action flex items-center justify-center outline-hidden transition-transform after:absolute after:-inset-2 group-data-[collapsible=icon]:hidden md:after:hidden [&>svg]:shrink-0',
+					'etc-sidebar-menu-action flex items-center justify-center outline-hidden transition-transform after:absolute after:-inset-2 group-data-[collapsible=icon]:hidden md:after:hidden [&>svg]:shrink-0',
 					showOnHover &&
 						'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-open:opacity-100 peer-data-active/menu-button:text-sidebar-accent-foreground md:opacity-0',
 					className
@@ -578,7 +578,7 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentProps<'div'>) 
 	return (
 		<div
 			className={cn(
-				'cn-sidebar-menu-badge flex select-none items-center justify-center tabular-nums group-data-[collapsible=icon]:hidden',
+				'etc-sidebar-menu-badge flex select-none items-center justify-center tabular-nums group-data-[collapsible=icon]:hidden',
 				className
 			)}
 			data-sidebar="menu-badge"
@@ -600,19 +600,19 @@ function SidebarMenuSkeleton({
 
 	return (
 		<div
-			className={cn('cn-sidebar-menu-skeleton flex items-center', className)}
+			className={cn('etc-sidebar-menu-skeleton flex items-center', className)}
 			data-sidebar="menu-skeleton"
 			data-slot="sidebar-menu-skeleton"
 			{...props}
 		>
 			{showIcon && (
 				<Skeleton
-					className="cn-sidebar-menu-skeleton-icon"
+					className="etc-sidebar-menu-skeleton-icon"
 					data-sidebar="menu-skeleton-icon"
 				/>
 			)}
 			<Skeleton
-				className="cn-sidebar-menu-skeleton-text max-w-(--skeleton-width) flex-1"
+				className="etc-sidebar-menu-skeleton-text max-w-(--skeleton-width) flex-1"
 				data-sidebar="menu-skeleton-text"
 				style={
 					{
@@ -627,7 +627,7 @@ function SidebarMenuSkeleton({
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<'ul'>) {
 	return (
 		<ul
-			className={cn('cn-sidebar-menu-sub flex min-w-0 flex-col', className)}
+			className={cn('etc-sidebar-menu-sub flex min-w-0 flex-col', className)}
 			data-sidebar="menu-sub"
 			data-slot="sidebar-menu-sub"
 			{...props}
@@ -662,7 +662,7 @@ function SidebarMenuSubButton({
 		props: mergeProps<'a'>(
 			{
 				className: cn(
-					'cn-sidebar-menu-sub-button flex min-w-0 -translate-x-px items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 group-data-[collapsible=icon]:hidden [&>span:last-child]:truncate [&>svg]:shrink-0',
+					'etc-sidebar-menu-sub-button flex min-w-0 -translate-x-px items-center overflow-hidden outline-hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 group-data-[collapsible=icon]:hidden [&>span:last-child]:truncate [&>svg]:shrink-0',
 					className
 				),
 			},

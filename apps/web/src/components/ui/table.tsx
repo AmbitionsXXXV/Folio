@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
 	return (
-		<div className="cn-table-container" data-slot="table-container">
-			<table className={cn('cn-table', className)} data-slot="table" {...props} />
+		<div className="etc-table-container" data-slot="table-container">
+			<table className={cn('etc-table', className)} data-slot="table" {...props} />
 		</div>
 	)
 }
@@ -13,7 +13,7 @@ function Table({ className, ...props }: React.ComponentProps<'table'>) {
 function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
 	return (
 		<thead
-			className={cn('cn-table-header', className)}
+			className={cn('etc-table-header', className)}
 			data-slot="table-header"
 			{...props}
 		/>
@@ -23,7 +23,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
 function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
 	return (
 		<tbody
-			className={cn('cn-table-body', className)}
+			className={cn('etc-table-body', className)}
 			data-slot="table-body"
 			{...props}
 		/>
@@ -33,7 +33,7 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
 function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
 	return (
 		<tfoot
-			className={cn('cn-table-footer', className)}
+			className={cn('etc-table-footer', className)}
 			data-slot="table-footer"
 			{...props}
 		/>
@@ -42,14 +42,18 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
 
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
 	return (
-		<tr className={cn('cn-table-row', className)} data-slot="table-row" {...props} />
+		<tr
+			className={cn('etc-table-row', className)}
+			data-slot="table-row"
+			{...props}
+		/>
 	)
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 	return (
 		<th
-			className={cn('cn-table-head', className)}
+			className={cn('etc-table-head', className)}
 			data-slot="table-head"
 			{...props}
 		/>
@@ -59,7 +63,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
 	return (
 		<td
-			className={cn('cn-table-cell', className)}
+			className={cn('etc-table-cell', className)}
 			data-slot="table-cell"
 			{...props}
 		/>
@@ -69,7 +73,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
 function TableCaption({ className, ...props }: React.ComponentProps<'caption'>) {
 	return (
 		<caption
-			className={cn('cn-table-caption', className)}
+			className={cn('etc-table-caption', className)}
 			data-slot="table-caption"
 			{...props}
 		/>

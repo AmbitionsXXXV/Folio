@@ -48,14 +48,14 @@ function TooltipContent({
 			>
 				<TooltipPrimitive.Popup
 					className={cn(
-						'cn-tooltip-content z-50 w-fit max-w-xs origin-(--transform-origin) bg-foreground text-background',
+						'etc-tooltip-content z-50 w-fit max-w-xs origin-(--transform-origin) bg-foreground text-background',
 						className
 					)}
 					data-slot="tooltip-content"
 					{...props}
 				>
 					{children}
-					<TooltipPrimitive.Arrow className="cn-tooltip-arrow z-50 bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=left]:top-1/2! data-[side=right]:top-1/2! data-[side=left]:-right-1 data-[side=top]:-bottom-2.5 data-[side=right]:-left-1 data-[side=left]:-translate-y-1/2 data-[side=right]:-translate-y-1/2" />
+					<TooltipPrimitive.Arrow className="etc-tooltip-arrow z-50 bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=left]:top-1/2! data-[side=right]:top-1/2! data-[side=left]:-right-1 data-[side=top]:-bottom-2.5 data-[side=right]:-left-1 data-[side=left]:-translate-y-1/2 data-[side=right]:-translate-y-1/2" />
 				</TooltipPrimitive.Popup>
 			</TooltipPrimitive.Positioner>
 		</TooltipPrimitive.Portal>

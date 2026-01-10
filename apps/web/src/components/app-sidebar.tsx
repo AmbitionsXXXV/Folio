@@ -10,9 +10,10 @@ import {
 } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Link, useMatchRoute } from '@tanstack/react-router'
+import { Link, useMatchRoute, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useCommandPalette } from '@/contexts/command-palette-context'
+import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 import {
 	Sidebar,
@@ -50,20 +51,35 @@ const secondaryNavItems: NavItem[] = [
 function NavItems({ items }: { items: NavItem[] }) {
 	const { t } = useTranslation()
 	const matchRoute = useMatchRoute()
+	// Track pending navigation target for visual feedback
+	const pendingLocation = useRouterState({
+		select: (state) => (state.isTransitioning ? state.location.pathname : null),
+	})
 
 	return (
 		<SidebarMenu>
 			{items.map(({ to, labelKey, icon }) => {
 				const isActive = matchRoute({ to, fuzzy: true })
+				// Check if this item is the pending navigation target
+				const isPending = pendingLocation?.startsWith(to) ?? false
 
 				return (
 					<SidebarMenuItem key={to}>
-						<SidebarMenuButton isActive={!!isActive} tooltip={t(labelKey)}>
-							<Link className="flex w-full items-center gap-3" to={to}>
+						<SidebarMenuButton
+							isActive={!!isActive || isPending}
+							tooltip={t(labelKey)}
+						>
+							<Link
+								className={cn(
+									'flex w-full items-center gap-3 transition-opacity',
+									isPending && 'opacity-70'
+								)}
+								to={to}
+							>
 								<HugeiconsIcon
-									className="size-5"
+									className={cn('size-5', isPending && 'animate-pulse')}
 									icon={icon}
-									strokeWidth={isActive ? 2.5 : 2}
+									strokeWidth={isActive || isPending ? 2.5 : 2}
 								/>
 								<span>{t(labelKey)}</span>
 							</Link>

@@ -18,7 +18,10 @@ function Command({
 }: React.ComponentProps<typeof CommandPrimitive>) {
 	return (
 		<CommandPrimitive
-			className={cn('cn-command flex size-full flex-col overflow-hidden', className)}
+			className={cn(
+				'etc-command flex size-full flex-col overflow-hidden',
+				className
+			)}
 			data-slot="command"
 			{...props}
 		/>
@@ -46,7 +49,7 @@ function CommandDialog({
 				<DialogDescription>{description}</DialogDescription>
 			</DialogHeader>
 			<DialogContent
-				className={cn('cn-command-dialog overflow-hidden p-0', className)}
+				className={cn('etc-command-dialog overflow-hidden p-0', className)}
 				showCloseButton={showCloseButton}
 			>
 				{children}
@@ -60,18 +63,18 @@ function CommandInput({
 	...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
 	return (
-		<div className="cn-command-input-wrapper" data-slot="command-input-wrapper">
-			<InputGroup className="cn-command-input-group gap-1.5">
+		<div className="etc-command-input-wrapper" data-slot="command-input-wrapper">
+			<InputGroup className="etc-command-input-group gap-1.5">
 				<CommandPrimitive.Input
 					className={cn(
-						'cn-command-input outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+						'etc-command-input outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
 						className
 					)}
 					data-slot="command-input"
 					{...props}
 				/>
 				<InputGroupAddon>
-					<HugeiconsIcon className="cn-command-input-icon" icon={Search01Icon} />
+					<HugeiconsIcon className="etc-command-input-icon" icon={Search01Icon} />
 				</InputGroupAddon>
 			</InputGroup>
 		</div>
@@ -84,7 +87,7 @@ function CommandList({
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
 	return (
 		<CommandPrimitive.List
-			className={cn('cn-command-list overflow-y-auto overflow-x-hidden', className)}
+			className={cn('etc-command-list overflow-y-auto overflow-x-hidden', className)}
 			data-slot="command-list"
 			{...props}
 		/>
@@ -97,7 +100,7 @@ function CommandEmpty({
 }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
 	return (
 		<CommandPrimitive.Empty
-			className={cn('cn-command-empty', className)}
+			className={cn('etc-command-empty', className)}
 			data-slot="command-empty"
 			{...props}
 		/>
@@ -110,7 +113,7 @@ function CommandGroup({
 }: React.ComponentProps<typeof CommandPrimitive.Group>) {
 	return (
 		<CommandPrimitive.Group
-			className={cn('cn-command-group', className)}
+			className={cn('etc-command-group', className)}
 			data-slot="command-group"
 			{...props}
 		/>
@@ -123,7 +126,7 @@ function CommandSeparator({
 }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
 	return (
 		<CommandPrimitive.Separator
-			className={cn('cn-command-separator', className)}
+			className={cn('etc-command-separator', className)}
 			data-slot="command-separator"
 			{...props}
 		/>
@@ -138,7 +141,7 @@ function CommandItem({
 	return (
 		<CommandPrimitive.Item
 			className={cn(
-				'cn-command-item group/command-item data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+				'etc-command-item group/command-item data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
 				className
 			)}
 			data-slot="command-item"
@@ -146,7 +149,7 @@ function CommandItem({
 		>
 			{children}
 			<HugeiconsIcon
-				className="cn-command-item-indicator ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100"
+				className="etc-command-item-indicator ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100"
 				icon={Tick02Icon}
 			/>
 		</CommandPrimitive.Item>
@@ -156,7 +159,7 @@ function CommandItem({
 function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) {
 	return (
 		<span
-			className={cn('cn-command-shortcut', className)}
+			className={cn('etc-command-shortcut', className)}
 			data-slot="command-shortcut"
 			{...props}
 		/>

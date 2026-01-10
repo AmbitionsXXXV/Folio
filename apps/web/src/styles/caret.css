@@ -294,13 +294,13 @@
 }
 
 /* Textarea custom caret fallback (CSS-only approach) */
-.cn-textarea {
+.etc-textarea {
 	caret-color: var(--primary);
 }
 
 /* For browsers that support caret-shape (future-proofing) */
 @supports (caret-shape: bar) {
-	.cn-textarea {
+	.etc-textarea {
 		caret-shape: bar;
 	}
 }

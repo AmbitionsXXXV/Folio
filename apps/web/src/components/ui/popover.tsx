@@ -34,7 +34,7 @@ function PopoverContent({
 			>
 				<PopoverPrimitive.Popup
 					className={cn(
-						'cn-popover-content z-50 w-72 origin-(--transform-origin) outline-hidden',
+						'etc-popover-content z-50 w-72 origin-(--transform-origin) outline-hidden',
 						className
 					)}
 					data-slot="popover-content"
@@ -48,7 +48,7 @@ function PopoverContent({
 function PopoverHeader({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
-			className={cn('cn-popover-header', className)}
+			className={cn('etc-popover-header', className)}
 			data-slot="popover-header"
 			{...props}
 		/>
@@ -58,7 +58,7 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<'div'>) {
 function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
 	return (
 		<PopoverPrimitive.Title
-			className={cn('cn-popover-title', className)}
+			className={cn('etc-popover-title', className)}
 			data-slot="popover-title"
 			{...props}
 		/>
@@ -71,7 +71,7 @@ function PopoverDescription({
 }: PopoverPrimitive.Description.Props) {
 	return (
 		<PopoverPrimitive.Description
-			className={cn('cn-popover-description', className)}
+			className={cn('etc-popover-description', className)}
 			data-slot="popover-description"
 			{...props}
 		/>

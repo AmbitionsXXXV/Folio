@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 function FieldSet({ className, ...props }: React.ComponentProps<'fieldset'>) {
 	return (
 		<fieldset
-			className={cn('cn-field-set flex flex-col', className)}
+			className={cn('etc-field-set flex flex-col', className)}
 			data-slot="field-set"
 			{...props}
 		/>
@@ -21,7 +21,7 @@ function FieldLegend({
 }: React.ComponentProps<'legend'> & { variant?: 'legend' | 'label' }) {
 	return (
 		<legend
-			className={cn('cn-field-legend', className)}
+			className={cn('etc-field-legend', className)}
 			data-slot="field-legend"
 			data-variant={variant}
 			{...props}
@@ -33,7 +33,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'cn-field-group group/field-group @container/field-group flex w-full flex-col',
+				'etc-field-group group/field-group @container/field-group flex w-full flex-col',
 				className
 			)}
 			data-slot="field-group"
@@ -42,15 +42,15 @@ function FieldGroup({ className, ...props }: React.ComponentProps<'div'>) {
 	)
 }
 
-const fieldVariants = cva('cn-field group/field flex w-full', {
+const fieldVariants = cva('etc-field group/field flex w-full', {
 	variants: {
 		orientation: {
 			vertical:
-				'cn-field-orientation-vertical flex-col [&>*]:w-full [&>.sr-only]:w-auto',
+				'etc-field-orientation-vertical flex-col [&>*]:w-full [&>.sr-only]:w-auto',
 			horizontal:
-				'cn-field-orientation-horizontal flex-row items-center has-[>[data-slot=field-content]]:items-start [&>[data-slot=field-label]]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
+				'etc-field-orientation-horizontal flex-row items-center has-[>[data-slot=field-content]]:items-start [&>[data-slot=field-label]]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
 			responsive:
-				'cn-field-orientation-responsive @md/field-group:flex-row flex-col @md/field-group:items-center @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:[&>*]:w-auto [&>*]:w-full [&>.sr-only]:w-auto @md/field-group:[&>[data-slot=field-label]]:flex-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
+				'etc-field-orientation-responsive @md/field-group:flex-row flex-col @md/field-group:items-center @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:[&>*]:w-auto [&>*]:w-full [&>.sr-only]:w-auto @md/field-group:[&>[data-slot=field-label]]:flex-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
 		},
 	},
 	defaultVariants: {
@@ -78,7 +78,7 @@ function FieldContent({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'cn-field-content group/field-content flex flex-1 flex-col leading-snug',
+				'etc-field-content group/field-content flex flex-1 flex-col leading-snug',
 				className
 			)}
 			data-slot="field-content"
@@ -91,7 +91,7 @@ function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>)
 	return (
 		<Label
 			className={cn(
-				'cn-field-label group/field-label peer/field-label flex w-fit leading-snug',
+				'etc-field-label group/field-label peer/field-label flex w-fit leading-snug',
 				'has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col',
 				className
 			)}
@@ -105,7 +105,7 @@ function FieldTitle({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'cn-field-title flex w-fit items-center leading-snug',
+				'etc-field-title flex w-fit items-center leading-snug',
 				className
 			)}
 			data-slot="field-label"
@@ -118,7 +118,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<'p'>) {
 	return (
 		<p
 			className={cn(
-				'cn-field-description font-normal leading-normal group-has-data-[orientation=horizontal]/field:text-balance',
+				'etc-field-description font-normal leading-normal group-has-data-[orientation=horizontal]/field:text-balance',
 				'nth-last-2:-mt-1 last:mt-0',
 				'[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4',
 				className
@@ -138,7 +138,7 @@ function FieldSeparator({
 }) {
 	return (
 		<div
-			className={cn('cn-field-separator relative', className)}
+			className={cn('etc-field-separator relative', className)}
 			data-content={!!children}
 			data-slot="field-separator"
 			{...props}
@@ -146,7 +146,7 @@ function FieldSeparator({
 			<Separator className="absolute inset-0 top-1/2" />
 			{children && (
 				<span
-					className="cn-field-separator-content relative mx-auto block w-fit bg-background"
+					className="etc-field-separator-content relative mx-auto block w-fit bg-background"
 					data-slot="field-separator-content"
 				>
 					{children}
@@ -196,7 +196,7 @@ function FieldError({
 
 	return (
 		<div
-			className={cn('cn-field-error font-normal', className)}
+			className={cn('etc-field-error font-normal', className)}
 			data-slot="field-error"
 			role="alert"
 			{...props}

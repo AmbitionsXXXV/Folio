@@ -1,20 +1,32 @@
 import { LANGUAGE_LABELS } from '@folionote/constants'
 import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import {
+	Alert01Icon,
 	Calendar03Icon,
 	ComputerIcon,
 	LanguageCircleIcon,
+	Logout03Icon,
 	Moon02Icon,
 	Settings01Icon,
 	Sun03Icon,
 	UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AvatarUploader } from '@/components/avatar-uploader'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -56,12 +68,19 @@ function ProfilePage() {
 	const { t, i18n } = useTranslation()
 	const { theme, setTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
+	const [signOutDialogOpen, setSignOutDialogOpen] = useState(false)
 	const { currentImageUrl, setLocalImageUrl, user } = useAvatarState()
+	const router = useRouter()
 
 	// Avoid hydration mismatch
 	useEffect(() => {
 		setMounted(true)
 	}, [])
+
+	const handleSignOut = async () => {
+		await authClient.signOut()
+		router.navigate({ to: '/', reloadDocument: true })
+	}
 
 	return (
 		<div className="container mx-auto max-w-3xl px-4 py-8">
@@ -69,14 +88,9 @@ function ProfilePage() {
 			<div className="mb-8">
 				<h1 className="mb-1 flex items-center gap-2 font-bold text-2xl">
 					<HugeiconsIcon className="size-7" icon={UserCircleIcon} />
-					{t('profile.title', 'Profile')}
+					{t('profile.title')}
 				</h1>
-				<p className="text-muted-foreground">
-					{t(
-						'profile.settingsDescription',
-						'Update your profile picture and information.'
-					)}
-				</p>
+				<p className="text-muted-foreground">{t('profile.settingsDescription')}</p>
 			</div>
 
 			{/* Profile Card */}
@@ -84,14 +98,9 @@ function ProfilePage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<HugeiconsIcon className="size-5" icon={Settings01Icon} />
-						{t('profile.settings', 'Profile Settings')}
+						{t('profile.settings')}
 					</CardTitle>
-					<CardDescription>
-						{t(
-							'profile.avatarHelp',
-							'Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 20MB.'
-						)}
-					</CardDescription>
+					<CardDescription>{t('profile.avatarHelp')}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
@@ -116,7 +125,7 @@ function ProfilePage() {
 										icon={Calendar03Icon}
 									/>
 									<span className="text-muted-foreground">
-										{t('profile.memberSince', 'Member since')}:
+										{t('profile.memberSince')}:
 									</span>
 									<span>{formatDate(user?.createdAt)}</span>
 								</div>
@@ -131,13 +140,13 @@ function ProfilePage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<HugeiconsIcon className="size-5" icon={Moon02Icon} />
-						{t('profile.appearance', 'Appearance')}
+						{t('profile.appearance')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{/* Theme Selection */}
 					<div className="flex items-center justify-between">
-						<Label htmlFor="theme">{t('common.theme', 'Theme')}</Label>
+						<Label htmlFor="theme">{t('common.theme')}</Label>
 						<Select
 							onValueChange={(value) => value && setTheme(value)}
 							value={mounted ? theme : 'system'}
@@ -149,19 +158,19 @@ function ProfilePage() {
 								<SelectItem value="light">
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon className="size-4" icon={Sun03Icon} />
-										{t('common.themeLight', 'Light')}
+										{t('common.themeLight')}
 									</div>
 								</SelectItem>
 								<SelectItem value="dark">
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon className="size-4" icon={Moon02Icon} />
-										{t('common.themeDark', 'Dark')}
+										{t('common.themeDark')}
 									</div>
 								</SelectItem>
 								<SelectItem value="system">
 									<div className="flex items-center gap-2">
 										<HugeiconsIcon className="size-4" icon={ComputerIcon} />
-										{t('common.themeSystem', 'System')}
+										{t('common.themeSystem')}
 									</div>
 								</SelectItem>
 							</SelectContent>
@@ -175,13 +184,13 @@ function ProfilePage() {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<HugeiconsIcon className="size-5" icon={LanguageCircleIcon} />
-						{t('profile.languageAndRegion', 'Language & Region')}
+						{t('profile.languageAndRegion')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{/* Language Selection */}
 					<div className="flex items-center justify-between">
-						<Label htmlFor="language">{t('common.language', 'Language')}</Label>
+						<Label htmlFor="language">{t('common.language')}</Label>
 						<Select
 							onValueChange={(value) => value && i18n.changeLanguage(value)}
 							value={i18n.language as SupportedLanguage}
@@ -215,38 +224,53 @@ function ProfilePage() {
 					{/* Sign Out All Devices */}
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 						<div>
-							<p className="font-medium">
-								{t('profile.signOutAllDevices', 'Sign Out All Devices')}
-							</p>
+							<p className="font-medium">{t('profile.signOutAllDevices')}</p>
 							<p className="text-muted-foreground text-sm">
-								{t(
-									'profile.signOutAllDevicesDescription',
-									'Sign out from all devices and sessions.'
-								)}
+								{t('profile.signOutAllDevicesDescription')}
 							</p>
 						</div>
-						<Button onClick={() => authClient.signOut()} variant="outline">
-							{t('auth.signOut', 'Sign Out')}
+						<Button onClick={() => setSignOutDialogOpen(true)} variant="outline">
+							{t('auth.signOut')}
 						</Button>
 					</div>
+
+					{/* Sign Out Confirmation Dialog */}
+					<AlertDialog onOpenChange={setSignOutDialogOpen} open={signOutDialogOpen}>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle className="flex items-center gap-2">
+									<HugeiconsIcon
+										className="size-5 text-destructive"
+										icon={Alert01Icon}
+									/>
+									{t('profile.signOutConfirmTitle')}
+								</AlertDialogTitle>
+								<AlertDialogDescription>
+									{t('profile.signOutConfirmDescription')}
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+								<AlertDialogAction onClick={handleSignOut} variant="destructive">
+									<HugeiconsIcon className="mr-2 size-4" icon={Logout03Icon} />
+									{t('auth.signOut')}
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 
 					<Separator />
 
 					{/* Delete Account */}
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 						<div>
-							<p className="font-medium">
-								{t('profile.deleteAccount', 'Delete Account')}
-							</p>
+							<p className="font-medium">{t('profile.deleteAccount')}</p>
 							<p className="text-muted-foreground text-sm">
-								{t(
-									'profile.deleteAccountDescription',
-									'Permanently delete your account and all associated data.'
-								)}
+								{t('profile.deleteAccountDescription')}
 							</p>
 						</div>
 						<Button disabled variant="destructive">
-							{t('profile.deleteAccount', 'Delete Account')}
+							{t('profile.deleteAccount')}
 						</Button>
 					</div>
 				</CardContent>

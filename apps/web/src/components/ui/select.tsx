@@ -14,7 +14,7 @@ const Select = SelectPrimitive.Root
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
 	return (
 		<SelectPrimitive.Group
-			className={cn('cn-select-group', className)}
+			className={cn('etc-select-group', className)}
 			data-slot="select-group"
 			{...props}
 		/>
@@ -24,7 +24,7 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
 function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
 	return (
 		<SelectPrimitive.Value
-			className={cn('cn-select-value', className)}
+			className={cn('etc-select-value', className)}
 			data-slot="select-value"
 			{...props}
 		/>
@@ -42,7 +42,7 @@ function SelectTrigger({
 	return (
 		<SelectPrimitive.Trigger
 			className={cn(
-				'cn-select-trigger flex w-fit items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:pointer-events-none [&_svg]:shrink-0',
+				'etc-select-trigger flex w-fit items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:pointer-events-none [&_svg]:shrink-0',
 				className
 			)}
 			data-size={size}
@@ -53,7 +53,7 @@ function SelectTrigger({
 			<SelectPrimitive.Icon
 				render={
 					<HugeiconsIcon
-						className="cn-select-trigger-icon pointer-events-none"
+						className="etc-select-trigger-icon pointer-events-none"
 						icon={UnfoldMoreIcon}
 					/>
 				}
@@ -88,7 +88,7 @@ function SelectContent({
 			>
 				<SelectPrimitive.Popup
 					className={cn(
-						'cn-select-content cn-menu-target relative isolate z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden',
+						'etc-select-content etc-menu-target relative isolate z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden',
 						className
 					)}
 					data-slot="select-content"
@@ -106,7 +106,7 @@ function SelectContent({
 function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) {
 	return (
 		<SelectPrimitive.GroupLabel
-			className={cn('cn-select-label', className)}
+			className={cn('etc-select-label', className)}
 			data-slot="select-label"
 			{...props}
 		/>
@@ -117,20 +117,20 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
 	return (
 		<SelectPrimitive.Item
 			className={cn(
-				'cn-select-item relative flex w-full cursor-default select-none items-center outline-hidden data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+				'etc-select-item relative flex w-full cursor-default select-none items-center outline-hidden data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
 				className
 			)}
 			data-slot="select-item"
 			{...props}
 		>
-			<SelectPrimitive.ItemText className="cn-select-item-text shrink-0 whitespace-nowrap">
+			<SelectPrimitive.ItemText className="etc-select-item-text shrink-0 whitespace-nowrap">
 				{children}
 			</SelectPrimitive.ItemText>
 			<SelectPrimitive.ItemIndicator
-				render={<span className="cn-select-item-indicator" />}
+				render={<span className="etc-select-item-indicator" />}
 			>
 				<HugeiconsIcon
-					className="cn-select-item-indicator-icon pointer-events-none"
+					className="etc-select-item-indicator-icon pointer-events-none"
 					icon={Tick02Icon}
 				/>
 			</SelectPrimitive.ItemIndicator>
@@ -141,7 +141,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
 function SelectSeparator({ className, ...props }: SelectPrimitive.Separator.Props) {
 	return (
 		<SelectPrimitive.Separator
-			className={cn('cn-select-separator pointer-events-none', className)}
+			className={cn('etc-select-separator pointer-events-none', className)}
 			data-slot="select-separator"
 			{...props}
 		/>
@@ -154,7 +154,7 @@ function SelectScrollUpButton({
 }: ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
 	return (
 		<SelectPrimitive.ScrollUpArrow
-			className={cn('cn-select-scroll-up-button top-0 w-full', className)}
+			className={cn('etc-select-scroll-up-button top-0 w-full', className)}
 			data-slot="select-scroll-up-button"
 			{...props}
 		>
@@ -169,7 +169,7 @@ function SelectScrollDownButton({
 }: ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
 	return (
 		<SelectPrimitive.ScrollDownArrow
-			className={cn('cn-select-scroll-down-button bottom-0 w-full', className)}
+			className={cn('etc-select-scroll-down-button bottom-0 w-full', className)}
 			data-slot="select-scroll-down-button"
 			{...props}
 		>

@@ -495,10 +495,23 @@
     }
   },
   "profile": {
+    "title": "プロフィール",
     "settings": "プロフィール設定",
     "settingsDescription": "プロフィール画像と情報を更新します。",
     "editProfile": "プロフィールを編集",
-    "avatarHelp": "クリックまたはドラッグして画像をアップロードします。対応形式：JPEG、PNG、GIF、WebP。最大5MB。"
+    "avatarHelp": "クリックまたはドラッグして画像をアップロードします。対応形式：JPEG、PNG、GIF、WebP。最大5MB。",
+    "accountInfo": "アカウント情報",
+    "memberSince": "登録日",
+    "lastUpdated": "最終更新",
+    "appearance": "外観",
+    "languageAndRegion": "言語と地域",
+    "dangerZone": "危険ゾーン",
+    "deleteAccount": "アカウント削除",
+    "deleteAccountDescription": "アカウントと関連するすべてのデータを完全に削除します。",
+    "signOutAllDevices": "すべてのデバイスからサインアウト",
+    "signOutAllDevicesDescription": "すべてのデバイスとセッションからサインアウトします。",
+    "signOutConfirmTitle": "サインアウト",
+    "signOutConfirmDescription": "サインアウトしてもよろしいですか？アカウントにアクセスするには再度サインインする必要があります。"
   },
   "avatar": {
     "uploadSuccess": "アバターのアップロードに成功しました",
