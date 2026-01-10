@@ -14,6 +14,7 @@ on:
       - "apps/server/**"
       - "packages/**"
       - "pnpm-lock.yaml"
+      - ".github/workflows/ci.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

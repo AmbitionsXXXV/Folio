@@ -504,6 +504,7 @@
     "avatarHelp": "Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 3MB.",
     "accountInfo": "Account Information",
     "memberSince": "Member since",
+    "joined": "Joined",
     "joinedDays": "Joined for <1>{{count}}</1> days",
     "lastUpdated": "Last updated",
     "appearance": "Appearance",

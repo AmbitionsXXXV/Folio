@@ -34,7 +34,12 @@ export type AvatarUploaderProps = {
 	/** Additional class name */
 	className?: string
 	/** Additional class name for the avatar */
+	/** Additional class name for the avatar */
 	avatarClassName?: string
+}
+
+export type AvatarUploaderRef = {
+	open: () => void
 }
 
 /**

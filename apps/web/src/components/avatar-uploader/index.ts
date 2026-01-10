@@ -3,5 +3,6 @@ export type {
 	AvatarSize,
 	AvatarSizeConfig,
 	AvatarUploaderProps,
+	AvatarUploaderRef,
 	CropArea,
 } from './types'
