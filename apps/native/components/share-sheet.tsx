@@ -1,3 +1,4 @@
+import { formatDate } from '@folionote/locales'
 import BottomSheet, {
 	BottomSheetBackdrop,
 	type BottomSheetBackdropProps,
@@ -222,7 +223,6 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 		// Format date
 		const formatDateStr = useCallback(
 			(dateStr: string) => {
-				const { formatDate } = require('@folionote/locales')
 				return formatDate(dateStr, { locale: i18n.language, preset: 'shortTime' })
 			},
 			[i18n.language]

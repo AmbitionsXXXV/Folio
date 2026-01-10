@@ -170,6 +170,10 @@ export default function HomeScreen() {
 		router.push('/inbox' as never)
 	}, [])
 
+	const navigateToLibrary = useCallback(() => {
+		router.push('/today' as never)
+	}, [])
+
 	const navigateToReview = useCallback(() => {
 		router.push('/review' as never)
 	}, [])
@@ -274,7 +278,10 @@ export default function HomeScreen() {
 							<Text className="font-semibold text-foreground text-lg">
 								{t('activity.recentEntries')}
 							</Text>
-							<Pressable className="flex-row items-center" onPress={navigateToInbox}>
+							<Pressable
+								className="flex-row items-center"
+								onPress={navigateToLibrary}
+							>
 								<Text className="mr-1 text-muted text-sm">
 									{t('activity.viewAll')}
 								</Text>
@@ -337,7 +344,7 @@ export default function HomeScreen() {
 						</Pressable>
 
 						{/* Library */}
-						<Pressable onPress={navigateToInbox}>
+						<Pressable onPress={navigateToLibrary}>
 							<Card className="p-4" variant="secondary">
 								<View className="flex-row items-center">
 									<View className="mr-3 size-12 items-center justify-center rounded-lg bg-success/10">
