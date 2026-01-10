@@ -1,5 +1,20 @@
 # server
 
+## 0.2.0
+
+### Minor Changes
+
+- sync all feature to native app
+
+### Patch Changes
+
+- Updated dependencies
+  - @folionote/locales@0.2.0
+  - @folionote/api@0.2.0
+  - @folionote/auth@0.2.0
+  - @folionote/db@0.2.0
+  - @folionote/storage@0.2.0
+
 ## 0.1.4
 
 ### Patch Changes

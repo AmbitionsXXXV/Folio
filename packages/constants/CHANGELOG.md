@@ -1,5 +1,16 @@
 # @folionote/constants
 
+## 0.2.0
+
+### Minor Changes
+
+- sync all feature to native app
+
+### Patch Changes
+
+- Updated dependencies
+  - @folionote/locales@0.2.0
+
 ## 0.1.4
 
 ### Patch Changes
