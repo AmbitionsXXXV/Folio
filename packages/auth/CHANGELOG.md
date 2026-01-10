@@ -1,5 +1,17 @@
 # @folionote/auth
 
+## 0.2.0
+
+### Minor Changes
+
+- sync all feature to native app
+
+### Patch Changes
+
+- Updated dependencies
+  - @folionote/db@0.2.0
+  - @folionote/transactional@0.2.0
+
 ## 0.1.4
 
 ### Patch Changes

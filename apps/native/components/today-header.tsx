@@ -1,3 +1,4 @@
+import { formatDate } from '@folionote/locales'
 import { FireIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useThemeColor } from 'heroui-native'
@@ -10,14 +11,12 @@ type TodayHeaderProps = {
 }
 
 export function TodayHeader({ userName, streak }: TodayHeaderProps) {
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 	const warningColor = useThemeColor('warning')
 
-	const dateString = new Date().toLocaleDateString(undefined, {
-		weekday: 'long',
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric',
+	const dateString = formatDate(new Date(), {
+		locale: i18n.language,
+		preset: 'full',
 	})
 
 	return (

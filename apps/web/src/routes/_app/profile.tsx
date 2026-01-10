@@ -1,4 +1,4 @@
-import { LANGUAGE_LABELS } from '@folionote/constants'
+import { formatUserNo, getDaysSince, LANGUAGE_LABELS } from '@folionote/constants'
 import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import {
 	Alert01Icon,
@@ -15,7 +15,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { AvatarUploader } from '@/components/avatar-uploader'
 import {
 	AlertDialog,
@@ -50,27 +50,6 @@ import { authClient } from '@/lib/auth-client'
 export const Route = createFileRoute('/_app/profile')({
 	component: ProfilePage,
 })
-
-/**
- * Format date for display
- */
-function formatDate(date: Date | string | undefined): string {
-	if (!date) return '-'
-	const d = typeof date === 'string' ? new Date(date) : date
-	return new Intl.DateTimeFormat(undefined, {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric',
-	}).format(d)
-}
-
-/**
- * Format user No for display (e.g., 1 -> "00001")
- */
-function formatUserNo(no: number | undefined | null): string {
-	if (no === undefined || no === null) return '-'
-	return no.toString().padStart(5, '0')
-}
 
 function ProfilePage() {
 	const { t, i18n } = useTranslation()
@@ -125,7 +104,7 @@ function ProfilePage() {
 						<div className="flex-1 text-center sm:text-left">
 							<div className="flex items-center justify-center gap-2 sm:justify-start">
 								<h3 className="font-semibold text-xl">{user?.name}</h3>
-								{user?.no && user.no <= 50 && (
+								{user?.no && (
 									<span className="rounded bg-muted px-1.5 py-0.5 font-number font-semibold text-primary text-sm">
 										No.{formatUserNo(user.no)}
 									</span>
@@ -133,17 +112,20 @@ function ProfilePage() {
 							</div>
 							<p className="mb-4 text-muted-foreground">{user?.email}</p>
 
-							<div className="space-y-2 text-sm">
-								<div className="flex items-center justify-center gap-2 sm:justify-start">
-									<HugeiconsIcon
-										className="size-4 text-muted-foreground"
-										icon={Calendar03Icon}
+							<div className="flex items-center justify-center gap-1.5 text-sm sm:justify-start">
+								<HugeiconsIcon
+									className="size-4 text-muted-foreground"
+									icon={Calendar03Icon}
+								/>
+								<span className="text-muted-foreground">
+									<Trans
+										components={{
+											1: <span className="font-number font-semibold text-primary" />,
+										}}
+										i18nKey="profile.joinedDays"
+										values={{ count: getDaysSince(user?.createdAt) }}
 									/>
-									<span className="text-muted-foreground">
-										{t('profile.memberSince')}:
-									</span>
-									<span>{formatDate(user?.createdAt)}</span>
-								</div>
+								</span>
 							</div>
 						</div>
 					</div>
@@ -232,7 +214,7 @@ function ProfilePage() {
 			<Card className="border-destructive/50">
 				<CardHeader>
 					<CardTitle className="text-destructive">
-						{t('profile.dangerZone', 'Danger Zone')}
+						{t('profile.dangerZone')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">

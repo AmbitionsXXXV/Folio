@@ -1,28 +1,26 @@
 import '@/global.css'
 
-import {
-	Inter_400Regular,
-	Inter_500Medium,
-	Inter_600SemiBold,
-	Inter_700Bold,
-	useFonts,
-} from '@expo-google-fonts/inter'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { useFonts } from 'expo-font'
+import { isLiquidGlassAvailable } from 'expo-glass-effect'
 
 import { Stack } from 'expo-router'
-import { HeroUINativeProvider } from 'heroui-native'
-import { I18nextProvider } from 'react-i18next'
-import { ActivityIndicator, View } from 'react-native'
+import * as SplashScreen from 'expo-splash-screen'
+import { HeroUINativeProvider, useThemeColor } from 'heroui-native'
+import { useEffect } from 'react'
+import { I18nextProvider, useTranslation } from 'react-i18next'
+import { ActivityIndicator, Platform, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { FirstLaunchHandler } from '@/components/first-launch-handler'
-import { AppThemeProvider } from '@/contexts/app-theme-context'
+import { AppThemeProvider, useAppTheme } from '@/contexts/app-theme-context'
 import { DataServiceProvider } from '@/contexts/data-service-context'
 import { LocalModeProvider, useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { i18n } from '@/lib/i18n'
-
 import { queryClient } from '@/utils/orpc'
+
+SplashScreen.preventAutoHideAsync()
 
 export const unstable_settings = {
 	initialRouteName: '(auth)',
@@ -36,8 +34,17 @@ export const unstable_settings = {
  * - Supports local mode (skip login) for offline-first usage
  */
 function StackLayout() {
+	const { t } = useTranslation()
+	const { isDark } = useAppTheme()
 	const { data: session, isPending: isAuthPending } = authClient.useSession()
 	const { isLocalMode, isLoading: isLocalModeLoading } = useLocalMode()
+
+	const backgroundColor = useThemeColor('background')
+	const foregroundColor = useThemeColor('foreground')
+
+	// iOS 26+ Liquid Glass: 系统会自动应用玻璃效果
+	const isLiquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable()
+	const blurEffect = isDark ? 'dark' : 'light'
 
 	const isAuthenticated = !!session?.user
 	// User can access protected routes if authenticated OR in local mode
@@ -58,6 +65,36 @@ function StackLayout() {
 			<Stack.Protected guard={canAccessApp}>
 				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 				<Stack.Screen
+					name="profile"
+					options={{
+						title: t('nav.profile'),
+						headerTitleAlign: 'center',
+						// iOS 26 Liquid Glass: headerTransparent 让内容可以延伸到 header 下方
+						headerTransparent: true,
+						// 非 Liquid Glass 环境使用模糊效果
+						headerBlurEffect: isLiquidGlass ? undefined : blurEffect,
+						headerTintColor: foregroundColor,
+						headerTitleStyle: {
+							fontFamily: 'Inter_600SemiBold',
+						},
+						// 禁用 header 底部的阴影/分隔线
+						headerShadowVisible: false,
+						headerStyle: {
+							backgroundColor: Platform.select({
+								ios: undefined,
+								android: backgroundColor,
+							}),
+						},
+						headerBackButtonDisplayMode: 'generic',
+						gestureEnabled: true,
+						gestureDirection: 'horizontal',
+						fullScreenGestureEnabled: !isLiquidGlass,
+						contentStyle: {
+							backgroundColor,
+						},
+					}}
+				/>
+				<Stack.Screen
 					name="modal"
 					options={{ title: 'Modal', presentation: 'modal' }}
 				/>
@@ -72,14 +109,17 @@ function StackLayout() {
 }
 
 export default function Layout() {
-	const fonts = useFonts({
-		Inter_400Regular,
-		Inter_500Medium,
-		Inter_600SemiBold,
-		Inter_700Bold,
+	const [loaded, error] = useFonts({
+		LeckerliOne: require('@/assets/fonts/LeckerliOne.ttf'),
 	})
 
-	if (!fonts) {
+	useEffect(() => {
+		if (loaded || error) {
+			SplashScreen.hideAsync()
+		}
+	}, [loaded, error])
+
+	if (!(loaded || error)) {
 		return null
 	}
 
