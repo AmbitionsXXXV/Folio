@@ -64,6 +64,14 @@ function formatDate(date: Date | string | undefined): string {
 	}).format(d)
 }
 
+/**
+ * Format user No for display (e.g., 1 -> "00001")
+ */
+function formatUserNo(no: number | undefined | null): string {
+	if (no === undefined || no === null) return '-'
+	return no.toString().padStart(5, '0')
+}
+
 function ProfilePage() {
 	const { t, i18n } = useTranslation()
 	const { theme, setTheme } = useTheme()
@@ -115,7 +123,14 @@ function ProfilePage() {
 
 						{/* User Info */}
 						<div className="flex-1 text-center sm:text-left">
-							<h3 className="font-semibold text-xl">{user?.name}</h3>
+							<div className="flex items-center justify-center gap-2 sm:justify-start">
+								<h3 className="font-semibold text-xl">{user?.name}</h3>
+								{user?.no && user.no <= 50 && (
+									<span className="rounded bg-muted px-1.5 py-0.5 font-number font-semibold text-primary text-sm">
+										No.{formatUserNo(user.no)}
+									</span>
+								)}
+							</div>
 							<p className="mb-4 text-muted-foreground">{user?.email}</p>
 
 							<div className="space-y-2 text-sm">

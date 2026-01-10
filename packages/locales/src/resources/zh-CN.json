@@ -500,7 +500,7 @@
     "settings": "个人资料设置",
     "settingsDescription": "更新您的头像和个人信息。",
     "editProfile": "编辑资料",
-    "avatarHelp": "点击或拖拽图片上传。支持格式：JPEG、PNG、GIF、WebP。最大 20MB。",
+    "avatarHelp": "点击或拖拽图片上传。支持格式：JPEG、PNG、GIF、WebP。最大 3MB。",
     "accountInfo": "账户信息",
     "memberSince": "注册时间",
     "lastUpdated": "最后更新",

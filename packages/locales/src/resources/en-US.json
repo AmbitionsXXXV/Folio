@@ -500,7 +500,7 @@
     "settings": "Profile Settings",
     "settingsDescription": "Update your profile picture and information.",
     "editProfile": "Edit Profile",
-    "avatarHelp": "Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 20MB.",
+    "avatarHelp": "Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 3MB.",
     "accountInfo": "Account Information",
     "memberSince": "Member since",
     "lastUpdated": "Last updated",

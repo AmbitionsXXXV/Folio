@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.1.4
+
+### Patch Changes
+
+- add user number field and update avatar upload limits
+- Updated dependencies
+  - @folionote/db@0.1.4
+  - @folionote/transactional@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes

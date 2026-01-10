@@ -93,7 +93,7 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', tru
 | --------------- | --------------------------------------------------- |
 | Bucket Name     | `avatars`                                           |
 | Public          | Yes (for direct URL access)                         |
-| Max File Size   | 20MB (Supabase allows 50MB)                         |
+| Max File Size   | 3MB (Supabase allows 50MB)                          |
 | Allowed Types   | image/jpeg, image/png, image/gif, image/webp        |
 
 ## API Endpoints
@@ -164,8 +164,8 @@ Get upload configuration for client-side validation.
 ```typescript
 {
   allowedTypes: string[]  // ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-  maxSize: number         // 5242880 (5MB in bytes)
-  maxSizeMB: number       // 5
+  maxSize: number         // 3145728 (3MB in bytes)
+  maxSizeMB: number       // 3
 }
 ```
 
@@ -292,7 +292,7 @@ import {
 } from '@folionote/storage'
 
 console.log(STORAGE_BUCKETS.AVATARS)  // 'avatars'
-console.log(MAX_AVATAR_SIZE)           // 5242880 (5MB)
+console.log(MAX_AVATAR_SIZE)           // 3145728 (3MB)
 ```
 
 ## Troubleshooting
@@ -318,7 +318,7 @@ Ensure the file's MIME type is one of:
 
 ### File too large
 
-Maximum file size is 5MB. Consider compressing the image before upload or using a client-side image resizer.
+Maximum file size is 3MB. Consider compressing the image before upload or using a client-side image resizer.
 
 ### S3 Connection Error
 

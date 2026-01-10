@@ -1,5 +1,14 @@
 # native
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @folionote/locales@0.1.4
+  - @folionote/api@0.1.4
+  - @folionote/constants@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
