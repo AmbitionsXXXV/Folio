@@ -503,6 +503,7 @@
     "avatarHelp": "クリックまたはドラッグして画像をアップロードします。対応形式：JPEG、PNG、GIF、WebP。最大 3MB。",
     "accountInfo": "アカウント情報",
     "memberSince": "登録日",
+    "joined": "加入日",
     "joinedDays": "参加から <1>{{count}}</1> 日",
     "lastUpdated": "最終更新",
     "appearance": "外観",

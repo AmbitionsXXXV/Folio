@@ -96,7 +96,7 @@ export function useAvatarUpload(
 			})
 		},
 		onSuccess: (data) => {
-			toast.success(t('avatar.uploadSuccess', 'Avatar uploaded successfully'))
+			toast.success(t('avatar.uploadSuccess'))
 			setPreviewUrl(null)
 			onAvatarChange?.(data.imageUrl)
 			queryClient.invalidateQueries({ queryKey: ['session'] })
@@ -107,7 +107,7 @@ export function useAvatarUpload(
 				refetchRateLimit?.()
 			}
 			toast.error(
-				t('avatar.uploadError', 'Failed to upload avatar: {{message}}', {
+				t('avatar.uploadError', {
 					message: error.message,
 				})
 			)
@@ -135,7 +135,7 @@ export function useAvatarDelete(
 	const deleteMutation = useMutation({
 		mutationFn: () => client.storage.deleteAvatar(),
 		onSuccess: () => {
-			toast.success(t('avatar.deleteSuccess', 'Avatar deleted successfully'))
+			toast.success(t('avatar.deleteSuccess'))
 			onAvatarChange?.(null)
 			queryClient.invalidateQueries({ queryKey: ['session'] })
 			refetchRateLimit?.()
@@ -145,7 +145,7 @@ export function useAvatarDelete(
 				refetchRateLimit?.()
 			}
 			toast.error(
-				t('avatar.deleteError', 'Failed to delete avatar: {{message}}', {
+				t('avatar.deleteError', {
 					message: error.message,
 				})
 			)
@@ -196,7 +196,7 @@ export function useAvatarCropper(
 
 			uploadMutation.mutate(croppedFile)
 		} catch {
-			toast.error(t('avatar.cropError', 'Failed to crop image. Please try again.'))
+			toast.error(t('avatar.cropError'))
 		}
 	}, [
 		cropImageSrc,
@@ -252,20 +252,13 @@ export function useAvatarValidation() {
 			if (!config) return null
 
 			if (!ALLOWED_AVATAR_TYPES.includes(file.type as AllowedAvatarMimeType)) {
-				return t(
-					'avatar.invalidType',
-					'Invalid file type. Please use JPEG, PNG, GIF, or WebP.'
-				)
+				return t('avatar.invalidType')
 			}
 
 			if (file.size > config.maxSize) {
-				return t(
-					'avatar.fileTooLarge',
-					'File is too large. Maximum size is {{size}}MB.',
-					{
-						size: config.maxSizeMB,
-					}
-				)
+				return t('avatar.fileTooLarge', {
+					size: config.maxSizeMB,
+				})
 			}
 
 			return null
