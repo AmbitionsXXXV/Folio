@@ -36,22 +36,22 @@ function Slider({
 		>
 			<SliderPrimitive.Control
 				className={cn(
-					'cn-slider relative flex w-full touch-none select-none items-center data-vertical:h-full data-vertical:w-auto data-vertical:flex-col data-disabled:opacity-50',
+					'etc-slider relative flex w-full touch-none select-none items-center data-vertical:h-full data-vertical:w-auto data-vertical:flex-col data-disabled:opacity-50',
 					className
 				)}
 			>
 				<SliderPrimitive.Track
-					className="cn-slider-track relative select-none overflow-hidden"
+					className="etc-slider-track relative select-none overflow-hidden"
 					data-slot="slider-track"
 				>
 					<SliderPrimitive.Indicator
-						className="cn-slider-range select-none data-horizontal:h-full data-vertical:w-full"
+						className="etc-slider-range select-none data-horizontal:h-full data-vertical:w-full"
 						data-slot="slider-range"
 					/>
 				</SliderPrimitive.Track>
 				{Array.from({ length: _values.length }, (_, index) => (
 					<SliderPrimitive.Thumb
-						className="cn-slider-thumb block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
+						className="etc-slider-thumb block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
 						data-slot="slider-thumb"
 						key={`${index}-${_values[index]}`}
 					/>

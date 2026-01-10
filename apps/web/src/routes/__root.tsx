@@ -13,6 +13,7 @@ import { RootProvider } from 'fumadocs-ui/provider/tanstack'
 import { ThemeProvider } from 'next-themes'
 import { I18nextProvider, useTranslation } from 'react-i18next'
 import { CommandPalette } from '@/components/command-palette'
+import { RouterPendingIndicator } from '@/components/router-pending-indicator'
 import { Toaster } from '@/components/ui/sonner'
 import { CommandPaletteProvider } from '@/contexts/command-palette-context'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -100,6 +101,7 @@ function RootDocumentInner() {
 					disableTransitionOnChange
 					enableSystem
 				>
+					<RouterPendingIndicator />
 					<CommandPaletteProvider>
 						<Outlet />
 						<CommandPalette />

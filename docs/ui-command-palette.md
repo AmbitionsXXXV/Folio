@@ -1,6 +1,6 @@
 # 命令面板（cmdk）样式注意事项
 
-本项目的 Web 命令面板基于 `cmdk`，相关组件封装在 `apps/web/src/components/ui/command.tsx`，样式在 `apps/web/src/index.css`（以 `.cn-command-*` 作为命名空间）。
+本项目的 Web 命令面板基于 `cmdk`，相关组件封装在 `apps/web/src/components/ui/command.tsx`，样式在 `apps/web/src/index.css`（以 `.etc-command-*` 作为命名空间）。
 
 ## 选中态属性与 Tailwind 变体
 
@@ -12,15 +12,15 @@
 示例（来自 `apps/web/src/index.css` 的修正方向）：
 
 ```css
-.cn-command-item {
+.etc-command-item {
  @apply data-[selected=true]:bg-muted;
 }
 
-.cn-command-shortcut {
+.etc-command-shortcut {
  @apply group-data-[selected=true]/command-item:text-foreground;
 }
 ```
 
 ## 修复记录
 
-- 2025-12-21：将 `.cn-command-item` / `.cn-command-shortcut` 的选中态从 `data-selected:` / `group-data-selected:` 改为 `data-[selected=true]:` / `group-data-[selected=true]`，避免 `data-selected="false"` 误命中。
+- 2025-12-21：将 `.etc-command-item` / `.etc-command-shortcut` 的选中态从 `data-selected:` / `group-data-selected:` 改为 `data-[selected=true]:` / `group-data-[selected=true]`，避免 `data-selected="false"` 误命中。

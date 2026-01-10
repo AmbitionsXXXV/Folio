@@ -396,7 +396,7 @@ export function AvatarUploader({
 							{t('avatar.zoom', 'Zoom')}
 						</span>
 						<Slider
-							className="flex-1"
+							className="w-32"
 							max={AVATAR_CROPPER_MAX_ZOOM}
 							min={AVATAR_CROPPER_MIN_ZOOM}
 							onValueChange={(value) => {
@@ -411,7 +411,7 @@ export function AvatarUploader({
 						</span>
 					</div>
 
-					<DialogFooter className="gap-2 sm:gap-0">
+					<DialogFooter>
 						<Button onClick={handleCropCancel} type="button" variant="outline">
 							<HugeiconsIcon className="mr-2 size-4" icon={Cancel01Icon} />
 							{t('common.cancel', 'Cancel')}

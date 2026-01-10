@@ -510,7 +510,9 @@
     "deleteAccount": "删除账户",
     "deleteAccountDescription": "永久删除您的账户和所有相关数据。",
     "signOutAllDevices": "登出所有设备",
-    "signOutAllDevicesDescription": "从所有设备和会话中登出。"
+    "signOutAllDevicesDescription": "从所有设备和会话中登出。",
+    "signOutConfirmTitle": "退出登录",
+    "signOutConfirmDescription": "您确定要退出登录吗？再次访问账户时需要重新登录。"
   },
   "avatar": {
     "uploadSuccess": "头像上传成功",
