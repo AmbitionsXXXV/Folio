@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.1
+
+### Patch Changes
+
+- refactor: 📦 enhance avatar uploader component and localization updates
+- Updated dependencies
+  - @folionote/db@0.2.1
+  - @folionote/transactional@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

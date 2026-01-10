@@ -1,5 +1,15 @@
 # native
 
+## 0.2.1
+
+### Patch Changes
+
+- refactor: 📦 enhance avatar uploader component and localization updates
+- Updated dependencies
+  - @folionote/locales@0.2.1
+  - @folionote/api@0.2.1
+  - @folionote/constants@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

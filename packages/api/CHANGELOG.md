@@ -1,5 +1,16 @@
 # @folionote/api
 
+## 0.2.1
+
+### Patch Changes
+
+- refactor: 📦 enhance avatar uploader component and localization updates
+- Updated dependencies
+  - @folionote/locales@0.2.1
+  - @folionote/auth@0.2.1
+  - @folionote/db@0.2.1
+  - @folionote/storage@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

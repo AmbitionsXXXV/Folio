@@ -1,5 +1,11 @@
 # @folionote/locales
 
+## 0.2.1
+
+### Patch Changes
+
+- refactor: 📦 enhance avatar uploader component and localization updates
+
 ## 0.2.0
 
 ### Minor Changes
