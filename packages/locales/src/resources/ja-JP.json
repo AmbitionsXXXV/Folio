@@ -499,7 +499,7 @@
     "settings": "プロフィール設定",
     "settingsDescription": "プロフィール画像と情報を更新します。",
     "editProfile": "プロフィールを編集",
-    "avatarHelp": "クリックまたはドラッグして画像をアップロードします。対応形式：JPEG、PNG、GIF、WebP。最大5MB。",
+    "avatarHelp": "クリックまたはドラッグして画像をアップロードします。対応形式：JPEG、PNG、GIF、WebP。最大 3MB。",
     "accountInfo": "アカウント情報",
     "memberSince": "登録日",
     "lastUpdated": "最終更新",

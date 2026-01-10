@@ -21,10 +21,10 @@ export const ALLOWED_AVATAR_TYPES = [
 export type AllowedAvatarType = (typeof ALLOWED_AVATAR_TYPES)[number]
 
 /**
- * Maximum file size for avatars (20MB)
- * Note: Supabase has a 50MB limit, but we use 20MB for better UX
+ * Maximum file size for avatars (3MB)
+ * Note: Supabase has a 50MB limit, but we use 3MB for better UX
  */
-export const MAX_AVATAR_SIZE = 20 * 1024 * 1024
+export const MAX_AVATAR_SIZE = 3 * 1024 * 1024
 
 /**
  * Get the default S3 endpoint for local Supabase development

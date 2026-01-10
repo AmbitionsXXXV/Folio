@@ -98,6 +98,16 @@ export const auth = betterAuth({
 			verification,
 		},
 	}),
+	user: {
+		additionalFields: {
+			/** 用户编号，自动递增，用于展示 */
+			no: {
+				type: 'number',
+				required: false,
+				input: false,
+			},
+		},
+	},
 	trustedOrigins: [
 		...(trustedOrigins ?? []),
 		'http://localhost:3001',

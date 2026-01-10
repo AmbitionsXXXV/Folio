@@ -78,7 +78,7 @@ export function ProfileSettingsDialog({
 					<p className="text-center text-muted-foreground text-xs">
 						{t(
 							'profile.avatarHelp',
-							'Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB.'
+							'Click or drag an image to upload. Supported formats: JPEG, PNG, GIF, WebP. Max size: 3MB.'
 						)}
 					</p>
 				</div>

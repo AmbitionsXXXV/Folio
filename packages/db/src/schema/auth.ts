@@ -1,5 +1,12 @@
 import { relations } from 'drizzle-orm'
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import {
+	boolean,
+	index,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+} from 'drizzle-orm/pg-core'
 
 /**
  * user - 用户表
@@ -7,6 +14,8 @@ import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
  */
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
+	/** 用户编号，自动递增，用于展示 */
+	no: serial('no').notNull().unique(),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
 	emailVerified: boolean('email_verified').default(false).notNull(),

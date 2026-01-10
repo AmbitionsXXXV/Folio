@@ -9,10 +9,10 @@ VALUES (
   'avatars',
   'avatars',
   true,
-  20971520, -- 20MB (Supabase allows 50MB, we use 20MB for better UX)
+  3145728, -- 3MB (Supabase allows 50MB, we use 3MB for better UX)
   ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 )
 ON CONFLICT (id) DO UPDATE SET
   public = true,
-  file_size_limit = 20971520,
+  file_size_limit = 3145728,
   allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
