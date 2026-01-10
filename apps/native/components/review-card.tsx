@@ -1,3 +1,4 @@
+import { formatDate } from '@folionote/locales'
 import { Clock01Icon, PinIcon, StarIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { Card, useThemeColor } from 'heroui-native'
@@ -19,16 +20,8 @@ type ReviewCardProps = {
 	entry: Entry
 }
 
-function formatDate(date: Date): string {
-	return new Date(date).toLocaleDateString(undefined, {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-	})
-}
-
 export function ReviewCard({ entry }: ReviewCardProps) {
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 	const mutedColor = useThemeColor('muted')
 	const warningColor = useThemeColor('warning')
 	const accentColor = useThemeColor('accent')
@@ -73,7 +66,8 @@ export function ReviewCard({ entry }: ReviewCardProps) {
 			<View className="mt-4 flex-row items-center border-divider border-t pt-4">
 				<HugeiconsIcon color={mutedColor} icon={Clock01Icon} size={14} />
 				<Text className="ml-1 text-muted text-xs">
-					{t('entry.updatedAt')}: {formatDate(entry.updatedAt)}
+					{t('entry.updatedAt')}:{' '}
+					{formatDate(entry.updatedAt, { locale: i18n.language, preset: 'medium' })}
 				</Text>
 			</View>
 		</Card>

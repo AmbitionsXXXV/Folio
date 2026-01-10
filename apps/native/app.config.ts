@@ -9,11 +9,12 @@ const config: ExpoConfig = {
 	web: {
 		bundler: 'metro',
 	},
+	icon: './assets/images/icon.png',
 	name: 'FolioNote',
 	slug: 'folio-note',
 	version: pkg.version,
 	plugins: [
-		'expo-font',
+		['expo-font', { fonts: ['./assets/fonts/LeckerliOne.ttf'] }],
 		'expo-router',
 		'expo-web-browser',
 		'expo-notifications',
@@ -33,6 +34,7 @@ const config: ExpoConfig = {
 		reactCompiler: true,
 	},
 	ios: {
+		icon: './assets/images/icon.png',
 		bundleIdentifier: 'com.etcetera.folio-note',
 		infoPlist: {
 			ITSAppUsesNonExemptEncryption: false,

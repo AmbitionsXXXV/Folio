@@ -99,7 +99,7 @@ function getShareUrl(shareToken: string): string {
  */
 export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 	({ entryId, entryTitle }, ref) => {
-		const { t } = useTranslation()
+		const { t, i18n } = useTranslation()
 		const bottomSheetRef = useRef<BottomSheet>(null)
 
 		// Theme colors
@@ -220,15 +220,13 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 		)
 
 		// Format date
-		const formatDate = useCallback((dateStr: string) => {
-			const date = new Date(dateStr)
-			return new Intl.DateTimeFormat(undefined, {
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-			}).format(date)
-		}, [])
+		const formatDateStr = useCallback(
+			(dateStr: string) => {
+				const { formatDate } = require('@folionote/locales')
+				return formatDate(dateStr, { locale: i18n.language, preset: 'shortTime' })
+			},
+			[i18n.language]
+		)
 
 		// Check if expired
 		const isExpired = useCallback((expiresAt: string | null) => {
@@ -328,7 +326,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 															size={12}
 														/>
 														<Text className="text-muted text-xs">
-															{formatDate(share.expiresAt)}
+															{formatDateStr(share.expiresAt)}
 														</Text>
 													</View>
 												)}

@@ -1,3 +1,4 @@
+import { formatDate } from '@folionote/locales'
 import { PinIcon, StarIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useRouter } from 'expo-router'
@@ -24,28 +25,6 @@ type EntryCardProps = {
 	navigateOnPress?: boolean
 }
 
-function formatDate(date: Date): string {
-	const now = new Date()
-	const diff = now.getTime() - new Date(date).getTime()
-	const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-	if (days === 0) {
-		const hours = Math.floor(diff / (1000 * 60 * 60))
-		if (hours === 0) {
-			const minutes = Math.floor(diff / (1000 * 60))
-			return `${minutes}m ago`
-		}
-		return `${hours}h ago`
-	}
-	if (days === 1) {
-		return 'Yesterday'
-	}
-	if (days < 7) {
-		return `${days}d ago`
-	}
-	return new Date(date).toLocaleDateString()
-}
-
 function truncateText(text: string | null, maxLength: number): string {
 	if (!text) {
 		return ''
@@ -61,7 +40,7 @@ export function EntryCard({
 	onPress,
 	navigateOnPress = true,
 }: EntryCardProps) {
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 	const router = useRouter()
 	const warningColor = useThemeColor('warning')
 	const accentColor = useThemeColor('accent')
@@ -106,7 +85,10 @@ export function EntryCard({
 
 						<View className="flex-row items-center">
 							<Text className="text-muted text-xs">
-								{formatDate(entry.updatedAt)}
+								{formatDate(entry.updatedAt, {
+									locale: i18n.language,
+									preset: 'relative',
+								})}
 							</Text>
 						</View>
 					</View>

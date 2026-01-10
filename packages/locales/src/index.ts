@@ -109,3 +109,11 @@ export function parseAcceptLanguage(header: string | null): SupportedLanguage {
 
 // Export raw resources for backward compatibility
 export { enUS, jaJP, zhCN }
+
+// Export date formatting utilities
+export {
+	createDateFormatter,
+	type DateFormatPreset,
+	type FormatDateOptions,
+	formatDate,
+} from './date'

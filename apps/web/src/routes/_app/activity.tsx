@@ -1,3 +1,4 @@
+import { formatDate } from '@folionote/locales'
 import {
 	ArrowRight01Icon,
 	BookOpen01Icon,
@@ -27,17 +28,6 @@ function getGreetingKey(): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
 	if (hour < 12) return 'goodMorning'
 	if (hour < 18) return 'goodAfternoon'
 	return 'goodEvening'
-}
-
-/**
- * Format today's date
- */
-function formatDate(): string {
-	return new Intl.DateTimeFormat(undefined, {
-		weekday: 'long',
-		month: 'long',
-		day: 'numeric',
-	}).format(new Date())
 }
 
 type RecentEntriesEntry = {
@@ -100,7 +90,7 @@ function RecentEntriesContent({ entries, isLoading, t }: RecentEntriesContentPro
 }
 
 function ActivityPage() {
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
 	const { session } = Route.useRouteContext()
 	const tzOffset = getUserTimezoneOffset()
 
@@ -151,7 +141,12 @@ function ActivityPage() {
 				<h1 className="mb-1 font-bold text-2xl">
 					{t(`activity.${greetingKey}`, { name: session.user.name })}
 				</h1>
-				<p className="text-muted-foreground">{formatDate()}</p>
+				<p className="text-muted-foreground">
+					{formatDate(new Date(), {
+						locale: i18n.language,
+						options: { weekday: 'long', month: 'long', day: 'numeric' },
+					})}
+				</p>
 				{totalDue > 0 && (
 					<Link
 						className="mt-2 inline-flex items-center gap-1 text-primary text-sm hover:underline"
