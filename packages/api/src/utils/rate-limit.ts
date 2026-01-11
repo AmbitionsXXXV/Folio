@@ -4,7 +4,6 @@
 const ONE_SECOND_MS = 1000
 const ONE_MINUTE_MS = 60 * ONE_SECOND_MS
 const ONE_WEEK_MS = 7 * 24 * 60 * ONE_MINUTE_MS
-const RATE_LIMIT_CLEANUP_INTERVAL_MS = ONE_MINUTE_MS
 
 import {
 	type ErrorMap,
@@ -14,6 +13,7 @@ import {
 	type ORPCErrorConstructorMap,
 } from '@orpc/server'
 import type { Context } from '../context'
+import { getRedisClient } from './redis'
 
 /**
  * Rate limit configuration
@@ -28,7 +28,7 @@ export interface RateLimitConfig {
 }
 
 /**
- * Rate limit entry stored in memory
+ * Rate limit entry stored in Redis
  */
 interface RateLimitEntry {
 	count: number
@@ -52,74 +52,41 @@ export interface RateLimitStatus {
 }
 
 /**
- * In-memory rate limit store
- * In production, consider using Redis for distributed rate limiting
- */
-const rateLimitStore = new Map<string, RateLimitEntry>()
-let cleanupTimer: ReturnType<typeof setInterval> | null = null
-
-type IntervalTimer = ReturnType<typeof setInterval>
-
-function hasUnref(
-	timer: IntervalTimer
-): timer is IntervalTimer & { unref: () => void } {
-	return typeof (timer as unknown as { unref?: unknown }).unref === 'function'
-}
-
-function startCleanupTimer() {
-	if (cleanupTimer) return
-
-	cleanupTimer = setInterval(() => {
-		const now = Date.now()
-		for (const [key, entry] of rateLimitStore.entries()) {
-			if (entry.resetTime <= now) {
-				rateLimitStore.delete(key)
-			}
-		}
-	}, RATE_LIMIT_CLEANUP_INTERVAL_MS)
-
-	// Don't prevent Node.js from exiting
-	if (cleanupTimer && hasUnref(cleanupTimer)) {
-		cleanupTimer.unref()
-	}
-}
-
-// Start cleanup on module load
-startCleanupTimer()
-
-/**
  * Get the rate limit key for a user and action
  */
 function getRateLimitKey(keyPrefix: string, userId: string): string {
-	return `${keyPrefix}:${userId}`
+	return `ratelimit:${keyPrefix}:${userId}`
 }
 
 /**
- * Check and update rate limit for a user
+ * Check and update rate limit for a user (async version using Redis)
  * Returns the current status and whether the request should be allowed
  */
-export function checkRateLimit(
+export async function checkRateLimit(
 	keyPrefix: string,
 	userId: string,
 	config: RateLimitConfig
-): RateLimitStatus & { allowed: boolean } {
+): Promise<RateLimitStatus & { allowed: boolean }> {
+	const redis = getRedisClient()
 	const key = getRateLimitKey(keyPrefix, userId)
 	const now = Date.now()
 
-	let entry = rateLimitStore.get(key)
+	const entry = await redis.get<RateLimitEntry>(key)
 
 	// If no entry or window expired, create new entry
 	if (!entry || entry.resetTime <= now) {
-		entry = {
+		const newEntry: RateLimitEntry = {
 			count: 1,
 			resetTime: now + config.windowMs,
 		}
-		rateLimitStore.set(key, entry)
+		// Set with TTL (in seconds) for auto-expiration
+		const ttlSeconds = Math.ceil(config.windowMs / ONE_SECOND_MS)
+		await redis.set(key, newEntry, { ex: ttlSeconds })
 
 		return {
 			remaining: config.maxRequests - 1,
 			limit: config.maxRequests,
-			resetAt: entry.resetTime,
+			resetAt: newEntry.resetTime,
 			resetInMs: config.windowMs,
 			isLimited: false,
 			allowed: true,
@@ -138,12 +105,17 @@ export function checkRateLimit(
 		}
 	}
 
-	// Increment count
-	entry.count++
-	rateLimitStore.set(key, entry)
+	// Increment count and update entry
+	const updatedEntry: RateLimitEntry = {
+		count: entry.count + 1,
+		resetTime: entry.resetTime,
+	}
+	// Preserve TTL by calculating remaining time
+	const remainingTtlSeconds = Math.ceil((entry.resetTime - now) / ONE_SECOND_MS)
+	await redis.set(key, updatedEntry, { ex: remainingTtlSeconds })
 
 	return {
-		remaining: config.maxRequests - entry.count,
+		remaining: config.maxRequests - updatedEntry.count,
 		limit: config.maxRequests,
 		resetAt: entry.resetTime,
 		resetInMs: entry.resetTime - now,
@@ -153,17 +125,18 @@ export function checkRateLimit(
 }
 
 /**
- * Get current rate limit status without incrementing
+ * Get current rate limit status without incrementing (async version using Redis)
  */
-export function getRateLimitStatus(
+export async function getRateLimitStatus(
 	keyPrefix: string,
 	userId: string,
 	config: RateLimitConfig
-): RateLimitStatus {
+): Promise<RateLimitStatus> {
+	const redis = getRedisClient()
 	const key = getRateLimitKey(keyPrefix, userId)
 	const now = Date.now()
 
-	const entry = rateLimitStore.get(key)
+	const entry = await redis.get<RateLimitEntry>(key)
 
 	// If no entry or window expired
 	if (!entry || entry.resetTime <= now) {
@@ -241,7 +214,7 @@ export function createRateLimitMiddleware(
 		}
 
 		const userId = context.session.user.id
-		const status = checkRateLimit(config.keyPrefix, userId, config)
+		const status = await checkRateLimit(config.keyPrefix, userId, config)
 
 		if (!status.allowed) {
 			const retryAfterSeconds = Math.ceil(status.resetInMs / 1000)
@@ -274,18 +247,22 @@ export function createRateLimitMiddleware(
 }
 
 /**
- * For testing: clear all rate limit entries
+ * For testing: clear all rate limit entries in Redis
+ * WARNING: This clears ALL rate limit keys matching the pattern
  */
-export function clearRateLimits(): void {
-	rateLimitStore.clear()
-}
-
-/**
- * For testing: stop the cleanup timer
- */
-export function stopCleanupTimer(): void {
-	if (cleanupTimer) {
-		clearInterval(cleanupTimer)
-		cleanupTimer = null
-	}
+export async function clearRateLimits(): Promise<void> {
+	const redis = getRedisClient()
+	// Scan and delete all rate limit keys
+	let cursor = '0'
+	do {
+		const scanResult: [string, string[]] = await redis.scan(cursor, {
+			match: 'ratelimit:*',
+			count: 100,
+		})
+		cursor = scanResult[0]
+		const keys = scanResult[1]
+		if (keys.length > 0) {
+			await redis.del(...keys)
+		}
+	} while (cursor !== '0')
 }

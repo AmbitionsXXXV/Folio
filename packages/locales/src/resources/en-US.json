@@ -548,7 +548,7 @@
     "actionsDescription": "Choose an action for your avatar.",
     "reupload": "Update",
     "rateLimited": "Too many update attempts. Please try again later.",
-    "rateLimitedWait": "Update limit reached. Please wait {{value}} {{unit, plural, =1 {{{unit}}} other {{{unit}}s}}}.",
+    "rateLimitedWait": "Update limit reached. Please wait {{value}} {{unit}}.",
     "remainingUploads": "{{remaining}}/{{limit}} updates remaining",
     "timeUnit": {
       "second": "second",

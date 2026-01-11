@@ -231,7 +231,7 @@ export const getAvatarRateLimitStatus = protectedProcedure
 			action: RateLimitActionSchema,
 		})
 	)
-	.handler(({ context, input }) => {
+	.handler(async ({ context, input }) => {
 		const userId = context.session.user.id
 		const { action } = input
 
@@ -242,7 +242,7 @@ export const getAvatarRateLimitStatus = protectedProcedure
 		} as const
 
 		const config = configMap[action]
-		const status = getRateLimitStatus(config.keyPrefix, userId, config)
+		const status = await getRateLimitStatus(config.keyPrefix, userId, config)
 
 		return {
 			action,
@@ -257,26 +257,26 @@ export const getAvatarRateLimitStatus = protectedProcedure
  * Returns the remaining requests and reset time for all actions at once.
  */
 export const getAllAvatarRateLimitStatus = protectedProcedure.handler(
-	({ context }) => {
+	async ({ context }) => {
 		const userId = context.session.user.id
 
-		const uploadStatus = getRateLimitStatus(
-			RATE_LIMIT_CONFIGS.AVATAR_UPLOAD.keyPrefix,
-			userId,
-			RATE_LIMIT_CONFIGS.AVATAR_UPLOAD
-		)
-
-		const updateStatus = getRateLimitStatus(
-			RATE_LIMIT_CONFIGS.AVATAR_UPDATE.keyPrefix,
-			userId,
-			RATE_LIMIT_CONFIGS.AVATAR_UPDATE
-		)
-
-		const deleteStatus = getRateLimitStatus(
-			RATE_LIMIT_CONFIGS.AVATAR_DELETE.keyPrefix,
-			userId,
-			RATE_LIMIT_CONFIGS.AVATAR_DELETE
-		)
+		const [uploadStatus, updateStatus, deleteStatus] = await Promise.all([
+			getRateLimitStatus(
+				RATE_LIMIT_CONFIGS.AVATAR_UPLOAD.keyPrefix,
+				userId,
+				RATE_LIMIT_CONFIGS.AVATAR_UPLOAD
+			),
+			getRateLimitStatus(
+				RATE_LIMIT_CONFIGS.AVATAR_UPDATE.keyPrefix,
+				userId,
+				RATE_LIMIT_CONFIGS.AVATAR_UPDATE
+			),
+			getRateLimitStatus(
+				RATE_LIMIT_CONFIGS.AVATAR_DELETE.keyPrefix,
+				userId,
+				RATE_LIMIT_CONFIGS.AVATAR_DELETE
+			),
+		])
 
 		return {
 			upload: {
