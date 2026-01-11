@@ -1,5 +1,17 @@
 # server
 
+## 0.2.3
+
+### Patch Changes
+
+- feat: ✨ integrate Upstash Redis for rate limiting and add Redis client utility
+- Updated dependencies
+  - @folionote/locales@0.2.3
+  - @folionote/api@0.2.3
+  - @folionote/auth@0.2.3
+  - @folionote/db@0.2.3
+  - @folionote/storage@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes
