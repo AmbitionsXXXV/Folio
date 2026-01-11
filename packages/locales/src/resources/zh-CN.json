@@ -88,7 +88,8 @@
     "confirmDelete": "确认删除",
     "onThisPage": "本页目录",
     "tocPositionLeft": "左侧",
-    "tocPositionRight": "右侧"
+    "tocPositionRight": "右侧",
+    "permissionRequired": "需要权限"
   },
   "auth": {
     "signIn": "登录",
@@ -546,9 +547,16 @@
     "actions": "头像操作",
     "actionsDescription": "选择一个操作。",
     "reupload": "更新",
-    "rateLimited": "更新次数过多，请在 {{seconds}} 秒后重试。",
-    "rateLimitedWait": "已达到更新限制，请等待 {{seconds}} 秒。",
-    "remainingUploads": "剩余 {{remaining}}/{{limit}} 次更新"
+    "rateLimited": "更新次数过多，请稍后重试。",
+    "rateLimitedWait": "已达到更新限制，请等待 {{value}} {{unit}}。",
+    "remainingUploads": "剩余 {{remaining}}/{{limit}} 次更新",
+    "timeUnit": {
+      "second": "秒",
+      "minute": "分钟",
+      "hour": "小时",
+      "day": "天"
+    },
+    "permissionDenied": "请授予照片库访问权限以上传头像。"
   },
   "share": {
     "title": "分享",

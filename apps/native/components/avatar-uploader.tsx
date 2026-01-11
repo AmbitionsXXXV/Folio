@@ -6,6 +6,7 @@ import {
 	RATE_LIMIT_POLL_INTERVAL_NORMAL,
 	RATE_LIMIT_STALE_TIME,
 } from '@folionote/constants'
+import { formatTimeWithI18n } from '@folionote/utils'
 import {
 	Cancel01Icon,
 	Delete02Icon,
@@ -24,20 +25,11 @@ import {
 	PressableFeedback,
 	useThemeColor,
 } from 'heroui-native'
-import {
-	forwardRef,
-	useCallback,
-	useEffect,
-	useImperativeHandle,
-	useState,
-} from 'react'
+import { useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native'
 import { client } from '@/utils/orpc'
 
-/**
- * Allowed MIME types for avatar uploads
- */
 type AllowedAvatarMimeType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
 const ALLOWED_AVATAR_TYPES: readonly AllowedAvatarMimeType[] = [
@@ -48,33 +40,20 @@ const ALLOWED_AVATAR_TYPES: readonly AllowedAvatarMimeType[] = [
 ] as const
 
 type AvatarUploaderProps = {
-	/** Current avatar URL */
 	currentImageUrl?: string | null
-	/** User name for fallback display */
 	userName?: string
-	/** Callback when avatar is updated */
 	onAvatarChange?: (newUrl: string | null) => void
-	/** Additional class name */
 	className?: string
-	/** Size of the avatar (default: 48) */
 	size?: number
-	/** Disable direct press on avatar (use ref.openActionSheet instead) */
 	disableDirectPress?: boolean
+	ref?: React.Ref<AvatarUploaderRef>
 }
 
-/**
- * Ref handle for AvatarUploader component
- */
 export type AvatarUploaderRef = {
-	/** Open the action sheet programmatically */
 	openActionSheet: () => void
-	/** Trigger image picker directly */
 	pickImage: () => void
 }
 
-/**
- * Get initials from a name string
- */
 function getInitials(name?: string): string {
 	if (!name) return ''
 	return name
@@ -85,9 +64,6 @@ function getInitials(name?: string): string {
 		.slice(0, 2)
 }
 
-/**
- * Hook to manage avatar configuration
- */
 function useAvatarConfig() {
 	return useQuery({
 		queryKey: ['storage', 'avatarConfig'],
@@ -96,9 +72,6 @@ function useAvatarConfig() {
 	})
 }
 
-/**
- * Hook to manage rate limiting for avatar updates
- */
 function useAvatarRateLimit() {
 	const { data: rateLimitStatus, refetch: refetchRateLimit } = useQuery({
 		queryKey: ['storage', 'rateLimitStatus', 'update'],
@@ -106,10 +79,9 @@ function useAvatarRateLimit() {
 		staleTime: RATE_LIMIT_STALE_TIME,
 		refetchInterval: (query) => {
 			const data = query.state.data
-			if (data?.isLimited) {
-				return RATE_LIMIT_POLL_INTERVAL_LIMITED
-			}
-			return RATE_LIMIT_POLL_INTERVAL_NORMAL
+			return data?.isLimited
+				? RATE_LIMIT_POLL_INTERVAL_LIMITED
+				: RATE_LIMIT_POLL_INTERVAL_NORMAL
 		},
 	})
 
@@ -137,21 +109,15 @@ function useAvatarRateLimit() {
 		return () => clearInterval(interval)
 	}, [rateLimitStatus?.isLimited, rateLimitStatus?.resetAt, refetchRateLimit])
 
-	const isRateLimited = rateLimitStatus?.isLimited ?? false
-
 	return {
 		rateLimitStatus,
 		refetchRateLimit,
 		countdown,
-		isRateLimited,
+		isRateLimited: rateLimitStatus?.isLimited ?? false,
 	}
 }
 
-/**
- * Compress and resize image using expo-image-manipulator
- */
 async function compressImage(uri: string): Promise<{ uri: string; base64: string }> {
-	// Resize to target size and compress
 	const result = await ImageManipulator.manipulateAsync(
 		uri,
 		[{ resize: { width: AVATAR_TARGET_IMAGE_SIZE } }],
@@ -162,11 +128,9 @@ async function compressImage(uri: string): Promise<{ uri: string; base64: string
 		}
 	)
 
-	// Check if file is too large
 	if (result.base64) {
 		const sizeInBytes = (result.base64.length * 3) / 4
 		if (sizeInBytes > AVATAR_MAX_COMPRESSED_SIZE) {
-			// Try with lower quality
 			const lowerQualityResult = await ImageManipulator.manipulateAsync(
 				uri,
 				[{ resize: { width: AVATAR_TARGET_IMAGE_SIZE } }],
@@ -189,402 +153,471 @@ async function compressImage(uri: string): Promise<{ uri: string; base64: string
 	}
 }
 
-/**
- * Avatar uploader component for native app
- */
-export const AvatarUploader = forwardRef<AvatarUploaderRef, AvatarUploaderProps>(
-	function AvatarUploader(
-		{
-			currentImageUrl,
-			userName,
-			onAvatarChange,
-			className,
-			size = 48,
-			disableDirectPress = false,
-		},
-		ref
-	) {
-		const { t } = useTranslation()
-		const queryClient = useQueryClient()
-		const [actionSheetVisible, setActionSheetVisible] = useState(false)
-		const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+function useAvatarUpload(
+	onAvatarChange?: (newUrl: string | null) => void,
+	refetchRateLimit?: () => void
+) {
+	const { t } = useTranslation()
+	const queryClient = useQueryClient()
 
-		const accentColor = useThemeColor('accent')
-		const foregroundColor = useThemeColor('foreground')
-		const mutedColor = useThemeColor('muted')
-		const dangerColor = useThemeColor('danger')
-		const warningColor = useThemeColor('warning')
-
-		// Rate limiting
-		const { rateLimitStatus, refetchRateLimit, countdown, isRateLimited } =
-			useAvatarRateLimit()
-
-		// Avatar config
-		const { data: config } = useAvatarConfig()
-
-		// Upload mutation
-		const uploadMutation = useMutation({
-			mutationFn: ({
-				base64,
+	return useMutation({
+		mutationFn: ({
+			base64,
+			contentType,
+		}: {
+			base64: string
+			contentType: AllowedAvatarMimeType
+		}) =>
+			client.storage.updateAvatar({
+				fileData: base64,
 				contentType,
-			}: {
-				base64: string
-				contentType: AllowedAvatarMimeType
-			}) =>
-				client.storage.updateAvatar({
-					fileData: base64,
-					contentType,
-					filename: 'avatar.jpg',
-				}),
-			onSuccess: (data) => {
-				setPreviewUrl(null)
-				onAvatarChange?.(data.imageUrl)
-				queryClient.invalidateQueries({ queryKey: ['session'] })
-				refetchRateLimit()
-				Alert.alert(
-					t('avatar.success', 'Success'),
-					t('avatar.uploadSuccess', 'Avatar uploaded successfully')
-				)
-			},
-			onError: (error) => {
-				if (error.message.includes('Rate limit')) {
-					refetchRateLimit()
-				}
-				setPreviewUrl(null)
-				Alert.alert(
-					t('common.error', 'Error'),
-					t('avatar.uploadError', 'Failed to upload avatar: {{message}}', {
-						message: error.message,
-					})
-				)
-			},
-		})
-
-		// Delete mutation
-		const deleteMutation = useMutation({
-			mutationFn: () => client.storage.deleteAvatar(),
-			onSuccess: () => {
-				onAvatarChange?.(null)
-				queryClient.invalidateQueries({ queryKey: ['session'] })
-				refetchRateLimit()
-				Alert.alert(
-					t('avatar.success', 'Success'),
-					t('avatar.deleteSuccess', 'Avatar deleted successfully')
-				)
-			},
-			onError: (error) => {
-				if (error.message.includes('Rate limit')) {
-					refetchRateLimit()
-				}
-				Alert.alert(
-					t('common.error', 'Error'),
-					t('avatar.deleteError', 'Failed to delete avatar: {{message}}', {
-						message: error.message,
-					})
-				)
-			},
-		})
-
-		const isLoading = uploadMutation.isPending || deleteMutation.isPending
-		const displayUrl = previewUrl ?? currentImageUrl
-
-		// Validate file
-		const validateFile = useCallback(
-			(mimeType: string, fileSize: number): string | null => {
-				if (!config) return null
-
-				if (!ALLOWED_AVATAR_TYPES.includes(mimeType as AllowedAvatarMimeType)) {
-					return t(
-						'avatar.invalidType',
-						'Invalid file type. Please use JPEG, PNG, GIF, or WebP.'
-					)
-				}
-
-				if (fileSize > config.maxSize) {
-					return t(
-						'avatar.fileTooLarge',
-						'File is too large. Maximum size is {{size}}MB.',
-						{ size: config.maxSizeMB }
-					)
-				}
-
-				return null
-			},
-			[config, t]
-		)
-
-		// Pick image from library
-		const pickImage = useCallback(async () => {
-			if (isRateLimited) {
-				const seconds =
-					countdown ?? Math.ceil((rateLimitStatus?.resetInMs ?? 0) / 1000)
-				Alert.alert(
-					t('avatar.rateLimited', 'Rate Limited'),
-					t('avatar.rateLimitedWait', { seconds })
-				)
-				return
-			}
-
-			// Close bottom sheet before launching image picker
-			setActionSheetVisible(false)
-
-			const permissionResult =
-				await ImagePicker.requestMediaLibraryPermissionsAsync()
-			if (!permissionResult.granted) {
-				Alert.alert(
-					t('common.permissionRequired', 'Permission Required'),
-					t(
-						'avatar.permissionDenied',
-						'Please grant photo library access to upload an avatar.'
-					)
-				)
-				return
-			}
-
-			const result = await ImagePicker.launchImageLibraryAsync({
-				mediaTypes: ['images'],
-				allowsEditing: true,
-				aspect: [1, 1],
-				quality: 1,
-			})
-
-			if (result.canceled || !result.assets[0]) {
-				return
-			}
-
-			const asset = result.assets[0]
-
-			// Validate file type
-			const mimeType = asset.mimeType ?? 'image/jpeg'
-			const fileInfo = await FileSystem.getInfoAsync(asset.uri)
-			const fileSize = fileInfo.exists ? (fileInfo.size ?? 0) : 0
-
-			const error = validateFile(mimeType, fileSize)
-			if (error) {
-				Alert.alert(t('common.error'), error)
-				return
-			}
-
-			// Show preview
-			setPreviewUrl(asset.uri)
-
-			// Compress and upload
-			try {
-				const compressed = await compressImage(asset.uri)
-				uploadMutation.mutate({
-					base64: compressed.base64,
-					contentType: 'image/jpeg',
-				})
-			} catch {
-				setPreviewUrl(null)
-				Alert.alert(t('common.error'), t('avatar.compressError'))
-			}
-		}, [
-			isRateLimited,
-			countdown,
-			rateLimitStatus?.resetInMs,
-			t,
-			validateFile,
-			uploadMutation,
-		])
-
-		// Handle delete
-		const handleDelete = useCallback(() => {
-			setActionSheetVisible(false)
-			Alert.alert(t('avatar.deleteTitle'), t('avatar.deleteConfirmation'), [
-				{
-					text: t('common.cancel'),
-					style: 'cancel',
-				},
-				{
-					text: t('avatar.delete'),
-					style: 'destructive',
-					onPress: () => deleteMutation.mutate(),
-				},
-			])
-		}, [t, deleteMutation])
-
-		// Handle avatar press
-		const handlePress = useCallback(() => {
-			if (isLoading || disableDirectPress) return
-
-			if (displayUrl) {
-				setActionSheetVisible(true)
-			} else {
-				pickImage()
-			}
-		}, [isLoading, disableDirectPress, displayUrl, pickImage])
-
-		// Expose methods via ref
-		useImperativeHandle(
-			ref,
-			() => ({
-				openActionSheet: () => {
-					if (!isLoading) {
-						setActionSheetVisible(true)
-					}
-				},
-				pickImage: () => {
-					if (!isLoading) {
-						pickImage()
-					}
-				},
+				filename: 'avatar.jpg',
 			}),
-			[isLoading, pickImage]
-		)
+		onSuccess: (data) => {
+			onAvatarChange?.(data.imageUrl)
+			queryClient.invalidateQueries({ queryKey: ['session'] })
+			refetchRateLimit?.()
+			Alert.alert(
+				t('avatar.success', 'Success'),
+				t('avatar.uploadSuccess', 'Avatar uploaded successfully')
+			)
+		},
+		onError: (error) => {
+			if (error.message.includes('Rate limit')) {
+				refetchRateLimit?.()
+			}
+			Alert.alert(
+				t('common.error', 'Error'),
+				t('avatar.uploadError', 'Failed to upload avatar: {{message}}', {
+					message: error.message,
+				})
+			)
+		},
+	})
+}
 
-		return (
-			<View className={cn('items-center', className)}>
-				<Pressable
-					disabled={isLoading}
-					onPress={handlePress}
-					style={{
-						width: size,
-						height: size,
-						borderRadius: size / 2,
-						overflow: 'hidden',
-					}}
+function useAvatarDelete(
+	onAvatarChange?: (newUrl: string | null) => void,
+	refetchRateLimit?: () => void
+) {
+	const { t } = useTranslation()
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: () => client.storage.deleteAvatar(),
+		onSuccess: () => {
+			onAvatarChange?.(null)
+			queryClient.invalidateQueries({ queryKey: ['session'] })
+			refetchRateLimit?.()
+			Alert.alert(
+				t('avatar.success', 'Success'),
+				t('avatar.deleteSuccess', 'Avatar deleted successfully')
+			)
+		},
+		onError: (error) => {
+			if (error.message.includes('Rate limit')) {
+				refetchRateLimit?.()
+			}
+			Alert.alert(
+				t('common.error', 'Error'),
+				t('avatar.deleteError', 'Failed to delete avatar: {{message}}', {
+					message: error.message,
+				})
+			)
+		},
+	})
+}
+
+export function AvatarUploader({
+	currentImageUrl,
+	userName,
+	onAvatarChange,
+	className,
+	size = 48,
+	disableDirectPress = false,
+	ref,
+}: AvatarUploaderProps): React.ReactElement {
+	const { t } = useTranslation()
+	const [actionSheetVisible, setActionSheetVisible] = useState(false)
+	const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+	const accentColor = useThemeColor('accent')
+	const foregroundColor = useThemeColor('foreground')
+	const mutedColor = useThemeColor('muted')
+	const dangerColor = useThemeColor('danger')
+	const warningColor = useThemeColor('warning')
+
+	const { rateLimitStatus, refetchRateLimit, countdown, isRateLimited } =
+		useAvatarRateLimit()
+	const { data: config } = useAvatarConfig()
+
+	const uploadMutation = useAvatarUpload(onAvatarChange, refetchRateLimit)
+	const deleteMutation = useAvatarDelete(onAvatarChange, refetchRateLimit)
+
+	const isLoading = uploadMutation.isPending || deleteMutation.isPending
+	const displayUrl = previewUrl ?? currentImageUrl
+
+	const getFormattedRateLimit = useCallback((): {
+		value: number
+		unit: string
+	} => {
+		const seconds =
+			countdown !== null
+				? countdown
+				: Math.ceil((rateLimitStatus?.resetInMs ?? 0) / 1000)
+		return formatTimeWithI18n(seconds, t, { maxUnit: 'hour' })
+	}, [countdown, rateLimitStatus?.resetInMs, t])
+
+	const validateFile = useCallback(
+		(mimeType: string, fileSize: number): string | null => {
+			if (!config) return null
+
+			if (!ALLOWED_AVATAR_TYPES.includes(mimeType as AllowedAvatarMimeType)) {
+				return t('avatar.invalidType')
+			}
+
+			if (fileSize > config.maxSize) {
+				return t('avatar.fileTooLarge', { size: config.maxSizeMB })
+			}
+
+			return null
+		},
+		[config, t]
+	)
+
+	const pickImage = useCallback(async () => {
+		if (isRateLimited) {
+			const { value, unit } = getFormattedRateLimit()
+			Alert.alert(
+				t('avatar.rateLimited'),
+				t('avatar.rateLimitedWait', { value, unit })
+			)
+			return
+		}
+
+		setActionSheetVisible(false)
+
+		const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+		if (!permissionResult.granted) {
+			Alert.alert(t('common.permissionRequired'), t('avatar.permissionDenied'))
+			return
+		}
+
+		const result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ['images'],
+			allowsEditing: true,
+			aspect: [1, 1],
+			quality: 1,
+		})
+
+		if (result.canceled || !result.assets[0]) {
+			return
+		}
+
+		const asset = result.assets[0]
+		const mimeType = asset.mimeType ?? 'image/jpeg'
+		const fileInfo = await FileSystem.getInfoAsync(asset.uri)
+		const fileSize = fileInfo.exists ? (fileInfo.size ?? 0) : 0
+
+		const error = validateFile(mimeType, fileSize)
+		if (error) {
+			Alert.alert(t('common.error'), error)
+			return
+		}
+
+		setPreviewUrl(asset.uri)
+
+		try {
+			const compressed = await compressImage(asset.uri)
+			uploadMutation.mutate({
+				base64: compressed.base64,
+				contentType: 'image/jpeg',
+			})
+		} catch {
+			setPreviewUrl(null)
+			Alert.alert(t('common.error'), t('avatar.compressError'))
+		}
+	}, [isRateLimited, getFormattedRateLimit, t, validateFile, uploadMutation])
+
+	const handleDelete = useCallback(() => {
+		setActionSheetVisible(false)
+		Alert.alert(t('avatar.deleteTitle'), t('avatar.deleteConfirmation'), [
+			{ text: t('common.cancel'), style: 'cancel' },
+			{
+				text: t('avatar.delete'),
+				style: 'destructive',
+				onPress: () => deleteMutation.mutate(),
+			},
+		])
+	}, [t, deleteMutation])
+
+	const handlePress = useCallback(() => {
+		if (isLoading || disableDirectPress) return
+
+		if (displayUrl) {
+			setActionSheetVisible(true)
+		} else {
+			pickImage()
+		}
+	}, [isLoading, disableDirectPress, displayUrl, pickImage])
+
+	const closeActionSheet = useCallback(() => {
+		setActionSheetVisible(false)
+	}, [])
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			openActionSheet: () => {
+				if (!isLoading) setActionSheetVisible(true)
+			},
+			pickImage: () => {
+				if (!isLoading) pickImage()
+			},
+		}),
+		[isLoading, pickImage]
+	)
+
+	// Reset preview on successful upload
+	useEffect(() => {
+		if (uploadMutation.isSuccess) {
+			setPreviewUrl(null)
+		}
+	}, [uploadMutation.isSuccess])
+
+	// Reset preview on error
+	useEffect(() => {
+		if (uploadMutation.isError) {
+			setPreviewUrl(null)
+		}
+	}, [uploadMutation.isError])
+
+	const borderRadius = size / 2
+
+	return (
+		<View className={cn('items-center', className)}>
+			<Pressable
+				disabled={isLoading}
+				onPress={handlePress}
+				style={{
+					width: size,
+					height: size,
+					borderRadius,
+					overflow: 'hidden',
+				}}
+			>
+				<Avatar
+					alt={userName ?? 'User avatar'}
+					color="accent"
+					style={{ width: size, height: size }}
 				>
-					<Avatar
-						alt={userName ?? 'User avatar'}
-						color="accent"
-						style={{
-							width: size,
-							height: size,
-						}}
+					{displayUrl && <Avatar.Image source={{ uri: displayUrl }} />}
+					<Avatar.Fallback>
+						{userName ? getInitials(userName) : undefined}
+					</Avatar.Fallback>
+				</Avatar>
+
+				{isLoading && (
+					<View
+						className="absolute inset-0 items-center justify-center bg-black/50"
+						style={{ borderRadius }}
 					>
-						{displayUrl && <Avatar.Image source={{ uri: displayUrl }} />}
-						<Avatar.Fallback>
-							{userName ? getInitials(userName) : undefined}
-						</Avatar.Fallback>
-					</Avatar>
+						<ActivityIndicator color="white" size="small" />
+					</View>
+				)}
+			</Pressable>
 
-					{/* Loading overlay */}
-					{isLoading && (
-						<View
-							className="absolute inset-0 items-center justify-center bg-black/50"
-							style={{ borderRadius: size / 2 }}
-						>
-							<ActivityIndicator color="white" size="small" />
+			<BottomSheet isOpen={actionSheetVisible} onOpenChange={setActionSheetVisible}>
+				<BottomSheet.Portal>
+					<BottomSheet.Overlay />
+					<BottomSheet.Content>
+						<BottomSheet.Title className="mb-4 text-center font-semibold text-lg">
+							{t('avatar.actions')}
+						</BottomSheet.Title>
+
+						<RateLimitWarning
+							countdown={countdown}
+							isRateLimited={isRateLimited}
+							warningColor={warningColor}
+						/>
+
+						<RateLimitStatus
+							isRateLimited={isRateLimited}
+							mutedColor={mutedColor}
+							rateLimitStatus={rateLimitStatus}
+						/>
+
+						<View className="gap-2">
+							<UploadButton
+								accentColor={accentColor}
+								foregroundColor={foregroundColor}
+								isRateLimited={isRateLimited}
+								mutedColor={mutedColor}
+								onPress={pickImage}
+							/>
+
+							{displayUrl && (
+								<DeleteButton dangerColor={dangerColor} onPress={handleDelete} />
+							)}
 						</View>
-					)}
-				</Pressable>
 
-				{/* Action Bottom Sheet */}
-				<BottomSheet
-					isOpen={actionSheetVisible}
-					onOpenChange={setActionSheetVisible}
-				>
-					<BottomSheet.Portal>
-						<BottomSheet.Overlay />
-						<BottomSheet.Content>
-							<BottomSheet.Title className="mb-4 text-center font-semibold text-lg">
-								{t('avatar.actions', 'Avatar Actions')}
-							</BottomSheet.Title>
+						<CancelButton
+							foregroundColor={foregroundColor}
+							mutedColor={mutedColor}
+							onPress={closeActionSheet}
+						/>
+					</BottomSheet.Content>
+				</BottomSheet.Portal>
+			</BottomSheet>
+		</View>
+	)
+}
 
-							{/* Rate limit warning */}
-							{isRateLimited && countdown !== null && (
-								<View className="mb-4 flex-row items-center gap-2 rounded-lg bg-warning/10 p-3">
-									<HugeiconsIcon color={warningColor} icon={Time02Icon} size={16} />
-									<Text className="flex-1 text-foreground text-sm">
-										{t(
-											'avatar.rateLimitedWait',
-											'Update limit reached. Please wait {{seconds}}s.',
-											{ seconds: countdown }
-										)}
-									</Text>
-								</View>
-							)}
+type RateLimitWarningProps = {
+	isRateLimited: boolean
+	countdown: number | null
+	warningColor: string
+}
 
-							{/* Rate limit status */}
-							{rateLimitStatus && !isRateLimited && (
-								<View className="mb-4 flex-row items-center gap-2">
-									<HugeiconsIcon color={mutedColor} icon={Time02Icon} size={14} />
-									<Text className="text-muted text-xs">
-										{t(
-											'avatar.remainingUploads',
-											'{{remaining}}/{{limit}} updates remaining',
-											{
-												remaining: rateLimitStatus.remaining,
-												limit: rateLimitStatus.limit,
-											}
-										)}
-									</Text>
-								</View>
-							)}
+function RateLimitWarning({
+	isRateLimited,
+	countdown,
+	warningColor,
+}: RateLimitWarningProps): React.ReactElement | null {
+	const { t } = useTranslation()
 
-							<View className="gap-2">
-								{/* Upload new */}
-								<PressableFeedback
-									className="flex-row items-center rounded-xl px-4 py-3"
-									isDisabled={isRateLimited}
-									onPress={pickImage}
-									style={{
-										backgroundColor: `${mutedColor}10`,
-										opacity: isRateLimited ? 0.5 : 1,
-									}}
-								>
-									<PressableFeedback.Highlight />
-									<HugeiconsIcon
-										color={accentColor}
-										icon={ImageUploadIcon}
-										size={20}
-									/>
-									<Text
-										className="ml-3 flex-1 font-medium"
-										style={{ color: foregroundColor }}
-									>
-										{t('avatar.reupload', 'Upload New')}
-									</Text>
-								</PressableFeedback>
+	if (!isRateLimited || countdown === null) return null
 
-								{/* Delete */}
-								{displayUrl && (
-									<PressableFeedback
-										className="flex-row items-center rounded-xl px-4 py-3"
-										onPress={handleDelete}
-										style={{ backgroundColor: `${dangerColor}10` }}
-									>
-										<PressableFeedback.Highlight />
-										<HugeiconsIcon
-											color={dangerColor}
-											icon={Delete02Icon}
-											size={20}
-										/>
-										<Text className="ml-3 flex-1 font-medium text-danger">
-											{t('avatar.delete', 'Delete')}
-										</Text>
-									</PressableFeedback>
-								)}
-							</View>
+	const { value, unit } = formatTimeWithI18n(countdown, t, { maxUnit: 'hour' })
 
-							{/* Cancel button */}
-							<View className="mt-4">
-								<PressableFeedback
-									className="items-center rounded-xl py-3"
-									onPress={() => setActionSheetVisible(false)}
-									style={{ backgroundColor: `${mutedColor}20` }}
-								>
-									<PressableFeedback.Highlight />
-									<HugeiconsIcon
-										color={foregroundColor}
-										icon={Cancel01Icon}
-										size={18}
-									/>
-									<Text
-										className="ml-2 font-medium"
-										style={{ color: foregroundColor }}
-									>
-										{t('common.cancel', 'Cancel')}
-									</Text>
-								</PressableFeedback>
-							</View>
-						</BottomSheet.Content>
-					</BottomSheet.Portal>
-				</BottomSheet>
-			</View>
-		)
-	}
-)
+	return (
+		<View className="mb-4 flex-row items-center gap-2 rounded-lg bg-warning/10 p-3">
+			<HugeiconsIcon color={warningColor} icon={Time02Icon} size={16} />
+			<Text className="flex-1 text-foreground text-sm">
+				{t('avatar.rateLimitedWait', { value, unit })}
+			</Text>
+		</View>
+	)
+}
+
+type RateLimitStatusProps = {
+	rateLimitStatus?: { remaining: number; limit: number; isLimited: boolean } | null
+	isRateLimited: boolean
+	mutedColor: string
+}
+
+function RateLimitStatus({
+	rateLimitStatus,
+	isRateLimited,
+	mutedColor,
+}: RateLimitStatusProps): React.ReactElement | null {
+	const { t } = useTranslation()
+
+	if (!rateLimitStatus || isRateLimited) return null
+
+	return (
+		<View className="mb-4 flex-row items-center gap-2">
+			<HugeiconsIcon color={mutedColor} icon={Time02Icon} size={14} />
+			<Text className="text-muted text-xs">
+				{t('avatar.remainingUploads', {
+					remaining: rateLimitStatus.remaining,
+					limit: rateLimitStatus.limit,
+				})}
+			</Text>
+		</View>
+	)
+}
+
+type UploadButtonProps = {
+	isRateLimited: boolean
+	onPress: () => void
+	mutedColor: string
+	accentColor: string
+	foregroundColor: string
+}
+
+function UploadButton({
+	isRateLimited,
+	onPress,
+	mutedColor,
+	accentColor,
+	foregroundColor,
+}: UploadButtonProps): React.ReactElement {
+	const { t } = useTranslation()
+
+	return (
+		<PressableFeedback
+			className="flex-row items-center rounded-xl px-4 py-3"
+			isDisabled={isRateLimited}
+			onPress={onPress}
+			style={{
+				backgroundColor: `${mutedColor}10`,
+				opacity: isRateLimited ? 0.5 : 1,
+			}}
+		>
+			<PressableFeedback.Highlight />
+			<HugeiconsIcon color={accentColor} icon={ImageUploadIcon} size={20} />
+			<Text className="ml-3 flex-1 font-medium" style={{ color: foregroundColor }}>
+				{t('avatar.reupload')}
+			</Text>
+		</PressableFeedback>
+	)
+}
+
+type DeleteButtonProps = {
+	onPress: () => void
+	dangerColor: string
+}
+
+function DeleteButton({
+	onPress,
+	dangerColor,
+}: DeleteButtonProps): React.ReactElement {
+	const { t } = useTranslation()
+
+	return (
+		<PressableFeedback
+			className="flex-row items-center rounded-xl px-4 py-3"
+			onPress={onPress}
+			style={{ backgroundColor: `${dangerColor}10` }}
+		>
+			<PressableFeedback.Highlight />
+			<HugeiconsIcon color={dangerColor} icon={Delete02Icon} size={20} />
+			<Text className="ml-3 flex-1 font-medium text-danger">
+				{t('avatar.delete')}
+			</Text>
+		</PressableFeedback>
+	)
+}
+
+type CancelButtonProps = {
+	onPress: () => void
+	mutedColor: string
+	foregroundColor: string
+}
+
+function CancelButton({
+	onPress,
+	mutedColor,
+	foregroundColor,
+}: CancelButtonProps): React.ReactElement {
+	const { t } = useTranslation()
+
+	return (
+		<View className="mt-4">
+			<PressableFeedback
+				className="items-center rounded-xl py-3"
+				onPress={onPress}
+				style={{ backgroundColor: `${mutedColor}20` }}
+			>
+				<PressableFeedback.Highlight />
+				<HugeiconsIcon color={foregroundColor} icon={Cancel01Icon} size={18} />
+				<Text className="ml-2 font-medium" style={{ color: foregroundColor }}>
+					{t('common.cancel')}
+				</Text>
+			</PressableFeedback>
+		</View>
+	)
+}
 
 export default AvatarUploader

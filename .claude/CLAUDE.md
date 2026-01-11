@@ -12,58 +12,58 @@ FolioNote is a cross-platform personal learning system for capturing, organizing
 
 ```bash
 # Install dependencies
-bun install
+pnpm install
 
 # Start all apps in development
-bun run dev
+pnpm run dev
 
 # Build all apps
-bun run build
+pnpm run build
 
 # Type checking across all apps
-bun run check-types
+pnpm run check-types
 
 # Format and lint code
-bun run check           # Check for issues
-bun x ultracite fix     # Auto-fix issues
+pnpm run check           # Check for issues
+pnpm x ultracite fix     # Auto-fix issues
 ```
 
 ### Individual App Development
 
 ```bash
 # Web app only (TanStack Start)
-bun run dev:web
+pnpm run dev:web
 
 # Server only (Hono)
-bun run dev:server
+pnpm run dev:server
 
 # Mobile app only (Expo)
-bun run dev:native
+pnpm run dev:native
 ```
 
 ### Database Management
 
 ```bash
 # Push schema changes to database
-bun run db:push
+pnpm run db:push
 
 # Generate migration files
-bun run db:generate
+pnpm run db:generate
 
 # Run migrations
-bun run db:migrate
+pnpm run db:migrate
 
 # Open Drizzle Studio (database UI)
-bun run db:studio
+pnpm run db:studio
 
 # Docker PostgreSQL management
-bun run db:start:docker
-bun run db:stop:docker
+pnpm run db:start:docker
+pnpm run db:stop:docker
 
 # Local PostgreSQL management
-bun run db:init:local
-bun run db:start:local
-bun run db:stop:local
+pnpm run db:init:local
+pnpm run db:start:local
+pnpm run db:stop:local
 ```
 
 ## Architecture Overview
@@ -181,11 +181,11 @@ CORS_ORIGIN="http://localhost:3001"
 1. Define schema in `packages/db/src/schema/`
 2. Export from `packages/db/src/index.ts`
 3. Add to drizzle client schema object
-4. Run `bun run db:push` to sync to database
+4. Run `pnpm run db:push` to sync to database
 
 ### Code Quality
 
-This project uses **Ultracite** (Biome preset) for formatting and linting. Run `bun x ultracite fix` before committing. See the code standards section below for details.
+This project uses **Ultracite** (Biome preset) for formatting and linting. Run `pnpm x ultracite fix` before committing. See the code standards section below for details.
 
 ---
 
@@ -195,9 +195,9 @@ This project uses **Ultracite**, a zero-config Biome preset that enforces strict
 
 ## Quick Reference
 
-- **Format code**: `bun x ultracite fix`
-- **Check for issues**: `bun x ultracite check`
-- **Diagnose setup**: `bun x ultracite doctor`
+- **Format code**: `pnpm x ultracite fix`
+- **Check for issues**: `pnpm x ultracite check`
+- **Diagnose setup**: `pnpm x ultracite doctor`
 
 Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
 
@@ -316,4 +316,4 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 
 ---
 
-Most formatting and common issues are automatically fixed by Biome. Run `bun x ultracite fix` before committing to ensure compliance.
+Most formatting and common issues are automatically fixed by Biome. Run `pnpm x ultracite fix` before committing to ensure compliance.

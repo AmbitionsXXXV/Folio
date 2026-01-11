@@ -1,3 +1,4 @@
+import { getTzOffset } from '@folionote/utils'
 import {
 	Cancel01Icon,
 	CheckmarkCircle02Icon,
@@ -20,7 +21,6 @@ import { ReviewCard } from '@/components/review-card'
 import { ReviewRatingButtons } from '@/components/review-rating-buttons'
 import { ReviewRuleCard } from '@/components/review-rule-card'
 import { useDataServiceContext } from '@/contexts/data-service-context'
-import { getTzOffset } from '@/utils/time'
 
 type ReviewRule = 'due' | 'new' | 'starred' | 'unreviewed' | 'all'
 type Rating = 'again' | 'hard' | 'good' | 'easy'

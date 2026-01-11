@@ -37,7 +37,8 @@
     "confirmDelete": "Confirm Delete",
     "onThisPage": "On this page",
     "tocPositionLeft": "Left",
-    "tocPositionRight": "Right"
+    "tocPositionRight": "Right",
+    "permissionRequired": "Permission Required"
   },
   "auth": {
     "signIn": "Sign In",
@@ -546,9 +547,16 @@
     "actions": "Avatar Actions",
     "actionsDescription": "Choose an action for your avatar.",
     "reupload": "Update",
-    "rateLimited": "Too many update attempts. Please try again in {{seconds}} seconds.",
-    "rateLimitedWait": "Update limit reached. Please wait {{seconds}}s.",
-    "remainingUploads": "{{remaining}}/{{limit}} updates remaining"
+    "rateLimited": "Too many update attempts. Please try again later.",
+    "rateLimitedWait": "Update limit reached. Please wait {{value}} {{unit, plural, =1 {{{unit}}} other {{{unit}}s}}}.",
+    "remainingUploads": "{{remaining}}/{{limit}} updates remaining",
+    "timeUnit": {
+      "second": "second",
+      "minute": "minute",
+      "hour": "hour",
+      "day": "day"
+    },
+    "permissionDenied": "Please grant photo library access to upload an avatar."
   },
   "share": {
     "title": "Share",

@@ -1,0 +1,19 @@
+{
+  "name": "@folionote/utils",
+  "version": "0.2.1",
+  "description": "FolioNote shared utility functions",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -37,7 +37,8 @@
     "confirmDelete": "削除の確認",
     "onThisPage": "このページの目次",
     "tocPositionLeft": "左",
-    "tocPositionRight": "右"
+    "tocPositionRight": "右",
+    "permissionRequired": "権限が必要です"
   },
   "auth": {
     "signIn": "サインイン",
@@ -545,9 +546,16 @@
     "actions": "アバター操作",
     "actionsDescription": "アバターの操作を選択してください。",
     "reupload": "更新",
-    "rateLimited": "更新回数が多すぎます。{{seconds}}秒後に再試行してください。",
-    "rateLimitedWait": "更新制限に達しました。{{seconds}}秒お待ちください。",
-    "remainingUploads": "残り{{remaining}}/{{limit}}回更新可能"
+    "rateLimited": "更新回数が多すぎます。しばらく時間をおいて再試行してください。",
+    "rateLimitedWait": "更新制限に達しました。{{value}}{{unit}}お待ちください。",
+    "remainingUploads": "残り{{remaining}}/{{limit}}回更新可能",
+    "timeUnit": {
+      "second": "秒",
+      "minute": "分",
+      "hour": "時間",
+      "day": "日"
+    },
+    "permissionDenied": "アバターをアップロードするにはフォトライブラリへのアクセス権限を付与してください。"
   },
   "share": {
     "title": "共有",
