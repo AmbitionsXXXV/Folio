@@ -28,14 +28,6 @@ export interface RateLimitConfig {
 }
 
 /**
- * Rate limit entry stored in Redis
- */
-interface RateLimitEntry {
-	count: number
-	resetTime: number
-}
-
-/**
  * Rate limit status returned to clients
  */
 export interface RateLimitStatus {
@@ -59,7 +51,82 @@ function getRateLimitKey(keyPrefix: string, userId: string): string {
 }
 
 /**
- * Check and update rate limit for a user (async version using Redis)
+ * Lua script for atomic rate limit check and increment
+ *
+ * This script atomically:
+ * 1. Gets current count (or 0 if key doesn't exist)
+ * 2. If count < maxRequests, increments and sets TTL on first request
+ * 3. Returns [allowed (0/1), currentCount, ttlMs]
+ *
+ * Using single key design - TTL is derived from PTTL, no separate resetTime key needed
+ */
+const RATE_LIMIT_SCRIPT = `
+local key = KEYS[1]
+local maxRequests = tonumber(ARGV[1])
+local windowMs = tonumber(ARGV[2])
+
+-- Get current count (returns nil if key doesn't exist)
+local current = redis.call('GET', key)
+local count = 0
+if current then
+	count = tonumber(current) or 0
+end
+
+-- Get TTL to calculate reset time
+local pttl = redis.call('PTTL', key)
+
+-- If key doesn't exist or has no TTL (expired), this is a new window
+if pttl < 0 then
+	-- New window: set count to 1 with TTL
+	redis.call('SET', key, 1, 'PX', windowMs)
+	-- allowed=1, count=1, ttl=windowMs
+	return {1, 1, windowMs}
+end
+
+-- Key exists with valid TTL
+if count >= maxRequests then
+	-- Already at limit, reject
+	-- allowed=0, count=current, ttl=remaining
+	return {0, count, pttl}
+end
+
+-- Under limit, increment
+local newCount = redis.call('INCR', key)
+-- allowed=1, count=newCount, ttl=remaining
+return {1, newCount, pttl}
+`
+
+/**
+ * Lua script for getting rate limit status without incrementing
+ */
+const GET_STATUS_SCRIPT = `
+local key = KEYS[1]
+local maxRequests = tonumber(ARGV[1])
+local windowMs = tonumber(ARGV[2])
+
+-- Get current count
+local current = redis.call('GET', key)
+local count = 0
+if current then
+	count = tonumber(current) or 0
+end
+
+-- Get TTL
+local pttl = redis.call('PTTL', key)
+
+-- If key doesn't exist or expired
+if pttl < 0 then
+	-- No active window
+	-- count=0, ttl=windowMs (would be the TTL if a new request came in)
+	return {0, windowMs}
+end
+
+-- Return current count and remaining TTL
+return {count, pttl}
+`
+
+/**
+ * Check and update rate limit for a user using atomic Lua script
  * Returns the current status and whether the request should be allowed
  */
 export async function checkRateLimit(
@@ -71,56 +138,24 @@ export async function checkRateLimit(
 	const key = getRateLimitKey(keyPrefix, userId)
 	const now = Date.now()
 
-	const entry = await redis.get<RateLimitEntry>(key)
+	// Execute atomic Lua script
+	// Returns [allowed (0/1), currentCount, ttlMs]
+	const result = (await redis.eval(
+		RATE_LIMIT_SCRIPT,
+		[key],
+		[config.maxRequests, config.windowMs]
+	)) as [number, number, number]
 
-	// If no entry or window expired, create new entry
-	if (!entry || entry.resetTime <= now) {
-		const newEntry: RateLimitEntry = {
-			count: 1,
-			resetTime: now + config.windowMs,
-		}
-		// Set with TTL (in seconds) for auto-expiration
-		const ttlSeconds = Math.ceil(config.windowMs / ONE_SECOND_MS)
-		await redis.set(key, newEntry, { ex: ttlSeconds })
-
-		return {
-			remaining: config.maxRequests - 1,
-			limit: config.maxRequests,
-			resetAt: newEntry.resetTime,
-			resetInMs: config.windowMs,
-			isLimited: false,
-			allowed: true,
-		}
-	}
-
-	// Check if rate limited
-	if (entry.count >= config.maxRequests) {
-		return {
-			remaining: 0,
-			limit: config.maxRequests,
-			resetAt: entry.resetTime,
-			resetInMs: entry.resetTime - now,
-			isLimited: true,
-			allowed: false,
-		}
-	}
-
-	// Increment count and update entry
-	const updatedEntry: RateLimitEntry = {
-		count: entry.count + 1,
-		resetTime: entry.resetTime,
-	}
-	// Preserve TTL by calculating remaining time
-	const remainingTtlSeconds = Math.ceil((entry.resetTime - now) / ONE_SECOND_MS)
-	await redis.set(key, updatedEntry, { ex: remainingTtlSeconds })
+	const [allowed, currentCount, ttlMs] = result
+	const isAllowed = allowed === 1
 
 	return {
-		remaining: config.maxRequests - updatedEntry.count,
+		remaining: Math.max(0, config.maxRequests - currentCount),
 		limit: config.maxRequests,
-		resetAt: entry.resetTime,
-		resetInMs: entry.resetTime - now,
-		isLimited: false,
-		allowed: true,
+		resetAt: now + ttlMs,
+		resetInMs: ttlMs,
+		isLimited: !isAllowed,
+		allowed: isAllowed,
 	}
 }
 
@@ -136,25 +171,22 @@ export async function getRateLimitStatus(
 	const key = getRateLimitKey(keyPrefix, userId)
 	const now = Date.now()
 
-	const entry = await redis.get<RateLimitEntry>(key)
+	// Execute atomic Lua script for status check
+	// Returns [currentCount, ttlMs]
+	const result = (await redis.eval(
+		GET_STATUS_SCRIPT,
+		[key],
+		[config.maxRequests, config.windowMs]
+	)) as [number, number]
 
-	// If no entry or window expired
-	if (!entry || entry.resetTime <= now) {
-		return {
-			remaining: config.maxRequests,
-			limit: config.maxRequests,
-			resetAt: now + config.windowMs,
-			resetInMs: config.windowMs,
-			isLimited: false,
-		}
-	}
+	const [currentCount, ttlMs] = result
 
 	return {
-		remaining: Math.max(0, config.maxRequests - entry.count),
+		remaining: Math.max(0, config.maxRequests - currentCount),
 		limit: config.maxRequests,
-		resetAt: entry.resetTime,
-		resetInMs: entry.resetTime - now,
-		isLimited: entry.count >= config.maxRequests,
+		resetAt: now + ttlMs,
+		resetInMs: ttlMs,
+		isLimited: currentCount >= config.maxRequests,
 	}
 }
 
