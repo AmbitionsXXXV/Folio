@@ -168,6 +168,9 @@ importers:
       '@folionote/locales':
         specifier: workspace:*
         version: link:../../packages/locales
+      '@folionote/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@gorhom/bottom-sheet':
         specifier: ^5.2.6
         version: 5.2.8(@types/react@19.1.17)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.1(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -461,6 +464,9 @@ importers:
       '@folionote/locales':
         specifier: workspace:*
         version: link:../../packages/locales
+      '@folionote/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@hugeicons/core-free-icons':
         specifier: 'catalog:'
         version: 3.1.1
@@ -837,6 +843,15 @@ importers:
       react-email:
         specifier: ^5.1.1
         version: 5.1.1
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/utils:
+    devDependencies:
+      '@folionote/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -15685,7 +15700,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.4)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.0.16(@types/node@22.19.3)(@vitest/ui@4.0.16)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@22.19.3)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/utils@4.0.16':
     dependencies:

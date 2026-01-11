@@ -1,5 +1,11 @@
 # @folionote/storage
 
+## 0.2.2
+
+### Patch Changes
+
+- refactor: 📦 rename package and integrate utils for avatar handling
+
 ## 0.2.1
 
 ### Patch Changes

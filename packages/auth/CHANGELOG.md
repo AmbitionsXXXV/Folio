@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.2
+
+### Patch Changes
+
+- refactor: 📦 rename package and integrate utils for avatar handling
+- Updated dependencies
+  - @folionote/db@0.2.2
+  - @folionote/transactional@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,4 +1,5 @@
 import { formatDate } from '@folionote/locales'
+import { getTzOffset } from '@folionote/utils'
 import {
 	ArrowRight01Icon,
 	BookOpen01Icon,
@@ -26,7 +27,6 @@ import { EntryCard } from '@/components/entry-card'
 import { useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { orpc } from '@/utils/orpc'
-import { getTzOffset } from '@/utils/time'
 
 /**
  * Get greeting key based on current hour

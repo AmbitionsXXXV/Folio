@@ -1,6 +1,6 @@
 {
   "name": "native",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --tunnel",
@@ -23,6 +23,7 @@
     "@folionote/api": "workspace:*",
     "@folionote/constants": "workspace:*",
     "@folionote/locales": "workspace:*",
+    "@folionote/utils": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.6",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react-native": "^1.0.9",

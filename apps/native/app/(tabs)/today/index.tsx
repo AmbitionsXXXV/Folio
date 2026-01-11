@@ -1,3 +1,4 @@
+import { getTzOffset } from '@folionote/utils'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { useThemeColor } from 'heroui-native'
@@ -8,7 +9,6 @@ import { Container } from '@/components/container'
 import { TodayContent } from '@/components/today-content'
 import { useDataServiceContext } from '@/contexts/data-service-context'
 import { authClient } from '@/lib/auth-client'
-import { getTzOffset } from '@/utils/time'
 
 export default function TodayScreen() {
 	const { t } = useTranslation()
