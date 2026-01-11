@@ -118,7 +118,7 @@ function RootDocumentInner() {
 
 function RootDocument() {
 	return (
-		<RootProvider>
+		<RootProvider search={{ enabled: false }}>
 			<I18nextProvider i18n={i18n}>
 				<RootDocumentInner />
 			</I18nextProvider>
