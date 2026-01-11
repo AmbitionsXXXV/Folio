@@ -1,5 +1,16 @@
 # native
 
+## 0.2.2
+
+### Patch Changes
+
+- refactor: 📦 rename package and integrate utils for avatar handling
+- Updated dependencies
+  - @folionote/locales@0.2.2
+  - @folionote/utils@0.2.2
+  - @folionote/api@0.2.2
+  - @folionote/constants@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

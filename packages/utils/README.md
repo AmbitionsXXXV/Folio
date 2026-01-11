@@ -72,6 +72,29 @@ formatRateLimitTime(120)  // { value: 2, unit: 'minute' }
 formatRateLimitTime(7200) // { value: 2, unit: 'hour' }
 ```
 
+#### `getTzOffset()`
+
+Get the current timezone offset in minutes. Returns a positive value for timezones ahead of UTC, negative for behind.
+
+```typescript
+import { getTzOffset } from '@folionote/utils'
+
+getTzOffset()  // 480 for UTC+8 (Beijing, China)
+getTzOffset()  // -300 for UTC-5 (New York, USA)
+getTzOffset()  // 0 for UTC (London, UK)
+```
+
+This is useful for sending timezone-aware requests to the server:
+
+```typescript
+import { getTzOffset } from '@folionote/utils'
+
+// Fetch due reviews for the user's timezone
+const dueStats = await api.review.getDueStats({
+  tzOffset: getTzOffset()
+})
+```
+
 ## Type Definitions
 
 ```typescript
