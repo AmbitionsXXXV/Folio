@@ -1,7 +1,6 @@
 import {
 	Activity01Icon,
 	BookOpen01Icon,
-	Home01Icon,
 	InboxIcon,
 	Link01Icon,
 	Rocket01Icon,
@@ -112,8 +111,6 @@ function SearchButton() {
 }
 
 export function AppSidebar() {
-	const matchRoute = useMatchRoute()
-	const isHomeActive = matchRoute({ to: '/', fuzzy: false })
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
 
@@ -124,13 +121,7 @@ export function AppSidebar() {
 					className="flex items-center gap-3 font-bold font-script font-script-en text-2xl text-primary"
 					to="/"
 				>
-					<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-						<HugeiconsIcon
-							className="size-5 text-primary"
-							icon={Home01Icon}
-							strokeWidth={isHomeActive ? 2.5 : 2}
-						/>
-					</div>
+					<img alt="FolioNote" className="size-8 rounded-full" src="/svg/icon.svg" />
 					<span className="group-data-[collapsible=icon]:hidden">FolioNote</span>
 				</Link>
 			</SidebarHeader>

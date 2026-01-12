@@ -368,24 +368,44 @@
 	@apply no-scrollbar max-h-72 scroll-py-1 outline-none;
 }
 
+/* Smooth transition for command list content changes */
+.etc-command-list > [cmdk-list-sizer] {
+	@apply transition-all duration-150 ease-out;
+}
+
 .etc-command-empty {
-	@apply py-6 text-center text-sm;
+	@apply py-6 text-center text-sm transition-opacity duration-150;
 }
 
 .etc-command-group {
 	@apply text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium;
+	/* Add smooth animation for group appearance */
+	animation: command-group-in 150ms ease-out;
+}
+
+@keyframes command-group-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .etc-command-separator {
-	@apply bg-border -mx-1 h-px;
+	@apply bg-border -mx-1 h-px transition-opacity duration-150;
 }
 
 .etc-command-item {
 	@apply data-[selected=true]:bg-muted data-[selected=true]:text-foreground data-[selected=true]:*:[svg]:text-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none [&_svg:not([class*='size-'])]:size-4 in-data-[slot=dialog-content]:rounded-lg!;
+	/* Smooth transition for item selection and appearance */
+	@apply transition-all duration-100 ease-out;
 }
 
 .etc-command-shortcut {
-	@apply text-muted-foreground group-data-[selected=true]/command-item:text-foreground ml-auto text-xs tracking-widest;
+	@apply text-muted-foreground group-data-[selected=true]/command-item:text-foreground ml-auto text-xs tracking-widest transition-colors duration-100;
 }
 
 /* MARK: Context Menu */
