@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.5
+
+### Patch Changes
+
+- refactor: 📦 refactor components
+- Updated dependencies
+  - @folionote/db@0.2.5
+  - @folionote/transactional@0.2.5
+
 ## 0.2.4
 
 ### Patch Changes

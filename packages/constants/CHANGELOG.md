@@ -1,5 +1,13 @@
 # @folionote/constants
 
+## 0.2.5
+
+### Patch Changes
+
+- refactor: 📦 refactor components
+- Updated dependencies
+  - @folionote/locales@0.2.5
+
 ## 0.2.4
 
 ### Patch Changes
