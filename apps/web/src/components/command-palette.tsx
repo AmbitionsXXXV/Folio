@@ -6,7 +6,7 @@ import {
 	Search01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,7 @@ import {
 	CommandShortcut,
 } from '@/components/ui/command'
 import { useCommandPalette } from '@/contexts/command-palette-context'
+import { useDebounce } from '@/hooks/use-debounce'
 import { orpc } from '@/utils/orpc'
 
 export function CommandPalette() {
@@ -29,6 +30,9 @@ export function CommandPalette() {
 	const { open, setOpen } = useCommandPalette()
 	const [search, setSearch] = useState('')
 	const navigate = useNavigate()
+
+	// Debounce search query to reduce flickering
+	const debouncedSearch = useDebounce(search, 300)
 
 	// Global keyboard shortcut
 	useEffect(() => {
@@ -50,16 +54,21 @@ export function CommandPalette() {
 		}
 	}, [open])
 
-	// Search entries when user types
-	const { data: searchResults, isLoading } = useQuery({
-		queryKey: ['command-search', search],
+	// Search entries when user types (with debounce and keep previous data)
+	const { data: searchResults, isFetching } = useQuery({
+		queryKey: ['command-search', debouncedSearch],
 		queryFn: () =>
 			orpc.search.entries.call({
-				query: search,
+				query: debouncedSearch,
 				limit: 5,
 			}),
-		enabled: search.length > 0,
+		enabled: debouncedSearch.length > 0,
+		placeholderData: keepPreviousData,
+		staleTime: 1000,
 	})
+
+	// Determine loading state - only show loading when actually searching
+	const isLoading = isFetching && debouncedSearch.length > 0
 
 	const handleSelect = useCallback(
 		(callback: () => void) => {

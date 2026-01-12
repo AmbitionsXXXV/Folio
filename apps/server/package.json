@@ -27,6 +27,7 @@
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
+    "@folionote/log": "workspace:*",
     "@folionote/storage": "workspace:*"
   },
   "devDependencies": {
