@@ -14,21 +14,12 @@ import { QuickCapture } from '@/components/quick-capture'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getUserTimezoneOffset } from '@/constants'
+import { getGreetingKey } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/activity')({
 	component: ActivityPage,
 })
-
-/**
- * Get greeting based on current hour
- */
-function getGreetingKey(): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
-	const hour = new Date().getHours()
-	if (hour < 12) return 'goodMorning'
-	if (hour < 18) return 'goodAfternoon'
-	return 'goodEvening'
-}
 
 type RecentEntriesEntry = {
 	id: string

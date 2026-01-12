@@ -139,3 +139,54 @@ export function formatTimeWithI18n(
 export function getTzOffset(): number {
 	return -new Date().getTimezoneOffset()
 }
+
+/**
+ * Greeting key type for i18n
+ */
+export type GreetingKey = 'goodMorning' | 'goodAfternoon' | 'goodEvening'
+
+/**
+ * Simple greeting key type for i18n (without name parameter)
+ */
+export type SimpleGreetingKey =
+	| 'goodMorningSimple'
+	| 'goodAfternoonSimple'
+	| 'goodEveningSimple'
+
+/**
+ * Get greeting key based on current hour
+ *
+ * @returns Greeting key for i18n translation
+ *
+ * @example
+ * ```ts
+ * getGreetingKey() // 'goodMorning' (before 12:00)
+ * getGreetingKey() // 'goodAfternoon' (12:00-17:59)
+ * getGreetingKey() // 'goodEvening' (after 18:00)
+ * ```
+ */
+export function getGreetingKey(): GreetingKey {
+	const hour = new Date().getHours()
+	if (hour < 12) return 'goodMorning'
+	if (hour < 18) return 'goodAfternoon'
+	return 'goodEvening'
+}
+
+/**
+ * Get simple greeting key (without name parameter)
+ *
+ * @returns Simple greeting key for i18n translation
+ *
+ * @example
+ * ```ts
+ * getSimpleGreetingKey() // 'goodMorningSimple' (before 12:00)
+ * getSimpleGreetingKey() // 'goodAfternoonSimple' (12:00-17:59)
+ * getSimpleGreetingKey() // 'goodEveningSimple' (after 18:00)
+ * ```
+ */
+export function getSimpleGreetingKey(): SimpleGreetingKey {
+	const hour = new Date().getHours()
+	if (hour < 12) return 'goodMorningSimple'
+	if (hour < 18) return 'goodAfternoonSimple'
+	return 'goodEveningSimple'
+}
