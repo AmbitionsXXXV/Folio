@@ -66,23 +66,17 @@ function NavItems({ items }: { items: NavItem[] }) {
 				return (
 					<SidebarMenuItem key={to}>
 						<SidebarMenuButton
+							className={cn('gap-3 transition-opacity', isPending && 'opacity-70')}
 							isActive={!!isActive || isPending}
+							render={<Link preload="intent" to={to} />}
 							tooltip={t(labelKey)}
 						>
-							<Link
-								className={cn(
-									'flex w-full items-center gap-3 transition-opacity',
-									isPending && 'opacity-70'
-								)}
-								to={to}
-							>
-								<HugeiconsIcon
-									className={cn('size-5', isPending && 'animate-pulse')}
-									icon={icon}
-									strokeWidth={isActive || isPending ? 2.5 : 2}
-								/>
-								<span>{t(labelKey)}</span>
-							</Link>
+							<HugeiconsIcon
+								className={cn('size-5', isPending && 'animate-pulse')}
+								icon={icon}
+								strokeWidth={isActive || isPending ? 2.5 : 2}
+							/>
+							<span>{t(labelKey)}</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				)

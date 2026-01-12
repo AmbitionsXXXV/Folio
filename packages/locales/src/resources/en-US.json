@@ -222,7 +222,9 @@
     "entries": "Notes",
     "quickNavigation": "Quick Navigation",
     "untitled": "Untitled",
-    "searchPage": "Search Page"
+    "searchPage": "Search Page",
+    "advancedSearch": "View all results with filters",
+    "tryAdvancedSearch": "Try Advanced Search"
   },
   "source": {
     "sources": "Sources",
@@ -369,7 +371,22 @@
     "recentSearches": "Recent searches",
     "clearHistory": "Clear history",
     "resultCount_one": "{{count}} result",
-    "resultCount_other": "{{count}} results"
+    "resultCount_other": "{{count}} results",
+    "advanced": "Advanced Search",
+    "advancedDescription": "Search with filters by tags, sources, and date range",
+    "filters": "Filters",
+    "filterByTags": "Filter by tags",
+    "filterBySources": "Filter by sources",
+    "dateRange": "Date range",
+    "from": "From",
+    "to": "To",
+    "clearFilters": "Clear filters",
+    "activeFilters_one": "{{count}} filter active",
+    "activeFilters_other": "{{count}} filters active",
+    "suggestions": "Suggestions",
+    "popularSearches": "Popular searches",
+    "noHistory": "No recent searches",
+    "historyCleared": "Search history cleared"
   },
   "editor": {
     "placeholder": "Start writing...",

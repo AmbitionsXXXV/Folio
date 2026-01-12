@@ -1,5 +1,6 @@
 import {
 	BookOpen01Icon,
+	FilterIcon,
 	InboxIcon,
 	Link01Icon,
 	Search01Icon,
@@ -17,6 +18,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandSeparator,
 	CommandShortcut,
 } from '@/components/ui/command'
 import { useCommandPalette } from '@/contexts/command-palette-context'
@@ -82,7 +84,7 @@ export function CommandPalette() {
 					placeholder={t('commandPalette.searchPlaceholder')}
 					value={search}
 				/>
-				<CommandList>
+				<CommandList className="h-[300px]">
 					<CommandEmpty>
 						{isLoading
 							? t('commandPalette.searching')
@@ -108,8 +110,40 @@ export function CommandPalette() {
 									</span>
 								</CommandItem>
 							))}
+							{/* Link to advanced search with current query */}
+							<CommandItem
+								onSelect={() =>
+									handleSelect(() =>
+										navigate({ to: '/search', search: { q: search } })
+									)
+								}
+								value="search-more"
+							>
+								<HugeiconsIcon className="mr-2 size-4" icon={FilterIcon} />
+								<span>{t('commandPalette.advancedSearch')}</span>
+							</CommandItem>
 						</CommandGroup>
 					) : null}
+
+					{/* Show advanced search link when no results */}
+					{search.length > 0 && entries.length === 0 && !isLoading && (
+						<>
+							<CommandSeparator />
+							<CommandGroup>
+								<CommandItem
+									onSelect={() =>
+										handleSelect(() =>
+											navigate({ to: '/search', search: { q: search } })
+										)
+									}
+									value="advanced-search"
+								>
+									<HugeiconsIcon className="mr-2 size-4" icon={FilterIcon} />
+									<span>{t('commandPalette.tryAdvancedSearch')}</span>
+								</CommandItem>
+							</CommandGroup>
+						</>
+					)}
 
 					{/* Quick navigation */}
 					<CommandGroup heading={t('commandPalette.quickNavigation')}>
@@ -144,7 +178,7 @@ export function CommandPalette() {
 							value="nav-search"
 						>
 							<HugeiconsIcon className="mr-2 size-4" icon={Search01Icon} />
-							<span>{t('commandPalette.searchPage')}</span>
+							<span>{t('search.advanced')}</span>
 							<CommandShortcut>{t('common.search')}</CommandShortcut>
 						</CommandItem>
 					</CommandGroup>

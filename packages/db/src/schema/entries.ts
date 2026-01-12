@@ -472,3 +472,37 @@ export const entrySharesRelations = relations(entryShares, ({ one }) => ({
 		references: [user.id],
 	}),
 }))
+
+/**
+ * search_history - 搜索历史
+ * 记录用户的搜索查询，用于历史记录和搜索建议
+ */
+export const searchHistory = pgTable(
+	'search_history',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		/** 搜索查询关键词 */
+		query: text('query').notNull(),
+		/** 搜索过滤器（JSON 字符串）：{ tagIds, sourceIds, dateRange, isInbox, isStarred } */
+		filters: text('filters'),
+		/** 搜索结果数量 */
+		resultCount: integer('result_count'),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index('search_history_user_id_created_at_idx').on(table.userId, table.createdAt),
+		index('search_history_user_id_query_idx').on(table.userId, table.query),
+	]
+)
+
+export const searchHistoryRelations = relations(searchHistory, ({ one }) => ({
+	user: one(user, {
+		fields: [searchHistory.userId],
+		references: [user.id],
+	}),
+}))

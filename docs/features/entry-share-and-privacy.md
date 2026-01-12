@@ -14,7 +14,7 @@
 用于存储分享链接的配置信息：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+| --- | --- | --- |
 | id | text | 主键 |
 | entry_id | text | 关联的 Entry ID |
 | user_id | text | 创建者用户 ID |
@@ -33,7 +33,7 @@
 新增字段：
 
 | 字段 | 类型 | 说明 |
-|------|------|------|
+| --- | --- | --- |
 | password_hash | text | Entry 本身的密码保护哈希 |
 
 ## API 接口
@@ -41,7 +41,7 @@
 ### Shares Router (`packages/api/src/routers/shares.ts`)
 
 | 方法 | 说明 | 认证 |
-|------|------|------|
+| --- | --- | --- |
 | `shares.create` | 创建分享链接 | 需要 |
 | `shares.getByEntry` | 获取 Entry 的所有分享链接 | 需要 |
 | `shares.update` | 更新分享配置 | 需要 |
@@ -52,7 +52,7 @@
 ### Entries Router 扩展
 
 | 方法 | 说明 |
-|------|------|
+| --- | --- |
 | `entries.setPassword` | 设置/更新 Entry 密码 |
 | `entries.removePassword` | 移除 Entry 密码 |
 | `entries.verifyPassword` | 验证 Entry 密码 |
@@ -63,7 +63,7 @@
 ### Web 端
 
 | 组件 | 路径 | 说明 |
-|------|------|------|
+| --- | --- | --- |
 | `ShareDialog` | `apps/web/src/components/share-dialog.tsx` | 分享链接管理弹窗 |
 | `EntryPasswordDialog` | `apps/web/src/components/entry-password-dialog.tsx` | Entry 密码保护弹窗 |
 | Share Page | `apps/web/src/routes/share/$token.tsx` | 公开分享页面 |
@@ -71,7 +71,7 @@
 ### Native 端
 
 | 组件 | 路径 | 说明 |
-|------|------|------|
+| --- | --- | --- |
 | `ShareSheet` | `apps/native/components/share-sheet.tsx` | 分享配置底部弹窗 |
 | `EntryPasswordSheet` | `apps/native/components/entry-password-sheet.tsx` | 密码保护底部弹窗 |
 

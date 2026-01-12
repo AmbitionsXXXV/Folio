@@ -1,14 +1,11 @@
 import { Search01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useInfiniteQuery } from '@tanstack/react-query'
 import { createFileRoute, useSearch } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { EntryList } from '@/components/entry-list'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { AdvancedSearch } from '@/components/search'
+import type { SearchFiltersValue } from '@/components/search/search-filters'
 import { searchQuerySchema } from '@/lib/search-schemas'
-import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/search')({
 	component: SearchPage,
@@ -18,44 +15,21 @@ export const Route = createFileRoute('/_app/search')({
 function SearchPage() {
 	const { t } = useTranslation()
 	const { q } = useSearch({ from: '/_app/search' })
-	const [searchInput, setSearchInput] = useState(q)
 
-	const {
-		data,
-		isLoading,
-		isError,
-		error,
-		hasNextPage,
-		fetchNextPage,
-		isFetchingNextPage,
-		refetch,
-	} = useInfiniteQuery({
-		queryKey: ['search', 'entries', q],
-		queryFn: ({ pageParam }) =>
-			orpc.search.entries.call({
-				query: q,
-				cursor: pageParam,
-				limit: 20,
-			}),
-		getNextPageParam: (lastPage) => lastPage?.nextCursor,
-		initialPageParam: undefined as string | undefined,
-		enabled: q.length > 0,
-	})
+	// Parse URL params to filters - only on client side
+	const [initialFilters, setInitialFilters] = useState<SearchFiltersValue>({})
 
-	const entries =
-		data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+		const params = new URLSearchParams(window.location.search)
+		const tags = params.get('tags')
+		const sources = params.get('sources')
 
-	const handleSearch = (e: React.FormEvent) => {
-		e.preventDefault()
-		if (searchInput.trim()) {
-			window.history.pushState(
-				{},
-				'',
-				`/search?q=${encodeURIComponent(searchInput.trim())}`
-			)
-			window.location.reload()
-		}
-	}
+		setInitialFilters({
+			tagIds: tags ? tags.split(',').filter(Boolean) : undefined,
+			sourceIds: sources ? sources.split(',').filter(Boolean) : undefined,
+		})
+	}, [])
 
 	return (
 		<div className="container mx-auto max-w-5xl px-4 py-8">
@@ -65,64 +39,20 @@ function SearchPage() {
 					<HugeiconsIcon className="size-6 text-primary" icon={Search01Icon} />
 				</div>
 				<div>
-					<h1 className="font-bold text-2xl">{t('nav.search')}</h1>
-					<p className="text-muted-foreground text-sm">{t('search.placeholder')}</p>
+					<h1 className="text-balance font-bold text-2xl">{t('search.advanced')}</h1>
+					<p className="text-pretty text-muted-foreground text-sm">
+						{t('search.advancedDescription')}
+					</p>
 				</div>
 			</div>
 
-			{/* Search form */}
-			<form className="mb-8" onSubmit={handleSearch}>
-				<div className="flex gap-2">
-					<div className="relative flex-1">
-						<HugeiconsIcon
-							className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
-							icon={Search01Icon}
-						/>
-						<Input
-							className="pl-10"
-							onChange={(e) => setSearchInput(e.target.value)}
-							placeholder={t('search.placeholder')}
-							type="search"
-							value={searchInput}
-						/>
-					</div>
-					<Button type="submit">{t('nav.search')}</Button>
-				</div>
-			</form>
-
-			{/* Search results */}
-			{q ? (
-				<>
-					<p className="mb-4 text-muted-foreground text-sm">
-						{(() => {
-							if (isLoading) return t('common.loading')
-							if (isError) return t('common.error')
-							return t('search.resultCount', { count: entries.length })
-						})()}
-					</p>
-					<EntryList
-						emptyMessage={t('search.noResults')}
-						entries={entries}
-						errorMessage={
-							isError ? (error?.message ?? t('common.unknownError')) : undefined
-						}
-						hasMore={hasNextPage}
-						isLoading={isLoading}
-						isLoadingMore={isFetchingNextPage}
-						onLoadMore={() => fetchNextPage()}
-						onRetry={refetch}
-					/>
-				</>
-			) : (
-				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<HugeiconsIcon
-						className="mb-4 size-12 text-muted-foreground/50"
-						icon={Search01Icon}
-					/>
-					<p className="mb-2 font-medium text-muted-foreground">{t('nav.search')}</p>
-					<p className="text-muted-foreground text-sm">{t('search.placeholder')}</p>
-				</div>
-			)}
+			{/* Advanced Search Component */}
+			<AdvancedSearch
+				initialFilters={initialFilters}
+				initialQuery={q}
+				showHistory
+				showSuggestions
+			/>
 		</div>
 	)
 }

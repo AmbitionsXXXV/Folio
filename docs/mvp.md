@@ -513,11 +513,11 @@ Done: 实现了完整的离线优先体验：
 
 ---
 
-### 🔮 Iteration 4：高级搜索（优先级：中）
+### ✅ Iteration 4：高级搜索（优先级：中）
 
-* [ ] Postgres 全文搜索（FTS）
-* [ ] 搜索过滤器（按标签、来源、时间范围）
-* [ ] 搜索历史与建议
+* [x] Postgres 全文搜索（FTS）
+* [x] 搜索过滤器（按标签、来源、时间范围）
+* [x] 搜索历史与建议
 
 ---
 
@@ -548,7 +548,7 @@ Done: 实现了完整的离线优先体验：
 ## 技术栈
 
 | 层级 | 技术 |
-|---|---|
+| --- | --- |
 | Web 前端 | TanStack Start, React, TailwindCSS |
 | 移动端 | Expo, React Native（仅 iOS 且优先支持 iOS 26） |
 | 富文本 | Tiptap (ProseMirror)；iOS 端通过 WebView 复用 |
