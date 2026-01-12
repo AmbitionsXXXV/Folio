@@ -84,16 +84,27 @@ export function ShareContent({ entryData }: ShareContentProps) {
 
 	const hasToc = tocItems.length > 0
 
+	// Header height for padding offset (py-4 = 1rem * 2 + content height)
+	const HEADER_HEIGHT = 65
+
 	return (
-		<div className="flex min-h-svh flex-col bg-background">
+		<div
+			className="flex min-h-svh flex-col bg-background"
+			style={
+				{
+					'--folio-nav-height': `${HEADER_HEIGHT}px`,
+				} as React.CSSProperties
+			}
+		>
 			<ShareHeader showBranding={share.showBranding} />
 
-			{/* Content with TOC */}
+			{/* Content with TOC - add top padding to account for fixed header */}
 			<div
 				className={cn(
 					'container mx-auto flex min-h-0 flex-1',
 					hasToc ? 'max-w-6xl' : 'max-w-5xl'
 				)}
+				style={{ paddingTop: HEADER_HEIGHT }}
 			>
 				{/* TOC on left side */}
 				{hasToc && tocPosition === 'left' && (

@@ -1,6 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { useScrollDirection } from '@/hooks/use-scroll-direction'
+import { cn } from '@/lib/utils'
 
 type ShareHeaderProps = {
 	showBranding: boolean
@@ -8,12 +10,21 @@ type ShareHeaderProps = {
 
 /**
  * Header component for share page
+ * Fixed at top, hides on scroll down, shows on scroll up
  */
 export function ShareHeader({ showBranding }: ShareHeaderProps) {
 	const { t } = useTranslation()
+	const { scrollDirection, isAtTop } = useScrollDirection({ threshold: 10 })
+
+	const isVisible = isAtTop || scrollDirection === 'up'
 
 	return (
-		<header className="border-b">
+		<header
+			className={cn(
+				'fixed top-0 right-0 left-0 z-50 border-b bg-background/95 backdrop-blur-sm transition-transform duration-300 supports-backdrop-filter:bg-background/80',
+				isVisible ? 'translate-y-0' : '-translate-y-full'
+			)}
+		>
 			<div className="container mx-auto flex items-center justify-between px-4 py-4">
 				{showBranding ? (
 					<Link
