@@ -89,7 +89,8 @@
     "onThisPage": "本页目录",
     "tocPositionLeft": "左侧",
     "tocPositionRight": "右侧",
-    "permissionRequired": "需要权限"
+    "permissionRequired": "需要权限",
+    "navigation": "导航"
   },
   "auth": {
     "signIn": "登录",
@@ -184,6 +185,7 @@
     "pinnedSection": "置顶",
     "createdAt": "创建于",
     "updatedAt": "更新于",
+    "metadata": "条目信息",
     "count_one": "{{count}} 条目",
     "count_other": "{{count}} 条目",
     "count": "{{count}} 条目",
@@ -620,7 +622,12 @@
     "removePasswordError": "移除密码失败",
     "currentlyProtected": "此笔记当前已启用密码保护",
     "changeOrRemove": "您可以修改密码或完全移除保护。",
-    "removeConfirm": "确定要移除密码保护吗？"
+    "removeConfirm": "确定要移除密码保护吗？",
+    "strengthWeak": "密码强度弱",
+    "strengthFair": "密码强度一般",
+    "strengthGood": "密码强度良好",
+    "strengthStrong": "密码强度强",
+    "strengthVeryStrong": "密码强度极强"
   },
   "sync": {
     "syncing": "同步中...",

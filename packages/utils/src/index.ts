@@ -1,3 +1,4 @@
+export { getPasswordStrength } from './password'
 export type {
 	FormatTimeOptions,
 	FormattedTime,
