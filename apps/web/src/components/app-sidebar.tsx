@@ -1,7 +1,6 @@
 import {
 	Activity01Icon,
 	BookOpen01Icon,
-	Home01Icon,
 	InboxIcon,
 	Link01Icon,
 	Rocket01Icon,
@@ -66,23 +65,17 @@ function NavItems({ items }: { items: NavItem[] }) {
 				return (
 					<SidebarMenuItem key={to}>
 						<SidebarMenuButton
+							className={cn('gap-3 transition-opacity', isPending && 'opacity-70')}
 							isActive={!!isActive || isPending}
+							render={<Link preload="intent" to={to} />}
 							tooltip={t(labelKey)}
 						>
-							<Link
-								className={cn(
-									'flex w-full items-center gap-3 transition-opacity',
-									isPending && 'opacity-70'
-								)}
-								to={to}
-							>
-								<HugeiconsIcon
-									className={cn('size-5', isPending && 'animate-pulse')}
-									icon={icon}
-									strokeWidth={isActive || isPending ? 2.5 : 2}
-								/>
-								<span>{t(labelKey)}</span>
-							</Link>
+							<HugeiconsIcon
+								className={cn('size-5', isPending && 'animate-pulse')}
+								icon={icon}
+								strokeWidth={isActive || isPending ? 2.5 : 2}
+							/>
+							<span>{t(labelKey)}</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				)
@@ -118,8 +111,6 @@ function SearchButton() {
 }
 
 export function AppSidebar() {
-	const matchRoute = useMatchRoute()
-	const isHomeActive = matchRoute({ to: '/', fuzzy: false })
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
 
@@ -130,13 +121,7 @@ export function AppSidebar() {
 					className="flex items-center gap-3 font-bold font-script font-script-en text-2xl text-primary"
 					to="/"
 				>
-					<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-						<HugeiconsIcon
-							className="size-5 text-primary"
-							icon={Home01Icon}
-							strokeWidth={isHomeActive ? 2.5 : 2}
-						/>
-					</div>
+					<img alt="FolioNote" className="size-8 rounded-full" src="/svg/icon.svg" />
 					<span className="group-data-[collapsible=icon]:hidden">FolioNote</span>
 				</Link>
 			</SidebarHeader>

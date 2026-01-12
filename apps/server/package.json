@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -27,6 +27,7 @@
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
+    "@folionote/log": "workspace:*",
     "@folionote/storage": "workspace:*"
   },
   "devDependencies": {

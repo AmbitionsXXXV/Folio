@@ -394,6 +394,9 @@ importers:
       '@folionote/locales':
         specifier: workspace:*
         version: link:../../packages/locales
+      '@folionote/log':
+        specifier: workspace:*
+        version: link:../../packages/log
       '@folionote/storage':
         specifier: workspace:*
         version: link:../../packages/storage
@@ -545,6 +548,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       dotenv:
         specifier: 'catalog:'
         version: 17.2.3
@@ -599,6 +605,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      use-debounce:
+        specifier: ^10.1.0
+        version: 10.1.0(react@19.2.3)
       vite-tsconfig-paths:
         specifier: ^6.0.3
         version: 6.0.3(typescript@5.9.3)(vite@7.3.0(@types/node@25.0.6)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
@@ -657,6 +666,9 @@ importers:
       '@folionote/locales':
         specifier: workspace:*
         version: link:../locales
+      '@folionote/log':
+        specifier: workspace:*
+        version: link:../log
       '@folionote/storage':
         specifier: workspace:*
         version: link:../storage
@@ -799,6 +811,18 @@ importers:
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/log:
+    devDependencies:
+      '@folionote/config':
+        specifier: workspace:*
+        version: link:../config
+      hono:
+        specifier: 'catalog:'
+        version: 4.11.3
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -9704,6 +9728,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-debounce@10.1.0:
+    resolution: {integrity: sha512-lu87Za35V3n/MyMoEpD5zJv0k7hCn0p+V/fK2kWD+3k2u3kOCwO593UArbczg1fhfs2rqPEnHpULJ3KmGdDzvg==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      react: '*'
 
   use-latest-callback@0.2.6:
     resolution: {integrity: sha512-FvRG9i1HSo0wagmX63Vrm8SnlUU3LMM3WyZkQ76RnslpBrX694AdG4A0zQBx2B3ZifFA0yv/BaEHGBnEax5rZg==}
@@ -21236,6 +21266,10 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.7
+
+  use-debounce@10.1.0(react@19.2.3):
+    dependencies:
+      react: 19.2.3
 
   use-latest-callback@0.2.6(react@19.1.0):
     dependencies:

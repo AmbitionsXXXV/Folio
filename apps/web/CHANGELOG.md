@@ -1,5 +1,17 @@
 # web
 
+## 0.2.6
+
+### Patch Changes
+
+- feat: ✨ implement advanced search functionality with filters and history
+- Updated dependencies
+  - @folionote/locales@0.2.6
+  - @folionote/api@0.2.6
+  - @folionote/auth@0.2.6
+  - @folionote/constants@0.2.6
+  - @folionote/utils@0.2.6
+
 ## 0.2.5
 
 ### Patch Changes

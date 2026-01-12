@@ -273,7 +273,9 @@
     "entries": "笔记",
     "quickNavigation": "快速导航",
     "untitled": "无标题",
-    "searchPage": "搜索页面"
+    "searchPage": "搜索页面",
+    "advancedSearch": "使用过滤器查看全部结果",
+    "tryAdvancedSearch": "尝试高级搜索"
   },
   "source": {
     "sources": "来源",
@@ -420,7 +422,22 @@
     "recentSearches": "最近搜索",
     "clearHistory": "清除历史",
     "resultCount_one": "{{count}} 条结果",
-    "resultCount_other": "{{count}} 条结果"
+    "resultCount_other": "{{count}} 条结果",
+    "advanced": "高级搜索",
+    "advancedDescription": "按标签、来源和日期范围进行筛选搜索",
+    "filters": "筛选",
+    "filterByTags": "按标签筛选",
+    "filterBySources": "按来源筛选",
+    "dateRange": "日期范围",
+    "from": "从",
+    "to": "至",
+    "clearFilters": "清除筛选",
+    "activeFilters_one": "{{count}} 个筛选条件",
+    "activeFilters_other": "{{count}} 个筛选条件",
+    "suggestions": "搜索建议",
+    "popularSearches": "热门搜索",
+    "noHistory": "暂无搜索记录",
+    "historyCleared": "搜索历史已清除"
   },
   "editor": {
     "placeholder": "开始写作...",

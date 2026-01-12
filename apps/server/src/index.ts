@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { createContext } from '@folionote/api/context'
 import { appRouter } from '@folionote/api/routers/index'
 import { auth } from '@folionote/auth'
+import { createHonoLogger, createLogger } from '@folionote/log'
 import { serve } from '@hono/node-server'
 import { OpenAPIHandler } from '@orpc/openapi/fetch'
 import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins'
@@ -16,14 +17,16 @@ import { initI18n } from './i18n'
 
 await initI18n()
 
+const log = createLogger({ prefix: 'server' })
+
 const app = new Hono()
 
 const corsOrigins = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) || [
 	'http://localhost:3001',
 ]
-console.log('CORS_ORIGIN', corsOrigins)
+log.info('CORS_ORIGIN', corsOrigins)
 
-app.use(logger())
+app.use(logger(createHonoLogger()))
 app.use(
 	'/*',
 	cors({
@@ -55,7 +58,7 @@ export const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 	interceptors: [
 		onError((error) => {
-			console.error(error)
+			log.error('API error:', error)
 		}),
 	],
 })
@@ -63,7 +66,7 @@ export const apiHandler = new OpenAPIHandler(appRouter, {
 export const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
 		onError((error) => {
-			console.error(error)
+			log.error('RPC error:', error)
 		}),
 	],
 })
@@ -101,7 +104,7 @@ app.get('/health', (c) =>
 
 const port = Number(process.env.PORT) || 3000
 
-console.log(`Server is running on http://localhost:${port}`)
+log.info(`Server is running on http://localhost:${port}`)
 
 serve({
 	fetch: app.fetch,

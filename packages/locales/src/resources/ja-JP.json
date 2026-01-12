@@ -323,7 +323,22 @@
     "recentSearches": "最近の検索",
     "clearHistory": "履歴をクリア",
     "resultCount_one": "{{count}} 件の結果",
-    "resultCount_other": "{{count}} 件の結果"
+    "resultCount_other": "{{count}} 件の結果",
+    "advanced": "詳細検索",
+    "advancedDescription": "タグ、ソース、日付範囲でフィルタリング検索",
+    "filters": "フィルター",
+    "filterByTags": "タグでフィルター",
+    "filterBySources": "ソースでフィルター",
+    "dateRange": "日付範囲",
+    "from": "開始",
+    "to": "終了",
+    "clearFilters": "フィルターをクリア",
+    "activeFilters_one": "{{count}} 件のフィルター",
+    "activeFilters_other": "{{count}} 件のフィルター",
+    "suggestions": "検索候補",
+    "popularSearches": "人気の検索",
+    "noHistory": "検索履歴がありません",
+    "historyCleared": "検索履歴をクリアしました"
   },
   "editor": {
     "placeholder": "書き始めてください...",
@@ -426,7 +441,9 @@
     "entries": "ノート",
     "quickNavigation": "クイックナビゲーション",
     "untitled": "無題",
-    "searchPage": "検索ページ"
+    "searchPage": "検索ページ",
+    "advancedSearch": "フィルター付きで全件表示",
+    "tryAdvancedSearch": "詳細検索を試す"
   },
   "error": {
     "unauthorized": "続行するにはログインしてください",

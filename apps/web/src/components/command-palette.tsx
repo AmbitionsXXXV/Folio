@@ -1,11 +1,12 @@
 import {
 	BookOpen01Icon,
+	FilterIcon,
 	InboxIcon,
 	Link01Icon,
 	Search01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,9 +18,11 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandSeparator,
 	CommandShortcut,
 } from '@/components/ui/command'
 import { useCommandPalette } from '@/contexts/command-palette-context'
+import { useDebounce } from '@/hooks/use-debounce'
 import { orpc } from '@/utils/orpc'
 
 export function CommandPalette() {
@@ -27,6 +30,9 @@ export function CommandPalette() {
 	const { open, setOpen } = useCommandPalette()
 	const [search, setSearch] = useState('')
 	const navigate = useNavigate()
+
+	// Debounce search query to reduce flickering
+	const debouncedSearch = useDebounce(search, 300)
 
 	// Global keyboard shortcut
 	useEffect(() => {
@@ -48,16 +54,21 @@ export function CommandPalette() {
 		}
 	}, [open])
 
-	// Search entries when user types
-	const { data: searchResults, isLoading } = useQuery({
-		queryKey: ['command-search', search],
+	// Search entries when user types (with debounce and keep previous data)
+	const { data: searchResults, isFetching } = useQuery({
+		queryKey: ['command-search', debouncedSearch],
 		queryFn: () =>
 			orpc.search.entries.call({
-				query: search,
+				query: debouncedSearch,
 				limit: 5,
 			}),
-		enabled: search.length > 0,
+		enabled: debouncedSearch.length > 0,
+		placeholderData: keepPreviousData,
+		staleTime: 1000,
 	})
+
+	// Determine loading state - only show loading when actually searching
+	const isLoading = isFetching && debouncedSearch.length > 0
 
 	const handleSelect = useCallback(
 		(callback: () => void) => {
@@ -82,7 +93,7 @@ export function CommandPalette() {
 					placeholder={t('commandPalette.searchPlaceholder')}
 					value={search}
 				/>
-				<CommandList>
+				<CommandList className="h-[300px]">
 					<CommandEmpty>
 						{isLoading
 							? t('commandPalette.searching')
@@ -108,8 +119,40 @@ export function CommandPalette() {
 									</span>
 								</CommandItem>
 							))}
+							{/* Link to advanced search with current query */}
+							<CommandItem
+								onSelect={() =>
+									handleSelect(() =>
+										navigate({ to: '/search', search: { q: search } })
+									)
+								}
+								value="search-more"
+							>
+								<HugeiconsIcon className="mr-2 size-4" icon={FilterIcon} />
+								<span>{t('commandPalette.advancedSearch')}</span>
+							</CommandItem>
 						</CommandGroup>
 					) : null}
+
+					{/* Show advanced search link when no results */}
+					{search.length > 0 && entries.length === 0 && !isLoading && (
+						<>
+							<CommandSeparator />
+							<CommandGroup>
+								<CommandItem
+									onSelect={() =>
+										handleSelect(() =>
+											navigate({ to: '/search', search: { q: search } })
+										)
+									}
+									value="advanced-search"
+								>
+									<HugeiconsIcon className="mr-2 size-4" icon={FilterIcon} />
+									<span>{t('commandPalette.tryAdvancedSearch')}</span>
+								</CommandItem>
+							</CommandGroup>
+						</>
+					)}
 
 					{/* Quick navigation */}
 					<CommandGroup heading={t('commandPalette.quickNavigation')}>
@@ -144,7 +187,7 @@ export function CommandPalette() {
 							value="nav-search"
 						>
 							<HugeiconsIcon className="mr-2 size-4" icon={Search01Icon} />
-							<span>{t('commandPalette.searchPage')}</span>
+							<span>{t('search.advanced')}</span>
 							<CommandShortcut>{t('common.search')}</CommandShortcut>
 						</CommandItem>
 					</CommandGroup>

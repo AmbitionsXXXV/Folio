@@ -1,5 +1,11 @@
 # @folionote/utils
 
+## 0.2.6
+
+### Patch Changes
+
+- feat: ✨ implement advanced search functionality with filters and history
+
 ## 0.2.5
 
 ### Patch Changes

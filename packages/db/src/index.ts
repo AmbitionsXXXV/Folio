@@ -27,6 +27,8 @@ import {
 	entryTagsRelations,
 	reviewEvents,
 	reviewEventsRelations,
+	searchHistory,
+	searchHistoryRelations,
 	sources,
 	sourcesRelations,
 	tags,
@@ -64,6 +66,8 @@ const schema = {
 	dailyLogsRelations,
 	entryShares,
 	entrySharesRelations,
+	searchHistory,
+	searchHistoryRelations,
 }
 
 // 数据库连接初始化
@@ -99,6 +103,8 @@ export {
 	entryTagsRelations,
 	reviewEvents,
 	reviewEventsRelations,
+	searchHistory,
+	searchHistoryRelations,
 	sources,
 	sourcesRelations,
 	tags,

@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.6
+
+### Patch Changes
+
+- feat: ✨ implement advanced search functionality with filters and history
+- Updated dependencies
+  - @folionote/db@0.2.6
+  - @folionote/transactional@0.2.6
+
 ## 0.2.5
 
 ### Patch Changes

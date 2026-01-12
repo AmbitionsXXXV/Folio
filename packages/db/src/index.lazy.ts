@@ -27,6 +27,8 @@ import {
 	entryTagsRelations,
 	reviewEvents,
 	reviewEventsRelations,
+	searchHistory,
+	searchHistoryRelations,
 	sources,
 	sourcesRelations,
 	tags,
@@ -64,6 +66,8 @@ const schema = {
 	dailyLogsRelations,
 	entryShares,
 	entrySharesRelations,
+	searchHistory,
+	searchHistoryRelations,
 }
 
 // 延迟初始化数据库连接，避免模块循环依赖导致的初始化问题
@@ -116,6 +120,8 @@ export {
 	entryTagsRelations,
 	reviewEvents,
 	reviewEventsRelations,
+	searchHistory,
+	searchHistoryRelations,
 	sources,
 	sourcesRelations,
 	tags,
