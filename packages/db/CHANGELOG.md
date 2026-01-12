@@ -1,5 +1,11 @@
 # @folionote/db
 
+## 0.2.4
+
+### Patch Changes
+
+- feat: ✨ make ui component more accessible
+
 ## 0.2.3
 
 ### Patch Changes

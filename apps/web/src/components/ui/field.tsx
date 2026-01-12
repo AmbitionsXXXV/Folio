@@ -156,13 +156,15 @@ function FieldSeparator({
 	)
 }
 
+type FieldErrorItem = string | { message?: string } | undefined
+
 function FieldError({
 	className,
 	children,
 	errors,
 	...props
 }: React.ComponentProps<'div'> & {
-	errors?: Array<{ message?: string } | undefined>
+	errors?: FieldErrorItem[]
 }) {
 	const content = useMemo(() => {
 		if (children) {
@@ -173,8 +175,16 @@ function FieldError({
 			return null
 		}
 
+		// 统一处理字符串和对象格式的错误
+		const normalizedErrors = errors.map((error) => {
+			if (typeof error === 'string') {
+				return { message: error }
+			}
+			return error
+		})
+
 		const uniqueErrors = [
-			...new Map(errors.map((error) => [error?.message, error])).values(),
+			...new Map(normalizedErrors.map((error) => [error?.message, error])).values(),
 		]
 
 		if (uniqueErrors?.length === 1) {

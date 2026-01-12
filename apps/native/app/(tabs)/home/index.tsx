@@ -1,5 +1,5 @@
 import { formatDate } from '@folionote/locales'
-import { getTzOffset } from '@folionote/utils'
+import { getGreetingKey, getTzOffset } from '@folionote/utils'
 import {
 	ArrowRight01Icon,
 	BookOpen01Icon,
@@ -27,16 +27,6 @@ import { EntryCard } from '@/components/entry-card'
 import { useLocalMode } from '@/contexts/local-mode-context'
 import { authClient } from '@/lib/auth-client'
 import { orpc } from '@/utils/orpc'
-
-/**
- * Get greeting key based on current hour
- */
-function getGreetingKey(): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
-	const hour = new Date().getHours()
-	if (hour < 12) return 'goodMorning'
-	if (hour < 18) return 'goodAfternoon'
-	return 'goodEvening'
-}
 
 type RecentEntry = {
 	id: string

@@ -5,15 +5,32 @@ import {
 	MagicWand01Icon,
 	PencilEdit02Icon,
 	Search01Icon,
+	UserCircle02Icon,
+	UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import { getUser } from '@/functions/get-user'
-import { cn } from '@/lib/utils'
+import { cn, getSimpleGreetingKey } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
+
+/**
+ * Get initials from a name string
+ */
+function getInitials(name?: string | null): string {
+	if (!name) return ''
+	return name
+		.split(' ')
+		.map((part) => part[0])
+		.join('')
+		.toUpperCase()
+		.slice(0, 2)
+}
 
 export const Route = createFileRoute('/')({
 	component: HomeComponent,
@@ -30,6 +47,7 @@ function HomeComponent() {
 	const { t } = useTranslation()
 	const { session } = Route.useRouteContext()
 	const healthCheck = useQuery(orpc.healthCheck.queryOptions())
+	const greetingKey = getSimpleGreetingKey()
 
 	const quickActions: Array<{
 		icon: IconSvgElement
@@ -75,39 +93,75 @@ function HomeComponent() {
 	return (
 		<div className="relative h-full overflow-auto">
 			<div className="container mx-auto max-w-5xl px-6 py-12">
-				{/* Hero Section */}
-				<div className="mb-16 animate-fade-in">
-					<div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5">
-						<div
-							className={cn(
-								'size-1.5 rounded-full',
-								healthCheck.data ? 'bg-green-500' : 'bg-red-500',
-								healthCheck.data ? 'animate-pulse' : ''
-							)}
-						/>
-						<span className="font-medium font-script text-muted-foreground text-xs">
-							{(() => {
-								if (healthCheck.isLoading) return t('home.connecting')
-								return healthCheck.data ? t('home.systemReady') : t('home.offline')
-							})()}
-						</span>
+				{/* User Profile Header */}
+				<div className="mb-10 flex animate-fade-in items-center justify-between">
+					<div className="flex items-center gap-5">
+						<Link
+							aria-label={t('nav.profile')}
+							className="group relative"
+							to="/profile"
+						>
+							<Avatar className="size-16! ring-2 ring-primary/20 transition-all duration-300 group-hover:ring-4 group-hover:ring-primary/40">
+								{session.user.image ? (
+									<AvatarImage
+										alt={session.user.name || 'User avatar'}
+										src={session.user.image}
+									/>
+								) : null}
+								<AvatarFallback className="bg-linear-to-br from-primary/20 to-purple-500/20 font-semibold text-lg text-primary">
+									{session.user.name ? (
+										getInitials(session.user.name)
+									) : (
+										<HugeiconsIcon className="size-7" icon={UserCircleIcon} />
+									)}
+								</AvatarFallback>
+							</Avatar>
+							<div className="absolute -right-0.5 -bottom-0.5 size-4 rounded-full border-2 border-background bg-green-500" />
+						</Link>
+						<div>
+							<p className="text-muted-foreground text-sm">
+								{t(`activity.${greetingKey}`)}
+							</p>
+							<h1 className="bg-linear-to-r from-foreground to-foreground/70 bg-clip-text font-script font-script-en font-semibold text-2xl text-primary md:text-3xl">
+								{session.user.name || t('auth.welcome')}
+							</h1>
+						</div>
 					</div>
 
-					<h1 className="mb-4 font-display font-semibold text-5xl leading-tight tracking-tight md:text-6xl">
-						{t('auth.welcome')},
-						<br />
-						<span className="bg-linear-to-br from-primary via-purple-400 to-violet-300 bg-clip-text px-1 font-script font-script-en text-transparent">
-							{session.user.name?.split(' ')[0] || 'there'}
-						</span>
-					</h1>
+					<div className="flex items-center gap-3">
+						<div className="hidden items-center gap-2 rounded-full border border-border/50 bg-card/50 px-3 py-1.5 sm:flex">
+							<div
+								className={cn(
+									'size-2 rounded-full',
+									healthCheck.data ? 'bg-green-500' : 'bg-red-500',
+									healthCheck.data ? 'animate-pulse' : ''
+								)}
+							/>
+							<span className="font-medium font-script text-muted-foreground text-xs">
+								{(() => {
+									if (healthCheck.isLoading) return t('home.connecting')
+									return healthCheck.data ? t('home.systemReady') : t('home.offline')
+								})()}
+							</span>
+						</div>
+						<Link to="/profile">
+							<Button className="gap-2 rounded-full" size="sm" variant="outline">
+								<HugeiconsIcon className="size-4" icon={UserCircle02Icon} />
+								<span className="hidden sm:inline">{t('nav.profile')}</span>
+							</Button>
+						</Link>
+					</div>
+				</div>
 
+				{/* Hero Section */}
+				<div className="mb-14 animate-fade-in delay-100">
 					<p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
 						{t('home.subtitleUser')}
 					</p>
 				</div>
 
 				{/* Quick Actions Grid */}
-				<div className="mb-16 animate-fade-in delay-100">
+				<div className="mb-14 animate-fade-in delay-200">
 					<div className="mb-6 flex items-center gap-3">
 						<HugeiconsIcon className="h-5 w-5 text-primary" icon={MagicWand01Icon} />
 						<h2 className="font-script font-semibold text-2xl">
@@ -148,7 +202,7 @@ function HomeComponent() {
 				</div>
 
 				{/* Feature Highlights */}
-				<div className="animate-fade-in delay-200">
+				<div className="animate-fade-in delay-300">
 					<div className="mb-6 flex items-center gap-3">
 						<HugeiconsIcon className="size-5 text-primary" icon={BookOpen01Icon} />
 						<h2 className="font-script font-semibold text-2xl">

@@ -135,7 +135,10 @@ export function EntryEditor({
 		immediatelyRender: false,
 		editorProps: {
 			attributes: {
-				class: `prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[200px] ${className}`,
+				class: `prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[200px] transition-colors ${className}`,
+				'aria-multiline': 'true',
+				'aria-placeholder': placeholder,
+				spellcheck: 'true',
 			},
 		},
 		onUpdate: ({ editor: editorInstance }) => {
@@ -203,9 +206,17 @@ export function EntryEditor({
 
 	if (!editor) {
 		return (
-			<div className="animate-pulse">
-				<div className="mb-2 h-4 w-3/4 rounded bg-muted" />
-				<div className="h-4 w-1/2 rounded bg-muted" />
+			<div
+				aria-busy="true"
+				aria-label={t('common.loading')}
+				className="animate-pulse space-y-3"
+				role="status"
+			>
+				<div className="h-5 w-4/5 rounded bg-muted/60" />
+				<div className="h-4 w-full rounded bg-muted/40" />
+				<div className="h-4 w-3/4 rounded bg-muted/40" />
+				<div className="h-4 w-1/2 rounded bg-muted/30" />
+				<span className="sr-only">{t('common.loading')}</span>
 			</div>
 		)
 	}

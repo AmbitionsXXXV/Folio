@@ -1,6 +1,6 @@
 {
   "name": "@folionote/storage",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "FolioNote Storage client using S3 protocol",
   "type": "module",
   "exports": {

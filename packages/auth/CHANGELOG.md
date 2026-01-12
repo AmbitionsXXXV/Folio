@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.4
+
+### Patch Changes
+
+- feat: ✨ make ui component more accessible
+- Updated dependencies
+  - @folionote/db@0.2.4
+  - @folionote/transactional@0.2.4
+
 ## 0.2.3
 
 ### Patch Changes

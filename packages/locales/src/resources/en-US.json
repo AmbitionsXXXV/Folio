@@ -38,7 +38,8 @@
     "onThisPage": "On this page",
     "tocPositionLeft": "Left",
     "tocPositionRight": "Right",
-    "permissionRequired": "Permission Required"
+    "permissionRequired": "Permission Required",
+    "navigation": "Navigation"
   },
   "auth": {
     "signIn": "Sign In",
@@ -131,8 +132,9 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "pinnedSection": "Pinned",
-    "createdAt": "Created at",
-    "updatedAt": "Updated at",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "metadata": "Entry metadata",
     "count_one": "{{count}} entry",
     "count_other": "{{count}} entries",
     "count": "{{count}} entries",
@@ -332,6 +334,9 @@
     "goodMorning": "Good morning, {{name}}",
     "goodAfternoon": "Good afternoon, {{name}}",
     "goodEvening": "Good evening, {{name}}",
+    "goodMorningSimple": "Good morning",
+    "goodAfternoonSimple": "Good afternoon",
+    "goodEveningSimple": "Good evening",
     "description": "Your learning activity at a glance",
     "quickCapture": "Quick Capture",
     "quickCapturePlaceholder": "Capture a thought...",
@@ -617,7 +622,12 @@
     "removePasswordError": "Failed to remove password",
     "currentlyProtected": "This note is currently password protected",
     "changeOrRemove": "You can change the password or remove protection entirely.",
-    "removeConfirm": "Are you sure you want to remove password protection?"
+    "removeConfirm": "Are you sure you want to remove password protection?",
+    "strengthWeak": "Weak password",
+    "strengthFair": "Fair password",
+    "strengthGood": "Good password",
+    "strengthStrong": "Strong password",
+    "strengthVeryStrong": "Very strong password"
   },
   "sync": {
     "syncing": "Syncing...",

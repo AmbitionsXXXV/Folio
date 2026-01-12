@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { type SaveStatus, useAutoSave } from '@/hooks/use-auto-save'
 import { useTocPosition } from '@/hooks/use-toc-position'
 import { assignHeadingIds, parseTocFromContent } from '@/lib/toc'
@@ -446,70 +447,87 @@ function EntryEditPage() {
 
 						{/* Move to library/inbox */}
 						{entry.isInbox ? (
-							<Button
-								onClick={handleMoveToLibrary}
-								size="icon"
-								title={t('entry.moveToLibrary')}
-								variant="ghost"
-							>
-								<HugeiconsIcon className="size-4" icon={ArchiveIcon} />
-							</Button>
+							<Tooltip>
+								<TooltipTrigger
+									aria-label={t('entry.moveToLibrary')}
+									className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+									onClick={handleMoveToLibrary}
+								>
+									<HugeiconsIcon className="size-4" icon={ArchiveIcon} />
+								</TooltipTrigger>
+								<TooltipContent>{t('entry.moveToLibrary')}</TooltipContent>
+							</Tooltip>
 						) : (
-							<Button
-								onClick={handleMoveToInbox}
-								size="icon"
-								title={t('entry.moveToInbox')}
-								variant="ghost"
-							>
-								<HugeiconsIcon className="size-4" icon={InboxIcon} />
-							</Button>
+							<Tooltip>
+								<TooltipTrigger
+									aria-label={t('entry.moveToInbox')}
+									className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+									onClick={handleMoveToInbox}
+								>
+									<HugeiconsIcon className="size-4" icon={InboxIcon} />
+								</TooltipTrigger>
+								<TooltipContent>{t('entry.moveToInbox')}</TooltipContent>
+							</Tooltip>
 						)}
 
 						{/* Star */}
-						<Button
-							onClick={handleToggleStar}
-							size="icon"
-							title={t('entry.starred')}
-							variant="ghost"
-						>
-							<HugeiconsIcon
-								className={`size-4 ${
-									entry.isStarred ? 'fill-amber-500 text-amber-500' : ''
-								}`}
-								icon={StarIcon}
-							/>
-						</Button>
+						<Tooltip>
+							<TooltipTrigger
+								aria-label={entry.isStarred ? t('entry.unstar') : t('entry.star')}
+								aria-pressed={entry.isStarred}
+								className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+								onClick={handleToggleStar}
+							>
+								<HugeiconsIcon
+									className={cn(
+										'size-4 transition-colors',
+										entry.isStarred && 'fill-amber-500 text-amber-500'
+									)}
+									icon={StarIcon}
+								/>
+							</TooltipTrigger>
+							<TooltipContent>
+								{entry.isStarred ? t('entry.unstar') : t('entry.star')}
+							</TooltipContent>
+						</Tooltip>
 
 						{/* Pin */}
-						<Button
-							onClick={handleTogglePin}
-							size="icon"
-							title={t('entry.pinned')}
-							variant="ghost"
-						>
-							<HugeiconsIcon
-								className={`size-4 ${
-									entry.isPinned ? 'fill-primary text-primary' : ''
-								}`}
-								icon={PinIcon}
-							/>
-						</Button>
+						<Tooltip>
+							<TooltipTrigger
+								aria-label={entry.isPinned ? t('entry.unpin') : t('entry.pin')}
+								aria-pressed={entry.isPinned}
+								className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+								onClick={handleTogglePin}
+							>
+								<HugeiconsIcon
+									className={cn(
+										'size-4 transition-colors',
+										entry.isPinned && 'fill-primary text-primary'
+									)}
+									icon={PinIcon}
+								/>
+							</TooltipTrigger>
+							<TooltipContent>
+								{entry.isPinned ? t('entry.unpin') : t('entry.pin')}
+							</TooltipContent>
+						</Tooltip>
 
 						{/* Delete */}
-						<Button
-							className="text-destructive hover:text-destructive"
-							onClick={handleDeleteClick}
-							size="icon"
-							title={t('common.delete')}
-							variant="ghost"
-						>
-							<HugeiconsIcon className="size-4" icon={Delete02Icon} />
-						</Button>
+						<Tooltip>
+							<TooltipTrigger
+								aria-label={t('common.delete')}
+								className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-destructive/30"
+								onClick={handleDeleteClick}
+							>
+								<HugeiconsIcon className="size-4" icon={Delete02Icon} />
+							</TooltipTrigger>
+							<TooltipContent>{t('common.delete')}</TooltipContent>
+						</Tooltip>
 
 						{/* More actions dropdown */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button size="icon" title={t('common.more')} variant="ghost">
+								<Button aria-label={t('common.more')} size="icon" variant="ghost">
 									<HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
 								</Button>
 							</DropdownMenuTrigger>
@@ -529,9 +547,12 @@ function EntryEditPage() {
 
 				{/* Title input */}
 				<Input
-					className="mb-4 border-none font-bold text-2xl shadow-none focus-visible:ring-0"
+					aria-label={t('entry.title')}
+					autoComplete="off"
+					className="mb-4 h-auto border-none bg-transparent py-2 font-bold text-2xl shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
 					onChange={handleTitleChange}
 					placeholder={t('entry.title')}
+					spellCheck={false}
 					value={title}
 				/>
 
@@ -558,28 +579,50 @@ function EntryEditPage() {
 				</div>
 
 				{/* Metadata footer */}
-				<div className="mt-8 border-t pt-4 font-bold font-script text-muted-foreground text-sm">
-					<p>
-						{t('entry.createdAt')}{' '}
-						{new Intl.DateTimeFormat(undefined, {
-							year: 'numeric',
-							month: 'long',
-							day: 'numeric',
-							hour: '2-digit',
-							minute: '2-digit',
-						}).format(new Date(entry.createdAt))}
-					</p>
-					<p>
-						{t('entry.updatedAt')}{' '}
-						{new Intl.DateTimeFormat(undefined, {
-							year: 'numeric',
-							month: 'long',
-							day: 'numeric',
-							hour: '2-digit',
-							minute: '2-digit',
-						}).format(new Date(entry.updatedAt))}
-					</p>
-				</div>
+				<footer className="mt-8 border-border/50 border-t pt-4">
+					<dl className="space-y-1 font-medium text-muted-foreground text-xs">
+						<div className="flex items-center gap-2">
+							<dt className="sr-only">{t('entry.createdAt')}</dt>
+							<dd className="flex items-center gap-1.5">
+								<span className="text-muted-foreground/60">
+									{t('entry.createdAt')}
+								</span>
+								<time
+									className="font-mono tabular-nums"
+									dateTime={new Date(entry.createdAt).toISOString()}
+								>
+									{new Intl.DateTimeFormat(undefined, {
+										year: 'numeric',
+										month: 'short',
+										day: 'numeric',
+										hour: '2-digit',
+										minute: '2-digit',
+									}).format(new Date(entry.createdAt))}
+								</time>
+							</dd>
+						</div>
+						<div className="flex items-center gap-2">
+							<dt className="sr-only">{t('entry.updatedAt')}</dt>
+							<dd className="flex items-center gap-1.5">
+								<span className="text-muted-foreground/60">
+									{t('entry.updatedAt')}
+								</span>
+								<time
+									className="font-mono tabular-nums"
+									dateTime={new Date(entry.updatedAt).toISOString()}
+								>
+									{new Intl.DateTimeFormat(undefined, {
+										year: 'numeric',
+										month: 'short',
+										day: 'numeric',
+										hour: '2-digit',
+										minute: '2-digit',
+									}).format(new Date(entry.updatedAt))}
+								</time>
+							</dd>
+						</div>
+					</dl>
+				</footer>
 
 				{/* Entry picker dialog for /ref command */}
 				<EntryPicker

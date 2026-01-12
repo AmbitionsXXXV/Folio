@@ -9,6 +9,7 @@ import { EntryEditor } from '@/components/entry-editor'
 import { TableOfContents } from '@/components/table-of-contents'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useTocPosition } from '@/hooks/use-toc-position'
 import { assignHeadingIds, parseTocFromContent } from '@/lib/toc'
 import { cn } from '@/lib/utils'
@@ -97,6 +98,21 @@ function NewEntryPage() {
 		navigate({ to: '/library' })
 	}, [navigate])
 
+	// Keyboard shortcut: ⌘/Ctrl + S to save
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+				e.preventDefault()
+				if (title.trim() || content.trim()) {
+					handleSave()
+				}
+			}
+		}
+
+		document.addEventListener('keydown', handleKeyDown)
+		return () => document.removeEventListener('keydown', handleKeyDown)
+	}, [handleSave, title, content])
+
 	// Parse TOC items from debounced content
 	const tocItems = useMemo(
 		() => parseTocFromContent(debouncedContentJson),
@@ -174,36 +190,59 @@ function NewEntryPage() {
 			{/* Main content */}
 			<div className="min-w-0 flex-1 px-4 py-6">
 				{/* Header toolbar */}
-				<div className="mb-6 flex items-center justify-between">
-					<Button onClick={handleGoBack} size="sm" variant="ghost">
+				<nav className="mb-6 flex items-center justify-between">
+					<Button
+						aria-label={t('common.back')}
+						onClick={handleGoBack}
+						size="sm"
+						variant="ghost"
+					>
 						<HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
 						{t('common.back')}
 					</Button>
 
-					<Button
-						disabled={createMutation.isPending || !(title.trim() || content.trim())}
-						onClick={handleSave}
-					>
-						{createMutation.isPending ? (
-							<>
-								<HugeiconsIcon
-									className="mr-2 size-4 animate-spin"
-									icon={Loading02Icon}
-								/>
-								{t('editor.saving')}
-							</>
-						) : (
-							t('common.save')
-						)}
-					</Button>
-				</div>
+					<Tooltip>
+						<TooltipTrigger
+							aria-describedby="save-shortcut"
+							aria-label={t('common.save')}
+							className="group/button inline-flex h-9 shrink-0 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-transparent bg-primary bg-clip-padding px-2.5 font-medium text-black text-sm outline-none transition-all hover:bg-primary/80 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+							disabled={
+								createMutation.isPending || !(title.trim() || content.trim())
+							}
+							onClick={handleSave}
+						>
+							{createMutation.isPending ? (
+								<>
+									<HugeiconsIcon
+										className="mr-1 size-4 animate-spin"
+										icon={Loading02Icon}
+									/>
+									<span>{t('editor.saving')}</span>
+								</>
+							) : (
+								t('common.save')
+							)}
+						</TooltipTrigger>
+						<TooltipContent side="bottom">
+							<span className="flex items-center gap-1.5">
+								{t('common.save')}
+								<kbd className="rounded border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[10px]">
+									⌘&nbsp;S
+								</kbd>
+							</span>
+						</TooltipContent>
+					</Tooltip>
+				</nav>
 
 				{/* Title input */}
 				<Input
+					aria-label={t('entry.title')}
+					autoComplete="off"
 					autoFocus
-					className="mb-4 border-none font-bold text-2xl shadow-none focus-visible:ring-0"
+					className="mb-4 h-auto border-none bg-transparent py-2 font-bold text-2xl shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
 					onChange={(e) => setTitle(e.target.value)}
 					placeholder={t('entry.title')}
+					spellCheck={false}
 					value={title}
 				/>
 

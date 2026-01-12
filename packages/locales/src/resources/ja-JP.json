@@ -38,7 +38,8 @@
     "onThisPage": "このページの目次",
     "tocPositionLeft": "左",
     "tocPositionRight": "右",
-    "permissionRequired": "権限が必要です"
+    "permissionRequired": "権限が必要です",
+    "navigation": "ナビゲーション"
   },
   "auth": {
     "signIn": "サインイン",
@@ -131,8 +132,9 @@
     "pin": "ピン留めする",
     "unpin": "ピン留めを解除",
     "pinnedSection": "ピン留め",
-    "createdAt": "作成日時",
-    "updatedAt": "更新日時",
+    "createdAt": "作成",
+    "updatedAt": "更新",
+    "metadata": "エントリ情報",
     "count_one": "{{count}} エントリ",
     "count_other": "{{count}} エントリ",
     "count": "{{count}} エントリ",
@@ -287,6 +289,9 @@
     "goodMorning": "おはようございます、{{name}}さん",
     "goodAfternoon": "こんにちは、{{name}}さん",
     "goodEvening": "こんばんは、{{name}}さん",
+    "goodMorningSimple": "おはようございます",
+    "goodAfternoonSimple": "こんにちは",
+    "goodEveningSimple": "こんばんは",
     "description": "あなたの学習アクティビティ",
     "quickCapture": "クイックキャプチャ",
     "quickCapturePlaceholder": "アイデアを記録...",
@@ -616,7 +621,12 @@
     "removePasswordError": "パスワードの削除に失敗しました",
     "currentlyProtected": "このノートは現在パスワードで保護されています",
     "changeOrRemove": "パスワードを変更するか、保護を完全に削除できます。",
-    "removeConfirm": "パスワード保護を削除してもよろしいですか？"
+    "removeConfirm": "パスワード保護を削除してもよろしいですか？",
+    "strengthWeak": "弱いパスワード",
+    "strengthFair": "普通のパスワード",
+    "strengthGood": "良いパスワード",
+    "strengthStrong": "強いパスワード",
+    "strengthVeryStrong": "非常に強いパスワード"
   },
   "sync": {
     "syncing": "同期中...",
