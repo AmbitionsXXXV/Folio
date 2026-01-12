@@ -1,0 +1,72 @@
+import { LockPasswordIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
+import type { PasswordFormProps } from '@/types/share'
+
+/**
+ * Password form component for protected share links
+ */
+export function SharePasswordForm({
+	password,
+	onPasswordChange,
+	onSubmit,
+	isPending,
+	error,
+}: PasswordFormProps) {
+	const { t } = useTranslation()
+
+	const handleSubmit = useCallback(
+		(e: React.FormEvent) => {
+			e.preventDefault()
+			if (password.length > 0) {
+				onSubmit()
+			}
+		},
+		[password, onSubmit]
+	)
+
+	return (
+		<div className="flex min-h-svh items-center justify-center p-4">
+			<Card className="w-full max-w-md">
+				<CardHeader className="text-center">
+					<div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+						<HugeiconsIcon
+							className="size-6 text-muted-foreground"
+							icon={LockPasswordIcon}
+						/>
+					</div>
+					<CardTitle className="text-balance">
+						{t('share.passwordRequired')}
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<form className="space-y-4" onSubmit={handleSubmit}>
+						<Input
+							autoFocus
+							onChange={(e) => onPasswordChange(e.target.value)}
+							placeholder={t('share.enterPassword')}
+							type="password"
+							value={password}
+						/>
+						{error && (
+							<p className="text-destructive text-sm">{t('share.wrongPassword')}</p>
+						)}
+						<Button
+							className="w-full"
+							disabled={password.length === 0 || isPending}
+							type="submit"
+						>
+							{isPending ? <Spinner className="mr-2 size-4" /> : null}
+							{t('share.unlock')}
+						</Button>
+					</form>
+				</CardContent>
+			</Card>
+		</div>
+	)
+}

@@ -1,5 +1,17 @@
 # web
 
+## 0.2.5
+
+### Patch Changes
+
+- refactor: 📦 refactor components
+- Updated dependencies
+  - @folionote/api@0.2.5
+  - @folionote/auth@0.2.5
+  - @folionote/constants@0.2.5
+  - @folionote/locales@0.2.5
+  - @folionote/utils@0.2.5
+
 ## 0.2.4
 
 ### Patch Changes
