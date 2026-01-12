@@ -1,5 +1,17 @@
 # server
 
+## 0.2.4
+
+### Patch Changes
+
+- feat: ✨ make ui component more accessible
+- Updated dependencies
+  - @folionote/locales@0.2.4
+  - @folionote/api@0.2.4
+  - @folionote/auth@0.2.4
+  - @folionote/db@0.2.4
+  - @folionote/storage@0.2.4
+
 ## 0.2.3
 
 ### Patch Changes
