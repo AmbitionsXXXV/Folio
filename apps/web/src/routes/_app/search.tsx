@@ -24,11 +24,33 @@ function SearchPage() {
 		const params = new URLSearchParams(window.location.search)
 		const tags = params.get('tags')
 		const sources = params.get('sources')
+		const from = params.get('from')
+		const to = params.get('to')
+		const isInbox = params.get('isInbox')
+		const isStarred = params.get('isStarred')
 
-		setInitialFilters({
-			tagIds: tags ? tags.split(',').filter(Boolean) : undefined,
-			sourceIds: sources ? sources.split(',').filter(Boolean) : undefined,
-		})
+		const parsedFilters: SearchFiltersValue = {}
+
+		if (tags) {
+			parsedFilters.tagIds = tags.split(',').filter(Boolean)
+		}
+		if (sources) {
+			parsedFilters.sourceIds = sources.split(',').filter(Boolean)
+		}
+		if (from || to) {
+			parsedFilters.dateRange = {
+				from: from ? new Date(from) : undefined,
+				to: to ? new Date(to) : undefined,
+			}
+		}
+		if (isInbox === 'true') {
+			parsedFilters.isInbox = true
+		}
+		if (isStarred === 'true') {
+			parsedFilters.isStarred = true
+		}
+
+		setInitialFilters(parsedFilters)
 	}, [])
 
 	return (

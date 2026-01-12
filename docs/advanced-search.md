@@ -12,8 +12,9 @@
 
 - 使用 `to_tsvector` 和 `to_tsquery` 进行全文搜索
 - 支持前缀匹配（如搜索 "note" 会匹配 "notebook"）
-- 使用 `ts_rank` 按相关性排序
-- 当 FTS 无结果时自动回退到 ILIKE 搜索
+- 按 `updatedAt` 降序排序（确保游标分页一致性）
+- 当 FTS 无结果或出错时自动回退到 ILIKE 搜索
+- FTS 错误会记录到日志便于调试
 
 **搜索语法：**
 
@@ -297,7 +298,8 @@ import { SearchSuggestions } from '@/components/search/search-suggestions'
 
 - 使用 `simple` 配置以支持多语言
 - 前缀匹配使用 `:*` 语法
-- 相关性排序使用 `ts_rank`
+- 运行迁移 `0004_add_fts_gin_index.sql` 后启用 GIN 索引
+- 生成列 `search_vector` 自动维护，无需手动更新
 
 ### 查询优化
 
@@ -311,9 +313,61 @@ import { SearchSuggestions } from '@/components/search/search-suggestions'
 - 历史记录使用 React Query 缓存
 - 过滤器使用 Popover 避免页面跳转
 
+## URL 状态同步
+
+搜索页面支持完整的 URL 状态持久化，刷新页面后可恢复搜索状态：
+
+| 参数 | 类型 | 描述 |
+| --- | --- | --- |
+| `q` | string | 搜索关键词 |
+| `tags` | string | 标签 ID，逗号分隔 |
+| `sources` | string | 来源 ID，逗号分隔 |
+| `from` | ISO date | 日期范围开始 |
+| `to` | ISO date | 日期范围结束 |
+| `isInbox` | "true" | 仅收件箱 |
+| `isStarred` | "true" | 仅星标 |
+
+**示例 URL：**
+
+```plaintext
+/search?q=React&tags=tag1,tag2&isStarred=true&from=2024-01-01T00:00:00.000Z
+```
+
+## 数据库迁移
+
+### 0004_add_fts_gin_index.sql
+
+添加 GIN 索引以提升 FTS 性能：
+
+```sql
+-- 添加生成的 tsvector 列
+ALTER TABLE "entries" ADD COLUMN IF NOT EXISTS "search_vector" tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('simple', coalesce("title", '') || ' ' || coalesce("content_text", ''))
+  ) STORED;
+
+-- GIN 索引
+CREATE INDEX IF NOT EXISTS "entries_search_vector_idx"
+  ON "entries" USING GIN ("search_vector");
+
+-- 分页优化索引
+CREATE INDEX IF NOT EXISTS "entries_user_id_updated_at_not_deleted_idx"
+  ON "entries" ("user_id", "updated_at" DESC)
+  WHERE "deleted_at" IS NULL;
+```
+
+运行迁移：
+
+```bash
+pnpm db:migrate
+```
+
 ## 待办事项
 
-- [ ] 添加 GIN 索引到 entries 表（需要数据库迁移）
+- [x] 添加 GIN 索引到 entries 表（迁移文件：`0004_add_fts_gin_index.sql`）
+- [x] 修复 FTS 分页游标逻辑（改为只按 `updatedAt` 排序）
+- [x] 完善 URL 状态同步（支持所有过滤器参数）
+- [x] 添加 FTS 错误日志记录
 - [ ] 支持中文分词（需要安装 pg_jieba 或 zhparser 扩展）
 - [ ] 添加搜索结果高亮
 - [ ] 支持保存搜索过滤器为预设

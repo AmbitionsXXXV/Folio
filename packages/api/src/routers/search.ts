@@ -1,4 +1,5 @@
 import { db, entries, entrySources, entryTags, searchHistory } from '@folionote/db'
+import { createLogger } from '@folionote/log'
 import {
 	and,
 	desc,
@@ -15,6 +16,8 @@ import {
 import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { protectedProcedure } from '../index'
+
+const log = createLogger({ prefix: 'search' })
 
 // Regex for splitting query into search terms (defined at top level for performance)
 const WHITESPACE_REGEX = /\s+/
@@ -90,6 +93,10 @@ const GetSuggestionsInputSchema = z.object({
 /**
  * Perform full-text search using PostgreSQL to_tsquery
  * Falls back to ILIKE if FTS returns no results
+ *
+ * Note: We order by updatedAt DESC only (not ts_rank) to ensure consistent
+ * cursor-based pagination. Relevance ranking would require a more complex
+ * composite cursor implementation.
  */
 async function performFtsSearch(
 	userId: string,
@@ -131,6 +138,7 @@ async function performFtsSearch(
 	}
 
 	// Try FTS first
+	// After running migration 0004, a GIN index on search_vector column will be used
 	try {
 		const ftsItems = await db
 			.select()
@@ -141,18 +149,17 @@ async function performFtsSearch(
 					sql`to_tsvector('simple', coalesce(${entries.title}, '') || ' ' || coalesce(${entries.contentText}, '')) @@ to_tsquery('simple', ${searchTerms})`
 				)
 			)
-			.orderBy(
-				// Order by relevance score first, then by updatedAt
-				sql`ts_rank(to_tsvector('simple', coalesce(${entries.title}, '') || ' ' || coalesce(${entries.contentText}, '')), to_tsquery('simple', ${searchTerms})) DESC`,
-				desc(entries.updatedAt)
-			)
+			// Order by updatedAt only for consistent cursor pagination
+			// FTS still filters by relevance, just doesn't sort by it
+			.orderBy(desc(entries.updatedAt))
 			.limit(limit + 1)
 
 		if (ftsItems.length > 0) {
 			return { items: ftsItems, usedFts: true }
 		}
-	} catch {
+	} catch (error) {
 		// FTS failed, fall back to ILIKE
+		log.warn('FTS search failed, falling back to ILIKE:', error)
 	}
 
 	// Fallback to ILIKE

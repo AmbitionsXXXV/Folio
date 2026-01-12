@@ -18,6 +18,25 @@ import type { SearchFiltersValue, SearchHistoryFilters } from './types'
 
 export type { SearchFiltersValue } from './types'
 
+/**
+ * Build URL search params from query and filters
+ */
+function buildSearchParams(
+	query: string,
+	filters: SearchFiltersValue
+): URLSearchParams {
+	const params = new URLSearchParams()
+	if (query) params.set('q', query)
+	if (filters.tagIds?.length) params.set('tags', filters.tagIds.join(','))
+	if (filters.sourceIds?.length) params.set('sources', filters.sourceIds.join(','))
+	if (filters.dateRange?.from)
+		params.set('from', filters.dateRange.from.toISOString())
+	if (filters.dateRange?.to) params.set('to', filters.dateRange.to.toISOString())
+	if (filters.isInbox) params.set('isInbox', 'true')
+	if (filters.isStarred) params.set('isStarred', 'true')
+	return params
+}
+
 type AdvancedSearchProps = {
 	initialQuery?: string
 	initialFilters?: SearchFiltersValue
@@ -60,6 +79,13 @@ export function AdvancedSearch({
 	const [filters, setFilters] = useState<SearchFiltersValue>(initialFilters)
 	const [isInputFocused, setIsInputFocused] = useState(false)
 	const [debouncedQuery] = useDebounce(query, 300)
+
+	// Sync filters when initialFilters prop changes (e.g., from URL parsing)
+	useEffect(() => {
+		if (Object.keys(initialFilters).length > 0) {
+			setFilters(initialFilters)
+		}
+	}, [initialFilters])
 
 	// Determine if we should show the dropdown (history/suggestions)
 	const showDropdown =
@@ -201,19 +227,12 @@ export function AdvancedSearch({
 
 	// Update URL when search changes (if onSearch not provided)
 	useEffect(() => {
-		if (typeof window === 'undefined') return
-		if (!onSearch && debouncedQuery) {
-			const searchParams = new URLSearchParams()
-			searchParams.set('q', debouncedQuery)
-			if (filters.tagIds?.length) {
-				searchParams.set('tags', filters.tagIds.join(','))
-			}
-			if (filters.sourceIds?.length) {
-				searchParams.set('sources', filters.sourceIds.join(','))
-			}
-			window.history.replaceState(null, '', `?${searchParams.toString()}`)
-		}
-	}, [debouncedQuery, filters, onSearch])
+		if (typeof window === 'undefined' || onSearch) return
+		if (!hasSearchCriteria) return
+
+		const params = buildSearchParams(debouncedQuery, filters)
+		window.history.replaceState(null, '', `?${params.toString()}`)
+	}, [debouncedQuery, filters, onSearch, hasSearchCriteria])
 
 	// Wrap entries to match Entry type with click handler
 	const entriesWithClick = entries.map((entry) => ({
