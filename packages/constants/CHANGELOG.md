@@ -1,5 +1,13 @@
 # @folionote/constants
 
+## 0.2.7
+
+### Patch Changes
+
+- chore: 🔨 a lot of fixes
+- Updated dependencies
+  - @folionote/locales@0.2.7
+
 ## 0.2.6
 
 ### Patch Changes

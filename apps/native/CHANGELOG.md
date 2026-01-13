@@ -1,5 +1,16 @@
 # native
 
+## 0.2.7
+
+### Patch Changes
+
+- chore: 🔨 a lot of fixes
+- Updated dependencies
+  - @folionote/api@0.2.7
+  - @folionote/constants@0.2.7
+  - @folionote/locales@0.2.7
+  - @folionote/utils@0.2.7
+
 ## 0.2.6
 
 ### Patch Changes
