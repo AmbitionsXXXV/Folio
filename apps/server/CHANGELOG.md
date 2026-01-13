@@ -1,5 +1,18 @@
 # server
 
+## 0.2.7
+
+### Patch Changes
+
+- chore: 🔨 a lot of fixes
+- Updated dependencies
+  - @folionote/api@0.2.7
+  - @folionote/auth@0.2.7
+  - @folionote/db@0.2.7
+  - @folionote/locales@0.2.7
+  - @folionote/log@0.1.1
+  - @folionote/storage@0.2.7
+
 ## 0.2.6
 
 ### Patch Changes

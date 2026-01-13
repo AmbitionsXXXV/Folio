@@ -1,5 +1,11 @@
 # @folionote/utils
 
+## 0.2.7
+
+### Patch Changes
+
+- chore: 🔨 a lot of fixes
+
 ## 0.2.6
 
 ### Patch Changes
