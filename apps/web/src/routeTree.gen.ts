@@ -22,8 +22,8 @@ import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
+import { Route as AppKnowledgeRouteImport } from './routes/_app/knowledge'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
-import { Route as AppAiDemoRouteImport } from './routes/_app/ai-demo'
 import { Route as AppActivityRouteImport } from './routes/_app/activity'
 import { Route as AppEntriesNewRouteImport } from './routes/_app/entries/new'
 import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
@@ -92,14 +92,14 @@ const AppLibraryRoute = AppLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AppRoute,
 } as any)
+const AppKnowledgeRoute = AppKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInboxRoute = AppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAiDemoRoute = AppAiDemoRouteImport.update({
-  id: '/ai-demo',
-  path: '/ai-demo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppActivityRoute = AppActivityRouteImport.update({
@@ -125,8 +125,8 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
-  '/ai-demo': typeof AppAiDemoRoute
   '/inbox': typeof AppInboxRoute
+  '/knowledge': typeof AppKnowledgeRoute
   '/library': typeof AppLibraryRoute
   '/profile': typeof AppProfileRoute
   '/review': typeof AppReviewRoute
@@ -144,8 +144,8 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
-  '/ai-demo': typeof AppAiDemoRoute
   '/inbox': typeof AppInboxRoute
+  '/knowledge': typeof AppKnowledgeRoute
   '/library': typeof AppLibraryRoute
   '/profile': typeof AppProfileRoute
   '/review': typeof AppReviewRoute
@@ -165,8 +165,8 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/activity': typeof AppActivityRoute
-  '/_app/ai-demo': typeof AppAiDemoRoute
   '/_app/inbox': typeof AppInboxRoute
+  '/_app/knowledge': typeof AppKnowledgeRoute
   '/_app/library': typeof AppLibraryRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/review': typeof AppReviewRoute
@@ -186,8 +186,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/activity'
-    | '/ai-demo'
     | '/inbox'
+    | '/knowledge'
     | '/library'
     | '/profile'
     | '/review'
@@ -205,8 +205,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/activity'
-    | '/ai-demo'
     | '/inbox'
+    | '/knowledge'
     | '/library'
     | '/profile'
     | '/review'
@@ -225,8 +225,8 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/_app/activity'
-    | '/_app/ai-demo'
     | '/_app/inbox'
+    | '/_app/knowledge'
     | '/_app/library'
     | '/_app/profile'
     | '/_app/review'
@@ -341,18 +341,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLibraryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/knowledge': {
+      id: '/_app/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof AppKnowledgeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/inbox': {
       id: '/_app/inbox'
       path: '/inbox'
       fullPath: '/inbox'
       preLoaderRoute: typeof AppInboxRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/ai-demo': {
-      id: '/_app/ai-demo'
-      path: '/ai-demo'
-      fullPath: '/ai-demo'
-      preLoaderRoute: typeof AppAiDemoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/activity': {
@@ -381,8 +381,8 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
-  AppAiDemoRoute: typeof AppAiDemoRoute
   AppInboxRoute: typeof AppInboxRoute
+  AppKnowledgeRoute: typeof AppKnowledgeRoute
   AppLibraryRoute: typeof AppLibraryRoute
   AppProfileRoute: typeof AppProfileRoute
   AppReviewRoute: typeof AppReviewRoute
@@ -395,8 +395,8 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
-  AppAiDemoRoute: AppAiDemoRoute,
   AppInboxRoute: AppInboxRoute,
+  AppKnowledgeRoute: AppKnowledgeRoute,
   AppLibraryRoute: AppLibraryRoute,
   AppProfileRoute: AppProfileRoute,
   AppReviewRoute: AppReviewRoute,

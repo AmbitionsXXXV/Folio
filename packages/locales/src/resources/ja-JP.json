@@ -39,7 +39,8 @@
     "tocPositionLeft": "左",
     "tocPositionRight": "右",
     "permissionRequired": "権限が必要です",
-    "navigation": "ナビゲーション"
+    "navigation": "ナビゲーション",
+    "optional": "オプション"
   },
   "auth": {
     "signIn": "サインイン",
@@ -315,7 +316,9 @@
     "search": "検索",
     "sources": "ソース",
     "tags": "タグ",
-    "settings": "設定"
+    "settings": "設定",
+    "profile": "プロフィール",
+    "knowledge": "ナレッジ"
   },
   "search": {
     "placeholder": "エントリを検索...",
@@ -681,5 +684,59 @@
     "uploadComplete_other": "{{count}} 件アップロード完了",
     "downloadComplete_one": "{{count}} 件ダウンロード完了",
     "downloadComplete_other": "{{count}} 件ダウンロード完了"
+  },
+  "knowledge": {
+    "title": "ナレッジベース",
+    "subtitle": "AI駆動のナレッジアシスタント",
+    "newChat": "新しいチャット",
+    "configuration": "設定",
+    "provider": "プロバイダー",
+    "model": "モデル",
+    "selectModel": "モデルを選択…",
+    "apiKey": "APIキー",
+    "apiKeyHint": "キーはローカルに保存され、サーバーに送信されません。",
+    "baseUrl": "Base URL（オプション）",
+    "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
+    "saveConfig": "設定を保存",
+    "configSaved": "設定が保存されました",
+    "inputPlaceholder": "何でも質問してください…",
+    "configureApiKeyFirst": "まずAPIキーを設定してください",
+    "configureFirst": "AIプロバイダーを設定",
+    "thinking": "考え中…",
+    "requestFailed": "AIリクエストが失敗しました",
+    "send": "送信",
+    "notConfigured": "未設定",
+    "noApiKeyWarning": "このプロバイダーにはAPIキーが設定されていません。",
+    "goToSettings": "設定へ移動",
+    "saveAsDefault": "デフォルトに設定",
+    "defaultSaved": "デフォルトプロバイダーを保存しました",
+    "manageApiKeys": "APIキーを管理",
+    "emptyState": {
+      "title": "会話を開始",
+      "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。"
+    }
+  },
+  "aiProvider": {
+    "title": "AIプロバイダー設定",
+    "description": "異なるAIプロバイダーのAPIキーを設定します。キーはローカルに保存され、サーバーに送信されません。",
+    "configured": "設定済み",
+    "default": "デフォルト",
+    "getApiKey": "APIキーを取得",
+    "setAsDefault": "デフォルトに設定",
+    "setAsDefaultSuccess": "{{provider}} をデフォルトに設定しました",
+    "configure": "設定",
+    "edit": "編集",
+    "remove": "削除",
+    "configureProvider": "{{provider}} を設定",
+    "configureDescription": "このプロバイダーを有効にするにはAPIキーを入力してください。",
+    "apiKey": "APIキー",
+    "apiKeyPlaceholder": "{{provider}} のAPIキーを入力…",
+    "apiKeyHint": "キーはローカルに保存され、サーバーに送信されません。",
+    "baseUrl": "Base URL",
+    "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
+    "configSaved": "{{provider}} の設定を保存しました",
+    "removed": "{{provider}} の設定を削除しました",
+    "removeConfirmTitle": "APIキーを削除",
+    "removeConfirmDescription": "{{provider}} のAPIキーを削除してもよろしいですか？このプロバイダーを使用するには再設定が必要です。"
   }
 }

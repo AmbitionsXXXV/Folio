@@ -90,7 +90,8 @@
     "tocPositionLeft": "左侧",
     "tocPositionRight": "右侧",
     "permissionRequired": "需要权限",
-    "navigation": "导航"
+    "navigation": "导航",
+    "optional": "可选"
   },
   "auth": {
     "signIn": "登录",
@@ -414,7 +415,8 @@
     "sources": "来源",
     "tags": "标签",
     "settings": "设置",
-    "profile": "个人资料"
+    "profile": "个人资料",
+    "knowledge": "知识库"
   },
   "search": {
     "placeholder": "搜索条目...",
@@ -682,5 +684,59 @@
     "uploadComplete_other": "已上传 {{count}} 项",
     "downloadComplete_one": "已下载 {{count}} 项",
     "downloadComplete_other": "已下载 {{count}} 项"
+  },
+  "knowledge": {
+    "title": "知识库",
+    "subtitle": "AI 驱动的知识助手",
+    "newChat": "新对话",
+    "configuration": "配置",
+    "provider": "提供商",
+    "model": "模型",
+    "selectModel": "选择模型…",
+    "apiKey": "API 密钥",
+    "apiKeyHint": "密钥仅存储在本地，不会发送到我们的服务器。",
+    "baseUrl": "Base URL（可选）",
+    "baseUrlHint": "留空使用默认端点；如需代理 / 网关可在此覆盖。",
+    "saveConfig": "保存配置",
+    "configSaved": "配置已保存",
+    "inputPlaceholder": "问任何问题…",
+    "configureApiKeyFirst": "请先配置 API 密钥",
+    "configureFirst": "配置 AI 提供商",
+    "thinking": "思考中…",
+    "requestFailed": "AI 请求失败",
+    "send": "发送",
+    "notConfigured": "未配置",
+    "noApiKeyWarning": "该提供商尚未配置 API 密钥。",
+    "goToSettings": "前往设置",
+    "saveAsDefault": "设为默认",
+    "defaultSaved": "已保存为默认提供商",
+    "manageApiKeys": "管理 API 密钥",
+    "emptyState": {
+      "title": "开始对话",
+      "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。"
+    }
+  },
+  "aiProvider": {
+    "title": "AI 提供商设置",
+    "description": "为不同的 AI 提供商配置 API 密钥。您的密钥仅存储在本地，不会发送到我们的服务器。",
+    "configured": "已配置",
+    "default": "默认",
+    "getApiKey": "获取 API Key",
+    "setAsDefault": "设为默认",
+    "setAsDefaultSuccess": "已将 {{provider}} 设为默认",
+    "configure": "配置",
+    "edit": "编辑",
+    "remove": "移除",
+    "configureProvider": "配置 {{provider}}",
+    "configureDescription": "输入您的 API 密钥以启用此提供商。",
+    "apiKey": "API 密钥",
+    "apiKeyPlaceholder": "输入您的 {{provider}} API 密钥…",
+    "apiKeyHint": "您的密钥仅存储在本地，不会发送到我们的服务器。",
+    "baseUrl": "Base URL",
+    "baseUrlHint": "留空使用默认端点；如需代理 / 网关可在此覆盖。",
+    "configSaved": "{{provider}} 配置已保存",
+    "removed": "{{provider}} 配置已移除",
+    "removeConfirmTitle": "移除 API 密钥",
+    "removeConfirmDescription": "确定要移除 {{provider}} 的 API 密钥吗？您需要重新配置才能使用此提供商。"
   }
 }

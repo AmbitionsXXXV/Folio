@@ -39,7 +39,8 @@
     "tocPositionLeft": "Left",
     "tocPositionRight": "Right",
     "permissionRequired": "Permission Required",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "optional": "optional"
   },
   "auth": {
     "signIn": "Sign In",
@@ -363,7 +364,8 @@
     "sources": "Sources",
     "tags": "Tags",
     "settings": "Settings",
-    "profile": "Profile"
+    "profile": "Profile",
+    "knowledge": "Knowledge"
   },
   "search": {
     "placeholder": "Search entries...",
@@ -682,5 +684,59 @@
     "uploadComplete_other": "Uploaded {{count}} items",
     "downloadComplete_one": "Downloaded {{count}} item",
     "downloadComplete_other": "Downloaded {{count}} items"
+  },
+  "knowledge": {
+    "title": "Knowledge Base",
+    "subtitle": "AI-powered knowledge assistant",
+    "newChat": "New Chat",
+    "configuration": "Configuration",
+    "provider": "Provider",
+    "model": "Model",
+    "selectModel": "Select a model…",
+    "apiKey": "API Key",
+    "apiKeyHint": "Your key is stored locally and never sent to our servers.",
+    "baseUrl": "Base URL (Optional)",
+    "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
+    "saveConfig": "Save Configuration",
+    "configSaved": "Configuration saved",
+    "inputPlaceholder": "Ask anything…",
+    "configureApiKeyFirst": "Configure your API key first",
+    "configureFirst": "Configure AI Provider",
+    "thinking": "Thinking…",
+    "requestFailed": "AI request failed",
+    "send": "Send",
+    "notConfigured": "not configured",
+    "noApiKeyWarning": "No API key configured for this provider.",
+    "goToSettings": "Go to Settings",
+    "saveAsDefault": "Save as Default",
+    "defaultSaved": "Default provider saved",
+    "manageApiKeys": "Manage API Keys",
+    "emptyState": {
+      "title": "Start a Conversation",
+      "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance."
+    }
+  },
+  "aiProvider": {
+    "title": "AI Provider Settings",
+    "description": "Configure API keys for different AI providers. Your keys are stored locally and never sent to our servers.",
+    "configured": "Configured",
+    "default": "Default",
+    "getApiKey": "Get API Key",
+    "setAsDefault": "Set as Default",
+    "setAsDefaultSuccess": "{{provider}} set as default",
+    "configure": "Configure",
+    "edit": "Edit",
+    "remove": "Remove",
+    "configureProvider": "Configure {{provider}}",
+    "configureDescription": "Enter your API key to enable this provider.",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "Enter your {{provider}} API key…",
+    "apiKeyHint": "Your key is stored locally and never sent to our servers.",
+    "baseUrl": "Base URL",
+    "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
+    "configSaved": "{{provider}} configuration saved",
+    "removed": "{{provider}} configuration removed",
+    "removeConfirmTitle": "Remove API Key",
+    "removeConfirmDescription": "Are you sure you want to remove the API key for {{provider}}? You will need to reconfigure it to use this provider."
   }
 }

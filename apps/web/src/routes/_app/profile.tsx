@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import {
+	AiProviderSettings,
 	AppearanceSettings,
 	DangerZone,
 	LanguageSettings,
@@ -31,6 +32,7 @@ function ProfilePage() {
 		<div className="container mx-auto max-w-3xl px-4 py-8">
 			<ProfileHeader />
 			<ProfileCard />
+			<AiProviderSettings />
 			<AppearanceSettings mounted={mounted} />
 			<LanguageSettings />
 			<DangerZone onSignOut={handleSignOut} />
