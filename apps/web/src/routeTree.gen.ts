@@ -23,6 +23,7 @@ import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
+import { Route as AppAiDemoRouteImport } from './routes/_app/ai-demo'
 import { Route as AppActivityRouteImport } from './routes/_app/activity'
 import { Route as AppEntriesNewRouteImport } from './routes/_app/entries/new'
 import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
@@ -96,6 +97,11 @@ const AppInboxRoute = AppInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiDemoRoute = AppAiDemoRouteImport.update({
+  id: '/ai-demo',
+  path: '/ai-demo',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppActivityRoute = AppActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
+  '/ai-demo': typeof AppAiDemoRoute
   '/inbox': typeof AppInboxRoute
   '/library': typeof AppLibraryRoute
   '/profile': typeof AppProfileRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
+  '/ai-demo': typeof AppAiDemoRoute
   '/inbox': typeof AppInboxRoute
   '/library': typeof AppLibraryRoute
   '/profile': typeof AppProfileRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/activity': typeof AppActivityRoute
+  '/_app/ai-demo': typeof AppAiDemoRoute
   '/_app/inbox': typeof AppInboxRoute
   '/_app/library': typeof AppLibraryRoute
   '/_app/profile': typeof AppProfileRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/activity'
+    | '/ai-demo'
     | '/inbox'
     | '/library'
     | '/profile'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/activity'
+    | '/ai-demo'
     | '/inbox'
     | '/library'
     | '/profile'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/_app/activity'
+    | '/_app/ai-demo'
     | '/_app/inbox'
     | '/_app/library'
     | '/_app/profile'
@@ -336,6 +348,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInboxRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ai-demo': {
+      id: '/_app/ai-demo'
+      path: '/ai-demo'
+      fullPath: '/ai-demo'
+      preLoaderRoute: typeof AppAiDemoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/activity': {
       id: '/_app/activity'
       path: '/activity'
@@ -362,6 +381,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
+  AppAiDemoRoute: typeof AppAiDemoRoute
   AppInboxRoute: typeof AppInboxRoute
   AppLibraryRoute: typeof AppLibraryRoute
   AppProfileRoute: typeof AppProfileRoute
@@ -375,6 +395,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
+  AppAiDemoRoute: AppAiDemoRoute,
   AppInboxRoute: AppInboxRoute,
   AppLibraryRoute: AppLibraryRoute,
   AppProfileRoute: AppProfileRoute,

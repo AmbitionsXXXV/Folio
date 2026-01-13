@@ -4,6 +4,7 @@
   "commit": false,
   "fixed": [
     [
+      "@folionote/ai",
       "@folionote/api",
       "@folionote/auth",
       "@folionote/config",

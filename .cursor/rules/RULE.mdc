@@ -1,0 +1,22 @@
+---
+description: FolioNote Rules
+globs: "**/*.{ts,tsx,js,jsx,json,jsonc,html,vue,svelte,astro,css,yaml,yml,graphql,gql,md,mdx,grit}"
+alwaysApply: true
+---
+
+# Commands
+
+- `pnpm run build`: Build the project
+- `pnpm run check-types`: Run the typechecker
+- `pnpm check:fix`: Lint and fix code
+- `pnpm test`: Run tests (prefer single test files for speed)
+
+# Code style
+
+- Use ES modules (import/export), not CommonJS (require)
+- Destructure imports when possible: `import { foo } from 'bar'`
+
+# Workflow
+
+- Always typecheck after making a series of code changes
+- API routes go in `apps/server/src/index.ts` and `packages/api/src/index.ts` following existing patterns

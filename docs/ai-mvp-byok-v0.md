@@ -162,47 +162,48 @@
 
 ---
 
-## 5. 服务端目录与文件规划（packages/api）
+## 5. 服务端目录与文件规划
 
-在 `packages/api/src` 新增：
+AI 能力沉淀在独立 package `@folionote/ai`（`packages/ai`），API 层只做接入与鉴权。
+
+### 5.1 AI 能力层（packages/ai）
 
 ```text
-packages/api/src
-├── ai
+packages/ai/src
+├── index.ts                 # 统一导出
+├── schemas.ts               # 共享 Zod schemas
+├── vercel-ai.ts             # Vercel AI SDK model factories（按 BYOK credential 创建模型）
+├── providers
 │   ├── index.ts
-│   ├── providers
-│   │   ├── index.ts
-│   │   ├── openai.ts
-│   │   ├── deepseek.ts
-│   │   ├── gemini.ts
-│   │   ├── claude.ts
-│   │   └── qwen.ts
-│   ├── credentials
-│   │   ├── crypto.ts
-│   │   ├── store.ts
-│   │   └── validate.ts
-│   ├── prompts
-│   │   ├── summarize.ts
-│   │   └── review-suggest.ts
-│   ├── rag
-│   │   ├── chunker.ts
-│   │   ├── embeddings.ts
-│   │   ├── indexer.ts
-│   │   └── retriever.ts
-│   ├── usage
-│   │   ├── tokens.ts
-│   │   ├── cost.ts
-│   │   └── persist.ts
-│   ├── graph
-│   │   ├── review-suggest.graph.ts
-│   │   └── types.ts
-│   └── schemas.ts
-└── routers
-    ├── ai.ts
-    ├── ai-credentials.ts
-    ├── ai-usage.ts
-    └── index.ts
+│   └── types.ts             # Provider 枚举、能力声明、配置
+├── credentials
+│   ├── index.ts
+│   └── types.ts             # BYOK 凭证类型、加解密接口
+├── prompts
+│   ├── index.ts
+│   └── versions.ts          # Prompt 版本常量
+├── rag
+│   ├── index.ts
+│   └── types.ts             # Chunker、Embedder、Retriever 接口
+├── usage
+│   ├── index.ts
+│   └── types.ts             # TokenUsage、AiRun、DailyUsage 类型
+└── graph
+    ├── index.ts
+    └── types.ts             # LangGraph 风格的 workflow 类型
 ```
+
+### 5.2 API 网关层（packages/api）
+
+```text
+packages/api/src/routers
+├── ai.ts                    # AI 路由（调用 @folionote/ai）
+├── ai-credentials.ts        # BYOK 凭证管理（后续实现）
+├── ai-usage.ts              # Usage 查询（后续实现）
+└── index.ts                 # appRouter 挂载
+```
+
+> **设计原则**：`@folionote/api` 只负责 HTTP 路由、鉴权、参数校验；AI 业务逻辑（加解密、RAG、workflow 编排等）全部在 `@folionote/ai` 实现，便于复用与测试。
 
 ---
 
@@ -211,21 +212,38 @@ packages/api/src
 新增（或在你现有 env 体系里加入）：
 
 * `AI_KEY_ENCRYPTION_SECRET`：用于加密用户 Key（必须）
-* `AI_PROMPT_VERSION_SUMMARIZE`：默认 `summarize_v0`
-* `AI_PROMPT_VERSION_REVIEW_SUGGEST`：默认 `review_suggest_v0`
+* `AI_PROMPT_VERSION_SUMMARIZE`：默认 `summarize_v0`（可选，若你希望用 env 参与灰度/回滚）
+* `AI_PROMPT_VERSION_REVIEW_SUGGEST`：默认 `review_suggest_v0`（可选，若你希望用 env 参与灰度/回滚）
 
-可选（默认模型名，不提供 Key）：
+默认 Provider / 默认模型：
 
-* `AI_DEFAULT_PROVIDER`（如 `openai`/`deepseek`/`qwen`）
-* `AI_DEFAULT_MODEL_SUMMARIZE`
-* `AI_DEFAULT_MODEL_RERANK`
-* `AI_DEFAULT_EMBEDDING_MODEL`
+* **不通过 env 管理**：默认值由 `@folionote/ai` 的 Provider registry（代码）提供
+* 后续可以演进为 **用户级配置**（存到 `user_ai_credentials` 或独立的 user settings 表），从而按用户覆盖默认模型
 
-Usage/成本估算（可选）：
+当前代码默认值（仅供开发期参考）：
 
-* `AI_PRICING_SNAPSHOT_JSON`：Provider 价格配置快照（JSON 字符串）  
-  用于估算 `estimatedCost`（不用于计费，仅给用户自查）
-* `AI_COST_ESTIMATION_ENABLED`：`true|false`（默认 false）
+* Gemini 默认 chat 模型：`gemini-2.5-flash-lite`
+* Gemini 默认 baseUrl（native）：`https://generativelanguage.googleapis.com/v1beta`
+* Gemini baseUrl（OpenAI compatible，可选）：`https://generativelanguage.googleapis.com/v1beta/openai`
+* Qwen baseUrl（CN）：`https://dashscope.aliyuncs.com/compatible-mode/v1`
+* Qwen baseUrl（INTL，可选）：`https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+
+> 注意：Gemini embedding 目前仅支持 native baseUrl（`/v1beta`）；若使用 OpenAI compatible baseUrl（`/v1beta/openai`），embedding 会直接报错。
+
+> 提示：如果出现 `User location is not supported for the API use`，说明 Gemini 官方 API 在当前地区不可用；可切换 Provider，或通过 baseUrl 配置代理 / 网关。
+
+Usage / 成本估算（可选）：
+
+* `AI_PRICING_SNAPSHOT_JSON` 与 `AI_COST_ESTIMATION_ENABLED` 建议迁移到 `config.toml`（便于版本化与审计；也更接近未来“用户级配置”演进方向）
+* 示例（`apps/server/config.toml`）：
+
+```toml
+[ai]
+cost_estimation_enabled = false
+
+# Provider 价格配置快照（JSON 字符串），用于估算 estimatedCost（不用于计费，仅给用户自查）
+pricing_snapshot_json = ""
+```
 
 > 注意：BYOK 模式下，**你不需要**在服务端放 `AI_API_KEY`，除非你想提供“平台 Key 试用模式”（MVP 建议不做）。
 

@@ -1,0 +1,7 @@
+[ai]
+# 是否启用成本估算（不用于计费，仅用于用户自查）
+cost_estimation_enabled = false
+
+# Provider 价格配置快照（JSON 字符串）
+pricing_snapshot_json = ""
+

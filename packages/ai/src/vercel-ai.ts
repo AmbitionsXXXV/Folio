@@ -1,0 +1,174 @@
+/**
+ * Vercel AI SDK integration
+ *
+ * This file provides minimal model factories that map BYOK credentials to
+ * Vercel AI SDK provider instances.
+ *
+ * Design notes (aligned with AI SDK docs):
+ * - Most providers support two integration styles:
+ *   - default provider instance (reads API key from env)
+ *   - createXxx factory (BYOK / proxy / custom baseURL)
+ * - FolioNote uses BYOK, so we always construct provider instances with `apiKey`.
+ *
+ * Note:
+ * - Keep this file out of `src/index.ts` exports to avoid pulling heavy runtime
+ *   dependencies into environments that only need types/constants.
+ */
+
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createOpenAI } from '@ai-sdk/openai'
+import type { EmbeddingModelV3, LanguageModelV3 } from '@ai-sdk/provider'
+import type { DecryptedCredential } from './credentials/types'
+import { getProviderConfig } from './providers/types'
+
+const TRAILING_SLASHES_REGEX = /\/+$/
+const MODELS_PREFIX = 'models/'
+
+type CreateChatModelOptions = {
+	/**
+	 * Explicit model override.
+	 * If omitted, falls back to `credential.model`, then provider defaults.
+	 */
+	model?: string
+}
+
+type CreateEmbeddingModelOptions = {
+	/**
+	 * Explicit embedding model override.
+	 * If omitted, falls back to provider defaults.
+	 */
+	model?: string
+}
+
+function resolveChatModelId(
+	credential: DecryptedCredential,
+	overrideModel?: string
+): string {
+	const providerDefaults = getProviderConfig(credential.provider).defaultModels
+	const resolvedModelId = overrideModel ?? credential.model ?? providerDefaults.chat
+	if (!resolvedModelId) {
+		throw new Error(
+			`No default chat model configured for provider: ${credential.provider}`
+		)
+	}
+	return resolvedModelId
+}
+
+function resolveEmbeddingModelId(
+	credential: DecryptedCredential,
+	overrideModel?: string
+): string {
+	const providerDefaults = getProviderConfig(credential.provider).defaultModels
+	const resolvedModelId = overrideModel ?? providerDefaults.embedding
+	if (!resolvedModelId) {
+		throw new Error(
+			`No default embedding model configured for provider: ${credential.provider}`
+		)
+	}
+	return resolvedModelId
+}
+
+function stripModelsPrefix(modelId: string): string {
+	return modelId.startsWith(MODELS_PREFIX)
+		? modelId.slice(MODELS_PREFIX.length)
+		: modelId
+}
+
+function isGeminiOpenAiCompatibilityBaseUrl(baseUrl: string): boolean {
+	return baseUrl.replace(TRAILING_SLASHES_REGEX, '').endsWith('/openai')
+}
+
+/**
+ * Create a Vercel AI SDK chat model from decrypted BYOK credential.
+ */
+export function createVercelAiChatModel(
+	credential: DecryptedCredential,
+	options: CreateChatModelOptions = {}
+): LanguageModelV3 {
+	const modelId = resolveChatModelId(credential, options.model)
+
+	switch (credential.provider) {
+		case 'openai':
+		case 'deepseek':
+		case 'qwen': {
+			const openai = createOpenAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return openai(modelId)
+		}
+		case 'claude': {
+			const anthropic = createAnthropic({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return anthropic(modelId)
+		}
+		case 'gemini': {
+			if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
+				const openaiCompatible = createOpenAI({
+					apiKey: credential.apiKey,
+					baseURL: credential.baseUrl,
+				})
+				return openaiCompatible(stripModelsPrefix(modelId))
+			}
+
+			const google = createGoogleGenerativeAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return google(stripModelsPrefix(modelId))
+		}
+		default: {
+			const unreachableProvider: never = credential.provider
+			throw new Error(`Unsupported provider: ${unreachableProvider}`)
+		}
+	}
+}
+/**
+ * Create a Vercel AI SDK embedding model from decrypted BYOK credential.
+ *
+ * Currently supported:
+ * - openai-compatible providers via `@ai-sdk/openai`
+ */
+export function createVercelAiEmbeddingModel(
+	credential: DecryptedCredential,
+	options: CreateEmbeddingModelOptions = {}
+): EmbeddingModelV3 {
+	const modelId = resolveEmbeddingModelId(credential, options.model)
+
+	switch (credential.provider) {
+		case 'openai':
+		case 'deepseek':
+		case 'qwen': {
+			const openai = createOpenAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return openai.embedding(modelId)
+		}
+		case 'gemini': {
+			if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
+				throw new Error(
+					'Gemini embedding is not supported via OpenAI compatible baseUrl. Use the native Gemini baseUrl instead.'
+				)
+			}
+
+			const google = createGoogleGenerativeAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return google.embedding(stripModelsPrefix(modelId))
+		}
+		case 'claude': {
+			throw new Error(
+				`Embedding model not implemented for provider: ${credential.provider}`
+			)
+		}
+		default: {
+			const unreachableProvider: never = credential.provider
+			throw new Error(`Unsupported provider: ${unreachableProvider}`)
+		}
+	}
+}
