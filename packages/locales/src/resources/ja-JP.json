@@ -513,11 +513,77 @@
     }
   },
   "settings": {
+    "title": "設定",
+    "subtitle": "エクスペリエンスをカスタマイズ",
     "languageDetection": {
       "title": "言語を検出しました",
       "description": "システム言語は{{language}}です。この言語に切り替えますか？",
       "confirm": "切り替える",
       "cancel": "現在のまま"
+    },
+    "nav": {
+      "menu": "メニュー",
+      "general": "一般設定",
+      "generalDesc": "プロフィール、外観、設定",
+      "models": "AI モデル",
+      "modelsDesc": "AI プロバイダーを設定"
+    },
+    "tip": {
+      "title": "プロのヒント",
+      "description": "AI モデルを設定して、ノートの要約やナレッジチャットなどのインテリジェント機能を有効にしましょう。"
+    },
+    "general": {
+      "title": "一般設定",
+      "description": "プロフィール、外観、設定を管理します。",
+      "sections_one": "{{count}} セクション",
+      "sections_other": "{{count}} セクション"
+    },
+    "models": {
+      "title": "モデル設定",
+      "description": "独自のAPIキーでAIモデルプロバイダーを設定します。キーはローカルに保存され、サーバーに送信されません。",
+      "byokTitle": "独自キーを使用 (BYOK)",
+      "byokDescription": "独自のAPIキーを使用してAIモデルに直接アクセスします。使用量とコストを完全に制御できます。",
+      "configuredProviders_one": "{{count}} プロバイダー設定済み",
+      "configuredProviders_other": "{{count}} プロバイダー設定済み",
+      "availableProviders": "利用可能なプロバイダー",
+      "feature": {
+        "secure": "安全なストレージ",
+        "private": "100% プライベート",
+        "flexible": "柔軟な使用"
+      },
+      "getStarted": "AI を始めましょう",
+      "getStartedHint": "少なくとも 1 つのプロバイダーを設定して、ナレッジチャットやノート要約などの AI 機能を有効にしてください。",
+      "helpTitle": "サポートが必要ですか？",
+      "helpDescription": "各プロバイダーのドキュメントにアクセスして、API キーの取得方法を確認してください。キーは暗号化され、デバイスにローカル保存されます。",
+      "configured": "設定済み",
+      "default": "デフォルト",
+      "configure": "設定",
+      "edit": "編集",
+      "remove": "削除",
+      "setAsDefault": "デフォルトに設定",
+      "setAsDefaultSuccess": "{{provider}} をデフォルトに設定しました",
+      "configureProvider": "{{provider}} を設定",
+      "configureDescription": "このプロバイダーを有効にするにはAPIキーを入力してください。",
+      "apiKey": "APIキー",
+      "apiKeyPlaceholder": "{{provider}} のAPIキーを入力…",
+      "apiKeyHint": "キーはローカルに保存され、サーバーに送信されません。",
+      "baseUrl": "Base URL",
+      "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
+      "configSaved": "{{provider}} の設定を保存しました",
+      "removed": "{{provider}} の設定を削除しました",
+      "removeConfig": "設定を削除",
+      "removeConfirmTitle": "APIキーを削除",
+      "removeConfirmDescription": "{{provider}} のAPIキーを削除してもよろしいですか？このプロバイダーを使用するには再設定が必要です。",
+      "viewModels": "モデルを表示",
+      "website": "ウェブサイト",
+      "getApiKey": "APIキーを取得",
+      "viewDocs": "ドキュメント",
+      "capabilities": "機能",
+      "capability": {
+        "modelFetcher": "モデルフェッチャー",
+        "responsesApi": "Responses API",
+        "apiKey": "APIキー認証"
+      }
     }
   },
   "profile": {

@@ -513,11 +513,77 @@
     "unknown": "发生未知错误"
   },
   "settings": {
+    "title": "设置",
+    "subtitle": "自定义您的体验",
     "languageDetection": {
       "title": "检测到语言",
       "description": "您的系统语言为{{language}}，是否切换到该语言？",
       "confirm": "切换",
       "cancel": "保持当前"
+    },
+    "nav": {
+      "menu": "菜单",
+      "general": "通用设置",
+      "generalDesc": "个人资料、外观与偏好",
+      "models": "AI 模型",
+      "modelsDesc": "配置您的 AI 提供商"
+    },
+    "tip": {
+      "title": "专业提示",
+      "description": "配置 AI 模型以解锁智能功能，如笔记摘要和知识对话。"
+    },
+    "general": {
+      "title": "通用设置",
+      "description": "管理您的个人资料、外观和偏好设置。",
+      "sections_one": "{{count}} 个部分",
+      "sections_other": "{{count}} 个部分"
+    },
+    "models": {
+      "title": "模型设置",
+      "description": "使用您自己的 API 密钥配置 AI 模型提供商。您的密钥仅存储在本地，不会发送到我们的服务器。",
+      "byokTitle": "自带密钥 (BYOK)",
+      "byokDescription": "使用您自己的 API 密钥直接访问 AI 模型。这让您可以完全控制使用量和费用。",
+      "configuredProviders_one": "已配置 {{count}} 个提供商",
+      "configuredProviders_other": "已配置 {{count}} 个提供商",
+      "availableProviders": "个可用提供商",
+      "feature": {
+        "secure": "安全存储",
+        "private": "100% 私密",
+        "flexible": "灵活使用"
+      },
+      "getStarted": "开始使用 AI",
+      "getStartedHint": "配置至少一个提供商以启用 AI 功能，如知识对话和笔记摘要。",
+      "helpTitle": "需要帮助？",
+      "helpDescription": "访问各提供商的文档了解如何获取 API 密钥。您的密钥将被加密并存储在您的设备上。",
+      "configured": "已配置",
+      "default": "默认",
+      "configure": "配置",
+      "edit": "编辑",
+      "remove": "移除",
+      "setAsDefault": "设为默认",
+      "setAsDefaultSuccess": "已将 {{provider}} 设为默认",
+      "configureProvider": "配置 {{provider}}",
+      "configureDescription": "输入您的 API 密钥以启用此提供商。",
+      "apiKey": "API 密钥",
+      "apiKeyPlaceholder": "输入您的 {{provider}} API 密钥…",
+      "apiKeyHint": "您的密钥仅存储在本地，不会发送到我们的服务器。",
+      "baseUrl": "Base URL",
+      "baseUrlHint": "留空使用默认端点；如需代理 / 网关可在此覆盖。",
+      "configSaved": "{{provider}} 配置已保存",
+      "removed": "{{provider}} 配置已移除",
+      "removeConfig": "移除配置",
+      "removeConfirmTitle": "移除 API 密钥",
+      "removeConfirmDescription": "确定要移除 {{provider}} 的 API 密钥吗？您需要重新配置才能使用此提供商。",
+      "viewModels": "查看模型",
+      "website": "官网",
+      "getApiKey": "获取 API Key",
+      "viewDocs": "查看文档",
+      "capabilities": "功能特性",
+      "capability": {
+        "modelFetcher": "模型获取",
+        "responsesApi": "Responses API",
+        "apiKey": "API Key 认证"
+      }
     }
   },
   "profile": {

@@ -44,3 +44,58 @@ export type LanguageSettingsProps = Record<string, never>
 export type DangerZoneProps = {
 	onSignOut: () => void
 }
+
+// ==================== Settings Nested Structure ====================
+
+/**
+ * User settings section - contains user profile related settings
+ */
+export interface UserSettings {
+	profile: {
+		displayName?: string
+		avatar?: string
+		bio?: string
+	}
+	preferences: {
+		theme: ThemeOption
+		language: string
+		timezone?: string
+	}
+	notifications: {
+		email: boolean
+		push: boolean
+		digest: 'daily' | 'weekly' | 'never'
+	}
+}
+
+/**
+ * AI Provider settings section - contains AI provider configurations
+ */
+export interface AiProviderSettings {
+	/** Currently active provider */
+	activeProvider?: string
+	/** Provider-specific configurations */
+	providers: Record<
+		string,
+		{
+			enabled: boolean
+			apiKey?: string
+			baseUrl?: string
+			defaultModel?: string
+		}
+	>
+	/** Global AI settings */
+	global: {
+		defaultProvider?: string
+		streamingEnabled: boolean
+		maxTokens?: number
+	}
+}
+
+/**
+ * Root settings structure with nested sections
+ */
+export interface SettingsRoot {
+	user: UserSettings
+	aiProvider: AiProviderSettings
+}

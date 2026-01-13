@@ -1,3 +1,9 @@
+import {
+	DEFAULT_MODEL_PROVIDER_LIST,
+	FOLIO_DEFAULT_MODEL_LIST,
+	type LobeDefaultAiModelListItem,
+	type ModelProviderCard,
+} from '@folionote/model-list'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,102 +29,47 @@ export type ModelSelectorGroup = {
 	options: ModelSelectorOption[]
 }
 
-export type AiModelProviderId = 'openai' | 'deepseek' | 'gemini' | 'claude' | 'qwen'
+export type AiModelProviderId =
+	| 'openai'
+	| 'anthropic'
+	| 'google'
+	| 'xai'
+	| 'deepseek'
+	| 'qwen'
 
-const AI_PROVIDER_ICONS: Record<AiModelProviderId, string> = {
-	openai: '/svg/models/openai.svg',
-	deepseek: '/svg/models/deepseek.svg',
-	gemini: '/svg/models/gemini.svg',
-	claude: '/svg/models/claude.svg',
-	qwen: '/svg/models/qwen.svg',
+/**
+ * Convert model-list data to ModelSelector format
+ */
+function createModelSelectorGroups(
+	providers: ModelProviderCard[],
+	models: LobeDefaultAiModelListItem[]
+): ModelSelectorGroup[] {
+	return providers
+		.filter((provider) => provider.enabled)
+		.map((provider) => {
+			const providerModels = models.filter(
+				(model) =>
+					model.providerId === provider.id && model.enabled && model.type === 'chat'
+			)
+
+			return {
+				id: provider.id,
+				name: provider.name,
+				options: providerModels.map((model) => ({
+					id: model.id,
+					name: model.displayName || model.id,
+					iconSrc: provider.logo,
+				})),
+			}
+		})
+		.filter((group) => group.options.length > 0)
 }
 
 /**
- * Built-in model catalog (curated, not exhaustive).
- *
- * - Gemini model ids follow the AI SDK Google provider docs:
- *   https://ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai
- * - Other providers include the models currently used by FolioNote defaults.
+ * Built-in model catalog using model-list package
  */
-export const AI_MODEL_SELECTOR_GROUPS: ModelSelectorGroup[] = [
-	{
-		id: 'openai',
-		name: 'OpenAI',
-		options: [
-			{ id: 'gpt-4o-mini', name: 'GPT-4o mini', iconSrc: AI_PROVIDER_ICONS.openai },
-			{ id: 'gpt-4o', name: 'GPT-4o', iconSrc: AI_PROVIDER_ICONS.openai },
-		],
-	},
-	{
-		id: 'deepseek',
-		name: 'DeepSeek',
-		options: [
-			{
-				id: 'deepseek-chat',
-				name: 'DeepSeek Chat',
-				iconSrc: AI_PROVIDER_ICONS.deepseek,
-			},
-		],
-	},
-	{
-		id: 'gemini',
-		name: 'Gemini',
-		options: [
-			{
-				id: 'gemini-2.5-flash-lite',
-				name: 'Gemini 2.5 Flash Lite',
-				iconSrc: AI_PROVIDER_ICONS.gemini,
-			},
-			{
-				id: 'gemini-2.5-flash',
-				name: 'Gemini 2.5 Flash',
-				iconSrc: AI_PROVIDER_ICONS.gemini,
-			},
-			{
-				id: 'gemini-2.5-pro',
-				name: 'Gemini 2.5 Pro',
-				iconSrc: AI_PROVIDER_ICONS.gemini,
-			},
-			{
-				id: 'gemini-2.0-flash',
-				name: 'Gemini 2.0 Flash',
-				iconSrc: AI_PROVIDER_ICONS.gemini,
-			},
-			{
-				id: 'gemini-1.5-flash',
-				name: 'Gemini 1.5 Flash',
-				iconSrc: AI_PROVIDER_ICONS.gemini,
-			},
-			{
-				id: 'gemini-1.5-pro',
-				name: 'Gemini 1.5 Pro',
-				iconSrc: AI_PROVIDER_ICONS.gemini,
-			},
-		],
-	},
-	{
-		id: 'claude',
-		name: 'Claude',
-		options: [
-			{
-				id: 'claude-sonnet-4-20250514',
-				name: 'Claude Sonnet 4 (2025-05-14)',
-				iconSrc: AI_PROVIDER_ICONS.claude,
-			},
-		],
-	},
-	{
-		id: 'qwen',
-		name: 'Qwen',
-		options: [
-			{
-				id: 'qwen-turbo',
-				name: 'Qwen Turbo',
-				iconSrc: AI_PROVIDER_ICONS.qwen,
-			},
-		],
-	},
-]
+export const AI_MODEL_SELECTOR_GROUPS: ModelSelectorGroup[] =
+	createModelSelectorGroups(DEFAULT_MODEL_PROVIDER_LIST, FOLIO_DEFAULT_MODEL_LIST)
 
 type ModelSelectorProps = {
 	options?: ModelSelectorOption[]
@@ -248,16 +199,28 @@ type AiModelSelectorProps = Omit<ModelSelectorProps, 'options' | 'groups'> & {
 }
 
 /**
+ * Create filtered groups based on provider filter
+ */
+function createFilteredGroups(
+	provider?: AiModelProviderId | 'all'
+): ModelSelectorGroup[] {
+	const allGroups = AI_MODEL_SELECTOR_GROUPS
+
+	if (provider === 'all' || !provider) {
+		return allGroups
+	}
+
+	return allGroups.filter((group) => group.id === provider)
+}
+
+/**
  * Opinionated selector that ships with a built-in model catalog.
  */
 export function AiModelSelector({
 	provider = 'all',
 	...props
 }: AiModelSelectorProps) {
-	const groups = useMemo(() => {
-		if (provider === 'all') return AI_MODEL_SELECTOR_GROUPS
-		return AI_MODEL_SELECTOR_GROUPS.filter((g) => g.id === provider)
-	}, [provider])
+	const groups = useMemo(() => createFilteredGroups(provider), [provider])
 
 	return <ModelSelector groups={groups} {...props} />
 }

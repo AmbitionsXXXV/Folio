@@ -513,11 +513,77 @@
     }
   },
   "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your experience",
     "languageDetection": {
       "title": "Language Detected",
       "description": "Your system language is {{language}}. Would you like to switch to this language?",
       "confirm": "Switch",
       "cancel": "Keep Current"
+    },
+    "nav": {
+      "menu": "Menu",
+      "general": "General",
+      "generalDesc": "Profile, appearance & preferences",
+      "models": "AI Models",
+      "modelsDesc": "Configure your AI providers"
+    },
+    "tip": {
+      "title": "Pro Tip",
+      "description": "Configure your AI models to unlock intelligent features like note summarization and knowledge chat."
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Manage your profile, appearance, and preferences.",
+      "sections_one": "{{count}} section",
+      "sections_other": "{{count}} sections"
+    },
+    "models": {
+      "title": "Model Settings",
+      "description": "Configure AI model providers with your own API keys. Your keys are stored locally and never sent to our servers.",
+      "byokTitle": "Bring Your Own Key (BYOK)",
+      "byokDescription": "Use your own API keys to access AI models directly. This gives you full control over your usage and costs.",
+      "configuredProviders_one": "{{count}} provider configured",
+      "configuredProviders_other": "{{count}} providers configured",
+      "availableProviders": "available providers",
+      "feature": {
+        "secure": "Secure storage",
+        "private": "100% private",
+        "flexible": "Flexible usage"
+      },
+      "getStarted": "Get started with AI",
+      "getStartedHint": "Configure at least one provider below to enable AI features like knowledge chat and note summarization.",
+      "helpTitle": "Need help?",
+      "helpDescription": "Visit the documentation for each provider to learn how to obtain your API key. Your keys are encrypted and stored locally on your device.",
+      "configured": "Configured",
+      "default": "Default",
+      "configure": "Configure",
+      "edit": "Edit",
+      "remove": "Remove",
+      "setAsDefault": "Set as Default",
+      "setAsDefaultSuccess": "{{provider}} set as default",
+      "configureProvider": "Configure {{provider}}",
+      "configureDescription": "Enter your API key to enable this provider.",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter your {{provider}} API key…",
+      "apiKeyHint": "Your key is stored locally and never sent to our servers.",
+      "baseUrl": "Base URL",
+      "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
+      "configSaved": "{{provider}} configuration saved",
+      "removed": "{{provider}} configuration removed",
+      "removeConfig": "Remove Configuration",
+      "removeConfirmTitle": "Remove API Key",
+      "removeConfirmDescription": "Are you sure you want to remove the API key for {{provider}}? You will need to reconfigure it to use this provider.",
+      "viewModels": "View models",
+      "website": "Website",
+      "getApiKey": "Get API Key",
+      "viewDocs": "Documentation",
+      "capabilities": "Capabilities",
+      "capability": {
+        "modelFetcher": "Model Fetcher",
+        "responsesApi": "Responses API",
+        "apiKey": "API Key Auth"
+      }
     }
   },
   "profile": {

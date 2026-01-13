@@ -18,6 +18,7 @@
     "@folionote/auth": "workspace:*",
     "@folionote/constants": "workspace:*",
     "@folionote/locales": "workspace:*",
+    "@folionote/model-list": "workspace:*",
     "@folionote/utils": "workspace:*",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "^1.1.4",
