@@ -1,13 +1,8 @@
-
-# FolioNote AI MVP v0（BYOK：Bring Your Own Key）完整开发计划
-
-> 核心变化：**模型对接以用户提供的 API Key 为主（BYOK）**。  
-> 用户在设置页配置 Key（按 Provider），服务端使用该 Key 调用模型。  
-> 目标：既满足“用户自带 Key”的学习/成本控制诉求，又保持 **安全、可审计、可回退** 的工程质量。
+# FolioNote AI MVP v0（BYOK：Bring Your Own Key）完整开发计划（Rev: +Usage/Token/Chat Context Telemetry）
 
 ---
 
-## 1. 目标与范围（MVP 只做两件事 + BYOK）
+## 1. 目标与范围（MVP 只做两件事 + BYOK + Usage 记录）
 
 ### 1.1 In Scope（必须交付）
 
@@ -26,13 +21,21 @@
     * 为每条生成 recall prompts + 推荐原因
   * LangGraph 编排工作流
   * 失败回退到默认队列
+* **AI Usage / Token 记录（新增，必须交付）**
+  * 记录每次调用的 token 用量（prompt/completion/total，embedding tokens）
+  * 记录（可选）估算费用（¥），便于用户自查额度消耗
+  * 记录单次调用的上下文使用统计（RAG chunks 数、上下文 token 估算等）
+  * 不记录敏感原文（遵守既有日志/审计规则）
 
 ### 1.2 Out of Scope（明确不做）
 
-* 全库自由问答/聊天（Chat with notes）
+* 全库自由问答/聊天（Chat with notes）功能本身
 * 多模态（图/音）
 * 端侧本地模型推理（离线 LLM）
 * 自动改写/自动打标签（后续迭代）
+* 平台 Key 试用模式（MVP 建议不做，避免成本不可控）
+
+> 说明：尽管 Chat 功能不做，但本计划会**预留 Chat Context Usage 的审计结构**，以便后续无缝上线 Chat。
 
 ---
 
@@ -58,7 +61,7 @@
 * 禁止写日志：
   * 不记录 Key
   * 不记录 Authorization header
-  * ai_runs 只记录 provider/model/promptVersion、输入引用（entryId/chunkId），不存原文
+  * `ai_runs` 只记录 provider/model/promptVersion、输入引用（entryId/chunkId）、usage 统计，不存原文
 
 ### 2.3 权限边界
 
@@ -68,7 +71,7 @@
 
 ---
 
-## 3. 高层架构（BYOK + Vercel AI SDK + RAG + LangGraph）
+## 3. 高层架构（BYOK + Vercel AI SDK + RAG + LangGraph + Usage）
 
 ### 3.1 组件职责
 
@@ -77,14 +80,16 @@
   * BYOK：Key 的增删改查 + 校验
   * RAG：chunk/embedding/retriever
   * LangGraph：reviewSuggest 工作流
-  * 审计：ai_runs
+  * 审计：ai_runs（含 token/成本/上下文统计）
 * **packages/db**
-  * 新表：user_ai_credentials / entry_chunks / entry_ai_artifacts / ai_runs
+  * 新表：user_ai_credentials / entry_chunks / entry_ai_artifacts / ai_runs  
+      新增（可选但推荐）：ai_usage_daily / chat_conversations / chat_messages / ai_chat_context_runs
   * pgvector
 * **apps/web / apps/native**
   * 设置页：配置 Key
   * Entry 详情：AI Summary 卡片
   * Review：AI Suggested Tab
+    *（后续）Chat 入口不在 MVP，但 usage 结构可复用
 
 ### 3.2 请求流（Summarize）
 
@@ -92,9 +97,9 @@
 2. API 获取用户 Provider + 解密 API Key（BYOK）
 3. 读取 Entry（contentText + tags + sources），计算 `sourceHash`
 4. 命中缓存则直接返回 artifact
-5. （可选）RAG：向量检索 Top-K chunks（同用户）
-6. 通过 Vercel AI SDK 调用模型（使用用户 Key）
-7. 写入 `entry_ai_artifacts` + `ai_runs`
+5.（可选）RAG：向量检索 Top-K chunks（同用户）
+5. 通过 Vercel AI SDK 调用模型（使用用户 Key）
+6. 写入 `entry_ai_artifacts` + `ai_runs`（含 token/上下文 usage）
 
 ### 3.3 请求流（ReviewSuggest）
 
@@ -104,7 +109,7 @@
     * Node B：RAG 检索候选用于补齐
     * Node C：规则过滤（due 优先、去重、限制数量）
     * Node D：LLM rerank + 生成 recall prompts + 推荐原因（结构化输出）
-    * Node E：写 ai_runs + 缓存结果
+    * Node E：写 `ai_runs` + 缓存结果
 3. 失败自动回退为默认 dueQueue 顺序（不影响复习主流程）
 
 ---
@@ -113,17 +118,46 @@
 
 ### 4.1 新增表（MVP 最小集合）
 
-| 表 | 用途 | 关键字段 |
-|---|---|---|
-| `user_ai_credentials` | BYOK：存用户的 Provider + 加密 Key | `userId`, `provider`, `encryptedApiKey`, `keyHint`, `status`, `lastValidatedAt`, `createdAt`, `updatedAt` |
-| `entry_ai_artifacts` | 缓存摘要产物 | `entryId`, `userId`, `sourceHash`, `summary`, `keyPoints`, `recallPrompts`, `relatedEntries`, `provider`, `model`, `promptVersion`, `updatedAt` |
-| `entry_chunks` | RAG chunks（含 embedding） | `id`, `entryId`, `userId`, `chunkIndex`, `text`, `metadata`, `embedding`, `createdAt` |
-| `ai_runs` | 审计与可观测 | `id`, `userId`, `type`, `provider`, `model`, `promptVersion`, `inputRefs`, `latencyMs`, `tokenIn`, `tokenOut`, `status`, `error`, `createdAt` |
+| 表                    | 用途                                  | 关键字段                                                                                                                                         |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `user_ai_credentials` | BYOK：存用户的 Provider + 加密 Key    | `userId`, `provider`, `encryptedApiKey`, `keyHint`, `status`, `lastValidatedAt`, `createdAt`, `updatedAt`                                        |
+| `entry_ai_artifacts`  | 缓存摘要产物                          | `entryId`, `userId`, `sourceHash`, `summary`, `keyPoints`, `recallPrompts`, `relatedEntries`, `provider`, `model`, `promptVersion`, `updatedAt`  |
+| `entry_chunks`        | RAG chunks（含 embedding）            | `id`, `entryId`, `userId`, `chunkIndex`, `text`, `metadata`, `embedding`, `embeddingProvider`, `embeddingModel`, `embeddingVersion`, `createdAt` |
+| `ai_runs`             | 审计与可观测（含 token/上下文 usage） | `id`, `userId`, `type`, `provider`, `model`, `promptVersion`, `inputRefs`, `latencyMs`, `status`, `error`, `createdAt`, `usage`                  |
 
-### 4.2 pgvector
+> 说明：本次修订建议将 token 相关字段收敛为一个 `usage` JSON（或拆列均可）。JSON 的好处是适配多 Provider 返回差异。
+
+### 4.2 `ai_runs.usage` 推荐结构（JSONB）
+
+`usage` 示例：
+
+* `tokens`：
+  * `prompt`
+  * `completion`
+  * `total`
+  * `embedding`（若本次包含 embedding 调用，或记录为独立 ai_run）
+* `cost`（可选估算）：
+  * `currency: "CNY"`
+  * `estimated: number`
+  * `pricingRef?: string`（价格快照版本号）
+* `context`（单次上下文使用统计）：
+  * `inputTextChars?: number`
+  * `inputTextTokensEstimated?: number`
+  * `ragTopK?: number`
+  * `ragRetrievedChunkIds?: string[]`
+  * `ragContextChars?: number`
+  * `ragContextTokensEstimated?: number`
+  * `conversation`（为后续 chat 预留，可为空）：
+    * `conversationId?: string`
+    * `messageIdsIncluded?: string[]`
+    * `windowStrategy?: "last_n" | "token_budget"`
+    * `windowMessagesCount?: number`
+    * `windowTokensEstimated?: number`
+
+### 4.3 pgvector
 
 * 启用 `vector` extension
-* 向量维度：根据你选的 embedding 模型决定（示例用 1536）
+* 向量维度：根据你选的 embedding 模型决定
 * 强制：所有检索都按 `userId` filter
 
 ---
@@ -140,6 +174,8 @@ packages/api/src
 │   │   ├── index.ts
 │   │   ├── openai.ts
 │   │   ├── deepseek.ts
+│   │   ├── gemini.ts
+│   │   ├── claude.ts
 │   │   └── qwen.ts
 │   ├── credentials
 │   │   ├── crypto.ts
@@ -153,6 +189,10 @@ packages/api/src
 │   │   ├── embeddings.ts
 │   │   ├── indexer.ts
 │   │   └── retriever.ts
+│   ├── usage
+│   │   ├── tokens.ts
+│   │   ├── cost.ts
+│   │   └── persist.ts
 │   ├── graph
 │   │   ├── review-suggest.graph.ts
 │   │   └── types.ts
@@ -160,12 +200,13 @@ packages/api/src
 └── routers
     ├── ai.ts
     ├── ai-credentials.ts
+    ├── ai-usage.ts
     └── index.ts
 ```
 
 ---
 
-## 6. 环境变量（Server-side BYOK 必备）
+## 6. 环境变量（Server-side BYOK + Usage）
 
 新增（或在你现有 env 体系里加入）：
 
@@ -173,14 +214,20 @@ packages/api/src
 * `AI_PROMPT_VERSION_SUMMARIZE`：默认 `summarize_v0`
 * `AI_PROMPT_VERSION_REVIEW_SUGGEST`：默认 `review_suggest_v0`
 
-可选（若你希望提供默认模型名，但不提供 Key）：
+可选（默认模型名，不提供 Key）：
 
 * `AI_DEFAULT_PROVIDER`（如 `openai`/`deepseek`/`qwen`）
 * `AI_DEFAULT_MODEL_SUMMARIZE`
 * `AI_DEFAULT_MODEL_RERANK`
 * `AI_DEFAULT_EMBEDDING_MODEL`
 
-> 注意：BYOK 模式下，**你不需要**在服务端放 `AI_API_KEY`，除非你想提供“平台 Key 试用模式”（MVP 建议不做，避免成本不可控）。
+Usage/成本估算（可选）：
+
+* `AI_PRICING_SNAPSHOT_JSON`：Provider 价格配置快照（JSON 字符串）  
+  用于估算 `estimatedCost`（不用于计费，仅给用户自查）
+* `AI_COST_ESTIMATION_ENABLED`：`true|false`（默认 false）
+
+> 注意：BYOK 模式下，**你不需要**在服务端放 `AI_API_KEY`，除非你想提供“平台 Key 试用模式”（MVP 建议不做）。
 
 ---
 
@@ -190,7 +237,7 @@ packages/api/src
 
 **Input**
 
-* `provider: "openai" | "deepseek" | "qwen"`（MVP 先支持 1–2 个也可以）
+* `provider: "openai" | "deepseek" | "qwen"`
 * `apiKey: string`
 
 **行为**
@@ -227,7 +274,7 @@ packages/api/src
 
 ---
 
-## 8. AI API 设计（使用用户 Key）
+## 8. AI API 设计（使用用户 Key + 返回 Usage）
 
 ### 8.1 Router：`ai.summarizeEntry`
 
@@ -251,13 +298,14 @@ packages/api/src
 * `model`
 * `promptVersion`
 * `cached: boolean`
+* `usage?: { tokens?: { prompt?: number; completion?: number; total?: number }; cost?: { currency: "CNY"; estimated?: number } }`（新增）
 
 **错误约定（建议）**
 
-* `AI_KEY_MISSING`：用户未配置 key
-* `AI_KEY_INVALID`：校验失败或 provider 返回认证错误
-* `AI_PROVIDER_ERROR`：上游错误
-* `AI_RATE_LIMITED`：本地限流
+* `AI_KEY_MISSING`
+* `AI_KEY_INVALID`
+* `AI_PROVIDER_ERROR`
+* `AI_RATE_LIMITED`
 
 ### 8.2 Router：`ai.suggestReviewList`
 
@@ -277,6 +325,7 @@ packages/api/src
 * `promptVersion`
 * `cached: boolean`
 * `fallback?: boolean`
+* `usage?: { tokens?: { prompt?: number; completion?: number; total?: number; embedding?: number }; cost?: { currency: "CNY"; estimated?: number } }`（新增）
 
 ---
 
@@ -288,7 +337,8 @@ packages/api/src
 
 * `createLLMClient({ apiKey, model })`
 * `createEmbeddingClient({ apiKey, model })`
-* `validateKey({ apiKey })`：用于 `aiCredentials.validate`
+* `validateKey({ apiKey })`
+* `extractUsage(response): { promptTokens?; completionTokens?; totalTokens? }`（新增）
 * 可选：`defaultModels`
 
 ### 9.2 Vercel AI SDK 用法建议
@@ -296,9 +346,15 @@ packages/api/src
 * 生成类任务（summarize / rerank）：
   * 使用结构化输出（zod schema parse）
   * Web 端支持 streaming（先实现 summarize 的 streaming）
+  * streaming 场景下 usage 获取策略：
+    * 以 provider 最终返回 usage 为准
+    * 若 provider 不返回，使用本地 tokenizer 估算并标注 `estimated=true`
 * embedding：
   * 可直接用 provider SDK 或 LangChain embeddings wrapper
   * 关键是：embedding 调用也必须使用用户 Key（BYOK）
+  * embedding token 记录：
+    * 若 provider 返回 usage 则记录
+    * 否则做估算（字符数/Tokenizer）
 
 ---
 
@@ -311,7 +367,7 @@ packages/api/src
 #### 路线 A（推荐）：向量索引依赖用户 Key
 
 * 用户配置 key 后，才开始对其笔记做 embedding 索引
-* 优点：成本完全由用户承担（如果 provider 计费）
+* 优点：成本完全由用户承担
 * 缺点：不同用户模型不同，向量空间不一致（但每用户隔离检索，没问题）
 
 #### 路线 B（平台 embedding + 用户生成）
@@ -357,7 +413,7 @@ packages/api/src
 * `retrieveCandidatesNode`（需要 embedding client，BYOK）
 * `ruleFilterNode`
 * `llmRerankNode`（使用用户 Key）
-* `persistAndCacheNode`
+* `persistAndCacheNode`（写入 `ai_runs` 的 usage/context）
 
 ### 11.3 回退策略（必须）
 
@@ -374,14 +430,9 @@ packages/api/src
 
 ### 12.1 设置页：配置 Key
 
-优先落点（按你现有结构二选一）：
-
-* `apps/web/apps/web/src/routes/_app/settings`（如果这是你的设置入口）
-* 或在 `apps/web/src/components/profile/*` 的设置对话框里增加一块 “AI”
-
 建议新增组件：
 
-* `apps/web/src/components/profile/ai-settings.tsx`（或 `apps/web/src/components/settings/ai-settings.tsx`）
+* `apps/web/src/components/settings/ai-providers.tsx`
 
 UI 要素：
 
@@ -397,7 +448,8 @@ UI 要素：
 * 行为：
   * 未配置 key：展示 CTA “去设置 AI Key”
   * 已配置 key：可 Generate / Regenerate（force）
-  * streaming：优先实现（Vercel AI SDK）
+  * streaming：优先实现
+  * 展示 usage（新增）：本次调用 tokens / 估算费用（若启用）
 
 ### 12.3 Review 页面：AI Suggested Tab
 
@@ -405,6 +457,7 @@ UI 要素：
 * 行为：
   * 未配置 key：提示去设置
   * 失败：回退展示默认队列
+  * 展示 usage（新增）
 
 ---
 
@@ -428,6 +481,7 @@ UI 要素：
 * 离线时：
   * 置灰按钮（复用 `use-network-state`）
   * 文案提示“AI 需要联网与已配置 Key”
+* 展示 usage（新增）：tokens / 估算费用
 
 ---
 
@@ -441,13 +495,29 @@ UI 要素：
 * `ai.summarizeEntry`：每用户每分钟 10 次
 * `ai.suggestReviewList`：每用户每分钟 5 次
 
-### 14.2 审计 ai_runs
+### 14.2 审计 ai_runs（升级：包含 token/context usage）
 
 * 必写字段：`type/provider/model/promptVersion/status/latencyMs`
 * 禁止字段：`apiKey`
 * inputRefs：
   * summarize：`{ entryId, chunkIds? }`
   * suggest：`{ dueEntryIds, candidateEntryIds? }`
+* usage（新增）：
+  * tokens：prompt/completion/total/embedding（可选）
+  * cost：estimated（可选）
+  * context：RAG/chunkIds、上下文 token 估算、conversation 预留字段
+
+### 14.3 Token 统计与成本估算规则（新增）
+
+* **优先使用 provider 返回的 usage**
+  * 例如 promptTokens、completionTokens、totalTokens
+* **若 provider 不返回**
+  * 使用 tokenizer 估算（按 provider/模型选择 tokenizer）
+  * `usage.tokensEstimated = true`
+* **成本估算（可选）**
+  * 只做“展示给用户的估算”，不做计费
+  * 以 `AI_PRICING_SNAPSHOT_JSON` 为价格来源
+  * 记录到 `usage.cost.estimated`，货币固定为 `CNY`
 
 ---
 
@@ -465,9 +535,65 @@ UI 要素：
 
 ---
 
-## 16. 测试计划（Vitest）
+## 16.（新增）AI Usage 查询 API（面向用户自查）
 
-### 16.1 packages/api 单测新增
+新增 router：`aiUsage.getSummary`
+
+**Input**
+
+* `range: "today" | "7d" | "30d"`
+* `tz?: string`（默认用户 tz）
+
+**Output**
+
+* `totals: { runs: number; tokensTotal?: number; tokensPrompt?: number; tokensCompletion?: number; tokensEmbedding?: number; estimatedCostCny?: number }`
+* `byType: Array<{ type: string; runs: number; tokensTotal?: number; estimatedCostCny?: number }>`
+* `updatedAt`
+
+> 实现方式：  
+>
+> * 直接聚合 `ai_runs`（MVP 最省事）  
+> * 或引入 `ai_usage_daily` 做增量聚合（后续优化）
+
+---
+
+## 17.（新增）Chat Context Usage 记录（为后续 Chat 预留，不做 Chat 功能）
+>
+> 目标：将来上线 Chat 时，能追踪“每次回答用了多少历史消息 + 多少 RAG chunks”，并可审计与调优。
+
+### 17.1 最小实现策略（推荐）
+
+* **不新增表也可**：直接写入 `ai_runs.usage.context.conversation` 字段
+* 当未来实现 `ai.chatWithNotes` 时：
+  * `conversationId`
+  * `messageIdsIncluded`
+  * `windowStrategy`
+  * `windowTokensEstimated`
+  * `ragRetrievedChunkIds`
+
+### 17.2 可选：新增专表（若你希望更强分析能力）
+
+新增表：`ai_chat_context_runs`（可选）
+
+| 字段                        | 说明                                   |
+| --------------------------- | -------------------------------------- |
+| `id`                        | pk                                     |
+| `userId`                    | 归属用户                               |
+| `conversationId`            | 对话 id                                |
+| `aiRunId`                   | 关联 `ai_runs.id`                      |
+| `messageIdsIncluded`        | 本次上下文纳入的消息 id 列表（或范围） |
+| `windowStrategy`            | `last_n` / `token_budget`              |
+| `windowMessagesCount`       | 纳入消息数                             |
+| `windowTokensEstimated`     | 上下文 token 估算                      |
+| `ragRetrievedChunkIds`      | 本次检索命中的 chunk ids               |
+| `ragContextTokensEstimated` | RAG 上下文 token 估算                  |
+| `createdAt`                 | 时间                                   |
+
+---
+
+## 18. 测试计划（Vitest）
+
+### 18.1 packages/api 单测新增
 
 * `packages/api/__tests__/routers/ai-credentials.test.ts`
   * set：存储为密文（断言不会等于明文）
@@ -477,65 +603,83 @@ UI 要素：
   * summarize：无 key -> `AI_KEY_MISSING`
   * summarize：缓存命中 -> `cached=true`
   * suggest：provider 抛错 -> fallback 输出
+  * usage：成功调用会写入 `ai_runs.usage.tokens.*`
 * `packages/api/__tests__/utils/crypto.test.ts`
   * encrypt/decrypt roundtrip
   * secret 缺失时报错
+* `packages/api/__tests__/ai/usage.test.ts`（新增）
+  * provider 返回 usage -> 正确落库
+  * provider 不返回 usage -> 走估算并标记 estimated
+  * cost 估算开关关闭时不写 cost（或 cost 为空）
 
-### 16.2 安全回归
+### 18.2 安全回归
 
 * 日志扫描：测试中确保不会输出 `apiKey`（可在 logger mock 中断言）
+* `ai_runs` 不含原文内容（仅 inputRefs/usage/context 统计）
 
 ---
 
-## 17. 里程碑（2–3 周，含 BYOK）
+## 19. 里程碑（2–3 周，含 BYOK + Usage）
 
-| Milestone | 预计耗时 | 交付内容 | 验收标准 |
-|---|---:|---|---|
-| M0 BYOK 基建 | 2–3 天 | user_ai_credentials 表 + 加密存储 + set/get/validate/delete | Web/iOS 可配置 key，服务端不泄露明文 |
-| M1 Summarize v0（无 RAG） | 3–5 天 | 摘要生成 + artifact 缓存 + streaming（Web） | 同一内容重复点击不重复消耗 |
-| M2 RAG（BYOK embedding） | 3–5 天 | pgvector + chunks + retriever + 按需索引 | 检索严格 userId 隔离，缺索引可补建 |
-| M3 ReviewSuggest（LangGraph） | 5–7 天 | AI Suggested tab + rerank + recall prompts | AI 失败自动回退，不影响复习主链路 |
-| M4 收敛与可观测 | 2–3 天 | ai_runs 统计、错误码/i18n、限流、缓存 TTL | 可追踪、可回滚、可稳定上线 |
+| Milestone                     | 预计耗时 | 交付内容                                                    | 验收标准                             |
+| ----------------------------- | -------: | ----------------------------------------------------------- | ------------------------------------ |
+| M0 BYOK 基建                  |   2–3 天 | user_ai_credentials 表 + 加密存储 + set/get/validate/delete | Web/iOS 可配置 key，服务端不泄露明文 |
+| M1 Summarize v0（无 RAG）     |   3–5 天 | 摘要生成 + artifact 缓存 + streaming（Web）                 | 同一内容重复点击不重复消耗           |
+| M1.5 Usage/Token 记录（新增） |   1–2 天 | `ai_runs.usage` 落库 + UI 展示 tokens/估算费用（可选）      | 每次调用可查 tokens，日志无敏感数据  |
+| M2 RAG（BYOK embedding）      |   3–5 天 | pgvector + chunks + retriever + 按需索引                    | 检索严格 userId 隔离，缺索引可补建   |
+| M3 ReviewSuggest（LangGraph） |   5–7 天 | AI Suggested tab + rerank + recall prompts                  | AI 失败自动回退，不影响复习主链路    |
+| M4 收敛与可观测               |   2–3 天 | ai_runs 统计、错误码/i18n、限流、缓存 TTL、Usage 汇总 API   | 可追踪、可回滚、可稳定上线           |
 
 ---
 
-## 18. 具体任务清单（可直接贴到项目管理）
+## 20. 具体任务清单（可直接贴到项目管理）
 
-### 18.1 DB（packages/db）
+### 20.1 DB（packages/db）
 
 * [ ] 新增 pgvector extension migration
 * [ ] 新增表：`user_ai_credentials`
 * [ ] 新增表：`entry_ai_artifacts`, `entry_chunks`, `ai_runs`
+* [ ] `entry_chunks` 增加：`embeddingProvider/embeddingModel/embeddingVersion`
+* [ ] `ai_runs` 增加：`usage JSONB`（或拆列）
 * [ ] 索引：`userId`、`createdAt`、向量索引（可选）
+* [ ]（可选）新增表：`ai_chat_context_runs`（后续 chat 用）
 
-### 18.2 API（packages/api）
+### 20.2 API（packages/api）
 
 * [ ] `routers/ai-credentials.ts`：set/get/validate/delete
 * [ ] `ai/credentials/crypto.ts`：encrypt/decrypt（AES-GCM 或 libsodium sealed box）
 * [ ] `ai/providers/*`：provider 适配（至少 1 个先跑通）
-* [ ] `routers/ai.ts`：summarizeEntry / suggestReviewList
+* [ ] provider 适配层补充：`extractUsage()`（不同 provider 兼容）
+* [ ] `ai/usage/tokens.ts`：usage 标准化 + 估算兜底
+* [ ] `ai/usage/cost.ts`：价格快照解析 + 成本估算（可选开关）
+* [ ] `ai/usage/persist.ts`：写入 `ai_runs.usage`
+* [ ] `routers/ai.ts`：summarizeEntry / suggestReviewList（返回 usage）
+* [ ] `routers/ai-usage.ts`：usage 汇总查询（可选但推荐）
 * [ ] `ai/rag/*`：chunker/embeddings/indexer/retriever（embedding 走 BYOK）
 * [ ] `ai/graph/review-suggest.graph.ts`：LangGraph 工作流
 * [ ] 统一错误码与 i18n message
 * [ ] rate limit 接入
 
-### 18.3 Web（apps/web）
+### 20.3 Web（apps/web）
 
 * [ ] AI Settings UI（provider/key、保存校验、删除、状态展示）
 * [ ] EntryAISummaryCard：无 key CTA + streaming + 缓存展示
+* [ ] EntryAISummaryCard：展示 tokens/估算费用（若启用）
 * [ ] Review AI Suggested Tab：无 key CTA + fallback 展示
+* [ ] Review AI Suggested Tab：展示 tokens/估算费用（若启用）
 * [ ] locales 增加 ai 相关 key
 
-### 18.4 Native（apps/native）
+### 20.4 Native（apps/native）
 
 * [ ] Settings：AI Key 配置 UI
 * [ ] Entry 详情页：AI Summary（在线）
+* [ ] Entry 详情页：展示 usage（tokens/费用）
 * [ ] Review：AI Suggested（可后置）
 * [ ] 离线提示与按钮置灰
 
 ---
 
-## 19. i18n 建议 keys（packages/locales）
+## 21. i18n 建议 keys（packages/locales）
 
 * `ai.settings.title`
 * `ai.settings.provider`
@@ -552,6 +696,9 @@ UI 要素：
 * `ai.reviewSuggest.title`
 * `ai.reviewSuggest.loading`
 * `ai.reviewSuggest.fallback`
+* `ai.usage.title`
+* `ai.usage.tokens`
+* `ai.usage.estimatedCost`
 * `ai.errors.keyMissing`
 * `ai.errors.keyInvalid`
 * `ai.errors.providerError`
@@ -559,24 +706,236 @@ UI 要素：
 
 ---
 
-## 20. 上线验收清单（BYOK 专项）
+## 22. 上线验收清单（BYOK + Usage 专项）
 
-### 20.1 BYOK 功能
+### 22.1 BYOK 功能
 
 * [ ] Web 设置页可保存并校验 key，显示 keyHint 与 lastValidatedAt
 * [ ] iOS 设置页同样可用
 * [ ] 服务端从不返回明文 key
 * [ ] DB 中 apiKey 为密文（抽样检查）
 
-### 20.2 AI 主流程
+### 22.2 AI 主流程
 
 * [ ] 未配置 key：Summarize/ReviewSuggest 均提示去设置，不崩溃
 * [ ] 配置 key 后：Summarize 成功且可缓存
 * [ ] ReviewSuggest 成功；失败回退到默认 dueQueue
 * [ ] RAG 不串用户（两用户数据验证）
 
-### 20.3 安全与成本
+### 22.3 安全与成本
 
 * [ ] rate limit 生效
 * [ ] 日志中无 key、无 Authorization
 * [ ] ai_runs 每次调用都有记录（成功/失败）
+* [ ] ai_runs 中包含 usage（tokens）且不包含原文
+* [ ]（若启用成本估算）估算费用显示为 ¥，且标注为 estimated（非计费）
+
+如果你希望我把 `ai_runs.usage` 从 JSONB 改成“拆列方案”（更方便 SQL 聚合、性能更稳定），我也可以给你一版等价的 schema 与迁移写法。
+
+下面把我上次加到计划里的“token 消耗 + 单次 chat context usage 记录”继续往下落到**可直接开工的实现细节**（schema 取舍、迁移、代码骨架、聚合查询）。
+
+## 1) `ai_runs` 的两种落库方案（建议你选其一）
+
+### 方案 A：`usage` 用 `JSONB`（我上版写的）
+
+适合：多 provider、字段经常变、先跑通 MVP。
+
+* 优点：兼容性强、改动小
+* 缺点：SQL 聚合稍麻烦，性能要靠表达式索引/离线聚合
+
+### 方案 B：`ai_runs` 拆列 + `usage_json` 兜底（更适合长期）
+
+适合：你确定要做 usage dashboard、账单式统计、需要高性能聚合。
+
+建议字段（最常用的拆出来）：
+
+| 字段               | 类型    | 说明                             |
+| ------------------ | ------- | -------------------------------- |
+| `promptTokens`     | int     | 生成类输入 tokens                |
+| `completionTokens` | int     | 生成类输出 tokens                |
+| `totalTokens`      | int     | 总 tokens                        |
+| `embeddingTokens`  | int     | embedding tokens（若有）         |
+| `estimatedCostCny` | numeric | 估算费用（¥）                    |
+| `tokensEstimated`  | boolean | 是否为估算（非 provider 返回）   |
+| `usageJson`        | jsonb   | 其余 provider 差异字段 & context |
+
+> 我建议：**MVP 用方案 A**；如果你已经确定要做“用量统计页”，直接上方案 B 会省很多返工。
+
+---
+
+## 2) SQL Migration 示例（给你可直接改成 Drizzle migration）
+
+下面以**方案 B（拆列 + JSONB）**为例（方案 A 你就只保留 `usage` / `usageJson`）：
+
+```sql
+ALTER TABLE ai_runs
+    ADD COLUMN prompt_tokens integer,
+    ADD COLUMN completion_tokens integer,
+    ADD COLUMN total_tokens integer,
+    ADD COLUMN embedding_tokens integer,
+    ADD COLUMN tokens_estimated boolean NOT NULL DEFAULT false,
+    ADD COLUMN estimated_cost_cny numeric(12, 6),
+    ADD COLUMN usage_json jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+CREATE INDEX ai_runs_user_created_idx
+    ON ai_runs(user_id, created_at DESC);
+
+CREATE INDEX ai_runs_type_created_idx
+    ON ai_runs(type, created_at DESC);
+
+-- 可选：如果你保留 JSONB 并需要按字段过滤/聚合，可以加表达式索引
+-- CREATE INDEX ai_runs_usage_total_tokens_idx
+--     ON ai_runs(((usage_json->'tokens'->>'total')::int));
+```
+
+---
+
+## 3) Provider usage 抽取：统一标准化函数（关键点）
+
+你在 `ai/providers/*` 增加 `extractUsage()` 的意义是：**不同 provider 返回结构不一，但你落库结构要统一**。
+
+推荐统一成：
+
+```ts
+type NormalizedUsage = {
+    tokens?: {
+        prompt?: number
+        completion?: number
+        total?: number
+        embedding?: number
+    }
+    tokensEstimated?: boolean
+    cost?: {
+        currency: "CNY"
+        estimated?: number
+        pricingRef?: string
+    }
+    context?: {
+        ragTopK?: number
+        ragRetrievedChunkIds?: string[]
+        ragContextTokensEstimated?: number
+        conversation?: {
+            conversationId?: string
+            messageIdsIncluded?: string[]
+            windowStrategy?: "last_n" | "token_budget"
+            windowMessagesCount?: number
+            windowTokensEstimated?: number
+        }
+    }
+}
+```
+
+落库时：
+
+* **有 provider usage 就用 provider 的**
+* 没有就走 tokenizer 估算，并 `tokensEstimated = true`
+* embedding 建议**单独一条 `ai_runs`**（type = `embedding.index` / `embedding.query`），或者把 embedding 也合并到同一次 run 的 `embeddingTokens`（两种都行，但统计上“分开更清晰”）
+
+---
+
+## 4) Token 估算（provider 不返 usage 时的兜底）
+
+你可以做一个简单策略，不追求 100% 精确：
+
+* 对生成类：
+  * `promptTokensEstimated = estimateTokens(system + messages + retrievedChunksText)`
+  * `completionTokensEstimated = estimateTokens(outputText)`（如果你能拿到完整输出）
+* 对 embedding：
+  * `embeddingTokensEstimated = estimateTokens(inputText)`
+
+实现上：
+
+* Web/Node 里可以用 tokenizer 库（按 provider/model 选择）
+* 实在不想引依赖，可以先用 “字符数/4” 粗估，但要标记 `tokensEstimated=true`
+
+---
+
+## 5) “单 chat context usage 记录”怎么写入（即使现在不做 Chat）
+
+你现在不做 Chat 功能，但要做到“以后能记录”，建议在写 `ai_runs` 时预留写入点：
+
+### 5.1 RAG 场景（你现在就能记录）
+
+当 summarize/review-suggest 发生检索：
+
+* `context.ragTopK`
+* `context.ragRetrievedChunkIds`
+* `context.ragContextTokensEstimated`（把拼接到 prompt 里的 rag 文本估算一下 tokens）
+
+这一步可以立刻用于调参（比如 topK 太大导致成本高）。
+
+### 5.2 未来 Chat 场景（预留字段即可）
+
+等你加 `ai.chatWithNotes` 后，每次回答写入：
+
+* `context.conversation.conversationId`
+* `context.conversation.messageIdsIncluded`
+* `context.conversation.windowStrategy`
+* `context.conversation.windowMessagesCount`
+* `context.conversation.windowTokensEstimated`
+
+> 如果你打算落专表 `ai_chat_context_runs`：写入时机就是“chat answer 成功/失败都写一条”，并用 `aiRunId` 关联 `ai_runs.id`。
+
+---
+
+## 6) 成本估算（¥）怎么做才不踩坑
+
+强调：这是**展示给用户自查**，不是计费。
+
+建议规则：
+
+* 成本估算开关 `AI_COST_ESTIMATION_ENABLED=false` 默认关闭
+* 开启时用 `AI_PRICING_SNAPSHOT_JSON`（你自己维护的价格快照）
+* 估算公式（按百万 tokens 计价时）：
+
+\[
+\text{cost} = \frac{\text{promptTokens}}{10^6}\cdot P_{in} + \frac{\text{completionTokens}}{10^6}\cdot P_{out} + \frac{\text{embeddingTokens}}{10^6}\cdot P_{emb}
+\]
+
+并落库：
+
+* `estimatedCostCny`
+* `pricingRef`（比如 `2026-01-13` 或版本号）
+
+---
+
+## 7) `aiUsage.getSummary` 的聚合查询（不新增日汇总表的 MVP 写法）
+
+直接聚合 `ai_runs`：
+
+```sql
+SELECT
+    COUNT(*) AS runs,
+    COALESCE(SUM(total_tokens), 0) AS total_tokens,
+    COALESCE(SUM(prompt_tokens), 0) AS prompt_tokens,
+    COALESCE(SUM(completion_tokens), 0) AS completion_tokens,
+    COALESCE(SUM(embedding_tokens), 0) AS embedding_tokens,
+    COALESCE(SUM(estimated_cost_cny), 0) AS estimated_cost_cny
+FROM ai_runs
+WHERE user_id = $1
+  AND created_at >= $2
+  AND created_at < $3;
+```
+
+再来一个按 type 分组：
+
+```sql
+SELECT
+    type,
+    COUNT(*) AS runs,
+    COALESCE(SUM(total_tokens), 0) AS total_tokens,
+    COALESCE(SUM(estimated_cost_cny), 0) AS estimated_cost_cny
+FROM ai_runs
+WHERE user_id = $1
+  AND created_at >= $2
+  AND created_at < $3
+GROUP BY type
+ORDER BY runs DESC;
+```
+
+---
+
+如果你愿意，我可以按你项目的实际栈（你文档里是 Drizzle + PostgreSQL + Vercel AI SDK）把下面两块也补齐成“可直接粘贴进仓库的版本”：
+
+* `packages/db` 的 Drizzle table 定义（含 `ai_runs` 新字段/JSONB）
+* `packages/api/src/ai/usage/*` 三个文件的最小实现（标准化、估算、persist）
