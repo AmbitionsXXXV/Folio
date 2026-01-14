@@ -957,3 +957,103 @@ ORDER BY runs DESC;
 
 * `packages/db` 的 Drizzle table 定义（含 `ai_runs` 新字段/JSONB）
 * `packages/api/src/ai/usage/*` 三个文件的最小实现（标准化、估算、persist）
+
+
+---
+
+## 23. 用户级模型启用开关（全类型 + 全站生效）
+
+**实现日期**：2026-01-14
+
+### 23.1 功能概述
+
+用户可在设置页为每个模型单独启用/禁用，该设置：
+
+1. **持久化存储**：保存到数据库 `user_ai_model_settings` 表
+2. **全类型支持**：覆盖 chat / embedding / image / tts / stt / realtime / text2video / text2music
+3. **全站生效**：
+   - 设置页显示开关状态
+   - 模型选择器（ChatInput / ModelSelector）仅展示已启用的模型
+   - 服务端 `ai.generateText` 拒绝被禁用的模型
+
+### 23.2 数据库设计
+
+新增表 `user_ai_model_settings`（`packages/db/src/schema/ai.ts`）：
+
+| 字段        | 类型      | 说明                                            |
+| ----------- | --------- | ----------------------------------------------- |
+| id          | text (PK) | nanoid 主键                                     |
+| user_id     | text (FK) | 关联 user.id，级联删除                          |
+| provider_id | text      | model-list provider id（openai / anthropic 等） |
+| model_id    | text      | 模型 id（gpt-4o / claude-sonnet-4-5 等）        |
+| type        | text      | 模型类型（chat / embedding / image 等）         |
+| enabled     | boolean   | 用户设置的启用状态                              |
+| created_at  | timestamp | 创建时间                                        |
+| updated_at  | timestamp | 更新时间（自动更新）                            |
+
+约束：
+
+- 唯一索引：`(user_id, provider_id, model_id, type)`
+- 用户查询索引：`(user_id)`
+
+### 23.3 API 设计
+
+在 `packages/api/src/routers/ai.ts` 新增：
+
+#### `ai.getModelCatalog`（protected）
+
+返回合并后的模型目录：
+
+- `providers`：来自 `DEFAULT_MODEL_PROVIDER_LIST`
+- `models`：来自 `FOLIO_DEFAULT_MODEL_LIST`，应用用户覆盖后的 `enabled` 状态
+
+#### `ai.setModelEnabled`（protected）
+
+输入：`{ providerId, id, type, enabled }`
+
+- 校验模型存在于 `FOLIO_DEFAULT_MODEL_LIST`
+- Upsert 到 `user_ai_model_settings`
+
+#### `ai.generateText` 增强
+
+当传入 `model` 时：
+
+- 映射 API provider（openai/deepseek/gemini/claude/qwen）到 model-list provider（openai/deepseek/google/anthropic/qwen）
+- 检查该 model 对用户是否 enabled
+- 若禁用则返回 `ORPCError('BAD_REQUEST')`
+
+### 23.4 Web 端实现
+
+#### 新增 Hook：`use-ai-model-catalog.ts`
+
+- `useAiModelCatalog()`：封装 catalog 查询，返回 providers/models
+- `useSetModelEnabled()`：封装 mutation，成功后 invalidate cache
+
+#### 设置页 UI：`models.tsx` 新增 "Models" 区块
+
+- 搜索框：按 displayName / id / provider 过滤
+- 类型筛选：下拉选择 chat / embedding / all 等
+- 模型列表：按 provider 分组，每行显示模型名称 + type badge + Switch 开关
+- 状态统计：显示"已启用 X 个模型 / 共 Y 个模型"
+
+#### 模型选择器改造
+
+- `ChatInput`：从 props 接收 `catalogProviders` / `catalogModels`，仅展示 enabled 的 chat 模型
+- `ModelSelector`：`createModelSelectorGroups()` 改为运行时基于 catalog 生成
+- `knowledge.tsx`：加载 catalog 后校验当前选中模型，若被禁用则自动回退到首个可用模型
+
+### 23.5 i18n Keys
+
+新增 `settings.models.modelList.*`：
+
+- `title`、`description`、`searchPlaceholder`、`noResults`
+- `enabledCount`、`totalCount`
+- `type.chat`、`type.embedding`、`type.image` 等
+- `allTypes`、`enableAll`、`disableAll`
+
+### 23.6 测试
+
+新增 `packages/api/__tests__/routers/ai-model-catalog.test.ts`：
+
+- `mergeModelSettings()`：验证默认 enabled、用户覆盖、类型区分
+- `validateModelExists()`：验证模型存在性校验

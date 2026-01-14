@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { ChatInput } from '@/components/ai-elements/chat-input'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
@@ -66,6 +67,13 @@ function KnowledgePage() {
 	const { config, isLoaded, configuredProviders, getProviderConfig } =
 		useModelProviderConfig()
 
+	// Model catalog for enabled models
+	const {
+		providers: catalogProviders,
+		models: catalogModels,
+		isLoaded: isCatalogLoaded,
+	} = useAiModelCatalog()
+
 	// Selected provider & model for this session
 	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
@@ -75,13 +83,78 @@ function KnowledgePage() {
 	const [inputValue, setInputValue] = useState('')
 	const messagesEndRef = useRef<HTMLDivElement>(null)
 
-	// Sync with loaded config
+	// Get enabled chat models for a provider
+	const getEnabledChatModels = useCallback(
+		(providerId: string) => {
+			return catalogModels.filter(
+				(m) => m.providerId === providerId && m.type === 'chat' && m.enabled
+			)
+		},
+		[catalogModels]
+	)
+
+	// Find fallback provider and model when current selection is invalid
+	const findValidProviderAndModel = useCallback(
+		(
+			currentProvider: string,
+			currentModel: string
+		): { provider: string; model: string } => {
+			const enabledModels = getEnabledChatModels(currentProvider)
+
+			// Current provider has enabled models
+			if (enabledModels.length > 0) {
+				const modelStillEnabled = enabledModels.some((m) => m.id === currentModel)
+				if (modelStillEnabled) {
+					return { provider: currentProvider, model: currentModel }
+				}
+				return {
+					provider: currentProvider,
+					model: enabledModels[0]?.id ?? '',
+				}
+			}
+
+			// Find first provider with enabled models
+			for (const provider of catalogProviders) {
+				const models = getEnabledChatModels(provider.id)
+				const firstModel = models[0]
+				if (firstModel) {
+					return { provider: provider.id, model: firstModel.id }
+				}
+			}
+
+			return { provider: currentProvider, model: '' }
+		},
+		[getEnabledChatModels, catalogProviders]
+	)
+
+	// Sync with loaded config and validate against enabled models
 	useEffect(() => {
-		if (isLoaded) {
-			setSelectedProvider(config.defaultProvider)
-			setSelectedModel(config.defaultModel ?? '')
-		}
-	}, [isLoaded, config.defaultProvider, config.defaultModel])
+		if (!(isLoaded && isCatalogLoaded)) return
+
+		const { provider, model } = findValidProviderAndModel(
+			config.defaultProvider,
+			config.defaultModel ?? ''
+		)
+		setSelectedProvider(provider)
+		setSelectedModel(model)
+	}, [
+		isLoaded,
+		isCatalogLoaded,
+		config.defaultProvider,
+		config.defaultModel,
+		findValidProviderAndModel,
+	])
+
+	// When provider changes, ensure selected model is valid
+	const handleProviderChange = useCallback(
+		(providerId: string) => {
+			setSelectedProvider(providerId)
+			// Reset model when provider changes
+			const enabledModels = getEnabledChatModels(providerId)
+			setSelectedModel(enabledModels[0]?.id ?? '')
+		},
+		[getEnabledChatModels]
+	)
 
 	const providerConfig = useMemo(
 		() => getProviderConfig(selectedProvider),
@@ -194,12 +267,14 @@ function KnowledgePage() {
 			{/* Input Area with integrated model selector */}
 			<div className="mt-4">
 				<ChatInput
+					catalogModels={catalogModels}
+					catalogProviders={catalogProviders}
 					configuredProviders={configuredProviders}
 					hasApiKey={hasApiKey}
 					isPending={isPending}
 					onChange={setInputValue}
 					onModelChange={setSelectedModel}
-					onProviderChange={setSelectedProvider}
+					onProviderChange={handleProviderChange}
 					onSubmit={handleSendMessage}
 					selectedModel={selectedModel}
 					selectedProvider={selectedProvider}

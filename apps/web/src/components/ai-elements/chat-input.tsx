@@ -1,7 +1,3 @@
-import {
-	DEFAULT_MODEL_PROVIDER_LIST,
-	FOLIO_DEFAULT_MODEL_LIST,
-} from '@folionote/model-list'
 import { ArrowUp02Icon, Setting06Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMemo, useRef } from 'react'
@@ -15,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
+import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
 import { cn } from '@/lib/utils'
 
 export type ChatInputProps = {
@@ -32,6 +29,9 @@ export type ChatInputProps = {
 	onModelChange: (model: string) => void
 	configuredProviders: string[]
 	hasApiKey: boolean
+	// Model catalog (from useAiModelCatalog)
+	catalogProviders: CatalogProvider[]
+	catalogModels: CatalogModel[]
 }
 
 export function ChatInput({
@@ -48,24 +48,26 @@ export function ChatInput({
 	onModelChange,
 	configuredProviders,
 	hasApiKey,
+	catalogProviders,
+	catalogModels,
 }: ChatInputProps) {
 	const { t } = useTranslation()
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
 	const providerInfo = useMemo(
-		() => DEFAULT_MODEL_PROVIDER_LIST.find((p) => p.id === selectedProvider),
-		[selectedProvider]
+		() => catalogProviders.find((p) => p.id === selectedProvider),
+		[catalogProviders, selectedProvider]
 	)
 
-	// Get models for the selected provider from FOLIO_DEFAULT_MODEL_LIST
+	// Get enabled chat models for the selected provider from catalog
 	const providerModels = useMemo(() => {
-		return FOLIO_DEFAULT_MODEL_LIST.filter(
+		return catalogModels.filter(
 			(model) =>
 				model.providerId === selectedProvider &&
 				model.enabled &&
 				model.type === 'chat'
 		)
-	}, [selectedProvider])
+	}, [catalogModels, selectedProvider])
 
 	// Find selected model info
 	const selectedModelInfo = useMemo(() => {
@@ -117,11 +119,7 @@ export function ChatInput({
 				{/* Left: Model Selector */}
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button
-							className="h-8 gap-2 rounded-lg px-3 text-xs"
-							disabled={!hasApiKey}
-							variant="ghost"
-						>
+						<Button className="h-8 gap-2 rounded-lg px-3 text-xs" variant="ghost">
 							{providerInfo?.logo && (
 								<img
 									alt=""
@@ -147,7 +145,7 @@ export function ChatInput({
 						<div className="px-2 py-1.5 font-medium text-muted-foreground text-xs">
 							{t('knowledge.provider')}
 						</div>
-						{DEFAULT_MODEL_PROVIDER_LIST.map((p) => {
+						{catalogProviders.map((p) => {
 							const isConfigured = configuredProviders.includes(p.id)
 							const isSelected = selectedProvider === p.id
 							return (
@@ -164,7 +162,7 @@ export function ChatInput({
 											<img
 												alt=""
 												aria-hidden="true"
-												className="size-4"
+												className="size-4 dark:brightness-0 dark:invert"
 												src={p.logo}
 											/>
 										)}

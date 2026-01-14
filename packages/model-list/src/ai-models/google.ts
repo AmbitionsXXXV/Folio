@@ -225,36 +225,6 @@ const googleChatModels: AIChatModelCard[] = [
 	},
 	{
 		abilities: {
-			imageOutput: true,
-			reasoning: true,
-			search: true,
-			vision: true,
-		},
-		contextWindowTokens: 131_072 + 32_768,
-		description:
-			'Gemini 3 Pro Image (Nano Banana Pro) is Google’s image generation model and also supports multimodal chat.',
-		displayName: 'Nano Banana Pro',
-		enabled: true,
-		id: 'gemini-3-pro-image-preview',
-		maxOutput: 32_768,
-		pricing: {
-			approximatePricePerImage: 0.134,
-			units: [
-				{ name: 'imageOutput', rate: 120, strategy: 'fixed', unit: 'millionTokens' },
-				{ name: 'textInput', rate: 2, strategy: 'fixed', unit: 'millionTokens' },
-				{ name: 'textOutput', rate: 12, strategy: 'fixed', unit: 'millionTokens' },
-			],
-		},
-		releasedAt: '2025-11-20',
-		settings: {
-			extendParams: ['imageAspectRatio', 'imageResolution'],
-			searchImpl: 'params',
-			searchProvider: 'google',
-		},
-		type: 'chat',
-	},
-	{
-		abilities: {
 			functionCall: true,
 			reasoning: true,
 			search: true,
@@ -617,26 +587,6 @@ const googleChatModels: AIChatModelCard[] = [
 	},
 	{
 		abilities: {
-			imageOutput: true,
-			vision: true,
-		},
-		contextWindowTokens: 1_048_576 + 8192,
-		description:
-			'Gemini 2.0 Flash experimental model with image generation support.',
-		displayName: 'Gemini 2.0 Flash (Image Generation) Experimental',
-		id: 'gemini-2.0-flash-exp-image-generation',
-		maxOutput: 8192,
-		pricing: {
-			units: [
-				{ name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-				{ name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-			],
-		},
-		releasedAt: '2025-03-14',
-		type: 'chat',
-	},
-	{
-		abilities: {
 			vision: true,
 		},
 		contextWindowTokens: 1_048_576 + 8192,
@@ -649,45 +599,6 @@ const googleChatModels: AIChatModelCard[] = [
 			units: [
 				{ name: 'textInput', rate: 0.075, strategy: 'fixed', unit: 'millionTokens' },
 				{ name: 'textOutput', rate: 0.3, strategy: 'fixed', unit: 'millionTokens' },
-			],
-		},
-		releasedAt: '2025-02-05',
-		type: 'chat',
-	},
-	{
-		abilities: {
-			vision: true,
-		},
-		contextWindowTokens: 1_048_576 + 8192,
-		description:
-			'A Gemini 2.0 Flash variant optimized for cost efficiency and low latency.',
-		displayName: 'Gemini 2.0 Flash-Lite 001',
-		id: 'gemini-2.0-flash-lite-001',
-		maxOutput: 8192,
-		pricing: {
-			units: [
-				{ name: 'textInput', rate: 0.075, strategy: 'fixed', unit: 'millionTokens' },
-				{ name: 'textOutput', rate: 0.3, strategy: 'fixed', unit: 'millionTokens' },
-			],
-		},
-		releasedAt: '2025-02-05',
-		type: 'chat',
-	},
-	{
-		abilities: {
-			imageOutput: true,
-			vision: true,
-		},
-		contextWindowTokens: 1_048_576 + 8192,
-		description:
-			'A Gemini 2.0 Flash variant optimized for cost efficiency and low latency.',
-		displayName: 'Gemini 2.0 Flash Exp',
-		id: 'gemini-2.0-flash-exp',
-		maxOutput: 8192,
-		pricing: {
-			units: [
-				{ name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-				{ name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
 			],
 		},
 		releasedAt: '2025-02-05',

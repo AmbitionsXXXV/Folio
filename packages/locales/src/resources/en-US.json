@@ -583,6 +583,29 @@
         "modelFetcher": "Model Fetcher",
         "responsesApi": "Responses API",
         "apiKey": "API Key Auth"
+      },
+      "modelList": {
+        "title": "Models",
+        "description": "Enable or disable individual models. Disabled models won't appear in model selection.",
+        "searchPlaceholder": "Search models…",
+        "noResults": "No models match your search.",
+        "enabledCount_one": "{{count}} model enabled",
+        "enabledCount_other": "{{count}} models enabled",
+        "totalCount_one": "{{count}} model",
+        "totalCount_other": "{{count}} models",
+        "type": {
+          "chat": "Chat",
+          "embedding": "Embedding",
+          "image": "Image",
+          "tts": "TTS",
+          "stt": "STT",
+          "realtime": "Realtime",
+          "text2video": "Text to Video",
+          "text2music": "Text to Music"
+        },
+        "allTypes": "All Types",
+        "enableAll": "Enable All",
+        "disableAll": "Disable All"
       }
     }
   },

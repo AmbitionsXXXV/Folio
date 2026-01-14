@@ -583,6 +583,29 @@
         "modelFetcher": "模型获取",
         "responsesApi": "Responses API",
         "apiKey": "API Key 认证"
+      },
+      "modelList": {
+        "title": "模型列表",
+        "description": "启用或禁用各个模型。禁用的模型不会出现在模型选择器中。",
+        "searchPlaceholder": "搜索模型…",
+        "noResults": "没有找到匹配的模型。",
+        "enabledCount_one": "已启用 {{count}} 个模型",
+        "enabledCount_other": "已启用 {{count}} 个模型",
+        "totalCount_one": "{{count}} 个模型",
+        "totalCount_other": "{{count}} 个模型",
+        "type": {
+          "chat": "对话",
+          "embedding": "向量",
+          "image": "图像",
+          "tts": "语音合成",
+          "stt": "语音识别",
+          "realtime": "实时",
+          "text2video": "文本转视频",
+          "text2music": "文本转音乐"
+        },
+        "allTypes": "全部类型",
+        "enableAll": "全部启用",
+        "disableAll": "全部禁用"
       }
     }
   },

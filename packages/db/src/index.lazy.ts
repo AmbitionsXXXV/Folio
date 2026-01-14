@@ -1,4 +1,7 @@
 // Auth schema
+
+// AI schema
+import { userAiModelSettings, userAiModelSettingsRelations } from './schema/ai'
 import {
 	account,
 	accountRelations,
@@ -8,7 +11,6 @@ import {
 	userRelations,
 	verification,
 } from './schema/auth'
-
 // Business schema
 import {
 	attachments,
@@ -68,6 +70,9 @@ const schema = {
 	entrySharesRelations,
 	searchHistory,
 	searchHistoryRelations,
+	// AI
+	userAiModelSettings,
+	userAiModelSettingsRelations,
 }
 
 // 延迟初始化数据库连接，避免模块循环依赖导致的初始化问题
@@ -92,6 +97,10 @@ export const db = new Proxy({} as DbType, {
 	},
 }) as DbType
 
+export {
+	userAiModelSettings,
+	userAiModelSettingsRelations,
+} from './schema/ai'
 // Re-export schema for external use
 export {
 	account,
@@ -102,7 +111,6 @@ export {
 	userRelations,
 	verification,
 } from './schema/auth'
-
 export {
 	attachments,
 	attachmentsRelations,

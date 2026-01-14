@@ -7,6 +7,7 @@
  * - BYOK credential management
  * - AI operations (summarize, review suggest, etc.)
  * - Usage tracking
+ * - Model catalog management (user-level enabled/disabled overrides)
  */
 
 import {
@@ -17,11 +18,32 @@ import {
 	PROVIDER_CONFIGS,
 } from '@folionote/ai'
 import { generateTextWithCredential } from '@folionote/ai/generate-text'
+import { db, userAiModelSettings } from '@folionote/db'
+import {
+	DEFAULT_MODEL_PROVIDER_LIST,
+	FOLIO_DEFAULT_MODEL_LIST,
+	MODEL_TYPES,
+} from '@folionote/model-list'
 import { ORPCError } from '@orpc/server'
+import { and, eq } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { protectedProcedure, publicProcedure } from '../index'
 
 const GENERATE_TEXT_PROMPT_MAX_LENGTH = 20_000
+
+/**
+ * Mapping from API provider IDs to model-list provider IDs
+ * API uses: openai, deepseek, gemini, claude, qwen
+ * model-list uses: openai, deepseek, google, anthropic, qwen, xai
+ */
+const API_TO_MODEL_LIST_PROVIDER: Record<string, string> = {
+	openai: 'openai',
+	deepseek: 'deepseek',
+	gemini: 'google',
+	claude: 'anthropic',
+	qwen: 'qwen',
+}
 
 /**
  * List supported AI providers
@@ -97,9 +119,27 @@ const GenerateTextInputSchema = z.object({
  */
 const generateText = protectedProcedure
 	.input(GenerateTextInputSchema)
-	.handler(async ({ input }) => {
+	.handler(async ({ context, input }) => {
 		const provider = input.provider as AiProvider
 		const providerConfig = PROVIDER_CONFIGS[provider]
+		const userId = context.session.user.id
+
+		// Check if the model is enabled for this user (if model is specified)
+		if (input.model) {
+			const modelListProviderId = API_TO_MODEL_LIST_PROVIDER[provider] || provider
+			const isEnabled = await checkModelEnabled(
+				userId,
+				modelListProviderId,
+				input.model,
+				'chat'
+			)
+
+			if (!isEnabled) {
+				throw new ORPCError('BAD_REQUEST', {
+					message: `模型 "${input.model}" 已被禁用。请在设置中启用此模型或选择其他模型。`,
+				})
+			}
+		}
 
 		const credential: DecryptedCredential = {
 			provider,
@@ -133,6 +173,157 @@ const generateText = protectedProcedure
 		}
 	})
 
+// ==================== Model Catalog APIs ====================
+
+/**
+ * Check if a model is enabled for a user
+ * Returns the user's override if exists, otherwise returns the default enabled status
+ */
+async function checkModelEnabled(
+	userId: string,
+	providerId: string,
+	modelId: string,
+	type: string
+): Promise<boolean> {
+	// First check if user has an override
+	const [userSetting] = await db
+		.select({ enabled: userAiModelSettings.enabled })
+		.from(userAiModelSettings)
+		.where(
+			and(
+				eq(userAiModelSettings.userId, userId),
+				eq(userAiModelSettings.providerId, providerId),
+				eq(userAiModelSettings.modelId, modelId),
+				eq(userAiModelSettings.type, type)
+			)
+		)
+		.limit(1)
+
+	if (userSetting !== undefined) {
+		return userSetting.enabled
+	}
+
+	// Fall back to default from model-list
+	const model = FOLIO_DEFAULT_MODEL_LIST.find(
+		(m) => m.providerId === providerId && m.id === modelId && m.type === type
+	)
+
+	return Boolean(model?.enabled)
+}
+
+/**
+ * Get model catalog with user's enabled overrides
+ */
+const getModelCatalog = protectedProcedure.handler(async ({ context }) => {
+	const userId = context.session.user.id
+
+	// Get all user's model settings
+	const userSettings = await db
+		.select()
+		.from(userAiModelSettings)
+		.where(eq(userAiModelSettings.userId, userId))
+
+	// Create a map for quick lookup
+	const userSettingsMap = new Map<string, boolean>()
+	for (const setting of userSettings) {
+		const key = `${setting.providerId}:${setting.modelId}:${setting.type}`
+		userSettingsMap.set(key, setting.enabled)
+	}
+
+	// Build providers list (with logos)
+	const providers = DEFAULT_MODEL_PROVIDER_LIST.map((p) => ({
+		id: p.id,
+		name: p.name,
+		logo: p.logo,
+		enabled: p.enabled ?? false,
+	}))
+
+	// Build models list with user overrides applied
+	const models = FOLIO_DEFAULT_MODEL_LIST.map((m) => {
+		const key = `${m.providerId}:${m.id}:${m.type}`
+		const userEnabled = userSettingsMap.get(key)
+		const enabled = userEnabled !== undefined ? userEnabled : Boolean(m.enabled)
+
+		return {
+			id: m.id,
+			providerId: m.providerId,
+			type: m.type,
+			displayName: m.displayName ?? m.id,
+			enabled,
+		}
+	})
+
+	return { providers, models }
+})
+
+const SetModelEnabledInputSchema = z.object({
+	providerId: z.string().min(1),
+	id: z.string().min(1),
+	type: z.enum(MODEL_TYPES),
+	enabled: z.boolean(),
+})
+
+/**
+ * Set model enabled status for current user
+ */
+const setModelEnabled = protectedProcedure
+	.input(SetModelEnabledInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+
+		// Validate that the model exists in the default list
+		const modelExists = FOLIO_DEFAULT_MODEL_LIST.some(
+			(m) =>
+				m.providerId === input.providerId &&
+				m.id === input.id &&
+				m.type === input.type
+		)
+
+		if (!modelExists) {
+			throw new ORPCError('NOT_FOUND', {
+				message: `模型不存在：${input.providerId}/${input.id} (${input.type})`,
+			})
+		}
+
+		// Upsert the user's model setting
+		// First try to find existing record
+		const [existing] = await db
+			.select({ id: userAiModelSettings.id })
+			.from(userAiModelSettings)
+			.where(
+				and(
+					eq(userAiModelSettings.userId, userId),
+					eq(userAiModelSettings.providerId, input.providerId),
+					eq(userAiModelSettings.modelId, input.id),
+					eq(userAiModelSettings.type, input.type)
+				)
+			)
+			.limit(1)
+
+		if (existing) {
+			// Update existing record
+			await db
+				.update(userAiModelSettings)
+				.set({
+					enabled: input.enabled,
+					updatedAt: new Date(),
+				})
+				.where(eq(userAiModelSettings.id, existing.id))
+		} else {
+			// Insert new record
+			await db.insert(userAiModelSettings).values({
+				id: nanoid(),
+				userId,
+				providerId: input.providerId,
+				modelId: input.id,
+				type: input.type,
+				enabled: input.enabled,
+			})
+		}
+
+		return { success: true }
+	})
+
 export const aiRouter = {
 	healthCheck,
 	listProviders,
@@ -140,4 +331,7 @@ export const aiRouter = {
 	getPromptVersions,
 	getConfig,
 	generateText,
+	// Model catalog
+	getModelCatalog,
+	setModelEnabled,
 }

@@ -1,9 +1,4 @@
-import {
-	DEFAULT_MODEL_PROVIDER_LIST,
-	FOLIO_DEFAULT_MODEL_LIST,
-	type LobeDefaultAiModelListItem,
-	type ModelProviderCard,
-} from '@folionote/model-list'
+import type { ModelProviderId } from '@folionote/model-list'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +10,7 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
+import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
 import { cn } from '@/lib/utils'
 
 export type ModelSelectorOption = {
@@ -29,20 +25,12 @@ export type ModelSelectorGroup = {
 	options: ModelSelectorOption[]
 }
 
-export type AiModelProviderId =
-	| 'openai'
-	| 'anthropic'
-	| 'google'
-	| 'xai'
-	| 'deepseek'
-	| 'qwen'
-
 /**
- * Convert model-list data to ModelSelector format
+ * Convert catalog data to ModelSelector format (using enabled models only)
  */
-function createModelSelectorGroups(
-	providers: ModelProviderCard[],
-	models: LobeDefaultAiModelListItem[]
+export function createModelSelectorGroups(
+	providers: CatalogProvider[],
+	models: CatalogModel[]
 ): ModelSelectorGroup[] {
 	return providers
 		.filter((provider) => provider.enabled)
@@ -64,12 +52,6 @@ function createModelSelectorGroups(
 		})
 		.filter((group) => group.options.length > 0)
 }
-
-/**
- * Built-in model catalog using model-list package
- */
-export const AI_MODEL_SELECTOR_GROUPS: ModelSelectorGroup[] =
-	createModelSelectorGroups(DEFAULT_MODEL_PROVIDER_LIST, FOLIO_DEFAULT_MODEL_LIST)
 
 type ModelSelectorProps = {
 	options?: ModelSelectorOption[]
@@ -195,17 +177,20 @@ export function ModelSelector({
 }
 
 type AiModelSelectorProps = Omit<ModelSelectorProps, 'options' | 'groups'> & {
-	provider?: AiModelProviderId | 'all'
+	provider?: ModelProviderId | 'all'
+	/** Catalog providers from useAiModelCatalog */
+	catalogProviders: CatalogProvider[]
+	/** Catalog models from useAiModelCatalog */
+	catalogModels: CatalogModel[]
 }
 
 /**
  * Create filtered groups based on provider filter
  */
 function createFilteredGroups(
-	provider?: AiModelProviderId | 'all'
+	allGroups: ModelSelectorGroup[],
+	provider?: ModelProviderId | 'all'
 ): ModelSelectorGroup[] {
-	const allGroups = AI_MODEL_SELECTOR_GROUPS
-
 	if (provider === 'all' || !provider) {
 		return allGroups
 	}
@@ -214,13 +199,19 @@ function createFilteredGroups(
 }
 
 /**
- * Opinionated selector that ships with a built-in model catalog.
+ * Opinionated selector that ships with dynamic model catalog from server.
+ * Only enabled models are shown.
  */
 export function AiModelSelector({
 	provider = 'all',
+	catalogProviders,
+	catalogModels,
 	...props
 }: AiModelSelectorProps) {
-	const groups = useMemo(() => createFilteredGroups(provider), [provider])
+	const groups = useMemo(() => {
+		const allGroups = createModelSelectorGroups(catalogProviders, catalogModels)
+		return createFilteredGroups(allGroups, provider)
+	}, [catalogProviders, catalogModels, provider])
 
 	return <ModelSelector groups={groups} {...props} />
 }

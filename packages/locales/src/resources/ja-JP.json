@@ -583,6 +583,29 @@
         "modelFetcher": "モデルフェッチャー",
         "responsesApi": "Responses API",
         "apiKey": "APIキー認証"
+      },
+      "modelList": {
+        "title": "モデル一覧",
+        "description": "個々のモデルを有効または無効にします。無効なモデルはモデル選択に表示されません。",
+        "searchPlaceholder": "モデルを検索…",
+        "noResults": "検索に一致するモデルがありません。",
+        "enabledCount_one": "{{count}} モデルが有効",
+        "enabledCount_other": "{{count}} モデルが有効",
+        "totalCount_one": "{{count}} モデル",
+        "totalCount_other": "{{count}} モデル",
+        "type": {
+          "chat": "チャット",
+          "embedding": "埋め込み",
+          "image": "画像",
+          "tts": "音声合成",
+          "stt": "音声認識",
+          "realtime": "リアルタイム",
+          "text2video": "テキストから動画",
+          "text2music": "テキストから音楽"
+        },
+        "allTypes": "すべてのタイプ",
+        "enableAll": "すべて有効",
+        "disableAll": "すべて無効"
       }
     }
   },

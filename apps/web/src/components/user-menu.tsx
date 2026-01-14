@@ -5,8 +5,8 @@ import {
 	Logout03Icon,
 	Moon02Icon,
 	MoreVerticalIcon,
+	Settings02Icon,
 	Sun03Icon,
-	UserCircle02Icon,
 	UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -294,7 +294,7 @@ export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 
 				<DropdownMenuItem>
 					<Link className="flex w-full items-center gap-2" to="/settings/general">
-						<HugeiconsIcon className="mr-2 size-4" icon={UserCircle02Icon} />
+						<HugeiconsIcon className="mr-2 size-4" icon={Settings02Icon} />
 						{t('nav.settings', 'Settings')}
 					</Link>
 				</DropdownMenuItem>

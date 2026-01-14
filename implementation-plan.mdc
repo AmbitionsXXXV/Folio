@@ -99,6 +99,28 @@ Done:
 
 > 待 Phase 1 完成后再展开
 
+### 2.1 用户级模型启用开关（全类型 + 全站生效）
+
+- [x] 在 `packages/db/src/schema/ai.ts` 新增 `user_ai_model_settings` 表
+- [x] 更新 `packages/db/src/index.ts` 与 `packages/db/src/index.lazy.ts` 注册 schema
+- [x] 运行 `pnpm run db:generate` 生成迁移文件
+- [x] 在 `packages/api/package.json` 添加 `@folionote/model-list` 依赖
+- [x] 在 `packages/api/src/routers/ai.ts` 新增 `ai.getModelCatalog` 与 `ai.setModelEnabled`
+- [x] 在 `ai.generateText` 中增加模型启用状态校验
+- [x] 新增 `apps/web/src/hooks/use-ai-model-catalog.ts`
+- [x] 新增 `apps/web/src/components/ui/switch.tsx`
+- [x] 更新 `apps/web/src/routes/_app/settings/models.tsx` 增加模型列表与开关
+- [x] 更新 `apps/web/src/components/ai-elements/chat-input.tsx` 使用动态 catalog
+- [x] 更新 `apps/web/src/components/ai-elements/model-selector.tsx` 使用动态 catalog
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx` 增加模型回退逻辑
+- [x] 更新 i18n 资源文件（en-US / zh-CN / ja-JP）
+- [x] 新增单测 `packages/api/__tests__/routers/ai-model-catalog.test.ts`
+- [x] 更新 `docs/ai-mvp-byok-v0.md` Section 23
+
+Done:
+实现用户级模型启用开关功能，支持全类型（chat/embedding/image/tts/stt 等）与全站生效。
+新增 `user_ai_model_settings` 表存储用户覆盖，API 层合并默认与用户设置，Web 端提供搜索+开关 UI。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）
