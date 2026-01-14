@@ -20,6 +20,8 @@
     "@folionote/locales": "workspace:*",
     "@folionote/model-list": "workspace:*",
     "@folionote/utils": "workspace:*",
+    "@folionote/editor-core": "workspace:*",
+    "@folionote/editor-react": "workspace:*",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "^1.1.4",
     "@orpc/client": "catalog:",

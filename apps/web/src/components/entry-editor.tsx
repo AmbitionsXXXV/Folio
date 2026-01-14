@@ -1,18 +1,20 @@
+import {
+	CustomCaret,
+	CustomLink,
+	createSlashCommandExtension,
+	getResolvedDefaultCommands,
+	PasteHandler,
+	type PasteStrategy,
+	type SlashCommandItem,
+	useEditorCommands,
+} from '@folionote/editor-react'
+import { CodeBlockShiki } from '@folionote/editor-react/extensions'
 import type { JSONContent } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CodeBlockShiki } from './editor/code-block-extension'
-import { CustomCaret } from './editor/custom-caret-extension'
-import { CustomLink } from './editor/link-extension'
-import { PasteHandler, type PasteStrategy } from './editor/paste-handler-extension'
-import {
-	createSlashCommand,
-	getDefaultSlashCommands,
-	type SlashCommandItem,
-} from './editor/slash-command'
 
 /**
  * 内容格式类型
@@ -89,9 +91,9 @@ export function EntryEditor({
 
 	// Combine default commands with additional commands
 	const commands = useMemo(() => {
-		const defaults = getDefaultSlashCommands(t)
+		const defaults = getResolvedDefaultCommands(t)
 		return [...defaults, ...additionalCommands]
-	}, [additionalCommands])
+	}, [additionalCommands, t])
 
 	// Parse initial content based on format
 	const initialContent = useMemo(
@@ -106,7 +108,7 @@ export function EntryEditor({
 				heading: {
 					levels: [1, 2, 3],
 				},
-				// Disable the default code block in favor of CodeBlockLowlight
+				// Disable the default code block in favor of CodeBlockShiki
 				codeBlock: false,
 			}),
 			CodeBlockShiki.configure({
@@ -122,8 +124,9 @@ export function EntryEditor({
 				placeholder,
 				emptyEditorClass: 'is-editor-empty',
 			}),
-			createSlashCommand(t).configure({
+			createSlashCommandExtension({
 				commands,
+				t,
 			}),
 			// 自定义光标：带彗星尾巴动画效果（只在可编辑模式下启用）
 			CustomCaret.configure({
@@ -237,54 +240,8 @@ export function EntryEditor({
  * Provide memoized editor command functions for toolbar controls.
  *
  * @param editor - The TipTap editor instance returned from `useEditor`.
- * @returns An object containing command functions (`toggleBold`, `toggleItalic`, `toggleHeading`, `toggleBulletList`, `toggleOrderedList`, `toggleBlockquote`, `toggleCode`, `toggleCodeBlock`) that focus the editor and toggle the corresponding formatting, and `isActive(name, attributes?)` which returns `true` if the specified mark or node is currently active, `false` otherwise.
+ * @returns An object containing command functions for formatting.
  */
 export function useEntryEditorCommands(editor: ReturnType<typeof useEditor>) {
-	const toggleBold = useCallback(() => {
-		editor?.chain().focus().toggleBold().run()
-	}, [editor])
-
-	const toggleItalic = useCallback(() => {
-		editor?.chain().focus().toggleItalic().run()
-	}, [editor])
-
-	const toggleHeading = useCallback(
-		(level: 1 | 2 | 3) => {
-			editor?.chain().focus().toggleHeading({ level }).run()
-		},
-		[editor]
-	)
-
-	const toggleBulletList = useCallback(() => {
-		editor?.chain().focus().toggleBulletList().run()
-	}, [editor])
-
-	const toggleOrderedList = useCallback(() => {
-		editor?.chain().focus().toggleOrderedList().run()
-	}, [editor])
-
-	const toggleBlockquote = useCallback(() => {
-		editor?.chain().focus().toggleBlockquote().run()
-	}, [editor])
-
-	const toggleCode = useCallback(() => {
-		editor?.chain().focus().toggleCode().run()
-	}, [editor])
-
-	const toggleCodeBlock = useCallback(() => {
-		editor?.chain().focus().toggleCodeBlock().run()
-	}, [editor])
-
-	return {
-		toggleBold,
-		toggleItalic,
-		toggleHeading,
-		toggleBulletList,
-		toggleOrderedList,
-		toggleBlockquote,
-		toggleCode,
-		toggleCodeBlock,
-		isActive: (name: string, attributes?: Record<string, unknown>) =>
-			editor?.isActive(name, attributes) ?? false,
-	}
+	return useEditorCommands(editor)
 }

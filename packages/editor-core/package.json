@@ -1,0 +1,40 @@
+{
+  "name": "@folionote/editor-core",
+  "version": "0.2.7",
+  "description": "FolioNote headless editor core - platform-agnostic editor logic",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./commands": {
+      "types": "./src/commands/index.ts",
+      "default": "./src/commands/index.ts"
+    },
+    "./extensions": {
+      "types": "./src/extensions/index.ts",
+      "default": "./src/extensions/index.ts"
+    },
+    "./suggestion": {
+      "types": "./src/suggestion/index.ts",
+      "default": "./src/suggestion/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.14.0",
+    "@tiptap/extension-link": "^3.14.0",
+    "@tiptap/pm": "^3.14.0",
+    "@tiptap/suggestion": "^3.14.0"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@tiptap/core": "^3.0.0"
+  }
+}

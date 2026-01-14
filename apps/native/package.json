@@ -24,6 +24,7 @@
     "@folionote/constants": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/utils": "workspace:*",
+    "@folionote/editor-core": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.6",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react-native": "^1.0.9",

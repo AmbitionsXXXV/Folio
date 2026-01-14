@@ -1,7 +1,5 @@
-import { Link04Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import type { SlashCommandItem } from '@folionote/editor-react'
 import type { Editor, Range } from '@tiptap/core'
-import type { SlashCommandItem } from './slash-command'
 
 /**
  * Entry reference type definition
@@ -37,9 +35,10 @@ export function createRefCommand(
 	const { t, getEntries, onOpenEntryPicker, currentEntryId } = options
 
 	return {
+		id: 'ref',
 		title: t('editor.refCommand.refEntry'),
 		description: t('editor.refCommand.refEntryDesc'),
-		icon: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
+		iconId: 'ref',
 		keywords: ['ref', 'reference', 'link', 'entry', '引用', '链接', '条目'],
 		group: 'FolioNote',
 		command: ({ editor, range }: { editor: Editor; range: Range }) => {
@@ -94,9 +93,10 @@ export function createRefCommandWithEvent(
 	t: (key: string) => string
 ): SlashCommandItem {
 	return {
+		id: 'ref-event',
 		title: t('editor.refCommand.refEntry'),
 		description: t('editor.refCommand.refEntryDesc'),
-		icon: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
+		iconId: 'ref',
 		keywords: ['ref', 'reference', 'link', 'entry', '引用', '链接', '条目'],
 		group: 'FolioNote',
 		command: ({ editor, range }: { editor: Editor; range: Range }) => {

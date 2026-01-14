@@ -1,0 +1,36 @@
+import type { IconId } from '@folionote/editor-core'
+import {
+	Book02Icon,
+	CodeIcon,
+	DivideSignIcon,
+	Heading01Icon,
+	Heading02Icon,
+	Heading03Icon,
+	LeftToRightListBulletIcon,
+	LeftToRightListNumberIcon,
+	Link04Icon,
+	QuoteUpIcon,
+	Tag01Icon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import type { ReactNode } from 'react'
+
+/**
+ * Default icon map for slash commands
+ * Maps IconId to React components
+ */
+export const defaultIconMap: Record<IconId, ReactNode> = {
+	heading1: <HugeiconsIcon className="size-4" icon={Heading01Icon} />,
+	heading2: <HugeiconsIcon className="size-4" icon={Heading02Icon} />,
+	heading3: <HugeiconsIcon className="size-4" icon={Heading03Icon} />,
+	quote: <HugeiconsIcon className="size-4" icon={QuoteUpIcon} />,
+	code: <HugeiconsIcon className="size-4" icon={CodeIcon} />,
+	bulletList: <HugeiconsIcon className="size-4" icon={LeftToRightListBulletIcon} />,
+	orderedList: <HugeiconsIcon className="size-4" icon={LeftToRightListNumberIcon} />,
+	divider: <HugeiconsIcon className="size-4" icon={DivideSignIcon} />,
+	tag: <HugeiconsIcon className="size-4" icon={Tag01Icon} />,
+	ref: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
+	source: <HugeiconsIcon className="size-4" icon={Book02Icon} />,
+}
+
+export type IconMapType = Record<IconId, ReactNode>

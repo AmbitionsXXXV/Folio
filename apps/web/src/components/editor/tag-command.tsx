@@ -1,7 +1,5 @@
-import { Tag01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import type { SlashCommandItem } from '@folionote/editor-react'
 import type { Editor, Range } from '@tiptap/core'
-import type { SlashCommandItem } from './slash-command'
 
 /**
  * Tag type definition
@@ -38,9 +36,10 @@ export function createTagCommand(
 	const { onAddTag, getTags } = options
 
 	return {
+		id: 'tag',
 		title: t('editor.tagCommand.addTag'),
 		description: t('editor.tagCommand.addTagDesc'),
-		icon: <HugeiconsIcon className="size-4" icon={Tag01Icon} />,
+		iconId: 'tag',
 		keywords: ['tag', 'label', '标签'],
 		group: 'FolioNote',
 		command: ({ editor, range }: { editor: Editor; range: Range }) => {
@@ -73,9 +72,10 @@ export function createTagCommandWithEvent(
 	t: (key: string) => string
 ): SlashCommandItem {
 	return {
+		id: 'tag-event',
 		title: t('editor.tagCommand.addTag'),
 		description: t('editor.tagCommand.addTagDesc'),
-		icon: <HugeiconsIcon className="size-4" icon={Tag01Icon} />,
+		iconId: 'tag',
 		keywords: ['tag', 'label', '标签'],
 		group: 'FolioNote',
 		command: ({ editor, range }: { editor: Editor; range: Range }) => {
