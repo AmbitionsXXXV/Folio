@@ -23,6 +23,7 @@
     "@ai-sdk/provider": "^3.0.2",
     "@ai-sdk/xai": "^3.0.22",
     "ai": "catalog:",
+    "tokenlens": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

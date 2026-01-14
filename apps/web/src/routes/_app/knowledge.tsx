@@ -74,11 +74,13 @@ type Message = {
 	isStreaming?: boolean
 	/** Thinking/reasoning content (for models that support extended thinking) */
 	thinking?: string
-	/** Token count for the message */
-	tokenCount?: {
-		input?: number
-		output?: number
-		thinking?: number
+	/** Token usage from the AI provider */
+	usage?: {
+		inputTokens?: number
+		outputTokens?: number
+		totalTokens?: number
+		reasoningTokens?: number
+		costUSD?: number
 	}
 }
 
@@ -219,6 +221,7 @@ function KnowledgePage() {
 		isStreaming,
 		text: streamingText,
 		thinking: streamingThinking,
+		usage: streamingUsage,
 		error: streamError,
 		reset: resetStream,
 	} = useStreamText()
@@ -243,38 +246,33 @@ function KnowledgePage() {
 		}
 	}, [streamingText, streamingThinking])
 
-	// Estimate token count (roughly 4 characters per token)
-	const estimateTokens = useCallback((text: string): number => {
-		if (!text) return 0
-		return Math.ceil(text.length / 4)
-	}, [])
-
-	// Handle stream completion - calculate token counts
+	// Handle stream completion - update with usage info from tokenlens
 	useEffect(() => {
 		if (!isStreaming && streamingMessageIdRef.current) {
 			const messageId = streamingMessageIdRef.current
-			// Mark the message as no longer streaming and calculate token counts
+			// Mark the message as no longer streaming and add usage info
 			setMessages((prev) =>
 				prev.map((msg) => {
 					if (msg.id !== messageId) return msg
 
-					// Estimate token counts (roughly 4 chars per token)
-					const outputTokens = estimateTokens(msg.content)
-					const thinkingTokens = msg.thinking ? estimateTokens(msg.thinking) : 0
-
 					return {
 						...msg,
 						isStreaming: false,
-						tokenCount: {
-							output: outputTokens,
-							thinking: thinkingTokens || undefined,
-						},
+						usage: streamingUsage
+							? {
+									inputTokens: streamingUsage.inputTokens,
+									outputTokens: streamingUsage.outputTokens,
+									totalTokens: streamingUsage.totalTokens,
+									reasoningTokens: streamingUsage.reasoningTokens,
+									costUSD: streamingUsage.costUSD,
+								}
+							: undefined,
 					}
 				})
 			)
 			streamingMessageIdRef.current = null
 		}
-	}, [isStreaming, estimateTokens])
+	}, [isStreaming, streamingUsage])
 
 	// Handle stream error
 	useEffect(() => {
@@ -588,11 +586,93 @@ type MessageBubbleProps = {
 	thinkingEnabled: boolean
 }
 
-function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
+// Format token count for display
+function formatTokenCount(count?: number): string | number | null {
+	if (!count) return null
+	return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count
+}
+
+// Format cost for display
+function formatCost(cost?: number): string | null {
+	if (!cost) return null
+	if (cost < 0.0001) return '<$0.0001'
+	if (cost < 0.01) return `$${cost.toFixed(4)}`
+	return `$${cost.toFixed(3)}`
+}
+
+type ThinkingCollapseProps = {
+	thinking: string
+	isStreaming: boolean
+	isThinkingOnly: boolean
+	reasoningTokens: string | number | null
+}
+
+function ThinkingCollapse({
+	thinking,
+	isStreaming,
+	isThinkingOnly,
+	reasoningTokens,
+}: ThinkingCollapseProps) {
 	const { t } = useTranslation()
+	const [thinkingOpen, setThinkingOpen] = useState(false)
+
+	return (
+		<Collapsible onOpenChange={setThinkingOpen} open={thinkingOpen}>
+			<CollapsibleTrigger
+				className={cn(
+					'mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5',
+					'bg-muted/50 text-muted-foreground text-xs',
+					'transition-colors hover:bg-muted',
+					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+				)}
+			>
+				<HugeiconsIcon className="size-3.5" icon={AiBrain01Icon} />
+				<span className="flex-1 text-left">
+					{isStreaming && isThinkingOnly
+						? t('knowledge.thinkingInProgress')
+						: t('knowledge.viewThinking')}
+				</span>
+				{reasoningTokens && !isStreaming && (
+					<span className="font-[tabular-nums] text-[10px] opacity-60">
+						{reasoningTokens} tokens
+					</span>
+				)}
+				<svg
+					aria-hidden="true"
+					className={cn('size-3 transition-transform', thinkingOpen && 'rotate-180')}
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						d="M19 9l-7 7-7-7"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+					/>
+				</svg>
+			</CollapsibleTrigger>
+			<CollapsibleContent>
+				<div
+					className={cn(
+						'mb-2 rounded-lg bg-muted/30 p-3',
+						'prose prose-sm dark:prose-invert max-w-none text-xs',
+						'border-primary/30 border-l-2',
+						isStreaming && isThinkingOnly && 'streaming-cursor'
+					)}
+				>
+					<Streamdown isAnimating={isStreaming && isThinkingOnly}>
+						{thinking}
+					</Streamdown>
+				</div>
+			</CollapsibleContent>
+		</Collapsible>
+	)
+}
+
+function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 	const isUser = message.role === 'user'
 	const isAssistant = message.role === 'assistant'
-	const [thinkingOpen, setThinkingOpen] = useState(false)
 
 	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
 	const isThinkingOnly = hasThinking && !message.content
@@ -602,14 +682,9 @@ function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 		return null
 	}
 
-	// Format token count for display
-	const formatTokenCount = (count?: number) => {
-		if (!count) return null
-		return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count
-	}
-
-	const outputTokens = formatTokenCount(message.tokenCount?.output)
-	const thinkingTokens = formatTokenCount(message.tokenCount?.thinking)
+	const outputTokens = formatTokenCount(message.usage?.outputTokens)
+	const reasoningTokens = formatTokenCount(message.usage?.reasoningTokens)
+	const costDisplay = formatCost(message.usage?.costUSD)
 
 	return (
 		<div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -623,59 +698,12 @@ function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 			>
 				{/* Thinking content for assistant messages */}
 				{isAssistant && hasThinking && thinkingEnabled && (
-					<Collapsible onOpenChange={setThinkingOpen} open={thinkingOpen}>
-						<CollapsibleTrigger
-							className={cn(
-								'mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5',
-								'bg-muted/50 text-muted-foreground text-xs',
-								'transition-colors hover:bg-muted',
-								'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-							)}
-						>
-							<HugeiconsIcon className="size-3.5" icon={AiBrain01Icon} />
-							<span className="flex-1 text-left">
-								{message.isStreaming && isThinkingOnly
-									? t('knowledge.thinkingInProgress')
-									: t('knowledge.viewThinking')}
-							</span>
-							{thinkingTokens && !message.isStreaming && (
-								<span className="font-[tabular-nums] text-[10px] opacity-60">
-									{thinkingTokens} tokens
-								</span>
-							)}
-							<svg
-								aria-hidden="true"
-								className={cn(
-									'size-3 transition-transform',
-									thinkingOpen && 'rotate-180'
-								)}
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									d="M19 9l-7 7-7-7"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-								/>
-							</svg>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<div
-								className={cn(
-									'mb-2 rounded-lg bg-muted/30 p-3',
-									'prose prose-sm dark:prose-invert max-w-none text-xs',
-									'border-primary/30 border-l-2',
-									message.isStreaming && isThinkingOnly && 'streaming-cursor'
-								)}
-							>
-								<Streamdown isAnimating={message.isStreaming && isThinkingOnly}>
-									{message.thinking ?? ''}
-								</Streamdown>
-							</div>
-						</CollapsibleContent>
-					</Collapsible>
+					<ThinkingCollapse
+						isStreaming={message.isStreaming ?? false}
+						isThinkingOnly={isThinkingOnly}
+						reasoningTokens={reasoningTokens}
+						thinking={message.thinking ?? ''}
+					/>
 				)}
 
 				{/* Main content */}
@@ -696,7 +724,7 @@ function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 					</p>
 				)}
 
-				{/* Footer: timestamp and token count */}
+				{/* Footer: timestamp, token count and cost */}
 				{!message.isStreaming && (
 					<div
 						className={cn(
@@ -708,6 +736,7 @@ function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 						{outputTokens && (
 							<span className="opacity-60">• {outputTokens} tokens</span>
 						)}
+						{costDisplay && <span className="opacity-60">• {costDisplay}</span>}
 					</div>
 				)}
 			</div>

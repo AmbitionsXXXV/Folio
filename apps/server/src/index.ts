@@ -25,6 +25,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { streamText } from 'hono/streaming'
 import { timeout } from 'hono/timeout'
+import { costFromUsage } from 'tokenlens'
 import { initI18n } from './i18n'
 
 await initI18n()
@@ -239,6 +240,29 @@ async function searchNotesForRag(
 	}))
 }
 
+/**
+ * Calculate cost using tokenlens from usage data
+ */
+function calculateCostFromUsage(
+	provider: string,
+	modelId: string,
+	usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number }
+): number | undefined {
+	try {
+		const tokenlensModelId = `${provider}/${modelId}`
+		return costFromUsage({
+			id: tokenlensModelId,
+			usage: {
+				promptTokens: usage.inputTokens,
+				completionTokens: usage.outputTokens,
+				totalTokens: usage.totalTokens,
+			},
+		})
+	} catch {
+		return undefined
+	}
+}
+
 app.post('/api/ai/stream', async (c) => {
 	const context = await createContext({ context: c })
 
@@ -320,7 +344,7 @@ app.post('/api/ai/stream', async (c) => {
 			enableReasoning,
 		})
 
-		// Stream response with SSE format to support thinking content
+		// Stream response with SSE format to support thinking content and usage
 		return streamText(c, async (stream) => {
 			// If reasoning is enabled, we need to use fullStreamResult to get thinking
 			if (enableReasoning) {
@@ -340,6 +364,31 @@ app.post('/api/ai/stream', async (c) => {
 				for await (const chunk of result.textStream) {
 					await stream.write(chunk)
 				}
+			}
+
+			// Get usage information after stream completes
+			try {
+				const usage = await result.fullStreamResult.usage
+				if (usage) {
+					const costUSD = calculateCostFromUsage(result.provider, result.modelId, {
+						inputTokens: usage.inputTokens,
+						outputTokens: usage.outputTokens,
+						totalTokens: usage.totalTokens,
+					})
+
+					// Send usage info with special marker
+					await stream.write(
+						`\x1E__USAGE__\x1E${JSON.stringify({
+							inputTokens: usage.inputTokens,
+							outputTokens: usage.outputTokens,
+							totalTokens: usage.totalTokens,
+							reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
+							costUSD,
+						})}`
+					)
+				}
+			} catch (usageError) {
+				log.debug('Failed to get usage info:', usageError)
 			}
 		})
 	} catch (error) {

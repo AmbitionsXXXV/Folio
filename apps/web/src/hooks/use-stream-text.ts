@@ -15,11 +15,23 @@ type StreamTextParams = {
 	enableReasoning?: boolean
 }
 
+/** Token usage information from the AI provider */
+export type TokenUsage = {
+	inputTokens?: number
+	outputTokens?: number
+	totalTokens?: number
+	reasoningTokens?: number
+	/** Cost in USD calculated by tokenlens */
+	costUSD?: number
+}
+
 type StreamTextState = {
 	isStreaming: boolean
 	text: string
 	/** Thinking/reasoning content from models that support it */
 	thinking: string
+	/** Token usage information */
+	usage: TokenUsage | null
 	error: Error | null
 }
 
@@ -38,6 +50,7 @@ export function useStreamText(): StreamTextResult {
 		isStreaming: false,
 		text: '',
 		thinking: '',
+		usage: null,
 		error: null,
 	})
 
@@ -57,6 +70,7 @@ export function useStreamText(): StreamTextResult {
 			isStreaming: true,
 			text: '',
 			thinking: '',
+			usage: null,
 			error: null,
 		})
 	}
@@ -88,15 +102,32 @@ export function useStreamText(): StreamTextResult {
 
 	/** Delimiter used to mark thinking content in the stream */
 	const THINKING_DELIMITER = '\x1E__THINKING__\x1E'
+	/** Delimiter used to mark usage info in the stream */
+	const USAGE_DELIMITER = '\x1E__USAGE__\x1E'
 
-	/** Parse accumulated stream content to extract text and thinking */
+	/** Parse accumulated stream content to extract text, thinking, and usage */
 	const parseStreamContent = (
 		content: string
-	): { text: string; thinking: string } => {
+	): { text: string; thinking: string; usage: TokenUsage | null } => {
 		let text = ''
 		let thinking = ''
+		let usage: TokenUsage | null = null
 		let remaining = content
 
+		// First, extract usage info if present (it comes at the end)
+		if (remaining.includes(USAGE_DELIMITER)) {
+			const usageIdx = remaining.indexOf(USAGE_DELIMITER)
+			const usageStart = usageIdx + USAGE_DELIMITER.length
+			const usageJson = remaining.slice(usageStart)
+			try {
+				usage = JSON.parse(usageJson) as TokenUsage
+			} catch {
+				// Usage JSON may be incomplete during streaming, ignore
+			}
+			remaining = remaining.slice(0, usageIdx)
+		}
+
+		// Then extract thinking content
 		while (remaining.includes(THINKING_DELIMITER)) {
 			const delimiterIdx = remaining.indexOf(THINKING_DELIMITER)
 			// Content before delimiter is regular text
@@ -119,7 +150,7 @@ export function useStreamText(): StreamTextResult {
 
 		// Any remaining content is regular text
 		text += remaining
-		return { text, thinking }
+		return { text, thinking, usage }
 	}
 
 	const processStream = async (response: Response) => {
@@ -138,11 +169,12 @@ export function useStreamText(): StreamTextResult {
 			const chunk = decoder.decode(value, { stream: true })
 			fullContent += chunk
 
-			const { text, thinking } = parseStreamContent(fullContent)
+			const { text, thinking, usage } = parseStreamContent(fullContent)
 			setState((prev) => ({
 				...prev,
 				text,
 				thinking,
+				usage,
 			}))
 		}
 	}
@@ -160,6 +192,7 @@ export function useStreamText(): StreamTextResult {
 			isStreaming: false,
 			text: '',
 			thinking: '',
+			usage: null,
 			error: error instanceof Error ? error : new Error('Unknown error'),
 		})
 	}
@@ -198,6 +231,7 @@ export function useStreamText(): StreamTextResult {
 			isStreaming: false,
 			text: '',
 			thinking: '',
+			usage: null,
 			error: null,
 		})
 	}, [cancel])
