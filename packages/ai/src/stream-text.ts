@@ -17,12 +17,66 @@ export type StreamTextInput = {
 	 * If omitted, falls back to BYOK credential/model defaults.
 	 */
 	model?: string
+	/**
+	 * Enable extended thinking/reasoning for models that support it.
+	 * Currently supported by Claude, DeepSeek, and some OpenAI models.
+	 */
+	enableReasoning?: boolean
+	/**
+	 * Maximum tokens for thinking/reasoning budget.
+	 * Only used when enableReasoning is true.
+	 */
+	reasoningBudgetTokens?: number
 }
+
+/** Full stream result type from Vercel AI SDK */
+export type FullStreamResult = ReturnType<typeof aiStreamText>
 
 export type StreamTextResult = {
 	provider: AiProvider
 	modelId: string
 	textStream: AsyncIterable<string>
+	/** Full stream result from Vercel AI SDK for accessing reasoning/thinking */
+	fullStreamResult: FullStreamResult
+}
+
+/** Default reasoning budget tokens */
+const DEFAULT_REASONING_BUDGET_TOKENS = 10_000
+
+/**
+ * Build provider options for extended thinking/reasoning
+ */
+type ProviderOptions = Parameters<typeof aiStreamText>[0]['providerOptions']
+
+function buildProviderOptions(
+	provider: AiProvider,
+	enableReasoning: boolean,
+	reasoningBudgetTokens: number
+): ProviderOptions | undefined {
+	if (!enableReasoning) return undefined
+
+	switch (provider) {
+		case 'claude':
+			// Anthropic extended thinking
+			return {
+				anthropic: {
+					thinking: {
+						type: 'enabled',
+						budgetTokens: reasoningBudgetTokens,
+					},
+				},
+			}
+		case 'deepseek':
+		case 'qwen':
+			// OpenAI-compatible providers with reasoning_effort
+			return {
+				openai: {
+					reasoningEffort: 'medium',
+				},
+			}
+		default:
+			return undefined
+	}
 }
 
 /**
@@ -31,20 +85,29 @@ export type StreamTextResult = {
  * This is intended for server-side execution only.
  * Returns a streaming result that can be consumed progressively.
  */
-export async function streamTextWithCredential(
+export function streamTextWithCredential(
 	credential: DecryptedCredential,
 	input: StreamTextInput
-): Promise<StreamTextResult> {
+): StreamTextResult {
 	const model = createVercelAiChatModel(credential, { model: input.model })
-	const result = await aiStreamText({
+
+	const providerOptions = buildProviderOptions(
+		credential.provider,
+		input.enableReasoning ?? false,
+		input.reasoningBudgetTokens ?? DEFAULT_REASONING_BUDGET_TOKENS
+	)
+
+	const result = aiStreamText({
 		model,
 		prompt: input.prompt,
+		providerOptions,
 	})
 
 	return {
 		provider: credential.provider,
 		modelId: model.modelId,
 		textStream: result.textStream,
+		fullStreamResult: result,
 	}
 }
 

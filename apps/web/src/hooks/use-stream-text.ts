@@ -7,11 +7,19 @@ type StreamTextParams = {
 	baseUrl?: string
 	model?: string
 	prompt: string
+	/** Optional: IDs of notes to attach as context */
+	noteEntryIds?: string[]
+	/** Optional: Number of notes to retrieve via RAG */
+	ragTopK?: number
+	/** Optional: Enable extended thinking/reasoning */
+	enableReasoning?: boolean
 }
 
 type StreamTextState = {
 	isStreaming: boolean
 	text: string
+	/** Thinking/reasoning content from models that support it */
+	thinking: string
 	error: Error | null
 }
 
@@ -29,6 +37,7 @@ export function useStreamText(): StreamTextResult {
 	const [state, setState] = useState<StreamTextState>({
 		isStreaming: false,
 		text: '',
+		thinking: '',
 		error: null,
 	})
 
@@ -47,6 +56,7 @@ export function useStreamText(): StreamTextResult {
 		setState({
 			isStreaming: true,
 			text: '',
+			thinking: '',
 			error: null,
 		})
 	}
@@ -76,6 +86,42 @@ export function useStreamText(): StreamTextResult {
 		return response
 	}
 
+	/** Delimiter used to mark thinking content in the stream */
+	const THINKING_DELIMITER = '\x1E__THINKING__\x1E'
+
+	/** Parse accumulated stream content to extract text and thinking */
+	const parseStreamContent = (
+		content: string
+	): { text: string; thinking: string } => {
+		let text = ''
+		let thinking = ''
+		let remaining = content
+
+		while (remaining.includes(THINKING_DELIMITER)) {
+			const delimiterIdx = remaining.indexOf(THINKING_DELIMITER)
+			// Content before delimiter is regular text
+			text += remaining.slice(0, delimiterIdx)
+
+			// Find the end of thinking content
+			const thinkingStart = delimiterIdx + THINKING_DELIMITER.length
+			const nextDelimiter = remaining.indexOf(THINKING_DELIMITER, thinkingStart)
+
+			if (nextDelimiter !== -1) {
+				// Complete thinking segment found
+				thinking += remaining.slice(thinkingStart, nextDelimiter)
+				remaining = remaining.slice(nextDelimiter + THINKING_DELIMITER.length)
+			} else {
+				// Incomplete thinking - append to thinking for now
+				thinking += remaining.slice(thinkingStart)
+				remaining = ''
+			}
+		}
+
+		// Any remaining content is regular text
+		text += remaining
+		return { text, thinking }
+	}
+
 	const processStream = async (response: Response) => {
 		const reader = response.body?.getReader()
 		if (!reader) {
@@ -83,18 +129,20 @@ export function useStreamText(): StreamTextResult {
 		}
 
 		const decoder = new TextDecoder()
-		let accumulatedText = ''
+		let fullContent = ''
 
 		while (true) {
 			const { done, value } = await reader.read()
 			if (done) break
 
 			const chunk = decoder.decode(value, { stream: true })
-			accumulatedText += chunk
+			fullContent += chunk
 
+			const { text, thinking } = parseStreamContent(fullContent)
 			setState((prev) => ({
 				...prev,
-				text: accumulatedText,
+				text,
+				thinking,
 			}))
 		}
 	}
@@ -111,6 +159,7 @@ export function useStreamText(): StreamTextResult {
 		setState({
 			isStreaming: false,
 			text: '',
+			thinking: '',
 			error: error instanceof Error ? error : new Error('Unknown error'),
 		})
 	}
@@ -148,6 +197,7 @@ export function useStreamText(): StreamTextResult {
 		setState({
 			isStreaming: false,
 			text: '',
+			thinking: '',
 			error: null,
 		})
 	}, [cancel])

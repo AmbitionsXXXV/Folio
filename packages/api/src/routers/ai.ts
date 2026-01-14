@@ -250,6 +250,10 @@ const getModelCatalog = protectedProcedure.handler(async ({ context }) => {
 			type: m.type,
 			displayName: m.displayName ?? m.id,
 			enabled,
+			// Include reasoning ability for thinking support
+			reasoning: m.abilities?.reasoning,
+			// Include settings for extended params like enableReasoning
+			settings: m.settings,
 		}
 	})
 

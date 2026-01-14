@@ -1,5 +1,6 @@
 import {
 	AiBrain01Icon,
+	ArrowDown01Icon,
 	MessageAdd01Icon,
 	Setting06Icon,
 } from '@hugeicons/core-free-icons'
@@ -9,14 +10,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Streamdown } from 'streamdown'
-import { ChatInput } from '@/components/ai-elements/chat-input'
+import { useStickToBottom } from 'use-stick-to-bottom'
+import { type AttachedNote, ChatInput } from '@/components/ai-elements/chat-input'
+import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import { Button } from '@/components/ui/button'
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Spinner } from '@/components/ui/spinner'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { useStreamText } from '@/hooks/use-stream-text'
 import { cn } from '@/lib/utils'
+import type { Entry } from '@/types'
 
 // API-compatible provider IDs (subset that the backend supports)
 // These map to the old provider IDs that the API expects
@@ -63,6 +72,14 @@ type Message = {
 	timestamp: Date
 	/** Whether this message is currently being streamed */
 	isStreaming?: boolean
+	/** Thinking/reasoning content (for models that support extended thinking) */
+	thinking?: string
+	/** Token count for the message */
+	tokenCount?: {
+		input?: number
+		output?: number
+		thinking?: number
+	}
 }
 
 function KnowledgePage() {
@@ -87,7 +104,14 @@ function KnowledgePage() {
 	// Chat state
 	const [messages, setMessages] = useState<Message[]>([])
 	const [inputValue, setInputValue] = useState('')
-	const messagesEndRef = useRef<HTMLDivElement>(null)
+	const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+	// Thinking/reasoning toggle state
+	const [thinkingEnabled, setThinkingEnabled] = useState(false)
+
+	// Attached notes state
+	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
+	const entryPickerRef = useRef<EntryPickerRef>(null)
 
 	// Get enabled chat models for a provider
 	const getEnabledChatModels = useCallback(
@@ -194,6 +218,7 @@ function KnowledgePage() {
 		stream,
 		isStreaming,
 		text: streamingText,
+		thinking: streamingThinking,
 		error: streamError,
 		reset: resetStream,
 	} = useStreamText()
@@ -201,33 +226,55 @@ function KnowledgePage() {
 	// Track the streaming message ID
 	const streamingMessageIdRef = useRef<string | null>(null)
 
-	// Update the streaming message content as text comes in
+	// Update the streaming message content as text and thinking come in
 	useEffect(() => {
-		if (streamingMessageIdRef.current && streamingText) {
+		if (streamingMessageIdRef.current && (streamingText || streamingThinking)) {
 			setMessages((prev) =>
 				prev.map((msg) =>
 					msg.id === streamingMessageIdRef.current
-						? { ...msg, content: streamingText }
+						? {
+								...msg,
+								content: streamingText,
+								thinking: streamingThinking || undefined,
+							}
 						: msg
 				)
 			)
 		}
-	}, [streamingText])
+	}, [streamingText, streamingThinking])
 
-	// Handle stream completion
+	// Estimate token count (roughly 4 characters per token)
+	const estimateTokens = useCallback((text: string): number => {
+		if (!text) return 0
+		return Math.ceil(text.length / 4)
+	}, [])
+
+	// Handle stream completion - calculate token counts
 	useEffect(() => {
 		if (!isStreaming && streamingMessageIdRef.current) {
-			// Mark the message as no longer streaming
+			const messageId = streamingMessageIdRef.current
+			// Mark the message as no longer streaming and calculate token counts
 			setMessages((prev) =>
-				prev.map((msg) =>
-					msg.id === streamingMessageIdRef.current
-						? { ...msg, isStreaming: false }
-						: msg
-				)
+				prev.map((msg) => {
+					if (msg.id !== messageId) return msg
+
+					// Estimate token counts (roughly 4 chars per token)
+					const outputTokens = estimateTokens(msg.content)
+					const thinkingTokens = msg.thinking ? estimateTokens(msg.thinking) : 0
+
+					return {
+						...msg,
+						isStreaming: false,
+						tokenCount: {
+							output: outputTokens,
+							thinking: thinkingTokens || undefined,
+						},
+					}
+				})
 			)
 			streamingMessageIdRef.current = null
 		}
-	}, [isStreaming])
+	}, [isStreaming, estimateTokens])
 
 	// Handle stream error
 	useEffect(() => {
@@ -242,6 +289,59 @@ function KnowledgePage() {
 			}
 		}
 	}, [streamError, t])
+
+	// Attachment handlers
+	const handleAtTrigger = useCallback(() => {
+		entryPickerRef.current?.open()
+	}, [])
+
+	const handleEntrySelect = useCallback(
+		(entry: Entry) => {
+			// Add the note to attachments if not already attached
+			setAttachedNotes((prev) => {
+				if (prev.some((n) => n.id === entry.id)) {
+					return prev
+				}
+				return [
+					...prev,
+					{
+						id: entry.id,
+						title: entry.title || '',
+					},
+				]
+			})
+
+			// Insert @note title at cursor position in textarea
+			if (textareaRef.current) {
+				const textarea = textareaRef.current
+				const start = textarea.selectionStart
+				const end = textarea.selectionEnd
+				const text = inputValue
+				const noteTitle = entry.title || t('entryPicker.untitled')
+				const insertText = `@${noteTitle} `
+
+				// If triggered by @, we want to replace the @ character
+				// Check if the character before cursor is @
+				const isAtTrigger = start > 0 && text[start - 1] === '@'
+				const replaceStart = isAtTrigger ? start - 1 : start
+
+				const newValue = text.slice(0, replaceStart) + insertText + text.slice(end)
+				setInputValue(newValue)
+
+				// Move cursor to after inserted text
+				setTimeout(() => {
+					const newPosition = replaceStart + insertText.length
+					textarea.setSelectionRange(newPosition, newPosition)
+					textarea.focus()
+				}, 0)
+			}
+		},
+		[inputValue, t]
+	)
+
+	const handleRemoveAttachment = useCallback((noteId: string) => {
+		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
+	}, [])
 
 	const handleSendMessage = useCallback(() => {
 		const trimmedInput = inputValue.trim()
@@ -274,6 +374,12 @@ function KnowledgePage() {
 		setMessages((prev) => [...prev, userMessage, assistantMessage])
 		setInputValue('')
 
+		// Collect attached note IDs for the request
+		const noteEntryIds = attachedNotes.map((n) => n.id)
+
+		// Clear attachments after sending
+		setAttachedNotes([])
+
 		const apiProviderId = mapProviderIdToApi(selectedProvider)
 		stream({
 			provider: apiProviderId,
@@ -281,6 +387,8 @@ function KnowledgePage() {
 			baseUrl: providerConfig?.baseUrl?.trim() || undefined,
 			model: selectedModel.trim() || undefined,
 			prompt: trimmedInput,
+			noteEntryIds: noteEntryIds.length > 0 ? noteEntryIds : undefined,
+			enableReasoning: thinkingEnabled,
 		})
 	}, [
 		inputValue,
@@ -289,17 +397,15 @@ function KnowledgePage() {
 		providerConfig,
 		selectedModel,
 		stream,
+		attachedNotes,
+		thinkingEnabled,
 	])
-
-	// Auto-scroll to bottom when messages change
-	useEffect(() => {
-		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-	}, [messages])
 
 	const handleNewChat = useCallback(() => {
 		resetStream()
 		setMessages([])
 		setInputValue('')
+		setAttachedNotes([])
 	}, [resetStream])
 
 	const isPending = isStreaming
@@ -335,14 +441,16 @@ function KnowledgePage() {
 			</div>
 
 			{/* Chat Messages */}
-			<div className="flex-1 overflow-y-auto rounded-lg border bg-muted/30 p-4">
+			<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
 				{messages.length === 0 ? (
-					<EmptyState hasApiKey={hasApiKey} />
+					<div className="flex h-full items-center justify-center p-4">
+						<EmptyState hasApiKey={hasApiKey} />
+					</div>
 				) : (
 					<MessageList
 						isPending={isPending}
 						messages={messages}
-						messagesEndRef={messagesEndRef}
+						thinkingEnabled={thinkingEnabled}
 					/>
 				)}
 			</div>
@@ -350,20 +458,35 @@ function KnowledgePage() {
 			{/* Input Area with integrated model selector */}
 			<div className="mt-4">
 				<ChatInput
+					attachedNotes={attachedNotes}
 					catalogModels={catalogModels}
 					catalogProviders={catalogProviders}
 					configuredProviders={configuredProviders}
 					hasApiKey={hasApiKey}
 					isPending={isPending}
+					onAtTrigger={handleAtTrigger}
 					onChange={setInputValue}
 					onModelChange={handleModelChange}
 					onProviderChange={handleProviderChange}
+					onRemoveAttachment={handleRemoveAttachment}
 					onSubmit={handleSendMessage}
+					onThinkingToggle={setThinkingEnabled}
 					selectedModel={selectedModel}
 					selectedProvider={selectedProvider}
+					textareaRef={textareaRef}
+					thinkingEnabled={thinkingEnabled}
 					value={inputValue}
 				/>
 			</div>
+
+			{/* Entry Picker for @ mentions */}
+			<EntryPicker
+				excludeIds={attachedNotes.map((n) => n.id)}
+				libraryOnly
+				onSelect={handleEntrySelect}
+				ref={entryPickerRef}
+				title={t('knowledge.selectNoteToAttach')}
+			/>
 		</div>
 	)
 }
@@ -404,52 +527,89 @@ function EmptyState({ hasApiKey }: EmptyStateProps) {
 type MessageListProps = {
 	messages: Message[]
 	isPending: boolean
-	messagesEndRef: React.RefObject<HTMLDivElement | null>
+	thinkingEnabled: boolean
 }
 
-function MessageList({ messages, isPending, messagesEndRef }: MessageListProps) {
+function MessageList({ messages, isPending, thinkingEnabled }: MessageListProps) {
 	const { t } = useTranslation()
 
-	// Check if there's currently a streaming message with content
+	// Use stick-to-bottom for auto-scroll behavior
+	const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom()
+
+	// Check if there's currently a streaming message with content or thinking
 	const hasStreamingMessageWithContent = messages.some(
-		(m) => m.isStreaming && m.content.length > 0
+		(m) => m.isStreaming && (m.content.length > 0 || (m.thinking?.length ?? 0) > 0)
 	)
 
-	// Only show thinking indicator when streaming but no content yet
-	const showThinking = isPending && !hasStreamingMessageWithContent
+	// Only show waiting indicator when streaming but no content or thinking yet
+	const showWaiting = isPending && !hasStreamingMessageWithContent
 
 	return (
-		<div className="space-y-4">
-			{messages.map((message) => (
-				<MessageBubble key={message.id} message={message} />
-			))}
-			{showThinking && (
-				<div className="flex justify-start">
-					<div className="flex items-center gap-2 rounded-2xl border bg-card px-4 py-2 shadow-sm">
-						<Spinner className="size-4" />
-						<span className="text-muted-foreground text-sm">
-							{t('knowledge.thinking')}
-						</span>
-					</div>
+		<div className="relative h-full">
+			<div className="h-full overflow-y-auto overscroll-contain p-4" ref={scrollRef}>
+				<div className="space-y-4" ref={contentRef}>
+					{messages.map((message) => (
+						<MessageBubble
+							key={message.id}
+							message={message}
+							thinkingEnabled={thinkingEnabled}
+						/>
+					))}
+					{showWaiting && (
+						<div className="flex justify-start">
+							<div className="flex items-center gap-2 rounded-2xl border bg-card px-4 py-2 shadow-sm">
+								<Spinner className="size-4" />
+								<span className="text-muted-foreground text-sm">
+									{t('knowledge.waiting')}
+								</span>
+							</div>
+						</div>
+					)}
 				</div>
+			</div>
+
+			{/* Scroll to bottom button */}
+			{!isAtBottom && (
+				<Button
+					className="absolute right-4 bottom-4 size-8 rounded-full shadow-lg"
+					onClick={() => scrollToBottom()}
+					size="icon"
+					variant="secondary"
+				>
+					<HugeiconsIcon className="size-4" icon={ArrowDown01Icon} />
+				</Button>
 			)}
-			<div ref={messagesEndRef} />
 		</div>
 	)
 }
 
 type MessageBubbleProps = {
 	message: Message
+	thinkingEnabled: boolean
 }
 
-function MessageBubble({ message }: MessageBubbleProps) {
+function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
+	const { t } = useTranslation()
 	const isUser = message.role === 'user'
 	const isAssistant = message.role === 'assistant'
+	const [thinkingOpen, setThinkingOpen] = useState(false)
 
-	// Don't render empty streaming messages
-	if (message.isStreaming && !message.content) {
+	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
+	const isThinkingOnly = hasThinking && !message.content
+
+	// Don't render completely empty streaming messages (no content and no thinking)
+	if (message.isStreaming && !message.content && !message.thinking) {
 		return null
 	}
+
+	// Format token count for display
+	const formatTokenCount = (count?: number) => {
+		if (!count) return null
+		return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count
+	}
+
+	const outputTokens = formatTokenCount(message.tokenCount?.output)
+	const thinkingTokens = formatTokenCount(message.tokenCount?.thinking)
 
 	return (
 		<div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -461,14 +621,72 @@ function MessageBubble({ message }: MessageBubbleProps) {
 						: 'border bg-card text-card-foreground shadow-sm'
 				)}
 			>
+				{/* Thinking content for assistant messages */}
+				{isAssistant && hasThinking && thinkingEnabled && (
+					<Collapsible onOpenChange={setThinkingOpen} open={thinkingOpen}>
+						<CollapsibleTrigger
+							className={cn(
+								'mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5',
+								'bg-muted/50 text-muted-foreground text-xs',
+								'transition-colors hover:bg-muted',
+								'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+							)}
+						>
+							<HugeiconsIcon className="size-3.5" icon={AiBrain01Icon} />
+							<span className="flex-1 text-left">
+								{message.isStreaming && isThinkingOnly
+									? t('knowledge.thinkingInProgress')
+									: t('knowledge.viewThinking')}
+							</span>
+							{thinkingTokens && !message.isStreaming && (
+								<span className="font-[tabular-nums] text-[10px] opacity-60">
+									{thinkingTokens} tokens
+								</span>
+							)}
+							<svg
+								aria-hidden="true"
+								className={cn(
+									'size-3 transition-transform',
+									thinkingOpen && 'rotate-180'
+								)}
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									d="M19 9l-7 7-7-7"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+								/>
+							</svg>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<div
+								className={cn(
+									'mb-2 rounded-lg bg-muted/30 p-3',
+									'prose prose-sm dark:prose-invert max-w-none text-xs',
+									'border-primary/30 border-l-2',
+									message.isStreaming && isThinkingOnly && 'streaming-cursor'
+								)}
+							>
+								<Streamdown isAnimating={message.isStreaming && isThinkingOnly}>
+									{message.thinking ?? ''}
+								</Streamdown>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
+				)}
+
+				{/* Main content */}
 				{isAssistant ? (
 					<div
 						className={cn(
 							'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm',
-							message.isStreaming && 'streaming-cursor'
+							message.isStreaming && !isThinkingOnly && 'streaming-cursor'
 						)}
 					>
-						<Streamdown isAnimating={message.isStreaming}>
+						<Streamdown isAnimating={message.isStreaming && !isThinkingOnly}>
 							{message.content}
 						</Streamdown>
 					</div>
@@ -477,15 +695,20 @@ function MessageBubble({ message }: MessageBubbleProps) {
 						{message.content}
 					</p>
 				)}
+
+				{/* Footer: timestamp and token count */}
 				{!message.isStreaming && (
-					<span
+					<div
 						className={cn(
-							'mt-1 block font-[tabular-nums] text-[10px]',
+							'mt-1 flex items-center gap-2 font-[tabular-nums] text-[10px]',
 							isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
 						)}
 					>
-						{message.timestamp.toLocaleTimeString()}
-					</span>
+						<span>{message.timestamp.toLocaleTimeString()}</span>
+						{outputTokens && (
+							<span className="opacity-60">• {outputTokens} tokens</span>
+						)}
+					</div>
 				)}
 			</div>
 		</div>

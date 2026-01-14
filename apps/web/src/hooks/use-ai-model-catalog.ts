@@ -16,6 +16,12 @@ export type CatalogModel = {
 	type: string
 	displayName: string
 	enabled: boolean
+	/** Whether the model supports reasoning/thinking */
+	reasoning?: boolean
+	/** Model settings including extendParams */
+	settings?: {
+		extendParams?: string[]
+	}
 }
 
 export type ModelCatalog = {

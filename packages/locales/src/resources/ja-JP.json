@@ -797,10 +797,11 @@
     "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
     "saveConfig": "設定を保存",
     "configSaved": "設定が保存されました",
-    "inputPlaceholder": "何でも質問してください…",
+    "inputPlaceholder": "何でも質問してください… @ でノートを添付",
     "configureApiKeyFirst": "まずAPIキーを設定してください",
     "configureFirst": "AIプロバイダーを設定",
     "thinking": "考え中…",
+    "waiting": "待機中…",
     "requestFailed": "AIリクエストが失敗しました",
     "send": "送信",
     "notConfigured": "未設定",
@@ -809,9 +810,17 @@
     "saveAsDefault": "デフォルトに設定",
     "defaultSaved": "デフォルトプロバイダーを保存しました",
     "manageApiKeys": "APIキーを管理",
+    "selectNoteToAttach": "添付するノートを選択",
+    "removeAttachment": "添付を削除",
+    "toggleThinking": "拡張思考を切り替え",
+    "enableThinking": "拡張思考を有効化",
+    "thinkingEnabled": "拡張思考が有効",
+    "thinkingBuiltIn": "拡張思考が内蔵（常時オン）",
+    "viewThinking": "思考プロセスを表示",
+    "thinkingInProgress": "考え中…",
     "emptyState": {
       "title": "会話を開始",
-      "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。"
+      "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。@ で特定のノートをコンテキストとして添付できます。"
     }
   },
   "aiProvider": {

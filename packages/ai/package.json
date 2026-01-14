@@ -21,7 +21,8 @@
     "@ai-sdk/google": "^3.0.7",
     "@ai-sdk/openai": "^3.0.9",
     "@ai-sdk/provider": "^3.0.2",
-    "ai": "^6.0.31",
+    "@ai-sdk/xai": "^3.0.22",
+    "ai": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

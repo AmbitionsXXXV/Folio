@@ -797,10 +797,11 @@
     "baseUrlHint": "留空使用默认端点；如需代理 / 网关可在此覆盖。",
     "saveConfig": "保存配置",
     "configSaved": "配置已保存",
-    "inputPlaceholder": "问任何问题…",
+    "inputPlaceholder": "问任何问题… 输入 @ 附加笔记",
     "configureApiKeyFirst": "请先配置 API 密钥",
     "configureFirst": "配置 AI 提供商",
     "thinking": "思考中…",
+    "waiting": "等待中…",
     "requestFailed": "AI 请求失败",
     "send": "发送",
     "notConfigured": "未配置",
@@ -809,9 +810,17 @@
     "saveAsDefault": "设为默认",
     "defaultSaved": "已保存为默认提供商",
     "manageApiKeys": "管理 API 密钥",
+    "selectNoteToAttach": "选择要附加的笔记",
+    "removeAttachment": "移除附件",
+    "toggleThinking": "切换深度思考",
+    "enableThinking": "启用深度思考",
+    "thinkingEnabled": "深度思考已启用",
+    "thinkingBuiltIn": "内置深度思考（始终开启）",
+    "viewThinking": "查看思考过程",
+    "thinkingInProgress": "思考中…",
     "emptyState": {
       "title": "开始对话",
-      "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。"
+      "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。输入 @ 附加特定笔记作为上下文。"
     }
   },
   "aiProvider": {

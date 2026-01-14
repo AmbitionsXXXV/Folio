@@ -2,7 +2,6 @@
  * @folionote/model-list
  *
  * AI Model definitions and provider configurations for FolioNote.
- * Based on LobeChat's model-bank architecture.
  *
  * Features:
  * - Model definitions for OpenAI, Anthropic, Google, and xAI

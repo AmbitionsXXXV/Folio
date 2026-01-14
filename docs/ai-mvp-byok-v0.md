@@ -1057,3 +1057,135 @@ ORDER BY runs DESC;
 
 - `mergeModelSettings()`：验证默认 enabled、用户覆盖、类型区分
 - `validateModelExists()`：验证模型存在性校验
+
+---
+
+## 24. Knowledge Chat：内置 Prompt + @ 笔记附件 + FTS 检索增强
+
+**实现日期**：2026-01-14
+
+### 24.1 功能概述
+
+Knowledge Chat 功能允许用户与 AI 进行基于个人知识库的对话。核心特性：
+
+1. **内置系统 Prompt**：定义知识库助手行为规则，优先使用用户笔记作为上下文
+2. **@ 笔记附件**：用户可通过 `@` 显式引用 Library 中的笔记作为对话上下文
+3. **FTS 检索增强**：自动基于用户输入进行全文搜索（FTS/ILIKE fallback），检索相关笔记作为补充上下文
+
+### 24.2 数据流与安全边界
+
+```text
+[用户输入] + [@ 附件笔记 IDs]
+         ↓
+    ┌─────────────────────────┐
+    │   Web 端 (ChatInput)     │
+    │   - @ 触发 EntryPicker   │
+    │   - 维护附件状态          │
+    │   - 发送 noteEntryIds    │
+    └─────────────────────────┘
+         ↓ POST /api/ai/stream
+    ┌─────────────────────────┐
+    │   Server 端              │
+    │   1. 鉴权 (userId)       │
+    │   2. 校验 noteEntryIds   │
+    │      - 最多 10 条        │
+    │      - 必须属于当前用户   │
+    │      - 必须是 Library     │
+    │      - 未删除             │
+    │   3. FTS 检索 Top-K      │
+    │      - userId 严格隔离   │
+    │      - 排除已附件笔记     │
+    │   4. 构建 Prompt         │
+    │      - 系统指令           │
+    │      - 附件笔记上下文     │
+    │      - 检索笔记上下文     │
+    │      - 用户问题           │
+    │   5. 调用 LLM (BYOK)     │
+    └─────────────────────────┘
+         ↓
+    [Streaming 响应]
+```
+
+**安全边界**：
+
+- 所有笔记查询强制 `WHERE userId = ? AND deletedAt IS NULL AND isInbox = false`
+- FTS 检索与附件笔记查询均按 userId 严格隔离
+- noteEntryIds 最多允许 10 条，防止滥用
+- 去重处理：检索结果排除已附件的笔记
+
+### 24.3 Prompt 构建策略
+
+Prompt 由以下四部分组成，按顺序拼接：
+
+1. **System 指令**（`KNOWLEDGE_CHAT_SYSTEM_PROMPT`）
+   - 定义助手角色为"知识库助手"
+   - 优先使用附件与检索笔记回答
+   - 信息不足时明确说明缺口
+   - 引用笔记时提及标题
+   - 使用 Markdown 格式输出
+
+2. **附件笔记上下文**（用户显式选择）
+   - 标记为 "Attached Notes (User Selected)"
+   - 优先分配 token 预算
+
+3. **检索笔记上下文**（FTS Top-K）
+   - 标记为 "Related Notes (Retrieved)"
+   - 使用剩余 token 预算
+
+4. **用户输入**
+   - 标记为 "User Question"
+
+**Token 预算控制**：
+
+- 单笔记最大 ~2000 tokens（约 8000 字符）
+- 总上下文最大 ~8000 tokens（约 32000 字符）
+- 超出预算时截断并标记 `wasTruncated`
+
+### 24.4 实现文件
+
+| 模块           | 文件路径                                           | 功能                                |
+| -------------- | -------------------------------------------------- | ----------------------------------- |
+| AI Package     | `packages/ai/src/prompts/knowledge-chat.ts`        | Prompt 构建器 + 系统指令常量        |
+| AI Package     | `packages/ai/src/prompts/index.ts`                 | 导出 knowledge-chat                 |
+| AI Tests       | `packages/ai/__tests__/knowledge-chat.test.ts`     | Prompt 构建单测                     |
+| Server         | `apps/server/src/index.ts`                         | `/api/ai/stream` 扩展               |
+| Web Hook       | `apps/web/src/hooks/use-stream-text.ts`            | 支持 noteEntryIds 参数              |
+| Web Component  | `apps/web/src/components/ai-elements/chat-input.tsx` | @ 触发 + 附件 chips UI              |
+| Web Component  | `apps/web/src/components/entry-picker.tsx`         | libraryOnly 过滤支持                |
+| Web Page       | `apps/web/src/routes/_app/knowledge.tsx`           | 附件状态管理 + EntryPicker 集成     |
+| i18n           | `packages/locales/src/resources/*.json`            | 新增 UI 文案                        |
+
+### 24.5 API 扩展
+
+`POST /api/ai/stream` 新增可选字段：
+
+```typescript
+{
+  // 现有字段
+  provider: string
+  apiKey: string
+  baseUrl?: string
+  model?: string
+  prompt: string
+  
+  // 新增字段
+  noteEntryIds?: string[]  // 最多 10 条
+  ragTopK?: number         // 默认 5
+}
+```
+
+### 24.6 i18n Keys
+
+新增键：
+
+- `knowledge.inputPlaceholder`：更新为 "Ask anything… Type @ to attach notes"
+- `knowledge.selectNoteToAttach`：选择笔记对话框标题
+- `knowledge.removeAttachment`：移除附件按钮 aria-label
+- `knowledge.emptyState.description`：更新说明文案
+
+### 24.7 测试验证
+
+- **单测**：`pnpm vitest run --project=packages packages/ai/__tests__/knowledge-chat.test.ts`
+  - 覆盖 Prompt 拼接、截断、去重逻辑
+- **类型检查**：`pnpm run check-types`
+- **Lint**：`pnpm check:fix`

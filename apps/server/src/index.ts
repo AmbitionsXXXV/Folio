@@ -1,13 +1,17 @@
 import 'dotenv/config'
 import {
 	type AiProvider,
+	buildKnowledgeChatPrompt,
+	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
 	type DecryptedCredential,
+	type NoteContext,
 	PROVIDER_CONFIGS,
 } from '@folionote/ai'
 import { streamTextWithCredential } from '@folionote/ai/stream-text'
 import { createContext } from '@folionote/api/context'
 import { appRouter } from '@folionote/api/routers/index'
 import { auth } from '@folionote/auth'
+import { db, entries } from '@folionote/db'
 import { createHonoLogger, createLogger } from '@folionote/log'
 import { serve } from '@hono/node-server'
 import { OpenAPIHandler } from '@orpc/openapi/fetch'
@@ -15,6 +19,7 @@ import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins'
 import { onError } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/fetch'
 import { ZodToJsonSchemaConverter } from '@orpc/zod/zod4'
+import { and, desc, eq, inArray, isNull, notInArray, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
@@ -113,6 +118,127 @@ app.get('/health', (c) =>
 // This bypasses oRPC for true streaming support
 const AI_PROVIDERS = ['openai', 'deepseek', 'gemini', 'claude', 'qwen'] as const
 
+/** Maximum number of attached notes allowed */
+const MAX_ATTACHED_NOTES = 10
+
+/** Regex for splitting query into search terms */
+const WHITESPACE_REGEX = /\s+/
+
+/**
+ * Fetch notes by IDs for the given user (Library only, not deleted)
+ */
+async function fetchNotesByIds(
+	userId: string,
+	noteIds: string[]
+): Promise<NoteContext[]> {
+	if (noteIds.length === 0) return []
+
+	const notes = await db
+		.select({
+			id: entries.id,
+			title: entries.title,
+			contentText: entries.contentText,
+		})
+		.from(entries)
+		.where(
+			and(
+				eq(entries.userId, userId),
+				inArray(entries.id, noteIds),
+				isNull(entries.deletedAt),
+				eq(entries.isInbox, false) // Library only
+			)
+		)
+
+	return notes.map((n) => ({
+		id: n.id,
+		title: n.title,
+		contentText: n.contentText ?? '',
+	}))
+}
+
+/**
+ * Perform FTS search for RAG retrieval
+ * Falls back to ILIKE if FTS returns no results
+ */
+async function searchNotesForRag(
+	userId: string,
+	query: string,
+	excludeIds: string[],
+	limit: number
+): Promise<NoteContext[]> {
+	const searchTerms = query
+		.trim()
+		.split(WHITESPACE_REGEX)
+		.filter((term) => term.length > 0)
+		.map((term) => `${term}:*`)
+		.join(' & ')
+
+	if (!searchTerms) return []
+
+	const baseConditions = [
+		eq(entries.userId, userId),
+		isNull(entries.deletedAt),
+		eq(entries.isInbox, false), // Library only
+	]
+
+	if (excludeIds.length > 0) {
+		baseConditions.push(notInArray(entries.id, excludeIds))
+	}
+
+	// Try FTS first
+	try {
+		const ftsResults = await db
+			.select({
+				id: entries.id,
+				title: entries.title,
+				contentText: entries.contentText,
+			})
+			.from(entries)
+			.where(
+				and(
+					...baseConditions,
+					sql`to_tsvector('simple', coalesce(${entries.title}, '') || ' ' || coalesce(${entries.contentText}, '')) @@ to_tsquery('simple', ${searchTerms})`
+				)
+			)
+			.orderBy(desc(entries.updatedAt))
+			.limit(limit)
+
+		if (ftsResults.length > 0) {
+			return ftsResults.map((n) => ({
+				id: n.id,
+				title: n.title,
+				contentText: n.contentText ?? '',
+			}))
+		}
+	} catch (error) {
+		log.warn('FTS search failed, falling back to ILIKE:', error)
+	}
+
+	// Fallback to ILIKE
+	const searchPattern = `%${query}%`
+	const ilikeResults = await db
+		.select({
+			id: entries.id,
+			title: entries.title,
+			contentText: entries.contentText,
+		})
+		.from(entries)
+		.where(
+			and(
+				...baseConditions,
+				sql`(${entries.title} ILIKE ${searchPattern} OR ${entries.contentText} ILIKE ${searchPattern})`
+			)
+		)
+		.orderBy(desc(entries.updatedAt))
+		.limit(limit)
+
+	return ilikeResults.map((n) => ({
+		id: n.id,
+		title: n.title,
+		contentText: n.contentText ?? '',
+	}))
+}
+
 app.post('/api/ai/stream', async (c) => {
 	const context = await createContext({ context: c })
 
@@ -126,9 +252,24 @@ app.post('/api/ai/stream', async (c) => {
 		baseUrl?: string
 		model?: string
 		prompt: string
+		/** Optional: IDs of notes to attach as context */
+		noteEntryIds?: string[]
+		/** Optional: Number of notes to retrieve via RAG */
+		ragTopK?: number
+		/** Optional: Enable extended thinking/reasoning */
+		enableReasoning?: boolean
 	}>()
 
-	const { provider, apiKey, baseUrl, model, prompt } = body
+	const {
+		provider,
+		apiKey,
+		baseUrl,
+		model,
+		prompt,
+		noteEntryIds,
+		ragTopK,
+		enableReasoning,
+	} = body
 
 	if (!(provider && apiKey && prompt)) {
 		return c.json({ error: 'Missing required fields' }, 400)
@@ -147,14 +288,58 @@ app.post('/api/ai/stream', async (c) => {
 	}
 
 	try {
-		const result = await streamTextWithCredential(credential, {
+		const userId = context.session.user.id
+
+		// Fetch attached notes if provided
+		const sanitizedNoteIds = (noteEntryIds ?? [])
+			.filter((id) => typeof id === 'string' && id.length > 0)
+			.slice(0, MAX_ATTACHED_NOTES)
+
+		const uniqueNoteIds = [...new Set(sanitizedNoteIds)]
+		const attachedNotes = await fetchNotesByIds(userId, uniqueNoteIds)
+
+		// Perform RAG search
+		const effectiveRagTopK = ragTopK ?? DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K
+		const retrievedNotes = await searchNotesForRag(
+			userId,
 			prompt,
-			model,
+			uniqueNoteIds,
+			effectiveRagTopK
+		)
+
+		// Build the knowledge chat prompt
+		const { prompt: assembledPrompt } = buildKnowledgeChatPrompt({
+			userPrompt: prompt,
+			attachedNotes,
+			retrievedNotes,
 		})
 
+		const result = await streamTextWithCredential(credential, {
+			prompt: assembledPrompt,
+			model,
+			enableReasoning,
+		})
+
+		// Stream response with SSE format to support thinking content
 		return streamText(c, async (stream) => {
-			for await (const chunk of result.textStream) {
-				await stream.write(chunk)
+			// If reasoning is enabled, we need to use fullStreamResult to get thinking
+			if (enableReasoning) {
+				// Use the full stream to capture reasoning parts
+				const fullStream = result.fullStreamResult.fullStream
+				for await (const part of fullStream) {
+					if (part.type === 'reasoning-delta') {
+						// Send thinking content with a special prefix
+						await stream.write(`\x1E__THINKING__\x1E${part.text}`)
+					} else if (part.type === 'text-delta') {
+						// Send regular text
+						await stream.write(part.text)
+					}
+				}
+			} else {
+				// Simple text stream without reasoning
+				for await (const chunk of result.textStream) {
+					await stream.write(chunk)
+				}
 			}
 		})
 	} catch (error) {

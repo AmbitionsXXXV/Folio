@@ -16,6 +16,7 @@ catalog:
   "@types/node": ^25.0.6
   "@vitest/coverage-v8": ^4.0.16
   "@vitest/ui": ^4.0.16
+  ai: ^6.0.33
   better-auth: ^1.4.10
   dotenv: ^17.2.3
   drizzle-kit: ^0.31.8

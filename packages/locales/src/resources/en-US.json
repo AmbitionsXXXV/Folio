@@ -797,10 +797,11 @@
     "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
     "saveConfig": "Save Configuration",
     "configSaved": "Configuration saved",
-    "inputPlaceholder": "Ask anything…",
+    "inputPlaceholder": "Ask anything… Type @ to attach notes",
     "configureApiKeyFirst": "Configure your API key first",
     "configureFirst": "Configure AI Provider",
     "thinking": "Thinking…",
+    "waiting": "Waiting…",
     "requestFailed": "AI request failed",
     "send": "Send",
     "notConfigured": "not configured",
@@ -809,9 +810,17 @@
     "saveAsDefault": "Save as Default",
     "defaultSaved": "Default provider saved",
     "manageApiKeys": "Manage API Keys",
+    "selectNoteToAttach": "Select note to attach",
+    "removeAttachment": "Remove attachment",
+    "toggleThinking": "Toggle extended thinking",
+    "enableThinking": "Enable extended thinking",
+    "thinkingEnabled": "Extended thinking enabled",
+    "thinkingBuiltIn": "Extended thinking built-in (always on)",
+    "viewThinking": "View thinking process",
+    "thinkingInProgress": "Thinking…",
     "emptyState": {
       "title": "Start a Conversation",
-      "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance."
+      "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance. Type @ to attach specific notes for context."
     }
   },
   "aiProvider": {

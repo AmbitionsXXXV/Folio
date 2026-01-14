@@ -331,9 +331,11 @@ export interface AiFullModelCard extends AIBaseModelCard {
 	type: AiModelType
 }
 
-export interface LobeDefaultAiModelListItem extends AiFullModelCard {
+export interface FolioNoteDefaultAiModelListItem extends AiFullModelCard {
 	abilities: ModelAbilities
 	providerId: string
+	/** Model settings including extendParams */
+	settings?: AiModelSettings
 }
 
 // create

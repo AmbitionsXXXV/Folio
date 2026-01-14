@@ -1,4 +1,7 @@
-import type { AiFullModelCard, LobeDefaultAiModelListItem } from '../types/ai-model'
+import type {
+	AiFullModelCard,
+	FolioNoteDefaultAiModelListItem,
+} from '../types/ai-model'
 
 import anthropic from './anthropic'
 import deepseek from './deepseek'
@@ -17,8 +20,10 @@ export { default as xaiModels } from './xai'
 
 type ModelsMap = Record<string, AiFullModelCard[]>
 
-const buildDefaultModelList = (map: ModelsMap): LobeDefaultAiModelListItem[] => {
-	let models: LobeDefaultAiModelListItem[] = []
+const buildDefaultModelList = (
+	map: ModelsMap
+): FolioNoteDefaultAiModelListItem[] => {
+	let models: FolioNoteDefaultAiModelListItem[] = []
 
 	for (const [provider, providerModels] of Object.entries(map)) {
 		const newModels = providerModels.map((model) => ({

@@ -28,31 +28,52 @@ type EntryPickerProps = {
 	onSelect: (entry: Entry) => void
 	/** Entry ID to exclude from the list (e.g., current entry) */
 	excludeId?: string
+	/** Entry IDs to exclude from the list (e.g., already attached notes) */
+	excludeIds?: string[]
 	/** Dialog title */
 	title?: string
+	/** Only show Library entries (isInbox = false) */
+	libraryOnly?: boolean
 }
 
 /**
  * A dialog component for selecting an entry to reference.
  * Supports search filtering and keyboard navigation.
  */
-export function EntryPicker({ ref, onSelect, excludeId, title }: EntryPickerProps) {
+export function EntryPicker({
+	ref,
+	onSelect,
+	excludeId,
+	excludeIds = [],
+	title,
+	libraryOnly = false,
+}: EntryPickerProps) {
 	const { t } = useTranslation()
 	const [isOpen, setIsOpen] = useState(false)
 	const [searchQuery, setSearchQuery] = useState('')
 
-	// Fetch entries
+	// Build all excluded IDs
+	const allExcludedIds = new Set([...(excludeId ? [excludeId] : []), ...excludeIds])
+
+	// Fetch entries - use 'all' for normal mode, 'all' with client-side filter for library-only
+	// The server 'all' filter returns non-deleted entries
 	const { data: entriesData, isLoading } = useQuery({
-		queryKey: ['entries', 'all', 'picker'],
-		queryFn: () => orpc.entries.list.call({ filter: 'all', limit: 50 }),
+		queryKey: ['entries', libraryOnly ? 'library' : 'all', 'picker'],
+		queryFn: () => orpc.entries.list.call({ filter: 'all', limit: 100 }),
 		enabled: isOpen,
 	})
 
 	const entries = (entriesData?.items ?? []) as Entry[]
 
-	// Filter entries by search query and exclude current entry
+	// Filter entries by search query, exclude IDs, and optionally library-only
 	const filteredEntries = entries.filter((entry) => {
-		if (excludeId && entry.id === excludeId) return false
+		// Exclude specified IDs
+		if (allExcludedIds.has(entry.id)) return false
+
+		// Library-only filter: exclude inbox entries
+		if (libraryOnly && entry.isInbox) return false
+
+		// Search query filter
 		if (!searchQuery.trim()) return true
 
 		const query = searchQuery.toLowerCase()

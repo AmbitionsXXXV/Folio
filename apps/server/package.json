@@ -20,6 +20,7 @@
     "@orpc/zod": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
     "i18next": "catalog:",
     "zod": "catalog:",
     "@folionote/ai": "workspace:*",
