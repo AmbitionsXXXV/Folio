@@ -4,13 +4,14 @@
 
 @import "tw-animate-css";
 
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
+
 @import "./styles/animate.css";
 @import "./styles/component.css";
 @import "./styles/tiptap.css";
 @import "./styles/caret.css";
 @source "../node_modules/streamdown/dist/*.js";
-@import "fumadocs-ui/css/shadcn.css";
-@import "fumadocs-ui/css/preset.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
