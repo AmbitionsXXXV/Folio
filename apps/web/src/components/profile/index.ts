@@ -1,3 +1,5 @@
+export { AiProviderSettings } from './ai-provider-settings'
+export { ApiEnvironmentSettings } from './api-environment-settings'
 export { AppearanceSettings } from './appearance-settings'
 export { DangerZone } from './danger-zone'
 export { LanguageSettings } from './language-settings'

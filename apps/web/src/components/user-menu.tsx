@@ -5,9 +5,8 @@ import {
 	Logout03Icon,
 	Moon02Icon,
 	MoreVerticalIcon,
-	Settings01Icon,
+	Settings02Icon,
 	Sun03Icon,
-	UserCircle02Icon,
 	UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -19,9 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuLabel,
 	DropdownMenuPortal,
 	DropdownMenuSeparator,
 	DropdownMenuSub,
@@ -151,29 +148,6 @@ function ThemeSubmenu() {
 						</span>
 						{theme === 'system' && <span className="ml-auto text-primary">✓</span>}
 					</DropdownMenuItem>
-				</DropdownMenuSubContent>
-			</DropdownMenuPortal>
-		</DropdownMenuSub>
-	)
-}
-
-function SettingsSubmenu() {
-	const { t } = useTranslation()
-
-	return (
-		<DropdownMenuSub>
-			<DropdownMenuSubTrigger>
-				<HugeiconsIcon className="mr-2 size-4" icon={Settings01Icon} />
-				<span>{t('common.settings')}</span>
-			</DropdownMenuSubTrigger>
-			<DropdownMenuPortal>
-				<DropdownMenuSubContent>
-					<DropdownMenuGroup>
-						<DropdownMenuLabel>{t('common.settings')}</DropdownMenuLabel>
-					</DropdownMenuGroup>
-					<DropdownMenuSeparator />
-					<LanguageSubmenu />
-					<ThemeSubmenu />
 				</DropdownMenuSubContent>
 			</DropdownMenuPortal>
 		</DropdownMenuSub>
@@ -319,13 +293,14 @@ export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 				<DropdownMenuSeparator />
 
 				<DropdownMenuItem>
-					<Link className="flex w-full items-center gap-2" to="/profile">
-						<HugeiconsIcon className="mr-2 size-4" icon={UserCircle02Icon} />
-						{t('nav.profile', 'Profile')}
+					<Link className="flex w-full items-center gap-2" to="/settings/general">
+						<HugeiconsIcon className="mr-2 size-4" icon={Settings02Icon} />
+						{t('nav.settings', 'Settings')}
 					</Link>
 				</DropdownMenuItem>
 
-				<SettingsSubmenu />
+				<LanguageSubmenu />
+				<ThemeSubmenu />
 
 				<DropdownMenuSeparator />
 

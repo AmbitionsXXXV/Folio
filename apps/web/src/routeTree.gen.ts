@@ -18,12 +18,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShareTokenRouteImport } from './routes/share/$token'
 import { Route as AppTagsRouteImport } from './routes/_app/tags'
 import { Route as AppSourcesRouteImport } from './routes/_app/sources'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
+import { Route as AppKnowledgeRouteImport } from './routes/_app/knowledge'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
 import { Route as AppActivityRouteImport } from './routes/_app/activity'
+import { Route as AppSettingsModelsRouteImport } from './routes/_app/settings/models'
+import { Route as AppSettingsGeneralRouteImport } from './routes/_app/settings/general'
 import { Route as AppEntriesNewRouteImport } from './routes/_app/entries/new'
 import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
 
@@ -71,6 +75,11 @@ const AppSourcesRoute = AppSourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSearchRoute = AppSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -91,6 +100,11 @@ const AppLibraryRoute = AppLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AppRoute,
 } as any)
+const AppKnowledgeRoute = AppKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInboxRoute = AppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
@@ -100,6 +114,16 @@ const AppActivityRoute = AppActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
   getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsModelsRoute = AppSettingsModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppSettingsGeneralRoute = AppSettingsGeneralRouteImport.update({
+  id: '/general',
+  path: '/general',
+  getParentRoute: () => AppSettingsRoute,
 } as any)
 const AppEntriesNewRoute = AppEntriesNewRouteImport.update({
   id: '/entries/new',
@@ -120,15 +144,19 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
   '/inbox': typeof AppInboxRoute
+  '/knowledge': typeof AppKnowledgeRoute
   '/library': typeof AppLibraryRoute
   '/profile': typeof AppProfileRoute
   '/review': typeof AppReviewRoute
   '/search': typeof AppSearchRoute
+  '/settings': typeof AppSettingsRouteWithChildren
   '/sources': typeof AppSourcesRoute
   '/tags': typeof AppTagsRoute
   '/share/$token': typeof ShareTokenRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries/new': typeof AppEntriesNewRoute
+  '/settings/general': typeof AppSettingsGeneralRoute
+  '/settings/models': typeof AppSettingsModelsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -138,15 +166,19 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
   '/inbox': typeof AppInboxRoute
+  '/knowledge': typeof AppKnowledgeRoute
   '/library': typeof AppLibraryRoute
   '/profile': typeof AppProfileRoute
   '/review': typeof AppReviewRoute
   '/search': typeof AppSearchRoute
+  '/settings': typeof AppSettingsRouteWithChildren
   '/sources': typeof AppSourcesRoute
   '/tags': typeof AppTagsRoute
   '/share/$token': typeof ShareTokenRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries/new': typeof AppEntriesNewRoute
+  '/settings/general': typeof AppSettingsGeneralRoute
+  '/settings/models': typeof AppSettingsModelsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,15 +190,19 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_app/activity': typeof AppActivityRoute
   '/_app/inbox': typeof AppInboxRoute
+  '/_app/knowledge': typeof AppKnowledgeRoute
   '/_app/library': typeof AppLibraryRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/review': typeof AppReviewRoute
   '/_app/search': typeof AppSearchRoute
+  '/_app/settings': typeof AppSettingsRouteWithChildren
   '/_app/sources': typeof AppSourcesRoute
   '/_app/tags': typeof AppTagsRoute
   '/share/$token': typeof ShareTokenRoute
   '/_app/entries/$id': typeof AppEntriesIdRoute
   '/_app/entries/new': typeof AppEntriesNewRoute
+  '/_app/settings/general': typeof AppSettingsGeneralRoute
+  '/_app/settings/models': typeof AppSettingsModelsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,15 +214,19 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/activity'
     | '/inbox'
+    | '/knowledge'
     | '/library'
     | '/profile'
     | '/review'
     | '/search'
+    | '/settings'
     | '/sources'
     | '/tags'
     | '/share/$token'
     | '/entries/$id'
     | '/entries/new'
+    | '/settings/general'
+    | '/settings/models'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,15 +236,19 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/activity'
     | '/inbox'
+    | '/knowledge'
     | '/library'
     | '/profile'
     | '/review'
     | '/search'
+    | '/settings'
     | '/sources'
     | '/tags'
     | '/share/$token'
     | '/entries/$id'
     | '/entries/new'
+    | '/settings/general'
+    | '/settings/models'
   id:
     | '__root__'
     | '/'
@@ -215,15 +259,19 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_app/activity'
     | '/_app/inbox'
+    | '/_app/knowledge'
     | '/_app/library'
     | '/_app/profile'
     | '/_app/review'
     | '/_app/search'
+    | '/_app/settings'
     | '/_app/sources'
     | '/_app/tags'
     | '/share/$token'
     | '/_app/entries/$id'
     | '/_app/entries/new'
+    | '/_app/settings/general'
+    | '/_app/settings/models'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSourcesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/search': {
       id: '/_app/search'
       path: '/search'
@@ -329,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLibraryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/knowledge': {
+      id: '/_app/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof AppKnowledgeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/inbox': {
       id: '/_app/inbox'
       path: '/inbox'
@@ -342,6 +404,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/activity'
       preLoaderRoute: typeof AppActivityRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/settings/models': {
+      id: '/_app/settings/models'
+      path: '/models'
+      fullPath: '/settings/models'
+      preLoaderRoute: typeof AppSettingsModelsRouteImport
+      parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/settings/general': {
+      id: '/_app/settings/general'
+      path: '/general'
+      fullPath: '/settings/general'
+      preLoaderRoute: typeof AppSettingsGeneralRouteImport
+      parentRoute: typeof AppSettingsRoute
     }
     '/_app/entries/new': {
       id: '/_app/entries/new'
@@ -360,13 +436,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppSettingsRouteChildren {
+  AppSettingsGeneralRoute: typeof AppSettingsGeneralRoute
+  AppSettingsModelsRoute: typeof AppSettingsModelsRoute
+}
+
+const AppSettingsRouteChildren: AppSettingsRouteChildren = {
+  AppSettingsGeneralRoute: AppSettingsGeneralRoute,
+  AppSettingsModelsRoute: AppSettingsModelsRoute,
+}
+
+const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
+  AppSettingsRouteChildren,
+)
+
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
   AppInboxRoute: typeof AppInboxRoute
+  AppKnowledgeRoute: typeof AppKnowledgeRoute
   AppLibraryRoute: typeof AppLibraryRoute
   AppProfileRoute: typeof AppProfileRoute
   AppReviewRoute: typeof AppReviewRoute
   AppSearchRoute: typeof AppSearchRoute
+  AppSettingsRoute: typeof AppSettingsRouteWithChildren
   AppSourcesRoute: typeof AppSourcesRoute
   AppTagsRoute: typeof AppTagsRoute
   AppEntriesIdRoute: typeof AppEntriesIdRoute
@@ -376,10 +468,12 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
   AppInboxRoute: AppInboxRoute,
+  AppKnowledgeRoute: AppKnowledgeRoute,
   AppLibraryRoute: AppLibraryRoute,
   AppProfileRoute: AppProfileRoute,
   AppReviewRoute: AppReviewRoute,
   AppSearchRoute: AppSearchRoute,
+  AppSettingsRoute: AppSettingsRouteWithChildren,
   AppSourcesRoute: AppSourcesRoute,
   AppTagsRoute: AppTagsRoute,
   AppEntriesIdRoute: AppEntriesIdRoute,

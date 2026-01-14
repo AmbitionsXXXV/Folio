@@ -1,7 +1,8 @@
-import { Search01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, Search01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Command as CommandPrimitive } from 'cmdk'
 import type * as React from 'react'
+import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogContent,
@@ -33,7 +34,7 @@ function CommandDialog({
 	description = 'Search for a command to run...',
 	children,
 	className,
-	showCloseButton = false,
+	showCloseButton = true,
 	...props
 }: Omit<React.ComponentProps<typeof Dialog>, 'children'> & {
 	title?: string
@@ -50,7 +51,7 @@ function CommandDialog({
 			</DialogHeader>
 			<DialogContent
 				className={cn('etc-command-dialog overflow-hidden p-0', className)}
-				showCloseButton={showCloseButton}
+				showCloseButton={false}
 			>
 				{children}
 			</DialogContent>
@@ -60,14 +61,23 @@ function CommandDialog({
 
 function CommandInput({
 	className,
+	showCloseButton = false,
+	onClose,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: React.ComponentProps<typeof CommandPrimitive.Input> & {
+	showCloseButton?: boolean
+	onClose?: () => void
+}) {
 	return (
-		<div className="etc-command-input-wrapper" data-slot="command-input-wrapper">
-			<InputGroup className="etc-command-input-group gap-1.5">
+		<div
+			className="etc-command-input-wrapper relative px-3 pb-3"
+			data-slot="command-input-wrapper"
+		>
+			<InputGroup className="etc-command-input-group relative gap-1.5">
 				<CommandPrimitive.Input
 					className={cn(
 						'etc-command-input outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+						showCloseButton && 'pr-8',
 						className
 					)}
 					data-slot="command-input"
@@ -76,6 +86,18 @@ function CommandInput({
 				<InputGroupAddon>
 					<HugeiconsIcon className="etc-command-input-icon" icon={Search01Icon} />
 				</InputGroupAddon>
+				{showCloseButton && onClose && (
+					<Button
+						className="absolute top-1/2 right-2 z-10 -translate-y-1/2"
+						onClick={onClose}
+						size="icon-sm"
+						type="button"
+						variant="ghost"
+					>
+						<HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+						<span className="sr-only">Close</span>
+					</Button>
+				)}
 			</InputGroup>
 		</div>
 	)

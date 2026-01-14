@@ -39,7 +39,8 @@
     "tocPositionLeft": "Left",
     "tocPositionRight": "Right",
     "permissionRequired": "Permission Required",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "optional": "optional"
   },
   "auth": {
     "signIn": "Sign In",
@@ -363,7 +364,8 @@
     "sources": "Sources",
     "tags": "Tags",
     "settings": "Settings",
-    "profile": "Profile"
+    "profile": "Profile",
+    "knowledge": "Knowledge"
   },
   "search": {
     "placeholder": "Search entries...",
@@ -511,11 +513,108 @@
     }
   },
   "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your experience",
     "languageDetection": {
       "title": "Language Detected",
       "description": "Your system language is {{language}}. Would you like to switch to this language?",
       "confirm": "Switch",
       "cancel": "Keep Current"
+    },
+    "nav": {
+      "menu": "Menu",
+      "general": "General",
+      "generalDesc": "Profile, appearance & preferences",
+      "models": "AI Models",
+      "modelsDesc": "Configure your AI providers"
+    },
+    "tip": {
+      "title": "Pro Tip",
+      "description": "Configure your AI models to unlock intelligent features like note summarization and knowledge chat."
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Manage your profile, appearance, and preferences.",
+      "sections_one": "{{count}} section",
+      "sections_other": "{{count}} sections"
+    },
+    "apiEnvironment": {
+      "title": "API Environment",
+      "useRemoteServer": "Use Remote Server",
+      "localDescription": "Connected to local development server (localhost)",
+      "remoteDescription": "Connected to remote production server",
+      "currentServer": "Current Server",
+      "reloadWarning": "Switching environments will reload the page"
+    },
+    "models": {
+      "title": "Model Settings",
+      "description": "Configure AI model providers with your own API keys. Your keys are stored locally and never sent to our servers.",
+      "byokTitle": "Bring Your Own Key (BYOK)",
+      "byokDescription": "Use your own API keys to access AI models directly. This gives you full control over your usage and costs.",
+      "configuredProviders_one": "{{count}} provider configured",
+      "configuredProviders_other": "{{count}} providers configured",
+      "availableProviders": "available providers",
+      "feature": {
+        "secure": "Secure storage",
+        "private": "100% private",
+        "flexible": "Flexible usage"
+      },
+      "getStarted": "Get started with AI",
+      "getStartedHint": "Configure at least one provider below to enable AI features like knowledge chat and note summarization.",
+      "helpTitle": "Need help?",
+      "helpDescription": "Visit the documentation for each provider to learn how to obtain your API key. Your keys are encrypted and stored locally on your device.",
+      "configured": "Configured",
+      "default": "Default",
+      "configure": "Configure",
+      "edit": "Edit",
+      "remove": "Remove",
+      "setAsDefault": "Set as Default",
+      "setAsDefaultSuccess": "{{provider}} set as default",
+      "configureProvider": "Configure {{provider}}",
+      "configureDescription": "Enter your API key to enable this provider.",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter your {{provider}} API key…",
+      "apiKeyHint": "Your key is stored locally and never sent to our servers.",
+      "baseUrl": "Base URL",
+      "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
+      "configSaved": "{{provider}} configuration saved",
+      "removed": "{{provider}} configuration removed",
+      "removeConfig": "Remove Configuration",
+      "removeConfirmTitle": "Remove API Key",
+      "removeConfirmDescription": "Are you sure you want to remove the API key for {{provider}}? You will need to reconfigure it to use this provider.",
+      "viewModels": "View models",
+      "website": "Website",
+      "getApiKey": "Get API Key",
+      "viewDocs": "Documentation",
+      "capabilities": "Capabilities",
+      "capability": {
+        "modelFetcher": "Model Fetcher",
+        "responsesApi": "Responses API",
+        "apiKey": "API Key Auth"
+      },
+      "modelList": {
+        "title": "Models",
+        "description": "Enable or disable individual models. Disabled models won't appear in model selection.",
+        "searchPlaceholder": "Search models…",
+        "noResults": "No models match your search.",
+        "enabledCount_one": "{{count}} model enabled",
+        "enabledCount_other": "{{count}} models enabled",
+        "totalCount_one": "{{count}} model",
+        "totalCount_other": "{{count}} models",
+        "type": {
+          "chat": "Chat",
+          "embedding": "Embedding",
+          "image": "Image",
+          "tts": "TTS",
+          "stt": "STT",
+          "realtime": "Realtime",
+          "text2video": "Text to Video",
+          "text2music": "Text to Music"
+        },
+        "allTypes": "All Types",
+        "enableAll": "Enable All",
+        "disableAll": "Disable All"
+      }
     }
   },
   "profile": {
@@ -682,5 +781,59 @@
     "uploadComplete_other": "Uploaded {{count}} items",
     "downloadComplete_one": "Downloaded {{count}} item",
     "downloadComplete_other": "Downloaded {{count}} items"
+  },
+  "knowledge": {
+    "title": "Knowledge Base",
+    "subtitle": "AI-powered knowledge assistant",
+    "newChat": "New Chat",
+    "configuration": "Configuration",
+    "provider": "Provider",
+    "model": "Model",
+    "selectModel": "Select a model…",
+    "apiKey": "API Key",
+    "apiKeyHint": "Your key is stored locally and never sent to our servers.",
+    "baseUrl": "Base URL (Optional)",
+    "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
+    "saveConfig": "Save Configuration",
+    "configSaved": "Configuration saved",
+    "inputPlaceholder": "Ask anything…",
+    "configureApiKeyFirst": "Configure your API key first",
+    "configureFirst": "Configure AI Provider",
+    "thinking": "Thinking…",
+    "requestFailed": "AI request failed",
+    "send": "Send",
+    "notConfigured": "not configured",
+    "noApiKeyWarning": "No API key configured for this provider.",
+    "goToSettings": "Go to Settings",
+    "saveAsDefault": "Save as Default",
+    "defaultSaved": "Default provider saved",
+    "manageApiKeys": "Manage API Keys",
+    "emptyState": {
+      "title": "Start a Conversation",
+      "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance."
+    }
+  },
+  "aiProvider": {
+    "title": "AI Provider Settings",
+    "description": "Configure API keys for different AI providers. Your keys are stored locally and never sent to our servers.",
+    "configured": "Configured",
+    "default": "Default",
+    "getApiKey": "Get API Key",
+    "setAsDefault": "Set as Default",
+    "setAsDefaultSuccess": "{{provider}} set as default",
+    "configure": "Configure",
+    "edit": "Edit",
+    "remove": "Remove",
+    "configureProvider": "Configure {{provider}}",
+    "configureDescription": "Enter your API key to enable this provider.",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "Enter your {{provider}} API key…",
+    "apiKeyHint": "Your key is stored locally and never sent to our servers.",
+    "baseUrl": "Base URL",
+    "baseUrlHint": "Leave empty to use the default endpoint; override for proxy/gateway.",
+    "configSaved": "{{provider}} configuration saved",
+    "removed": "{{provider}} configuration removed",
+    "removeConfirmTitle": "Remove API Key",
+    "removeConfirmDescription": "Are you sure you want to remove the API key for {{provider}}? You will need to reconfigure it to use this provider."
   }
 }

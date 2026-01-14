@@ -16,7 +16,8 @@
     "SUPABASE_URL",
     "SUPABASE_PUBLISHABLE_KEY",
     "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET"
+    "GOOGLE_CLIENT_SECRET",
+    "AI_KEY_ENCRYPTION_SECRET"
   ],
   "tasks": {
     "build": {

@@ -89,8 +89,10 @@ export function CommandPalette() {
 		>
 			<Command shouldFilter={false}>
 				<CommandInput
+					onClose={() => setOpen(false)}
 					onValueChange={setSearch}
 					placeholder={t('commandPalette.searchPlaceholder')}
+					showCloseButton={true}
 					value={search}
 				/>
 				<CommandList className="h-[300px]">

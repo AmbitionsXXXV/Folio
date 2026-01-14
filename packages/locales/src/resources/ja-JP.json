@@ -39,7 +39,8 @@
     "tocPositionLeft": "左",
     "tocPositionRight": "右",
     "permissionRequired": "権限が必要です",
-    "navigation": "ナビゲーション"
+    "navigation": "ナビゲーション",
+    "optional": "オプション"
   },
   "auth": {
     "signIn": "サインイン",
@@ -315,7 +316,9 @@
     "search": "検索",
     "sources": "ソース",
     "tags": "タグ",
-    "settings": "設定"
+    "settings": "設定",
+    "profile": "プロフィール",
+    "knowledge": "ナレッジ"
   },
   "search": {
     "placeholder": "エントリを検索...",
@@ -510,11 +513,108 @@
     }
   },
   "settings": {
+    "title": "設定",
+    "subtitle": "エクスペリエンスをカスタマイズ",
     "languageDetection": {
       "title": "言語を検出しました",
       "description": "システム言語は{{language}}です。この言語に切り替えますか？",
       "confirm": "切り替える",
       "cancel": "現在のまま"
+    },
+    "nav": {
+      "menu": "メニュー",
+      "general": "一般設定",
+      "generalDesc": "プロフィール、外観、設定",
+      "models": "AI モデル",
+      "modelsDesc": "AI プロバイダーを設定"
+    },
+    "tip": {
+      "title": "プロのヒント",
+      "description": "AI モデルを設定して、ノートの要約やナレッジチャットなどのインテリジェント機能を有効にしましょう。"
+    },
+    "general": {
+      "title": "一般設定",
+      "description": "プロフィール、外観、設定を管理します。",
+      "sections_one": "{{count}} セクション",
+      "sections_other": "{{count}} セクション"
+    },
+    "apiEnvironment": {
+      "title": "API環境",
+      "useRemoteServer": "リモートサーバーを使用",
+      "localDescription": "ローカル開発サーバーに接続中 (localhost)",
+      "remoteDescription": "リモート本番サーバーに接続中",
+      "currentServer": "現在のサーバー",
+      "reloadWarning": "環境を切り替えるとページがリロードされます"
+    },
+    "models": {
+      "title": "モデル設定",
+      "description": "独自のAPIキーでAIモデルプロバイダーを設定します。キーはローカルに保存され、サーバーに送信されません。",
+      "byokTitle": "独自キーを使用 (BYOK)",
+      "byokDescription": "独自のAPIキーを使用してAIモデルに直接アクセスします。使用量とコストを完全に制御できます。",
+      "configuredProviders_one": "{{count}} プロバイダー設定済み",
+      "configuredProviders_other": "{{count}} プロバイダー設定済み",
+      "availableProviders": "利用可能なプロバイダー",
+      "feature": {
+        "secure": "安全なストレージ",
+        "private": "100% プライベート",
+        "flexible": "柔軟な使用"
+      },
+      "getStarted": "AI を始めましょう",
+      "getStartedHint": "少なくとも 1 つのプロバイダーを設定して、ナレッジチャットやノート要約などの AI 機能を有効にしてください。",
+      "helpTitle": "サポートが必要ですか？",
+      "helpDescription": "各プロバイダーのドキュメントにアクセスして、API キーの取得方法を確認してください。キーは暗号化され、デバイスにローカル保存されます。",
+      "configured": "設定済み",
+      "default": "デフォルト",
+      "configure": "設定",
+      "edit": "編集",
+      "remove": "削除",
+      "setAsDefault": "デフォルトに設定",
+      "setAsDefaultSuccess": "{{provider}} をデフォルトに設定しました",
+      "configureProvider": "{{provider}} を設定",
+      "configureDescription": "このプロバイダーを有効にするにはAPIキーを入力してください。",
+      "apiKey": "APIキー",
+      "apiKeyPlaceholder": "{{provider}} のAPIキーを入力…",
+      "apiKeyHint": "キーはローカルに保存され、サーバーに送信されません。",
+      "baseUrl": "Base URL",
+      "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
+      "configSaved": "{{provider}} の設定を保存しました",
+      "removed": "{{provider}} の設定を削除しました",
+      "removeConfig": "設定を削除",
+      "removeConfirmTitle": "APIキーを削除",
+      "removeConfirmDescription": "{{provider}} のAPIキーを削除してもよろしいですか？このプロバイダーを使用するには再設定が必要です。",
+      "viewModels": "モデルを表示",
+      "website": "ウェブサイト",
+      "getApiKey": "APIキーを取得",
+      "viewDocs": "ドキュメント",
+      "capabilities": "機能",
+      "capability": {
+        "modelFetcher": "モデルフェッチャー",
+        "responsesApi": "Responses API",
+        "apiKey": "APIキー認証"
+      },
+      "modelList": {
+        "title": "モデル一覧",
+        "description": "個々のモデルを有効または無効にします。無効なモデルはモデル選択に表示されません。",
+        "searchPlaceholder": "モデルを検索…",
+        "noResults": "検索に一致するモデルがありません。",
+        "enabledCount_one": "{{count}} モデルが有効",
+        "enabledCount_other": "{{count}} モデルが有効",
+        "totalCount_one": "{{count}} モデル",
+        "totalCount_other": "{{count}} モデル",
+        "type": {
+          "chat": "チャット",
+          "embedding": "埋め込み",
+          "image": "画像",
+          "tts": "音声合成",
+          "stt": "音声認識",
+          "realtime": "リアルタイム",
+          "text2video": "テキストから動画",
+          "text2music": "テキストから音楽"
+        },
+        "allTypes": "すべてのタイプ",
+        "enableAll": "すべて有効",
+        "disableAll": "すべて無効"
+      }
     }
   },
   "profile": {
@@ -681,5 +781,59 @@
     "uploadComplete_other": "{{count}} 件アップロード完了",
     "downloadComplete_one": "{{count}} 件ダウンロード完了",
     "downloadComplete_other": "{{count}} 件ダウンロード完了"
+  },
+  "knowledge": {
+    "title": "ナレッジベース",
+    "subtitle": "AI駆動のナレッジアシスタント",
+    "newChat": "新しいチャット",
+    "configuration": "設定",
+    "provider": "プロバイダー",
+    "model": "モデル",
+    "selectModel": "モデルを選択…",
+    "apiKey": "APIキー",
+    "apiKeyHint": "キーはローカルに保存され、サーバーに送信されません。",
+    "baseUrl": "Base URL（オプション）",
+    "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
+    "saveConfig": "設定を保存",
+    "configSaved": "設定が保存されました",
+    "inputPlaceholder": "何でも質問してください…",
+    "configureApiKeyFirst": "まずAPIキーを設定してください",
+    "configureFirst": "AIプロバイダーを設定",
+    "thinking": "考え中…",
+    "requestFailed": "AIリクエストが失敗しました",
+    "send": "送信",
+    "notConfigured": "未設定",
+    "noApiKeyWarning": "このプロバイダーにはAPIキーが設定されていません。",
+    "goToSettings": "設定へ移動",
+    "saveAsDefault": "デフォルトに設定",
+    "defaultSaved": "デフォルトプロバイダーを保存しました",
+    "manageApiKeys": "APIキーを管理",
+    "emptyState": {
+      "title": "会話を開始",
+      "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。"
+    }
+  },
+  "aiProvider": {
+    "title": "AIプロバイダー設定",
+    "description": "異なるAIプロバイダーのAPIキーを設定します。キーはローカルに保存され、サーバーに送信されません。",
+    "configured": "設定済み",
+    "default": "デフォルト",
+    "getApiKey": "APIキーを取得",
+    "setAsDefault": "デフォルトに設定",
+    "setAsDefaultSuccess": "{{provider}} をデフォルトに設定しました",
+    "configure": "設定",
+    "edit": "編集",
+    "remove": "削除",
+    "configureProvider": "{{provider}} を設定",
+    "configureDescription": "このプロバイダーを有効にするにはAPIキーを入力してください。",
+    "apiKey": "APIキー",
+    "apiKeyPlaceholder": "{{provider}} のAPIキーを入力…",
+    "apiKeyHint": "キーはローカルに保存され、サーバーに送信されません。",
+    "baseUrl": "Base URL",
+    "baseUrlHint": "空のままでデフォルトエンドポイントを使用；プロキシ/ゲートウェイ用に上書き可能。",
+    "configSaved": "{{provider}} の設定を保存しました",
+    "removed": "{{provider}} の設定を削除しました",
+    "removeConfirmTitle": "APIキーを削除",
+    "removeConfirmDescription": "{{provider}} のAPIキーを削除してもよろしいですか？このプロバイダーを使用するには再設定が必要です。"
   }
 }

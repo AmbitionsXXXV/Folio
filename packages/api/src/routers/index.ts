@@ -1,5 +1,6 @@
 import type { RouterClient } from '@orpc/server'
 import { protectedProcedure, publicProcedure } from '../index'
+import { aiRouter } from './ai'
 import { entriesRouter } from './entries'
 import { reviewRouter } from './review'
 import { searchRouter } from './search'
@@ -14,6 +15,7 @@ export const appRouter = {
 		message: 'This is private',
 		user: context.session?.user,
 	})),
+	ai: aiRouter,
 	entries: entriesRouter,
 	tags: tagsRouter,
 	sources: sourcesRouter,

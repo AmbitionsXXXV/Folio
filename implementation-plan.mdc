@@ -1,0 +1,140 @@
+# AI MVP BYOK - Implementation Plan
+
+> 约定：每完成一步，在对应条目下追加 `Done` 与两行记录。
+
+---
+
+## Phase 1: 基础结构搭建
+
+### 1.1 新增流程文件 `implementation-plan.mdc`
+
+- [x] 在仓库根目录创建本文件，用于记录后续每步进展。
+
+Done:
+创建 `implementation-plan.mdc`，定义 Phase 1-5 的结构化进度追踪。
+
+### 1.2 创建 `packages/ai` package 骨架
+
+- [x] 新建 `packages/ai/package.json`
+- [x] 新建 `packages/ai/tsconfig.json`
+- [x] 新建 `packages/ai/CHANGELOG.md`
+- [x] 新建 `packages/ai/src/index.ts`
+- [x] 创建子目录：`providers/`, `credentials/`, `prompts/`, `rag/`, `usage/`, `graph/`
+- [x] 新建 `packages/ai/src/schemas.ts`
+
+Done:
+创建 `@folionote/ai` package，包含 package.json、tsconfig.json、CHANGELOG.md 与完整目录结构。
+
+### 1.3 落地最小可复用的类型与约束（@folionote/ai）
+
+- [x] Provider 枚举与能力声明 (`providers/types.ts`)
+- [x] Usage 类型结构 (`usage/types.ts`)
+- [x] Prompt version 常量 (`prompts/versions.ts`)
+- [x] Credentials 抽象接口占位 (`credentials/types.ts`)
+- [x] RAG 抽象接口占位 (`rag/types.ts`)
+- [x] Graph 抽象接口占位 (`graph/types.ts`)
+
+Done:
+定义 AI_PROVIDERS 枚举、ProviderConfig、TokenUsage、AiRun、TextChunk、GraphNode 等核心类型与接口。
+
+### 1.4 在 `@folionote/api` 增加最小接入点
+
+- [x] 更新 `packages/api/package.json` 添加 `@folionote/ai` 依赖
+- [x] 新建 `packages/api/src/routers/ai.ts`
+- [x] 更新 `packages/api/src/routers/index.ts` 挂载 `aiRouter`
+
+Done:
+在 `@folionote/api` 添加 `@folionote/ai` 依赖，创建 aiRouter 并挂载到 appRouter。
+
+### 1.5 更新文档与配置
+
+- [x] 更新 `docs/ai-mvp-byok-v0.md` 第 5 节目录规划
+- [x] 更新 `turbo.json` 透传 AI 相关环境变量
+
+Done:
+重写 Section 5，分为 AI 能力层（packages/ai）与 API 网关层；turbo.json 仅透传 `AI_KEY_ENCRYPTION_SECRET`，并新增 `apps/server/config.toml` 作为成本估算配置载体。
+
+### 1.6 自动化校验
+
+- [x] 运行 `pnpm check` 确保无 lint 错误
+- [x] 运行 `pnpm check-types` 确保无类型错误
+
+Done:
+运行 `pnpm check` 与 `pnpm check-types`，确保新增 package / router 通过 lint 与类型检查。
+修复 `@folionote/ai` 的 export 冲突与 Vercel AI SDK 相关类型标注问题。
+
+### 1.7 接入 Vercel AI SDK（@folionote/ai）
+
+- [x] 为 `@folionote/ai` 添加依赖：`ai`、`@ai-sdk/openai`、`@ai-sdk/anthropic`、`@ai-sdk/google`、`@ai-sdk/provider`
+- [x] 新增 `packages/ai/src/vercel-ai.ts`，提供 chat / embedding model 工厂（不导出到 `src/index.ts`）
+- [x] 新增单元测试 `packages/ai/__tests__/vercel-ai.test.ts`
+
+Done:
+为 `@folionote/ai` 引入 Vercel AI SDK 依赖，并新增 `vercel-ai.ts` 作为模型工厂入口（不在 index 导出）。
+补齐 `vercel-ai` 单测，覆盖 chat/embedding 工厂的基础行为。
+
+### 1.8 调整 Gemini 默认模型与可用性提示
+
+- [x] 将 Gemini 默认 chat 模型更新为 `gemini-2.5-flash-lite`
+- [x] 默认使用 Gemini OpenAI compatible baseUrl，并在 API 侧对地区不可用错误给出可操作提示
+- [x] Web 端 AI Demo 增加 baseUrl 可选输入，便于使用代理 / 网关
+
+Done:
+将 Gemini 默认 chat 模型更新为 `gemini-2.5-flash-lite`，并将默认 baseUrl 切换为 OpenAI compatible 端点。
+在 API 与 Web Demo 增加错误提示与 baseUrl 覆盖入口，避免地域限制时报 500 且无法配置。
+
+### 1.9 重构 AI SDK Provider 工厂与模型选择组件
+
+- [x] 在 Provider registry 中补充 “默认实例 / create 工厂” 两种接入方式的结构化元数据
+- [x] 重构 `vercel-ai.ts`：对齐 AI SDK 文档风格，并补齐 Gemini embedding 工厂（native baseUrl）
+- [x] Web 端 `ModelSelector` 支持按 Provider 分组，并内置常用模型列表
+
+Done:
+更新 `ProviderConfig` 以记录 AI SDK 两种接入方式，并为 Gemini/Qwen 增加可选 baseUrl 选项。
+重构模型工厂与 Web 端模型选择器，覆盖 Gemini native 与 OpenAI compatible 场景（含 embedding 的限制说明）。
+
+---
+
+## Phase 2: BYOK 基础设施（后续实现）
+
+> 待 Phase 1 完成后再展开
+
+### 2.1 用户级模型启用开关（全类型 + 全站生效）
+
+- [x] 在 `packages/db/src/schema/ai.ts` 新增 `user_ai_model_settings` 表
+- [x] 更新 `packages/db/src/index.ts` 与 `packages/db/src/index.lazy.ts` 注册 schema
+- [x] 运行 `pnpm run db:generate` 生成迁移文件
+- [x] 在 `packages/api/package.json` 添加 `@folionote/model-list` 依赖
+- [x] 在 `packages/api/src/routers/ai.ts` 新增 `ai.getModelCatalog` 与 `ai.setModelEnabled`
+- [x] 在 `ai.generateText` 中增加模型启用状态校验
+- [x] 新增 `apps/web/src/hooks/use-ai-model-catalog.ts`
+- [x] 新增 `apps/web/src/components/ui/switch.tsx`
+- [x] 更新 `apps/web/src/routes/_app/settings/models.tsx` 增加模型列表与开关
+- [x] 更新 `apps/web/src/components/ai-elements/chat-input.tsx` 使用动态 catalog
+- [x] 更新 `apps/web/src/components/ai-elements/model-selector.tsx` 使用动态 catalog
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx` 增加模型回退逻辑
+- [x] 更新 i18n 资源文件（en-US / zh-CN / ja-JP）
+- [x] 新增单测 `packages/api/__tests__/routers/ai-model-catalog.test.ts`
+- [x] 更新 `docs/ai-mvp-byok-v0.md` Section 23
+
+Done:
+实现用户级模型启用开关功能，支持全类型（chat/embedding/image/tts/stt 等）与全站生效。
+新增 `user_ai_model_settings` 表存储用户覆盖，API 层合并默认与用户设置，Web 端提供搜索+开关 UI。
+
+---
+
+## Phase 3: AI Summarize Entry（后续实现）
+
+> 待 Phase 2 完成后再展开
+
+---
+
+## Phase 4: AI Suggest Review List（后续实现）
+
+> 待 Phase 3 完成后再展开
+
+---
+
+## Phase 5: AI Usage / Token 记录（后续实现）
+
+> 待 Phase 4 完成后再展开

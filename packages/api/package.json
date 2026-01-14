@@ -18,10 +18,12 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@folionote/ai": "workspace:*",
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
+    "@folionote/model-list": "workspace:*",
     "@folionote/storage": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",

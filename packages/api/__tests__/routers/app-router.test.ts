@@ -17,11 +17,17 @@ describe('appRouter structure', () => {
 		expect(typeof appRouter.entries).toBe('object')
 	})
 
+	it('exports ai router', () => {
+		expect(appRouter.ai).toBeDefined()
+		expect(typeof appRouter.ai).toBe('object')
+	})
+
 	it('has correct procedure types', () => {
 		// Verify the router structure is correct
 		expect(appRouter).toHaveProperty('healthCheck')
 		expect(appRouter).toHaveProperty('privateData')
 		expect(appRouter).toHaveProperty('entries')
+		expect(appRouter).toHaveProperty('ai')
 	})
 
 	it('entries router has all required procedures', () => {
@@ -31,5 +37,14 @@ describe('appRouter structure', () => {
 		expect(appRouter.entries).toHaveProperty('restore')
 		expect(appRouter.entries).toHaveProperty('get')
 		expect(appRouter.entries).toHaveProperty('list')
+	})
+
+	it('ai router has required procedures', () => {
+		expect(appRouter.ai).toHaveProperty('healthCheck')
+		expect(appRouter.ai).toHaveProperty('listProviders')
+		expect(appRouter.ai).toHaveProperty('getProvider')
+		expect(appRouter.ai).toHaveProperty('getPromptVersions')
+		expect(appRouter.ai).toHaveProperty('getConfig')
+		expect(appRouter.ai).toHaveProperty('generateText')
 	})
 })

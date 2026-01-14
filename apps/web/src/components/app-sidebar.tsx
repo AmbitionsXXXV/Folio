@@ -1,5 +1,6 @@
 import {
 	Activity01Icon,
+	AiBrain01Icon,
 	BookOpen01Icon,
 	InboxIcon,
 	Link01Icon,
@@ -45,6 +46,7 @@ const secondaryNavItems: NavItem[] = [
 	{ to: '/tags', labelKey: 'nav.tags', icon: Tag01Icon },
 	{ to: '/sources', labelKey: 'nav.sources', icon: Link01Icon },
 	{ to: '/review', labelKey: 'nav.review', icon: Rocket01Icon },
+	{ to: '/knowledge', labelKey: 'nav.knowledge', icon: AiBrain01Icon },
 ]
 
 function NavItems({ items }: { items: NavItem[] }) {

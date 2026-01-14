@@ -1,0 +1,39 @@
+{
+  "name": "@folionote/model-list",
+  "version": "0.1.0",
+  "description": "AI Model definitions and provider configurations for FolioNote",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./types": {
+      "types": "./src/types/index.ts",
+      "default": "./src/types/index.ts"
+    },
+    "./ai-models": {
+      "types": "./src/ai-models/index.ts",
+      "default": "./src/ai-models/index.ts"
+    },
+    "./model-providers": {
+      "types": "./src/model-providers/index.ts",
+      "default": "./src/model-providers/index.ts"
+    },
+    "./standard-parameters": {
+      "types": "./src/standard-parameters/index.ts",
+      "default": "./src/standard-parameters/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "type-fest": "^5.4.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -1,4 +1,7 @@
 // Auth schema
+
+// AI schema
+import { userAiModelSettings, userAiModelSettingsRelations } from './schema/ai'
 import {
 	account,
 	accountRelations,
@@ -8,7 +11,6 @@ import {
 	userRelations,
 	verification,
 } from './schema/auth'
-
 // Business schema
 import {
 	attachments,
@@ -68,6 +70,9 @@ const schema = {
 	entrySharesRelations,
 	searchHistory,
 	searchHistoryRelations,
+	// AI
+	userAiModelSettings,
+	userAiModelSettingsRelations,
 }
 
 // 数据库连接初始化
@@ -75,6 +80,10 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 
 export const db = drizzle(process.env.DATABASE_URL || '', { schema })
 
+export {
+	userAiModelSettings,
+	userAiModelSettingsRelations,
+} from './schema/ai'
 // Re-export schema for external use
 export {
 	account,
@@ -85,7 +94,6 @@ export {
 	userRelations,
 	verification,
 } from './schema/auth'
-
 export {
 	attachments,
 	attachmentsRelations,
