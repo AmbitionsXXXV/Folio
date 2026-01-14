@@ -8,6 +8,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -150,6 +151,17 @@ export function ChatInput({
 
 	const hasAttachments = attachedNotes.length > 0
 
+	// Get known mention titles from attached notes
+	const knownMentions = useMemo(
+		() => attachedNotes.map((note) => note.title).filter(Boolean),
+		[attachedNotes]
+	)
+
+	// Render highlighted content with mentions
+	const highlightedContent = useMemo(() => {
+		return renderTextWithMentions(value, 'default', knownMentions)
+	}, [value, knownMentions])
+
 	return (
 		<div
 			className={cn(
@@ -161,7 +173,7 @@ export function ChatInput({
 		>
 			{/* Attached Notes Chips */}
 			{hasAttachments && (
-				<div className="flex flex-wrap gap-1.5 px-3 pt-3">
+				<div className="flex flex-wrap gap-1.5 px-3 py-2">
 					{attachedNotes.map((note) => (
 						<Badge
 							className="group flex items-center gap-1 pr-1"
@@ -191,26 +203,46 @@ export function ChatInput({
 				</div>
 			)}
 
-			{/* Textarea */}
-			<Textarea
-				className={cn(
-					'max-h-[200px] min-h-[100px] resize-none border-none bg-transparent',
-					'px-4 pb-16',
-					hasAttachments ? 'pt-2' : 'pt-4',
-					'focus-visible:ring-0 focus-visible:ring-offset-0',
-					'placeholder:text-muted-foreground/60'
-				)}
-				disabled={disabled || isPending || !hasApiKey}
-				onChange={(e) => onChange(e.target.value)}
-				onKeyDown={handleKeyDown}
-				placeholder={
-					hasApiKey
-						? placeholder || t('knowledge.inputPlaceholder')
-						: t('knowledge.configureApiKeyFirst')
-				}
-				ref={textareaRef}
-				value={value}
-			/>
+			{/* Textarea with mention highlighting */}
+			<div className="relative">
+				{/* Textarea (text color transparent, only caret visible) */}
+				<Textarea
+					className={cn(
+						'relative max-h-[200px] min-h-[100px] resize-none border-none bg-transparent',
+						'px-4 pb-16',
+						hasAttachments ? 'pt-2' : 'pt-4',
+						'focus-visible:ring-0 focus-visible:ring-offset-0',
+						'placeholder:text-muted-foreground/60',
+						'text-transparent caret-foreground selection:bg-primary/20'
+					)}
+					disabled={disabled || isPending || !hasApiKey}
+					onChange={(e) => onChange(e.target.value)}
+					onKeyDown={handleKeyDown}
+					placeholder={
+						hasApiKey
+							? placeholder || t('knowledge.inputPlaceholder')
+							: t('knowledge.configureApiKeyFirst')
+					}
+					ref={textareaRef}
+					value={value}
+				/>
+
+				{/* Highlighted content overlay (renders on top of textarea) */}
+				<div
+					aria-hidden="true"
+					className={cn(
+						'pointer-events-none absolute inset-0 z-10',
+						'max-h-[200px] min-h-[100px] overflow-hidden',
+						'wrap-break-word whitespace-pre-wrap',
+						'px-4 pb-16',
+						hasAttachments ? 'pt-2' : 'pt-4',
+						'text-sm',
+						'text-foreground'
+					)}
+				>
+					{highlightedContent}
+				</div>
+			</div>
 
 			{/* Bottom Actions Bar */}
 			<div className="absolute right-3 bottom-3 left-3 flex items-center justify-between">
