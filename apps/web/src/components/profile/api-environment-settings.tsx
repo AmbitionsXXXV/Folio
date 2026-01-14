@@ -61,6 +61,15 @@ export function ApiEnvironmentSettings() {
 					<code className="font-mono text-foreground text-xs">{serverUrl}</code>
 				</div>
 
+				{/* CORS Notice for Remote Server */}
+				{isRemote && (
+					<div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+						<p className="text-blue-900 text-xs dark:text-blue-200">
+							💡 {t('settings.apiEnvironment.corsNotice')}
+						</p>
+					</div>
+				)}
+
 				{/* Warning */}
 				<p className="text-muted-foreground text-xs">
 					⚠️ {t('settings.apiEnvironment.reloadWarning')}

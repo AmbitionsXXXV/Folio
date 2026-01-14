@@ -4,19 +4,19 @@ import {
 	Setting06Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { Streamdown } from 'streamdown'
 import { ChatInput } from '@/components/ai-elements/chat-input'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
+import { useStreamText } from '@/hooks/use-stream-text'
 import { cn } from '@/lib/utils'
-import { orpc } from '@/utils/orpc'
 
 // API-compatible provider IDs (subset that the backend supports)
 // These map to the old provider IDs that the API expects
@@ -61,6 +61,8 @@ type Message = {
 	role: 'user' | 'assistant'
 	content: string
 	timestamp: Date
+	/** Whether this message is currently being streamed */
+	isStreaming?: boolean
 }
 
 function KnowledgePage() {
@@ -187,40 +189,69 @@ function KnowledgePage() {
 
 	const hasApiKey = Boolean(providerConfig?.apiKey?.trim())
 
-	const generateMutation = useMutation({
-		mutationFn: (prompt: string) => {
-			// Only API-supported providers can be used for text generation
-			if (!isApiSupportedProvider(selectedProvider)) {
-				throw new Error(
-					`Provider "${selectedProvider}" is not yet supported by the API`
+	// Streaming text generation
+	const {
+		stream,
+		isStreaming,
+		text: streamingText,
+		error: streamError,
+		reset: resetStream,
+	} = useStreamText()
+
+	// Track the streaming message ID
+	const streamingMessageIdRef = useRef<string | null>(null)
+
+	// Update the streaming message content as text comes in
+	useEffect(() => {
+		if (streamingMessageIdRef.current && streamingText) {
+			setMessages((prev) =>
+				prev.map((msg) =>
+					msg.id === streamingMessageIdRef.current
+						? { ...msg, content: streamingText }
+						: msg
 				)
+			)
+		}
+	}, [streamingText])
+
+	// Handle stream completion
+	useEffect(() => {
+		if (!isStreaming && streamingMessageIdRef.current) {
+			// Mark the message as no longer streaming
+			setMessages((prev) =>
+				prev.map((msg) =>
+					msg.id === streamingMessageIdRef.current
+						? { ...msg, isStreaming: false }
+						: msg
+				)
+			)
+			streamingMessageIdRef.current = null
+		}
+	}, [isStreaming])
+
+	// Handle stream error
+	useEffect(() => {
+		if (streamError) {
+			toast.error(streamError.message || t('knowledge.requestFailed'))
+			// Remove the failed streaming message
+			if (streamingMessageIdRef.current) {
+				setMessages((prev) =>
+					prev.filter((msg) => msg.id !== streamingMessageIdRef.current)
+				)
+				streamingMessageIdRef.current = null
 			}
-			const apiProviderId = mapProviderIdToApi(selectedProvider)
-			return orpc.ai.generateText.call({
-				provider: apiProviderId,
-				apiKey: providerConfig?.apiKey ?? '',
-				baseUrl: providerConfig?.baseUrl?.trim() || undefined,
-				model: selectedModel.trim() || undefined,
-				prompt,
-			})
-		},
-		onSuccess: (data) => {
-			const assistantMessage: Message = {
-				id: crypto.randomUUID(),
-				role: 'assistant',
-				content: data.text,
-				timestamp: new Date(),
-			}
-			setMessages((prev) => [...prev, assistantMessage])
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t('knowledge.requestFailed'))
-		},
-	})
+		}
+	}, [streamError, t])
 
 	const handleSendMessage = useCallback(() => {
 		const trimmedInput = inputValue.trim()
-		if (!trimmedInput || generateMutation.isPending) return
+		if (!trimmedInput || isStreaming) return
+
+		// Only API-supported providers can be used for text generation
+		if (!isApiSupportedProvider(selectedProvider)) {
+			toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
+			return
+		}
 
 		const userMessage: Message = {
 			id: crypto.randomUUID(),
@@ -228,10 +259,37 @@ function KnowledgePage() {
 			content: trimmedInput,
 			timestamp: new Date(),
 		}
-		setMessages((prev) => [...prev, userMessage])
+
+		// Create a placeholder message for the assistant response
+		const assistantMessageId = crypto.randomUUID()
+		const assistantMessage: Message = {
+			id: assistantMessageId,
+			role: 'assistant',
+			content: '',
+			timestamp: new Date(),
+			isStreaming: true,
+		}
+
+		streamingMessageIdRef.current = assistantMessageId
+		setMessages((prev) => [...prev, userMessage, assistantMessage])
 		setInputValue('')
-		generateMutation.mutate(trimmedInput)
-	}, [inputValue, generateMutation])
+
+		const apiProviderId = mapProviderIdToApi(selectedProvider)
+		stream({
+			provider: apiProviderId,
+			apiKey: providerConfig?.apiKey ?? '',
+			baseUrl: providerConfig?.baseUrl?.trim() || undefined,
+			model: selectedModel.trim() || undefined,
+			prompt: trimmedInput,
+		})
+	}, [
+		inputValue,
+		isStreaming,
+		selectedProvider,
+		providerConfig,
+		selectedModel,
+		stream,
+	])
 
 	// Auto-scroll to bottom when messages change
 	useEffect(() => {
@@ -239,11 +297,12 @@ function KnowledgePage() {
 	}, [messages])
 
 	const handleNewChat = useCallback(() => {
+		resetStream()
 		setMessages([])
 		setInputValue('')
-	}, [])
+	}, [resetStream])
 
-	const isPending = generateMutation.isPending
+	const isPending = isStreaming
 
 	return (
 		<div className="container mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 py-4">
@@ -351,41 +410,20 @@ type MessageListProps = {
 function MessageList({ messages, isPending, messagesEndRef }: MessageListProps) {
 	const { t } = useTranslation()
 
+	// Check if there's currently a streaming message with content
+	const hasStreamingMessageWithContent = messages.some(
+		(m) => m.isStreaming && m.content.length > 0
+	)
+
+	// Only show thinking indicator when streaming but no content yet
+	const showThinking = isPending && !hasStreamingMessageWithContent
+
 	return (
 		<div className="space-y-4">
 			{messages.map((message) => (
-				<div
-					className={cn(
-						'flex',
-						message.role === 'user' ? 'justify-end' : 'justify-start'
-					)}
-					key={message.id}
-				>
-					<div
-						className={cn(
-							'max-w-[85%] rounded-2xl px-4 py-2',
-							message.role === 'user'
-								? 'bg-primary text-primary-foreground'
-								: 'border bg-card text-card-foreground shadow-sm'
-						)}
-					>
-						<p className="whitespace-pre-wrap text-pretty text-sm">
-							{message.content}
-						</p>
-						<span
-							className={cn(
-								'mt-1 block font-[tabular-nums] text-[10px]',
-								message.role === 'user'
-									? 'text-primary-foreground/70'
-									: 'text-muted-foreground'
-							)}
-						>
-							{message.timestamp.toLocaleTimeString()}
-						</span>
-					</div>
-				</div>
+				<MessageBubble key={message.id} message={message} />
 			))}
-			{isPending && (
+			{showThinking && (
 				<div className="flex justify-start">
 					<div className="flex items-center gap-2 rounded-2xl border bg-card px-4 py-2 shadow-sm">
 						<Spinner className="size-4" />
@@ -396,6 +434,60 @@ function MessageList({ messages, isPending, messagesEndRef }: MessageListProps) 
 				</div>
 			)}
 			<div ref={messagesEndRef} />
+		</div>
+	)
+}
+
+type MessageBubbleProps = {
+	message: Message
+}
+
+function MessageBubble({ message }: MessageBubbleProps) {
+	const isUser = message.role === 'user'
+	const isAssistant = message.role === 'assistant'
+
+	// Don't render empty streaming messages
+	if (message.isStreaming && !message.content) {
+		return null
+	}
+
+	return (
+		<div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
+			<div
+				className={cn(
+					'max-w-[85%] rounded-2xl px-4 py-2',
+					isUser
+						? 'bg-primary text-primary-foreground'
+						: 'border bg-card text-card-foreground shadow-sm'
+				)}
+			>
+				{isAssistant ? (
+					<div
+						className={cn(
+							'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm',
+							message.isStreaming && 'streaming-cursor'
+						)}
+					>
+						<Streamdown isAnimating={message.isStreaming}>
+							{message.content}
+						</Streamdown>
+					</div>
+				) : (
+					<p className="whitespace-pre-wrap text-pretty text-sm">
+						{message.content}
+					</p>
+				)}
+				{!message.isStreaming && (
+					<span
+						className={cn(
+							'mt-1 block font-[tabular-nums] text-[10px]',
+							isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
+						)}
+					>
+						{message.timestamp.toLocaleTimeString()}
+					</span>
+				)}
+			</div>
 		</div>
 	)
 }

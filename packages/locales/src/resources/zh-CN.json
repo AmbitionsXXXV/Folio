@@ -544,7 +544,8 @@
       "localDescription": "已连接到本地开发服务器 (localhost)",
       "remoteDescription": "已连接到远程生产服务器",
       "currentServer": "当前服务器",
-      "reloadWarning": "切换环境将重新加载页面"
+      "reloadWarning": "切换环境将重新加载页面",
+      "corsNotice": "CORS 已配置为允许 localhost 来源。远程服务器将接受来自本地开发环境的请求。"
     },
     "models": {
       "title": "模型设置",

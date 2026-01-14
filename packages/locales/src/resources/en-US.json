@@ -544,7 +544,8 @@
       "localDescription": "Connected to local development server (localhost)",
       "remoteDescription": "Connected to remote production server",
       "currentServer": "Current Server",
-      "reloadWarning": "Switching environments will reload the page"
+      "reloadWarning": "Switching environments will reload the page",
+      "corsNotice": "CORS is configured to allow localhost origins. The remote server will accept requests from your local development environment."
     },
     "models": {
       "title": "Model Settings",

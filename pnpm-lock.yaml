@@ -382,6 +382,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@folionote/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@folionote/api':
         specifier: workspace:*
         version: link:../../packages/api

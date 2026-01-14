@@ -544,7 +544,8 @@
       "localDescription": "ローカル開発サーバーに接続中 (localhost)",
       "remoteDescription": "リモート本番サーバーに接続中",
       "currentServer": "現在のサーバー",
-      "reloadWarning": "環境を切り替えるとページがリロードされます"
+      "reloadWarning": "環境を切り替えるとページがリロードされます",
+      "corsNotice": "CORSはlocalhostオリジンを許可するように設定されています。リモートサーバーはローカル開発環境からのリクエストを受け入れます。"
     },
     "models": {
       "title": "モデル設定",

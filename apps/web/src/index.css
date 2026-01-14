@@ -8,6 +8,7 @@
 @import "./styles/component.css";
 @import "./styles/tiptap.css";
 @import "./styles/caret.css";
+@source "../node_modules/streamdown/dist/*.js";
 @import "fumadocs-ui/css/shadcn.css";
 @import "fumadocs-ui/css/preset.css";
 
@@ -333,4 +334,94 @@ textarea::-webkit-resizer {
 /* Force English script font regardless of language */
 .font-script-en {
 	font-family: var(--font-script) !important;
+}
+
+/* Streamdown content styles */
+.streamdown-content {
+	/* Ensure proper spacing for markdown elements */
+	& > *:first-child {
+		margin-top: 0;
+	}
+
+	& > *:last-child {
+		margin-bottom: 0;
+	}
+
+	/* Code blocks */
+	& pre {
+		@apply my-2 overflow-x-auto rounded-lg bg-muted/50 p-3 text-xs;
+	}
+
+	& code {
+		@apply rounded bg-muted/50 px-1 py-0.5 text-xs;
+	}
+
+	& pre code {
+		@apply bg-transparent p-0;
+	}
+
+	/* Lists */
+	& ul,
+	& ol {
+		@apply my-2 pl-4;
+	}
+
+	& li {
+		@apply my-1;
+	}
+
+	/* Headings */
+	& h1,
+	& h2,
+	& h3,
+	& h4 {
+		@apply mt-3 mb-2 font-semibold;
+	}
+
+	/* Paragraphs */
+	& p {
+		@apply my-1.5 leading-relaxed;
+	}
+
+	/* Links */
+	& a {
+		@apply text-primary underline underline-offset-2;
+	}
+
+	/* Blockquotes */
+	& blockquote {
+		@apply my-2 border-primary/30 border-l-2 pl-3 text-muted-foreground italic;
+	}
+
+	/* Tables */
+	& table {
+		@apply my-2 w-full border-collapse text-xs;
+	}
+
+	& th,
+	& td {
+		@apply border border-border px-2 py-1;
+	}
+
+	& th {
+		@apply bg-muted/30 font-medium;
+	}
+}
+
+/* Streaming cursor animation for Streamdown */
+.streaming-cursor::after {
+	content: "▋";
+	animation: cursor-blink 1s ease-in-out infinite;
+	color: var(--primary);
+	margin-left: 2px;
+}
+
+@keyframes cursor-blink {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
 }
