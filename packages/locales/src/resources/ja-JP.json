@@ -538,6 +538,14 @@
       "sections_one": "{{count}} セクション",
       "sections_other": "{{count}} セクション"
     },
+    "apiEnvironment": {
+      "title": "API環境",
+      "useRemoteServer": "リモートサーバーを使用",
+      "localDescription": "ローカル開発サーバーに接続中 (localhost)",
+      "remoteDescription": "リモート本番サーバーに接続中",
+      "currentServer": "現在のサーバー",
+      "reloadWarning": "環境を切り替えるとページがリロードされます"
+    },
     "models": {
       "title": "モデル設定",
       "description": "独自のAPIキーでAIモデルプロバイダーを設定します。キーはローカルに保存され、サーバーに送信されません。",

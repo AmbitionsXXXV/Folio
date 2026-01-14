@@ -8,6 +8,7 @@ import { createTanstackQueryUtils } from '@orpc/tanstack-query'
 import { QueryCache, QueryClient } from '@tanstack/react-query'
 import { createIsomorphicFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
+import { getServerUrl } from './api-environment'
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
@@ -30,7 +31,7 @@ const getORPCClient = createIsomorphicFn()
 	)
 	.client((): RouterClient<typeof appRouter> => {
 		const link = new RPCLink({
-			url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
+			url: `${getServerUrl()}/rpc`,
 			fetch(rpcUrl, options) {
 				return globalThis.fetch(rpcUrl, {
 					...options,

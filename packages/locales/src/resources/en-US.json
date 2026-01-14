@@ -538,6 +538,14 @@
       "sections_one": "{{count}} section",
       "sections_other": "{{count}} sections"
     },
+    "apiEnvironment": {
+      "title": "API Environment",
+      "useRemoteServer": "Use Remote Server",
+      "localDescription": "Connected to local development server (localhost)",
+      "remoteDescription": "Connected to remote production server",
+      "currentServer": "Current Server",
+      "reloadWarning": "Switching environments will reload the page"
+    },
     "models": {
       "title": "Model Settings",
       "description": "Configure AI model providers with your own API keys. Your keys are stored locally and never sent to our servers.",

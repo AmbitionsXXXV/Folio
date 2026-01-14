@@ -5,6 +5,7 @@ import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+	ApiEnvironmentSettings,
 	AppearanceSettings,
 	DangerZone,
 	LanguageSettings,
@@ -99,6 +100,17 @@ function GeneralSettingsPage() {
 				>
 					<LanguageSettings />
 				</motion.div>
+
+				{/* API Environment Settings - Development only */}
+				{import.meta.env.MODE === 'development' && (
+					<motion.div
+						animate={{ opacity: 1, y: 0 }}
+						initial={{ opacity: 0, y: 20 }}
+						transition={{ duration: 0.4, delay: 0.45 }}
+					>
+						<ApiEnvironmentSettings />
+					</motion.div>
+				)}
 
 				<motion.div
 					animate={{ opacity: 1, y: 0 }}

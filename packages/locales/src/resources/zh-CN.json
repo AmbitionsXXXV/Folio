@@ -538,6 +538,14 @@
       "sections_one": "{{count}} 个部分",
       "sections_other": "{{count}} 个部分"
     },
+    "apiEnvironment": {
+      "title": "API 环境",
+      "useRemoteServer": "使用远程服务器",
+      "localDescription": "已连接到本地开发服务器 (localhost)",
+      "remoteDescription": "已连接到远程生产服务器",
+      "currentServer": "当前服务器",
+      "reloadWarning": "切换环境将重新加载页面"
+    },
     "models": {
       "title": "模型设置",
       "description": "使用您自己的 API 密钥配置 AI 模型提供商。您的密钥仅存储在本地，不会发送到我们的服务器。",

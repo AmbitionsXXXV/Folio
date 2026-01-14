@@ -13,6 +13,7 @@ import { ChatInput } from '@/components/ai-elements/chat-input'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
+import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
@@ -74,6 +75,9 @@ function KnowledgePage() {
 		isLoaded: isCatalogLoaded,
 	} = useAiModelCatalog()
 
+	// Last used model from localStorage
+	const { lastUsedProvider, lastUsedModel, saveLastUsed } = useLastUsedModel()
+
 	// Selected provider & model for this session
 	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
@@ -128,12 +132,17 @@ function KnowledgePage() {
 	)
 
 	// Sync with loaded config and validate against enabled models
+	// Prefer last used model from localStorage
 	useEffect(() => {
 		if (!(isLoaded && isCatalogLoaded)) return
 
+		// Prioritize last used model if available
+		const preferredProvider = lastUsedProvider || config.defaultProvider
+		const preferredModel = lastUsedModel || config.defaultModel || ''
+
 		const { provider, model } = findValidProviderAndModel(
-			config.defaultProvider,
-			config.defaultModel ?? ''
+			preferredProvider,
+			preferredModel
 		)
 		setSelectedProvider(provider)
 		setSelectedModel(model)
@@ -142,6 +151,8 @@ function KnowledgePage() {
 		isCatalogLoaded,
 		config.defaultProvider,
 		config.defaultModel,
+		lastUsedProvider,
+		lastUsedModel,
 		findValidProviderAndModel,
 	])
 
@@ -151,9 +162,22 @@ function KnowledgePage() {
 			setSelectedProvider(providerId)
 			// Reset model when provider changes
 			const enabledModels = getEnabledChatModels(providerId)
-			setSelectedModel(enabledModels[0]?.id ?? '')
+			const newModel = enabledModels[0]?.id ?? ''
+			setSelectedModel(newModel)
+			// Save to localStorage
+			saveLastUsed(providerId, newModel)
 		},
-		[getEnabledChatModels]
+		[getEnabledChatModels, saveLastUsed]
+	)
+
+	// When model changes, save to localStorage
+	const handleModelChange = useCallback(
+		(modelId: string) => {
+			setSelectedModel(modelId)
+			// Save to localStorage
+			saveLastUsed(selectedProvider, modelId)
+		},
+		[selectedProvider, saveLastUsed]
 	)
 
 	const providerConfig = useMemo(
@@ -273,7 +297,7 @@ function KnowledgePage() {
 					hasApiKey={hasApiKey}
 					isPending={isPending}
 					onChange={setInputValue}
-					onModelChange={setSelectedModel}
+					onModelChange={handleModelChange}
 					onProviderChange={handleProviderChange}
 					onSubmit={handleSendMessage}
 					selectedModel={selectedModel}
