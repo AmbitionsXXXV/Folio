@@ -1,3 +1,13 @@
+import { Button } from '@folionote/ui/button'
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+	FieldSeparator,
+} from '@folionote/ui/field'
+import { Input } from '@folionote/ui/input'
+import { Spinner } from '@folionote/ui/spinner'
 import {
 	GoogleIcon,
 	Mail01Icon,
@@ -13,20 +23,10 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import z from 'zod'
-import {
-	Field,
-	FieldError,
-	FieldGroup,
-	FieldLabel,
-	FieldSeparator,
-} from '@/components/ui/field'
 import { useSocialAuth } from '@/hooks/use-social-auth'
 import { authClient } from '@/lib/auth-client'
 import { prettifyFormErrors } from '@/lib/form-error'
 import Loader from './loader'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Spinner } from './ui/spinner'
 
 const PASSWORD_MIN_LENGTH = 8
 

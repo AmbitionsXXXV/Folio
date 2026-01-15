@@ -1,4 +1,6 @@
 import { formatDate } from '@folionote/locales'
+import { Card, CardContent } from '@folionote/ui/card'
+import { Skeleton } from '@folionote/ui/skeleton'
 import {
 	ArrowRight01Icon,
 	BookOpen01Icon,
@@ -11,8 +13,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { EntryCard } from '@/components/entry-card'
 import { QuickCapture } from '@/components/quick-capture'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { getUserTimezoneOffset } from '@/constants'
 import { getGreetingKey } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'

@@ -1,18 +1,18 @@
 import { mergeProps } from '@base-ui/react/merge-props'
 import { useRender } from '@base-ui/react/use-render'
+import { cn } from '@folionote/ui/lib/utils'
+import { Separator } from '@folionote/ui/separator'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
 
 const buttonGroupVariants = cva(
-	"cn-button-group flex w-fit items-stretch [&>*]:focus-visible:relative [&>*]:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
+	"etc-button-group flex w-fit items-stretch [&>*]:focus-visible:relative [&>*]:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
 	{
 		variants: {
 			orientation: {
 				horizontal:
-					'cn-button-group-orientation-horizontal [&>[data-slot]]:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:border-l-0',
+					'etc-button-group-orientation-horizontal [&>[data-slot]]:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:border-l-0',
 				vertical:
-					'cn-button-group-orientation-vertical flex-col [&>[data-slot]]:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0',
+					'etc-button-group-orientation-vertical flex-col [&>[data-slot]]:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0',
 			},
 		},
 		defaultVariants: {
@@ -47,7 +47,7 @@ function ButtonGroupText({
 		props: mergeProps<'div'>(
 			{
 				className: cn(
-					'cn-button-group-text flex items-center [&_svg]:pointer-events-none',
+					'etc-button-group-text flex items-center [&_svg]:pointer-events-none',
 					className
 				),
 			},
@@ -68,7 +68,7 @@ function ButtonGroupSeparator({
 	return (
 		<Separator
 			className={cn(
-				'cn-button-group-separator relative self-stretch data-[orientation=horizontal]:mx-px data-[orientation=vertical]:my-px data-[orientation=vertical]:h-auto data-[orientation=horizontal]:w-auto',
+				'etc-button-group-separator relative self-stretch data-[orientation=horizontal]:mx-px data-[orientation=vertical]:my-px data-[orientation=vertical]:h-auto data-[orientation=horizontal]:w-auto',
 				className
 			)}
 			data-slot="button-group-separator"

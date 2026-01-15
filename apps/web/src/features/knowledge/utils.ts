@@ -1,4 +1,4 @@
-import type { ApiProviderId, ChatMessage } from './types'
+import type { ApiProviderId, ChatMessage, CitationSource } from './types'
 
 // ============================================================================
 // Provider Mapping Utilities
@@ -77,9 +77,86 @@ export function formatCost(cost?: number): string | null {
 }
 
 // ============================================================================
-// Constants
+// Citation Parsing Utilities
 // ============================================================================
 
-/** Context usage percentage thresholds */
-export const CONTEXT_WARNING_THRESHOLD = 80
-export const CONTEXT_CRITICAL_THRESHOLD = 95
+/** Regex pattern to match citation markers like [1], [2], etc. */
+const CITATION_MARKER_REGEX = /\[(\d+)\]/g
+
+/**
+ * Parse citation markers from content and return structured data
+ * This extracts [1], [2], etc. markers from text
+ */
+export function parseCitationMarkers(content: string): number[] {
+	const markers: number[] = []
+	const matches = content.matchAll(CITATION_MARKER_REGEX)
+
+	for (const match of matches) {
+		const numStr = match[1]
+		if (numStr) {
+			const num = Number.parseInt(numStr, 10)
+			if (!markers.includes(num)) {
+				markers.push(num)
+			}
+		}
+	}
+
+	return markers.sort((a, b) => a - b)
+}
+
+/**
+ * Get citation source by index (1-based)
+ */
+export function getCitationByIndex(
+	citations: CitationSource[],
+	index: number
+): CitationSource | undefined {
+	return citations[index - 1]
+}
+
+/**
+ * Split content into parts with citation markers
+ * Returns an array of { type: 'text' | 'citation', value: string | number }
+ */
+export type ContentPart =
+	| { type: 'text'; value: string }
+	| { type: 'citation'; value: number }
+
+export function parseContentWithCitations(content: string): ContentPart[] {
+	const parts: ContentPart[] = []
+	let lastIndex = 0
+	const matches = [...content.matchAll(CITATION_MARKER_REGEX)]
+
+	for (const match of matches) {
+		const matchIndex = match.index
+		const numStr = match[1]
+
+		if (matchIndex === undefined || !numStr) continue
+
+		// Add text before the citation
+		if (matchIndex > lastIndex) {
+			parts.push({
+				type: 'text',
+				value: content.slice(lastIndex, matchIndex),
+			})
+		}
+
+		// Add the citation marker
+		parts.push({
+			type: 'citation',
+			value: Number.parseInt(numStr, 10),
+		})
+
+		lastIndex = matchIndex + match[0].length
+	}
+
+	// Add remaining text
+	if (lastIndex < content.length) {
+		parts.push({
+			type: 'text',
+			value: content.slice(lastIndex),
+		})
+	}
+
+	return parts
+}

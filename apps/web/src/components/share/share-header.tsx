@@ -1,6 +1,6 @@
+import { Button } from '@folionote/ui/button'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import { useScrollDirection } from '@/hooks/use-scroll-direction'
 import { cn } from '@/lib/utils'
 

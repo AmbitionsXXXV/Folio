@@ -3,6 +3,17 @@ import {
 	MODEL_TYPES,
 	type ModelType,
 } from '@folionote/model-list'
+import { Button } from '@folionote/ui/button'
+import { Input } from '@folionote/ui/input'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@folionote/ui/select'
+import { Skeleton } from '@folionote/ui/skeleton'
+import { Switch } from '@folionote/ui/switch'
 import {
 	AiBeautifyIcon,
 	Cancel01Icon,
@@ -17,17 +28,6 @@ import { motion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ModelProviderCard } from '@/components/settings/model-provider-card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Switch } from '@/components/ui/switch'
 import {
 	type CatalogModel,
 	useAiModelCatalog,

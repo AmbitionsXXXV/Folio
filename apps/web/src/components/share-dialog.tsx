@@ -1,3 +1,22 @@
+import { Button } from '@folionote/ui/button'
+import { Checkbox } from '@folionote/ui/checkbox'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@folionote/ui/dialog'
+import { Input } from '@folionote/ui/input'
+import { Label } from '@folionote/ui/label'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@folionote/ui/select'
 import {
 	Copy01Icon,
 	Delete02Icon,
@@ -16,25 +35,6 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
-import { Button } from './ui/button'
-import { Checkbox } from './ui/checkbox'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from './ui/dialog'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from './ui/select'
 
 type ShareDialogProps = {
 	entryId: string

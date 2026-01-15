@@ -1,11 +1,15 @@
-import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
+import { Spinner } from '@folionote/ui/spinner'
+import { AiBrain01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useStickToBottom } from 'use-stick-to-bottom'
+import {
+	Conversation,
+	ConversationContent,
+	ConversationEmptyState,
+	ConversationScrollButton,
+} from '@/components/ai-elements/conversation'
 import { Message, MessageContent } from '@/components/chat-message'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
 import type { ChatMessage } from '../types'
 import { MessageBubble } from './message-bubble'
 
@@ -47,9 +51,6 @@ export function MessageList({
 }: MessageListProps) {
 	const { t } = useTranslation()
 
-	// Use stick-to-bottom for auto-scroll behavior
-	const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom()
-
 	// Derive waiting state from messages - show only when pending but no streaming content
 	const showWaiting = useMemo(() => {
 		if (!isPending) return false
@@ -58,33 +59,36 @@ export function MessageList({
 		)
 	}, [isPending, messages])
 
-	return (
-		<div className="relative h-full">
-			<div className="h-full overflow-y-auto overscroll-contain p-4" ref={scrollRef}>
-				<div className="space-y-4" ref={contentRef}>
-					{messages.map((message) => (
-						<MessageBubble
-							key={message.id}
-							message={message}
-							thinkingEnabled={thinkingEnabled}
-						/>
-					))}
-					{showWaiting ? <WaitingIndicator /> : null}
-				</div>
-			</div>
+	const hasMessages = messages.length > 0 || showWaiting
 
-			{/* Scroll to bottom button */}
-			{isAtBottom ? null : (
-				<Button
-					aria-label={t('knowledge.scrollToBottom')}
-					className="absolute right-4 bottom-4 size-8 rounded-full shadow-lg"
-					onClick={() => scrollToBottom()}
-					size="icon"
-					variant="secondary"
-				>
-					<HugeiconsIcon className="size-4" icon={ArrowDown01Icon} />
-				</Button>
-			)}
-		</div>
+	return (
+		<Conversation className="h-full">
+			<ConversationContent className="gap-4 p-4">
+				{hasMessages ? (
+					<>
+						{messages.map((message) => (
+							<MessageBubble
+								key={message.id}
+								message={message}
+								thinkingEnabled={thinkingEnabled}
+							/>
+						))}
+						{showWaiting ? <WaitingIndicator /> : null}
+					</>
+				) : (
+					<ConversationEmptyState
+						description={t('knowledge.emptyState.description')}
+						icon={
+							<HugeiconsIcon
+								className="size-12 text-muted-foreground/50"
+								icon={AiBrain01Icon}
+							/>
+						}
+						title={t('knowledge.emptyState.title')}
+					/>
+				)}
+			</ConversationContent>
+			<ConversationScrollButton />
+		</Conversation>
 	)
 }

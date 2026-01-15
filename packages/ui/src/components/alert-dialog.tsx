@@ -1,7 +1,7 @@
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
+import { Button } from '@folionote/ui/button'
+import { cn } from '@folionote/ui/lib/utils'
 import type * as React from 'react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 /**
  * AlertDialog is built on top of Dialog but prevents closing by clicking outside

@@ -1,3 +1,5 @@
+import { Button } from '@folionote/ui/button'
+import { Skeleton } from '@folionote/ui/skeleton'
 import {
 	Add01Icon,
 	Book02Icon,
@@ -17,8 +19,6 @@ import { toast } from 'sonner'
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
 import { SourceCard } from '@/components/source-card'
 import { SourceDialog } from '@/components/source-dialog'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { orpc } from '@/utils/orpc'
 
 type SourceType = 'link' | 'pdf' | 'book' | 'article' | 'video' | 'podcast' | 'other'
@@ -259,6 +259,7 @@ function SourcesPage() {
 			<div className="mb-6 flex flex-wrap gap-2">
 				{filters.map(({ key, labelKey, icon }) => (
 					<Button
+						className="rounded-lg"
 						key={key}
 						onClick={() => setFilter(key)}
 						size="sm"

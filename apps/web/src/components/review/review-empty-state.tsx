@@ -1,7 +1,7 @@
+import { Button } from '@folionote/ui/button'
 import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import type { ReviewEmptyStateProps } from '@/types/review'
 
 /**

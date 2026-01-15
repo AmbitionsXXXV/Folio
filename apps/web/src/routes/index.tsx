@@ -1,3 +1,5 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@folionote/ui/avatar'
+import { Button } from '@folionote/ui/button'
 import {
 	BookOpen01Icon,
 	InboxIcon,
@@ -13,8 +15,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import { getUser } from '@/functions/get-user'
 import { cn, getSimpleGreetingKey } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'

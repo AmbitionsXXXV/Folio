@@ -1,3 +1,17 @@
+import { Button } from '@folionote/ui/button'
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupContent,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarSeparator,
+	useSidebar,
+} from '@folionote/ui/sidebar'
 import {
 	Activity01Icon,
 	AiBrain01Icon,
@@ -14,20 +28,6 @@ import { Link, useMatchRoute, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useCommandPalette } from '@/contexts/command-palette-context'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
-import {
-	Sidebar,
-	SidebarContent,
-	SidebarFooter,
-	SidebarGroup,
-	SidebarGroupContent,
-	SidebarHeader,
-	SidebarMenu,
-	SidebarMenuButton,
-	SidebarMenuItem,
-	SidebarSeparator,
-	useSidebar,
-} from './ui/sidebar'
 import UserMenu from './user-menu'
 
 type NavItem = {

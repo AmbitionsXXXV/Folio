@@ -1,13 +1,13 @@
+import { Badge } from '@folionote/ui/badge'
+import { Button } from '@folionote/ui/button'
+import { Input } from '@folionote/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@folionote/ui/popover'
 import { Cancel01Icon, PlusSignIcon, Tag01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type KeyboardEvent, type Ref, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { orpc } from '@/utils/orpc'
 
 type Tag = {

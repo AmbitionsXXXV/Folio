@@ -1,7 +1,4 @@
-import { Alert01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
+import { Button } from '@folionote/ui/button'
 import {
 	Dialog,
 	DialogClose,
@@ -10,7 +7,10 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from '@/components/ui/dialog'
+} from '@folionote/ui/dialog'
+import { Alert01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useTranslation } from 'react-i18next'
 
 type ConfirmDeleteDialogProps = {
 	open: boolean

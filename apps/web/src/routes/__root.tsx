@@ -1,7 +1,7 @@
+import { useIsMobile } from '@folionote/ui/hooks/use-mobile'
+import { Toaster } from '@folionote/ui/sonner'
 import type { QueryClient } from '@tanstack/react-query'
-
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -14,9 +14,7 @@ import { ThemeProvider } from 'next-themes'
 import { I18nextProvider, useTranslation } from 'react-i18next'
 import { CommandPalette } from '@/components/command-palette'
 import { RouterPendingIndicator } from '@/components/router-pending-indicator'
-import { Toaster } from '@/components/ui/sonner'
 import { CommandPaletteProvider } from '@/contexts/command-palette-context'
-import { useIsMobile } from '@/hooks/use-mobile'
 import i18n from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { orpc } from '@/utils/orpc'

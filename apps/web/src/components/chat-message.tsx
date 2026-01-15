@@ -1,21 +1,22 @@
-import type { FileUIPart, UIMessage } from 'ai'
-import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	PaperclipIcon,
-	XIcon,
-} from 'lucide-react'
-import type { ComponentProps, HTMLAttributes, ReactElement } from 'react'
-import { createContext, memo, useContext, useEffect, useState } from 'react'
-import { Streamdown } from 'streamdown'
-import { Button } from '@/components/ui/button'
-import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
+import { Button } from '@folionote/ui/button'
+import { ButtonGroup, ButtonGroupText } from '@folionote/ui/button-group'
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@folionote/ui/tooltip'
+import {
+	ArrowLeft01Icon,
+	ArrowRight01Icon,
+	Attachment01Icon,
+	MultiplicationSignIcon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import type { FileUIPart, UIMessage } from 'ai'
+import type { ComponentProps, HTMLAttributes, ReactElement } from 'react'
+import { createContext, memo, useContext, useEffect, useState } from 'react'
+import { Streamdown } from 'streamdown'
 import { cn } from '@/lib/utils'
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -239,7 +240,7 @@ export const MessageBranchPrevious = ({
 			variant="ghost"
 			{...props}
 		>
-			{children ?? <ChevronLeftIcon size={14} />}
+			{children ?? <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />}
 		</Button>
 	)
 }
@@ -262,7 +263,7 @@ export const MessageBranchNext = ({
 			variant="ghost"
 			{...props}
 		>
-			{children ?? <ChevronRightIcon size={14} />}
+			{children ?? <HugeiconsIcon icon={ArrowRight01Icon} size={14} />}
 		</Button>
 	)
 }
@@ -348,7 +349,7 @@ export function MessageAttachment({
 							type="button"
 							variant="ghost"
 						>
-							<XIcon />
+							<HugeiconsIcon icon={MultiplicationSignIcon} />
 							<span className="sr-only">Remove</span>
 						</Button>
 					)}
@@ -358,7 +359,7 @@ export function MessageAttachment({
 					<Tooltip>
 						<TooltipTrigger>
 							<div className="flex size-full shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-								<PaperclipIcon className="size-4" />
+								<HugeiconsIcon icon={Attachment01Icon} size={16} />
 							</div>
 						</TooltipTrigger>
 						<TooltipContent>
@@ -376,7 +377,7 @@ export function MessageAttachment({
 							type="button"
 							variant="ghost"
 						>
-							<XIcon />
+							<HugeiconsIcon icon={MultiplicationSignIcon} />
 							<span className="sr-only">Remove</span>
 						</Button>
 					)}

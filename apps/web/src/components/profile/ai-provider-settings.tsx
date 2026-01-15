@@ -1,4 +1,26 @@
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
+import { Badge } from '@folionote/ui/badge'
+import { Button } from '@folionote/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@folionote/ui/card'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@folionote/ui/dialog'
+import { Input } from '@folionote/ui/input'
+import { Label } from '@folionote/ui/label'
+import {
 	Add01Icon,
 	CheckmarkCircle02Icon,
 	Delete02Icon,
@@ -10,28 +32,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useAiProviderConfig } from '@/hooks/use-ai-provider-config'
 import { AI_PROVIDERS, type AiProviderInfo } from '@/lib/ai-provider-config'
 import { cn } from '@/lib/utils'

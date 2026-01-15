@@ -1,3 +1,17 @@
+/** Citation source for AI-generated content */
+export type CitationSource = {
+	/** Unique identifier for the citation */
+	id: string
+	/** Source URL */
+	url: string
+	/** Source title */
+	title?: string
+	/** Source description or snippet */
+	description?: string
+	/** Relevant quote from the source */
+	quote?: string
+}
+
 /** Chat message type for the knowledge page */
 export type ChatMessage = {
 	id: string
@@ -8,6 +22,8 @@ export type ChatMessage = {
 	isStreaming?: boolean
 	/** Thinking/reasoning content (for models that support extended thinking) */
 	thinking?: string
+	/** Citations/sources referenced in the message */
+	citations?: CitationSource[]
 	/** Token usage from the AI provider */
 	usage?: {
 		inputTokens?: number

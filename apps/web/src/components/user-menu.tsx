@@ -1,6 +1,30 @@
 import { LANGUAGE_LABELS } from '@folionote/constants'
 import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@folionote/ui/avatar'
+import { Button } from '@folionote/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuPortal,
+	DropdownMenuSeparator,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
+	DropdownMenuTrigger,
+} from '@folionote/ui/dropdown-menu'
+import { Skeleton } from '@folionote/ui/skeleton'
+import {
 	LanguageCircleIcon,
 	Logout03Icon,
 	Moon02Icon,
@@ -14,32 +38,8 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuPortal,
-	DropdownMenuSeparator,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
-import { Skeleton } from './ui/skeleton'
 
 type UserMenuProps = {
 	collapsed?: boolean

@@ -1,8 +1,8 @@
+import { buttonVariants } from '@folionote/ui/button'
 import { FileNotFoundIcon, Home01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { buttonVariants } from './ui/button'
 
 /**
  * Default 404 Not Found component.

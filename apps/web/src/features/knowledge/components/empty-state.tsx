@@ -1,8 +1,8 @@
+import { Button } from '@folionote/ui/button'
 import { AiBrain01Icon, Setting06Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 
 type EmptyStateProps = {
 	hasApiKey: boolean

@@ -1,3 +1,14 @@
+import { Badge } from '@folionote/ui/badge'
+import { Button } from '@folionote/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@folionote/ui/dropdown-menu'
+import { Spinner } from '@folionote/ui/spinner'
+import { Textarea } from '@folionote/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import {
 	AiBrain01Icon,
 	ArrowUp02Icon,
@@ -9,17 +20,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
 import { cn } from '@/lib/utils'
 

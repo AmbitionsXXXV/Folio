@@ -1,4 +1,15 @@
 import {
+	Command,
+	CommandDialog,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+	CommandSeparator,
+	CommandShortcut,
+} from '@folionote/ui/command'
+import {
 	BookOpen01Icon,
 	FilterIcon,
 	InboxIcon,
@@ -10,17 +21,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-	Command,
-	CommandDialog,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-	CommandSeparator,
-	CommandShortcut,
-} from '@/components/ui/command'
 import { useCommandPalette } from '@/contexts/command-palette-context'
 import { useDebounce } from '@/hooks/use-debounce'
 import { orpc } from '@/utils/orpc'

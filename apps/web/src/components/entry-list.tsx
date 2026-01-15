@@ -1,3 +1,4 @@
+import { Button } from '@folionote/ui/button'
 import { AlertCircleIcon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -7,7 +8,6 @@ import type { Entry } from '@/types'
 import { orpc } from '@/utils/orpc'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { EntryCard } from './entry-card'
-import { Button } from './ui/button'
 
 // 骨架屏的稳定 ID
 const SKELETON_IDS = [

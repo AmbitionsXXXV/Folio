@@ -1,17 +1,17 @@
 import { LANGUAGE_LABELS } from '@folionote/constants'
 import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
-import { LanguageCircleIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@folionote/ui/card'
+import { Label } from '@folionote/ui/label'
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/components/ui/select'
+} from '@folionote/ui/select'
+import { LanguageCircleIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Language and region settings card

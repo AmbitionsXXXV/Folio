@@ -3,6 +3,28 @@ import {
 	AVATAR_CROPPER_MIN_ZOOM,
 	AVATAR_CROPPER_ZOOM_STEP,
 } from '@folionote/constants'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@folionote/ui/avatar'
+import { Button } from '@folionote/ui/button'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@folionote/ui/dialog'
+import { Slider } from '@folionote/ui/slider'
+import { Spinner } from '@folionote/ui/spinner'
 import { formatTimeWithI18n } from '@folionote/utils'
 import {
 	Alert01Icon,
@@ -20,28 +42,6 @@ import { useCallback, useImperativeHandle, useRef, useState } from 'react'
 import Cropper from 'react-easy-crop'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog'
-import { Slider } from '@/components/ui/slider'
-import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 import {
 	useAvatarCropper,

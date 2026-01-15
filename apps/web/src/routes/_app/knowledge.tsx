@@ -1,3 +1,14 @@
+import { CONTEXT_CRITICAL_THRESHOLD } from '@folionote/constants'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
+import { Button } from '@folionote/ui/button'
 import {
 	AiBrain01Icon,
 	Alert02Icon,
@@ -12,33 +23,20 @@ import { toast } from 'sonner'
 import { type AttachedNote, ChatInput } from '@/components/ai-elements/chat-input'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
+	type ChatMessage,
+	ContextUsageIndicator,
+	calculateTotalTokens,
+	EmptyState,
+	estimateTokenCount,
+	isApiSupportedProvider,
+	MessageList,
+	mapProviderIdToApi,
+} from '@/features/knowledge'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { type ChatMessageInput, useStreamText } from '@/hooks/use-stream-text'
 import type { Entry } from '@/types'
-import {
-	ContextUsageIndicator,
-	EmptyState,
-	MessageList,
-} from './knowledge/components'
-import type { ChatMessage } from './knowledge/types'
-import {
-	CONTEXT_CRITICAL_THRESHOLD,
-	calculateTotalTokens,
-	estimateTokenCount,
-	isApiSupportedProvider,
-	mapProviderIdToApi,
-} from './knowledge/utils'
 
 export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,

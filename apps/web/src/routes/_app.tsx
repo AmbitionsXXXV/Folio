@@ -1,7 +1,7 @@
+import { SidebarInset, SidebarProvider } from '@folionote/ui/sidebar'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { AppSidebar } from '@/components/app-sidebar'
 import { MobileHeader } from '@/components/mobile-header'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { getUser } from '@/functions/get-user'
 
 export const Route = createFileRoute('/_app')({

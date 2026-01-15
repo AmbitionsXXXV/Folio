@@ -1,3 +1,5 @@
+import { Button } from '@folionote/ui/button'
+import { Skeleton } from '@folionote/ui/skeleton'
 import {
 	CheckmarkCircle02Icon,
 	Clock01Icon,
@@ -5,8 +7,6 @@ import {
 	InboxIcon,
 } from '@hugeicons/core-free-icons'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import type { StatsContentProps } from '@/types/review'
 import { StatsCard } from './stats-card'
 

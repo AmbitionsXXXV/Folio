@@ -1,9 +1,9 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@folionote/ui/card'
+import { Label } from '@folionote/ui/label'
+import { Switch } from '@folionote/ui/switch'
 import { CloudServerIcon, ComputerIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { useApiEnvironment } from '@/hooks/use-api-environment'
 
 /**

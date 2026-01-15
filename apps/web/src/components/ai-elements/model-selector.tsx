@@ -1,7 +1,5 @@
 import type { ModelProviderId } from '@folionote/model-list'
-import type { ComponentProps, ReactNode } from 'react'
-import { memo, useMemo, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@folionote/ui/button'
 import {
 	Command,
 	CommandDialog,
@@ -11,13 +9,15 @@ import {
 	CommandItem,
 	CommandList,
 	CommandSeparator,
-} from '@/components/ui/command'
+} from '@folionote/ui/command'
 import {
 	Dialog,
 	DialogContent,
 	DialogTitle,
 	DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@folionote/ui/dialog'
+import type { ComponentProps, ReactNode } from 'react'
+import { memo, useMemo, useState } from 'react'
 import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
 import { cn } from '@/lib/utils'
 

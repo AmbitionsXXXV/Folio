@@ -25,16 +25,16 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@tiptap/core": "^3.14.0",
-    "@tiptap/extension-link": "^3.14.0",
-    "@tiptap/pm": "^3.14.0",
-    "@tiptap/suggestion": "^3.14.0"
+    "@tiptap/core": "catalog:",
+    "@tiptap/extension-link": "catalog:",
+    "@tiptap/pm": "catalog:",
+    "@tiptap/suggestion": "catalog:"
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@tiptap/core": "^3.0.0"
+    "@tiptap/core": "catalog:"
   }
 }

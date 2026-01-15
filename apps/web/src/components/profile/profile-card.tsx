@@ -1,4 +1,12 @@
 import { formatUserNo, getDaysSince } from '@folionote/constants'
+import { Button } from '@folionote/ui/button'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@folionote/ui/card'
 import {
 	Calendar03Icon,
 	Edit02Icon,
@@ -8,14 +16,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useRef } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { AvatarUploader, type AvatarUploaderRef } from '@/components/avatar-uploader'
-import { Button } from '@/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
 import { useAvatarState } from '@/hooks/use-avatar-state'
 
 /**

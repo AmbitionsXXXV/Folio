@@ -1,16 +1,31 @@
-import { AiBrain01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { memo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
-import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+} from '@folionote/ui/collapsible'
+import { AiBrain01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { memo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+	InlineCitation,
+	InlineCitationCard,
+	InlineCitationCardBody,
+	InlineCitationCardTrigger,
+	InlineCitationCarousel,
+	InlineCitationCarouselContent,
+	InlineCitationCarouselHeader,
+	InlineCitationCarouselIndex,
+	InlineCitationCarouselItem,
+	InlineCitationCarouselNext,
+	InlineCitationCarouselPrev,
+	InlineCitationQuote,
+	InlineCitationSource,
+} from '@/components/ai-elements/inline-citation'
+import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
+import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
 import { cn } from '@/lib/utils'
-import type { ChatMessage } from '../types'
+import type { ChatMessage, CitationSource } from '../types'
 import { formatCost, formatTokenCount } from '../utils'
 
 // ============================================================================
@@ -122,6 +137,53 @@ const MessageFooter = memo(function MessageFooter({
 })
 
 // ============================================================================
+// Citation Badge Component
+// ============================================================================
+
+type CitationBadgeProps = {
+	citations: CitationSource[]
+}
+
+const CitationBadge = memo(function CitationBadge({
+	citations,
+}: CitationBadgeProps) {
+	if (citations.length === 0) return null
+
+	const sources = citations.map((c) => c.url)
+
+	return (
+		<InlineCitation>
+			<InlineCitationCard>
+				<InlineCitationCardTrigger sources={sources} />
+				<InlineCitationCardBody>
+					<InlineCitationCarousel>
+						<InlineCitationCarouselHeader>
+							<InlineCitationCarouselPrev />
+							<InlineCitationCarouselIndex />
+							<InlineCitationCarouselNext />
+						</InlineCitationCarouselHeader>
+						<InlineCitationCarouselContent>
+							{citations.map((citation) => (
+								<InlineCitationCarouselItem key={citation.id}>
+									<InlineCitationSource
+										description={citation.description}
+										title={citation.title}
+										url={citation.url}
+									/>
+									{citation.quote ? (
+										<InlineCitationQuote>{citation.quote}</InlineCitationQuote>
+									) : null}
+								</InlineCitationCarouselItem>
+							))}
+						</InlineCitationCarouselContent>
+					</InlineCitationCarousel>
+				</InlineCitationCardBody>
+			</InlineCitationCard>
+		</InlineCitation>
+	)
+})
+
+// ============================================================================
 // Content Components
 // ============================================================================
 
@@ -142,13 +204,17 @@ const UserMessageContent = memo(function UserMessageContent({
 type AssistantMessageContentProps = {
 	content: string
 	isStreaming?: boolean
+	citations?: CitationSource[]
 }
 
 const AssistantMessageContent = memo(
 	function AssistantMessageContent({
 		content,
 		isStreaming = false,
+		citations,
 	}: AssistantMessageContentProps) {
+		const hasCitations = citations && citations.length > 0
+
 		return (
 			<div
 				className={cn(
@@ -157,12 +223,14 @@ const AssistantMessageContent = memo(
 				)}
 			>
 				<MessageResponse isAnimating={isStreaming}>{content}</MessageResponse>
+				{hasCitations ? <CitationBadge citations={citations} /> : null}
 			</div>
 		)
 	},
 	(prevProps, nextProps) =>
 		prevProps.content === nextProps.content &&
-		prevProps.isStreaming === nextProps.isStreaming
+		prevProps.isStreaming === nextProps.isStreaming &&
+		prevProps.citations === nextProps.citations
 )
 
 // ============================================================================
@@ -218,6 +286,7 @@ export const MessageBubble = memo(function MessageBubble({
 					<UserMessageContent content={message.content} />
 				) : (
 					<AssistantMessageContent
+						citations={message.citations}
 						content={message.content}
 						isStreaming={message.isStreaming && !isThinkingOnly}
 					/>

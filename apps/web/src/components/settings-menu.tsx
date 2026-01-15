@@ -1,16 +1,6 @@
 import { LANGUAGE_LABELS } from '@folionote/constants'
 import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
-import {
-	LanguageCircleIcon,
-	Moon02Icon,
-	Settings01Icon,
-	Sun03Icon,
-} from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Button } from './ui/button'
+import { Button } from '@folionote/ui/button'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -23,7 +13,17 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from './ui/dropdown-menu'
+} from '@folionote/ui/dropdown-menu'
+import {
+	LanguageCircleIcon,
+	Moon02Icon,
+	Settings01Icon,
+	Sun03Icon,
+} from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useTheme } from 'next-themes'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 function LanguageSubmenu() {
 	const { t, i18n } = useTranslation()
