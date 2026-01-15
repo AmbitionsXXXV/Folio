@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.8
+
+### Patch Changes
+
+- implement table command
+- Updated dependencies
+  - @folionote/db@0.2.8
+  - @folionote/transactional@0.2.8
+
 ## 0.2.7
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @folionote/constants
 
+## 0.2.8
+
+### Patch Changes
+
+- implement table command
+- Updated dependencies
+  - @folionote/locales@0.2.8
+
 ## 0.2.7
 
 ### Patch Changes
