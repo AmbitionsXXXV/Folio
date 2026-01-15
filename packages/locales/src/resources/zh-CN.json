@@ -820,6 +820,14 @@
     "thinkingBuiltIn": "内置深度思考（始终开启）",
     "viewThinking": "查看思考过程",
     "thinkingInProgress": "思考中…",
+    "scrollToBottom": "滚动到底部",
+    "contextUsage": "上下文",
+    "contextUsageTooltip": "Token 使用量：{{used}} / {{total}} ({{percent}}%)",
+    "contextExceeded": "上下文超出限制",
+    "contextExceededDescription": "对话历史已超出模型的上下文窗口限制，请开启新对话继续。",
+    "startNewChat": "开启新对话",
+    "contextWarning": "上下文即将用尽 ({{percent}}%)",
+    "estimatedTokens": "约 {{count}} tokens",
     "emptyState": {
       "title": "开始对话",
       "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。输入 @ 附加特定笔记作为上下文。"

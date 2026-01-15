@@ -263,6 +263,12 @@ function calculateCostFromUsage(
 	}
 }
 
+/** Message type for conversation history */
+type ChatMessageInput = {
+	role: 'user' | 'assistant' | 'system'
+	content: string
+}
+
 app.post('/api/ai/stream', async (c) => {
 	const context = await createContext({ context: c })
 
@@ -276,6 +282,8 @@ app.post('/api/ai/stream', async (c) => {
 		baseUrl?: string
 		model?: string
 		prompt: string
+		/** Optional: Conversation history for context continuity */
+		messages?: ChatMessageInput[]
 		/** Optional: IDs of notes to attach as context */
 		noteEntryIds?: string[]
 		/** Optional: Number of notes to retrieve via RAG */
@@ -290,6 +298,7 @@ app.post('/api/ai/stream', async (c) => {
 		baseUrl,
 		model,
 		prompt,
+		messages,
 		noteEntryIds,
 		ragTopK,
 		enableReasoning,
@@ -331,18 +340,34 @@ app.post('/api/ai/stream', async (c) => {
 			effectiveRagTopK
 		)
 
-		// Build the knowledge chat prompt
-		const { prompt: assembledPrompt } = buildKnowledgeChatPrompt({
+		// Build the knowledge chat prompt (system prompt with context)
+		const { prompt: systemPromptWithContext } = buildKnowledgeChatPrompt({
 			userPrompt: prompt,
 			attachedNotes,
 			retrievedNotes,
 		})
 
-		const result = await streamTextWithCredential(credential, {
-			prompt: assembledPrompt,
-			model,
-			enableReasoning,
-		})
+		// If we have conversation history (messages), use multi-turn mode
+		// Otherwise, fall back to single-turn mode for backward compatibility
+		const hasConversationHistory = messages && messages.length > 0
+
+		const result = hasConversationHistory
+			? streamTextWithCredential(credential, {
+					// Use system prompt with knowledge context
+					system: systemPromptWithContext,
+					// Pass the conversation history
+					messages: messages.map((m) => ({
+						role: m.role,
+						content: m.content,
+					})),
+					model,
+					enableReasoning,
+				})
+			: streamTextWithCredential(credential, {
+					prompt: systemPromptWithContext,
+					model,
+					enableReasoning,
+				})
 
 		// Stream response with SSE format to support thinking content and usage
 		return streamText(c, async (stream) => {

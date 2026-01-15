@@ -10,8 +10,28 @@ import type { DecryptedCredential } from './credentials/types'
 import type { AiProvider } from './providers/types'
 import { createVercelAiChatModel } from './vercel-ai'
 
+/** Message type for conversation history */
+export type ChatMessage = {
+	role: 'user' | 'assistant' | 'system'
+	content: string
+}
+
 export type StreamTextInput = {
-	prompt: string
+	/**
+	 * Single prompt for simple requests (will be converted to user message)
+	 * @deprecated Use `messages` instead for conversation continuity
+	 */
+	prompt?: string
+	/**
+	 * Conversation history for multi-turn chat with context continuity.
+	 * Takes precedence over `prompt` if both are provided.
+	 */
+	messages?: ChatMessage[]
+	/**
+	 * System prompt to prepend to messages.
+	 * Only used when `messages` is provided.
+	 */
+	system?: string
 	/**
 	 * Optional model override.
 	 * If omitted, falls back to BYOK credential/model defaults.
@@ -80,10 +100,26 @@ function buildProviderOptions(
 }
 
 /**
+ * Convert ChatMessage array to format expected by Vercel AI SDK
+ */
+function convertToMessages(
+	messages: ChatMessage[]
+): Array<{ role: 'user' | 'assistant' | 'system'; content: string }> {
+	return messages.map((msg) => ({
+		role: msg.role,
+		content: msg.content,
+	}))
+}
+
+/**
  * Stream text using a decrypted BYOK credential.
  *
  * This is intended for server-side execution only.
  * Returns a streaming result that can be consumed progressively.
+ *
+ * Supports two modes:
+ * 1. Simple prompt mode: Pass `prompt` for single-turn requests
+ * 2. Conversation mode: Pass `messages` for multi-turn chat with context continuity
  */
 export function streamTextWithCredential(
 	credential: DecryptedCredential,
@@ -97,11 +133,21 @@ export function streamTextWithCredential(
 		input.reasoningBudgetTokens ?? DEFAULT_REASONING_BUDGET_TOKENS
 	)
 
-	const result = aiStreamText({
-		model,
-		prompt: input.prompt,
-		providerOptions,
-	})
+	// Determine whether to use messages or prompt mode
+	const hasMessages = input.messages && input.messages.length > 0
+
+	const result = hasMessages
+		? aiStreamText({
+				model,
+				system: input.system,
+				messages: convertToMessages(input.messages ?? []),
+				providerOptions,
+			})
+		: aiStreamText({
+				model,
+				prompt: input.prompt ?? '',
+				providerOptions,
+			})
 
 	return {
 		provider: credential.provider,

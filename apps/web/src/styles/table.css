@@ -447,10 +447,7 @@
 	background-color: var(--color-gray-800);
 }
 
-
-
 /* Cell with custom background color should preserve it on hover */
-
 
 .ProseMirror tr:hover td[data-background-color],
 .ProseMirror tr:hover th[data-background-color] {

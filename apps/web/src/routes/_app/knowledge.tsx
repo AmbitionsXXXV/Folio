@@ -1,19 +1,29 @@
 import {
 	AiBrain01Icon,
+	Alert02Icon,
 	ArrowDown01Icon,
 	MessageAdd01Icon,
 	Setting06Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Streamdown } from 'streamdown'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { type AttachedNote, ChatInput } from '@/components/ai-elements/chat-input'
 import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
+import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
 	Collapsible,
@@ -21,10 +31,11 @@ import {
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Spinner } from '@/components/ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
-import { useStreamText } from '@/hooks/use-stream-text'
+import { type ChatMessageInput, useStreamText } from '@/hooks/use-stream-text'
 import { cn } from '@/lib/utils'
 import type { Entry } from '@/types'
 
@@ -66,7 +77,7 @@ export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
 })
 
-type Message = {
+type ChatMessage = {
 	id: string
 	role: 'user' | 'assistant'
 	content: string
@@ -84,6 +95,31 @@ type Message = {
 		costUSD?: number
 	}
 }
+
+// ============================================================================
+// Token Estimation Utilities
+// ============================================================================
+
+/** Approximate characters per token (conservative estimate) */
+const CHARS_PER_TOKEN = 4
+
+/** Estimate token count from text */
+function estimateTokenCount(text: string): number {
+	return Math.ceil(text.length / CHARS_PER_TOKEN)
+}
+
+/** Calculate total estimated tokens for all messages */
+function calculateTotalTokens(messages: ChatMessage[]): number {
+	return messages.reduce((total, msg) => {
+		const contentTokens = estimateTokenCount(msg.content)
+		const thinkingTokens = msg.thinking ? estimateTokenCount(msg.thinking) : 0
+		return total + contentTokens + thinkingTokens
+	}, 0)
+}
+
+/** Context usage percentage thresholds */
+const CONTEXT_WARNING_THRESHOLD = 80
+const CONTEXT_CRITICAL_THRESHOLD = 95
 
 function KnowledgePage() {
 	const { t } = useTranslation()
@@ -105,7 +141,7 @@ function KnowledgePage() {
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 
 	// Chat state
-	const [messages, setMessages] = useState<Message[]>([])
+	const [messages, setMessages] = useState<ChatMessage[]>([])
 	const [inputValue, setInputValue] = useState('')
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -342,6 +378,30 @@ function KnowledgePage() {
 		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
 	}, [])
 
+	// Get selected model info for context window
+	const selectedModelInfo = useMemo(() => {
+		return catalogModels.find(
+			(m) => m.providerId === selectedProvider && m.id === selectedModel
+		)
+	}, [catalogModels, selectedProvider, selectedModel])
+
+	// Calculate context usage
+	const contextUsage = useMemo(() => {
+		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+		const usedTokens = calculateTotalTokens(messages)
+		const percent = Math.min(100, Math.round((usedTokens / contextWindow) * 100))
+		return {
+			used: usedTokens,
+			total: contextWindow,
+			percent,
+			isWarning: percent >= CONTEXT_WARNING_THRESHOLD,
+			isExceeded: percent >= CONTEXT_CRITICAL_THRESHOLD,
+		}
+	}, [messages, selectedModelInfo])
+
+	// State for context exceeded dialog
+	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
+
 	const handleSendMessage = useCallback(() => {
 		const trimmedInput = inputValue.trim()
 		if (!trimmedInput || isStreaming) return
@@ -352,7 +412,18 @@ function KnowledgePage() {
 			return
 		}
 
-		const userMessage: Message = {
+		// Check if context would be exceeded with new message
+		const newMessageTokens = estimateTokenCount(trimmedInput)
+		const projectedUsage = contextUsage.used + newMessageTokens
+		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+		const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
+
+		if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
+			setShowContextExceededDialog(true)
+			return
+		}
+
+		const userMessage: ChatMessage = {
 			id: crypto.randomUUID(),
 			role: 'user',
 			content: trimmedInput,
@@ -361,7 +432,7 @@ function KnowledgePage() {
 
 		// Create a placeholder message for the assistant response
 		const assistantMessageId = crypto.randomUUID()
-		const assistantMessage: Message = {
+		const assistantMessage: ChatMessage = {
 			id: assistantMessageId,
 			role: 'assistant',
 			content: '',
@@ -370,7 +441,8 @@ function KnowledgePage() {
 		}
 
 		streamingMessageIdRef.current = assistantMessageId
-		setMessages((prev) => [...prev, userMessage, assistantMessage])
+		const updatedMessages = [...messages, userMessage, assistantMessage]
+		setMessages(updatedMessages)
 		setInputValue('')
 
 		// Collect attached note IDs for the request
@@ -379,6 +451,15 @@ function KnowledgePage() {
 		// Clear attachments after sending
 		setAttachedNotes([])
 
+		// Build conversation history for context continuity
+		// Include all previous messages (excluding the current streaming placeholder)
+		const conversationHistory: ChatMessageInput[] = [...messages, userMessage].map(
+			(msg) => ({
+				role: msg.role,
+				content: msg.content,
+			})
+		)
+
 		const apiProviderId = mapProviderIdToApi(selectedProvider)
 		stream({
 			provider: apiProviderId,
@@ -386,6 +467,7 @@ function KnowledgePage() {
 			baseUrl: providerConfig?.baseUrl?.trim() || undefined,
 			model: selectedModel.trim() || undefined,
 			prompt: trimmedInput,
+			messages: conversationHistory,
 			noteEntryIds: noteEntryIds.length > 0 ? noteEntryIds : undefined,
 			enableReasoning: thinkingEnabled,
 		})
@@ -398,6 +480,9 @@ function KnowledgePage() {
 		stream,
 		attachedNotes,
 		thinkingEnabled,
+		messages,
+		contextUsage,
+		selectedModelInfo,
 	])
 
 	const handleNewChat = useCallback(() => {
@@ -427,6 +512,13 @@ function KnowledgePage() {
 					</div>
 				</div>
 				<div className="flex items-center gap-2">
+					{/* Context Usage Indicator */}
+					{messages.length > 0 && (
+						<ContextUsageIndicator
+							contextUsage={contextUsage}
+							onNewChat={handleNewChat}
+						/>
+					)}
 					<Link to="/settings/models">
 						<Button size="sm" variant="ghost">
 							<HugeiconsIcon className="size-4" icon={Setting06Icon} />
@@ -438,6 +530,38 @@ function KnowledgePage() {
 					</Button>
 				</div>
 			</div>
+
+			{/* Context Exceeded Dialog */}
+			<AlertDialog
+				onOpenChange={setShowContextExceededDialog}
+				open={showContextExceededDialog}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle className="flex items-center gap-2">
+							<HugeiconsIcon
+								className="size-5 text-destructive"
+								icon={Alert02Icon}
+							/>
+							{t('knowledge.contextExceeded')}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{t('knowledge.contextExceededDescription')}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogAction
+							onClick={() => {
+								setShowContextExceededDialog(false)
+								handleNewChat()
+							}}
+						>
+							<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
+							{t('knowledge.startNewChat')}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 
 			{/* Chat Messages */}
 			<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
@@ -490,6 +614,112 @@ function KnowledgePage() {
 	)
 }
 
+// ============================================================================
+// Context Usage Indicator Component
+// ============================================================================
+
+type ContextUsageIndicatorProps = {
+	contextUsage: {
+		used: number
+		total: number
+		percent: number
+		isWarning: boolean
+		isExceeded: boolean
+	}
+	onNewChat: () => void
+}
+
+const ContextUsageIndicator = memo(function ContextUsageIndicator({
+	contextUsage,
+	onNewChat,
+}: ContextUsageIndicatorProps) {
+	const { t } = useTranslation()
+
+	const formatTokenCount = (count: number): string => {
+		if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`
+		if (count >= 1000) return `${(count / 1000).toFixed(1)}k`
+		return String(count)
+	}
+
+	const getProgressColor = () => {
+		if (contextUsage.isExceeded) return 'bg-destructive'
+		if (contextUsage.isWarning) return 'bg-yellow-500'
+		return 'bg-primary'
+	}
+
+	const progressColor = getProgressColor()
+
+	return (
+		<Tooltip>
+			<TooltipTrigger>
+				<div
+					className={cn(
+						'flex items-center gap-2 rounded-lg px-2.5 py-1.5',
+						'border bg-background/50 backdrop-blur-sm',
+						'cursor-default transition-colors',
+						contextUsage.isExceeded && 'border-destructive/50 bg-destructive/5',
+						contextUsage.isWarning &&
+							!contextUsage.isExceeded &&
+							'border-yellow-500/50 bg-yellow-500/5'
+					)}
+				>
+					<div className="flex flex-col gap-0.5">
+						<div className="flex items-center gap-1.5">
+							<span className="font-[tabular-nums] text-[10px] text-muted-foreground">
+								{t('knowledge.contextUsage')}
+							</span>
+							<span
+								className={cn(
+									'font-[tabular-nums] font-medium text-xs',
+									contextUsage.isExceeded && 'text-destructive',
+									contextUsage.isWarning &&
+										!contextUsage.isExceeded &&
+										'text-yellow-600 dark:text-yellow-500'
+								)}
+							>
+								{contextUsage.percent}%
+							</span>
+						</div>
+						<div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
+							<div
+								className={cn('h-full transition-all', progressColor)}
+								style={{ width: `${Math.min(100, contextUsage.percent)}%` }}
+							/>
+						</div>
+					</div>
+					{contextUsage.isExceeded && (
+						<Button
+							className="h-6 px-2 text-xs"
+							onClick={(e) => {
+								e.stopPropagation()
+								onNewChat()
+							}}
+							size="sm"
+							variant="destructive"
+						>
+							{t('knowledge.newChat')}
+						</Button>
+					)}
+				</div>
+			</TooltipTrigger>
+			<TooltipContent side="bottom">
+				<p>
+					{t('knowledge.contextUsageTooltip', {
+						used: formatTokenCount(contextUsage.used),
+						total: formatTokenCount(contextUsage.total),
+						percent: contextUsage.percent,
+					})}
+				</p>
+				{contextUsage.isWarning && !contextUsage.isExceeded && (
+					<p className="mt-1 text-yellow-600 dark:text-yellow-500">
+						{t('knowledge.contextWarning', { percent: contextUsage.percent })}
+					</p>
+				)}
+			</TooltipContent>
+		</Tooltip>
+	)
+})
+
 type EmptyStateProps = {
 	hasApiKey: boolean
 }
@@ -524,7 +754,7 @@ function EmptyState({ hasApiKey }: EmptyStateProps) {
 }
 
 type MessageListProps = {
-	messages: Message[]
+	messages: ChatMessage[]
 	isPending: boolean
 	thinkingEnabled: boolean
 }
@@ -535,13 +765,13 @@ function MessageList({ messages, isPending, thinkingEnabled }: MessageListProps)
 	// Use stick-to-bottom for auto-scroll behavior
 	const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom()
 
-	// Check if there's currently a streaming message with content or thinking
-	const hasStreamingMessageWithContent = messages.some(
-		(m) => m.isStreaming && (m.content.length > 0 || (m.thinking?.length ?? 0) > 0)
-	)
-
-	// Only show waiting indicator when streaming but no content or thinking yet
-	const showWaiting = isPending && !hasStreamingMessageWithContent
+	// Derive waiting state from messages - show only when pending but no streaming content
+	const showWaiting = useMemo(() => {
+		if (!isPending) return false
+		return !messages.some(
+			(m) => m.isStreaming && (m.content.length > 0 || (m.thinking?.length ?? 0) > 0)
+		)
+	}, [isPending, messages])
 
 	return (
 		<div className="relative h-full">
@@ -554,22 +784,14 @@ function MessageList({ messages, isPending, thinkingEnabled }: MessageListProps)
 							thinkingEnabled={thinkingEnabled}
 						/>
 					))}
-					{showWaiting && (
-						<div className="flex justify-start">
-							<div className="flex items-center gap-2 rounded-2xl border bg-card px-4 py-2 shadow-sm">
-								<Spinner className="size-4" />
-								<span className="text-muted-foreground text-sm">
-									{t('knowledge.waiting')}
-								</span>
-							</div>
-						</div>
-					)}
+					{showWaiting ? <WaitingIndicator /> : null}
 				</div>
 			</div>
 
 			{/* Scroll to bottom button */}
-			{!isAtBottom && (
+			{isAtBottom ? null : (
 				<Button
+					aria-label={t('knowledge.scrollToBottom')}
 					className="absolute right-4 bottom-4 size-8 rounded-full shadow-lg"
 					onClick={() => scrollToBottom()}
 					size="icon"
@@ -582,18 +804,40 @@ function MessageList({ messages, isPending, thinkingEnabled }: MessageListProps)
 	)
 }
 
+/** Waiting indicator extracted as memoized component */
+const WaitingIndicator = memo(function WaitingIndicator() {
+	const { t } = useTranslation()
+
+	return (
+		<Message from="assistant">
+			<MessageContent>
+				<div className="flex items-center gap-2">
+					<Spinner className="size-4" />
+					<span className="text-muted-foreground text-sm">
+						{t('knowledge.waiting')}
+					</span>
+				</div>
+			</MessageContent>
+		</Message>
+	)
+})
+
 type MessageBubbleProps = {
-	message: Message
+	message: ChatMessage
 	thinkingEnabled: boolean
 }
 
-// Format token count for display
-function formatTokenCount(count?: number): string | number | null {
+// ============================================================================
+// Utility Functions (hoisted outside components for performance)
+// ============================================================================
+
+/** Format token count for display */
+function formatTokenCount(count?: number): string | null {
 	if (!count) return null
-	return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count
+	return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count)
 }
 
-// Format cost for display
+/** Format cost for display */
 function formatCost(cost?: number): string | null {
 	if (!cost) return null
 	if (cost < 0.0001) return '<$0.0001'
@@ -601,24 +845,33 @@ function formatCost(cost?: number): string | null {
 	return `$${cost.toFixed(3)}`
 }
 
+// ============================================================================
+// Thinking Collapse Component (Memoized for performance)
+// ============================================================================
+
 type ThinkingCollapseProps = {
 	thinking: string
 	isStreaming: boolean
 	isThinkingOnly: boolean
-	reasoningTokens: string | number | null
+	reasoningTokens: string | null
 }
 
-function ThinkingCollapse({
+const ThinkingCollapse = memo(function ThinkingCollapse({
 	thinking,
 	isStreaming,
 	isThinkingOnly,
 	reasoningTokens,
 }: ThinkingCollapseProps) {
 	const { t } = useTranslation()
-	const [thinkingOpen, setThinkingOpen] = useState(false)
+	const [isOpen, setIsOpen] = useState(false)
+
+	const label =
+		isStreaming && isThinkingOnly
+			? t('knowledge.thinkingInProgress')
+			: t('knowledge.viewThinking')
 
 	return (
-		<Collapsible onOpenChange={setThinkingOpen} open={thinkingOpen}>
+		<Collapsible onOpenChange={setIsOpen} open={isOpen}>
 			<CollapsibleTrigger
 				className={cn(
 					'mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5',
@@ -628,19 +881,15 @@ function ThinkingCollapse({
 				)}
 			>
 				<HugeiconsIcon className="size-3.5" icon={AiBrain01Icon} />
-				<span className="flex-1 text-left">
-					{isStreaming && isThinkingOnly
-						? t('knowledge.thinkingInProgress')
-						: t('knowledge.viewThinking')}
-				</span>
-				{reasoningTokens && !isStreaming && (
+				<span className="flex-1 text-left">{label}</span>
+				{reasoningTokens && !isStreaming ? (
 					<span className="font-[tabular-nums] text-[10px] opacity-60">
 						{reasoningTokens} tokens
 					</span>
-				)}
+				) : null}
 				<svg
 					aria-hidden="true"
-					className={cn('size-3 transition-transform', thinkingOpen && 'rotate-180')}
+					className={cn('size-3 transition-transform', isOpen && 'rotate-180')}
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"
@@ -662,34 +911,74 @@ function ThinkingCollapse({
 						isStreaming && isThinkingOnly && 'streaming-cursor'
 					)}
 				>
-					<Streamdown isAnimating={isStreaming && isThinkingOnly}>
+					<MessageResponse isAnimating={isStreaming && isThinkingOnly}>
 						{thinking}
-					</Streamdown>
+					</MessageResponse>
 				</div>
 			</CollapsibleContent>
 		</Collapsible>
 	)
+})
+
+// ============================================================================
+// Message Footer Component (Extracted for reusability)
+// ============================================================================
+
+type MessageFooterProps = {
+	timestamp: Date
+	outputTokens: string | null
+	costDisplay: string | null
+	isUser: boolean
 }
 
-function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
-	const isUser = message.role === 'user'
-	const isAssistant = message.role === 'assistant'
+const MessageFooter = memo(function MessageFooter({
+	timestamp,
+	outputTokens,
+	costDisplay,
+	isUser,
+}: MessageFooterProps) {
+	return (
+		<div
+			className={cn(
+				'mt-1 flex items-center gap-2 font-[tabular-nums] text-[10px]',
+				isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
+			)}
+		>
+			<span>{timestamp.toLocaleTimeString()}</span>
+			{outputTokens ? (
+				<span className="opacity-60">• {outputTokens} tokens</span>
+			) : null}
+			{costDisplay ? <span className="opacity-60">• {costDisplay}</span> : null}
+		</div>
+	)
+})
 
+// ============================================================================
+// Message Bubble Component (Using chat-message primitives)
+// ============================================================================
+
+const MessageBubble = memo(function MessageBubble({
+	message,
+	thinkingEnabled,
+}: MessageBubbleProps) {
+	const isUser = message.role === 'user'
 	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
 	const isThinkingOnly = hasThinking && !message.content
 
-	// Don't render completely empty streaming messages (no content and no thinking)
+	// Don't render completely empty streaming messages
 	if (message.isStreaming && !message.content && !message.thinking) {
 		return null
 	}
 
+	// Pre-compute derived values
 	const outputTokens = formatTokenCount(message.usage?.outputTokens)
 	const reasoningTokens = formatTokenCount(message.usage?.reasoningTokens)
 	const costDisplay = formatCost(message.usage?.costUSD)
+	const showFooter = !message.isStreaming
 
 	return (
-		<div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
-			<div
+		<Message from={message.role}>
+			<MessageContent
 				className={cn(
 					'max-w-[85%] rounded-2xl px-4 py-2',
 					isUser
@@ -698,49 +987,79 @@ function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 				)}
 			>
 				{/* Thinking content for assistant messages */}
-				{isAssistant && hasThinking && thinkingEnabled && (
+				{!isUser && hasThinking && thinkingEnabled ? (
 					<ThinkingCollapse
 						isStreaming={message.isStreaming ?? false}
 						isThinkingOnly={isThinkingOnly}
 						reasoningTokens={reasoningTokens}
 						thinking={message.thinking ?? ''}
 					/>
-				)}
+				) : null}
 
 				{/* Main content */}
-				{isAssistant ? (
-					<div
-						className={cn(
-							'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm',
-							message.isStreaming && !isThinkingOnly && 'streaming-cursor'
-						)}
-					>
-						<Streamdown isAnimating={message.isStreaming && !isThinkingOnly}>
-							{message.content}
-						</Streamdown>
-					</div>
+				{isUser ? (
+					<UserMessageContent content={message.content} />
 				) : (
-					<p className="whitespace-pre-wrap text-pretty text-sm">
-						{renderTextWithMentions(message.content, 'user-message')}
-					</p>
+					<AssistantMessageContent
+						content={message.content}
+						isStreaming={message.isStreaming && !isThinkingOnly}
+					/>
 				)}
 
 				{/* Footer: timestamp, token count and cost */}
-				{!message.isStreaming && (
-					<div
-						className={cn(
-							'mt-1 flex items-center gap-2 font-[tabular-nums] text-[10px]',
-							isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-						)}
-					>
-						<span>{message.timestamp.toLocaleTimeString()}</span>
-						{outputTokens && (
-							<span className="opacity-60">• {outputTokens} tokens</span>
-						)}
-						{costDisplay && <span className="opacity-60">• {costDisplay}</span>}
-					</div>
-				)}
-			</div>
-		</div>
+				{showFooter ? (
+					<MessageFooter
+						costDisplay={costDisplay}
+						isUser={isUser}
+						outputTokens={outputTokens}
+						timestamp={message.timestamp}
+					/>
+				) : null}
+			</MessageContent>
+		</Message>
 	)
+})
+
+// ============================================================================
+// Content Components (Separated for better memoization)
+// ============================================================================
+
+type UserMessageContentProps = {
+	content: string
 }
+
+const UserMessageContent = memo(function UserMessageContent({
+	content,
+}: UserMessageContentProps) {
+	return (
+		<p className="whitespace-pre-wrap text-pretty text-sm">
+			{renderTextWithMentions(content, 'user-message')}
+		</p>
+	)
+})
+
+type AssistantMessageContentProps = {
+	content: string
+	isStreaming?: boolean
+}
+
+const AssistantMessageContent = memo(
+	function AssistantMessageContent({
+		content,
+		isStreaming = false,
+	}: AssistantMessageContentProps) {
+		return (
+			<div
+				className={cn(
+					'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm',
+					isStreaming && 'streaming-cursor'
+				)}
+			>
+				<MessageResponse isAnimating={isStreaming}>{content}</MessageResponse>
+			</div>
+		)
+	},
+	(prevProps, nextProps) =>
+		prevProps.content === nextProps.content &&
+		prevProps.isStreaming === nextProps.isStreaming
+)

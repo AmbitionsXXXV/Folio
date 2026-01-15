@@ -820,6 +820,14 @@
     "thinkingBuiltIn": "拡張思考が内蔵（常時オン）",
     "viewThinking": "思考プロセスを表示",
     "thinkingInProgress": "考え中…",
+    "scrollToBottom": "最下部へスクロール",
+    "contextUsage": "コンテキスト",
+    "contextUsageTooltip": "トークン使用量：{{used}} / {{total}} ({{percent}}%)",
+    "contextExceeded": "コンテキスト制限を超過",
+    "contextExceededDescription": "会話履歴がモデルのコンテキストウィンドウ制限を超えています。会話を続けるには新しいチャットを開始してください。",
+    "startNewChat": "新しいチャットを開始",
+    "contextWarning": "コンテキストがほぼ満杯 ({{percent}}%)",
+    "estimatedTokens": "約 {{count}} トークン",
     "emptyState": {
       "title": "会話を開始",
       "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。@ で特定のノートをコンテキストとして添付できます。"

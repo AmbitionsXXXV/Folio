@@ -829,6 +829,14 @@
     "thinkingBuiltIn": "Extended thinking built-in (always on)",
     "viewThinking": "View thinking process",
     "thinkingInProgress": "Thinking…",
+    "scrollToBottom": "Scroll to bottom",
+    "contextUsage": "Context",
+    "contextUsageTooltip": "Token usage: {{used}} / {{total}} ({{percent}}%)",
+    "contextExceeded": "Context limit exceeded",
+    "contextExceededDescription": "The conversation history has exceeded the model's context window. Please start a new chat to continue.",
+    "startNewChat": "Start New Chat",
+    "contextWarning": "Context almost full ({{percent}}%)",
+    "estimatedTokens": "~{{count}} tokens",
     "emptyState": {
       "title": "Start a Conversation",
       "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance. Type @ to attach specific notes for context."

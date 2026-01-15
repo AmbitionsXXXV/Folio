@@ -1,12 +1,20 @@
 import { useCallback, useRef, useState } from 'react'
 import { getServerUrl } from '@/utils/api-environment'
 
+/** Message type for conversation history */
+export type ChatMessageInput = {
+	role: 'user' | 'assistant' | 'system'
+	content: string
+}
+
 type StreamTextParams = {
 	provider: string
 	apiKey: string
 	baseUrl?: string
 	model?: string
 	prompt: string
+	/** Optional: Conversation history for context continuity */
+	messages?: ChatMessageInput[]
 	/** Optional: IDs of notes to attach as context */
 	noteEntryIds?: string[]
 	/** Optional: Number of notes to retrieve via RAG */

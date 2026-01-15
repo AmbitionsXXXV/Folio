@@ -22,6 +22,8 @@ export type CatalogModel = {
 	settings?: {
 		extendParams?: string[]
 	}
+	/** Context window size in tokens for context tracking */
+	contextWindowTokens?: number
 }
 
 export type ModelCatalog = {
