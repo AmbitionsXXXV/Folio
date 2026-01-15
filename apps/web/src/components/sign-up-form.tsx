@@ -8,7 +8,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
-import { Link, useRouter } from '@tanstack/react-router'
+import { Link, useRouter, useSearch } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -45,10 +45,11 @@ export default function SignUpForm() {
 	const router = useRouter()
 	const { isPending } = authClient.useSession()
 	const [showPassword, setShowPassword] = useState(false)
+	const { redirect: redirectTo } = useSearch({ from: '/register' })
 
 	const googleAuth = useSocialAuth({
 		provider: 'google',
-		callbackURL: `${import.meta.env.VITE_WEB_URL}/activity`,
+		callbackURL: redirectTo || `${import.meta.env.VITE_WEB_URL}/activity`,
 		errorMessageKey: 'auth.signUpFailed',
 	})
 
@@ -86,7 +87,10 @@ export default function SignUpForm() {
 						toast.success(t('auth.signUpSuccess'))
 						// Use reloadDocument to trigger a full page reload
 						// This ensures cookies are properly sent with the new request
-						router.navigate({ to: '/activity', reloadDocument: true })
+						router.navigate({
+							to: redirectTo || '/activity',
+							reloadDocument: true,
+						})
 					},
 					onError: (error) => {
 						if (import.meta.env.DEV) {
@@ -320,7 +324,11 @@ export default function SignUpForm() {
 					{/* Sign In Link */}
 					<div className="mt-6 text-center text-sm">
 						<span className="text-muted-foreground">{t('auth.hasAccount')}</span>{' '}
-						<Link className="font-semibold text-primary hover:underline" to="/login">
+						<Link
+							className="font-semibold text-primary hover:underline"
+							search={{ redirect: redirectTo }}
+							to="/login"
+						>
 							{t('auth.signIn')}
 						</Link>
 					</div>

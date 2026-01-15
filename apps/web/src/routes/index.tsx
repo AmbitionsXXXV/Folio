@@ -34,10 +34,13 @@ function getInitials(name?: string | null): string {
 
 export const Route = createFileRoute('/')({
 	component: HomeComponent,
-	beforeLoad: async () => {
+	beforeLoad: async ({ location }) => {
 		const session = await getUser()
 		if (!session) {
-			throw redirect({ to: '/login' })
+			throw redirect({
+				to: '/login',
+				search: { redirect: location.href },
+			})
 		}
 		return { session }
 	},
