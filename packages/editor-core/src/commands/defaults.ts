@@ -111,6 +111,20 @@ export const defaultSlashCommands: SlashCommandDefinition[] = [
 			;(editor.chain().focus().deleteRange(range) as any).setHorizontalRule().run()
 		},
 	},
+	{
+		id: 'table',
+		titleKey: 'editor.slashCommand.table',
+		descriptionKey: 'editor.slashCommand.tableDesc',
+		iconId: 'table',
+		keywords: ['table', 'grid', 'spreadsheet', '表格'],
+		groupKey: 'editor.slashCommand.basicBlocks',
+		execute: ({ editor, range }) => {
+			// biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
+			;(editor.chain().focus().deleteRange(range) as any)
+				.insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+				.run()
+		},
+	},
 ]
 
 /**

@@ -432,7 +432,9 @@
       "orderedList": "Ordered List",
       "orderedListDesc": "Numbered list",
       "divider": "Divider",
-      "dividerDesc": "Horizontal separator"
+      "dividerDesc": "Horizontal separator",
+      "table": "Table",
+      "tableDesc": "Insert a table"
     },
     "sourceCommand": {
       "linkSource": "Link Source",
@@ -446,6 +448,15 @@
       "refEntry": "Reference Entry",
       "refEntryDesc": "Insert a link to another entry",
       "untitled": "Untitled"
+    },
+    "table": {
+      "addRowBefore": "Add row above",
+      "addRowAfter": "Add row below",
+      "deleteRow": "Delete row",
+      "addColumnBefore": "Add column left",
+      "addColumnAfter": "Add column right",
+      "deleteColumn": "Delete column",
+      "toggleHeaderRow": "Toggle header row"
     }
   },
   "error": {

@@ -6,6 +6,7 @@ import {
 	PasteHandler,
 	type PasteStrategy,
 	type SlashCommandItem,
+	TableKit,
 	useEditorCommands,
 } from '@folionote/editor-react'
 import { CodeBlockShiki } from '@folionote/editor-react/extensions'
@@ -114,6 +115,8 @@ export function EntryEditor({
 			CodeBlockShiki.configure({
 				defaultLanguage: 'plaintext',
 			}),
+			// Table extensions
+			...TableKit,
 			// Link 扩展：支持粘贴 URL 自动转换为链接
 			CustomLink,
 			// 粘贴处理扩展：处理富文本粘贴策略

@@ -385,7 +385,9 @@
       "orderedList": "番号付きリスト",
       "orderedListDesc": "番号付きリスト",
       "divider": "区切り線",
-      "dividerDesc": "水平区切り線"
+      "dividerDesc": "水平区切り線",
+      "table": "テーブル",
+      "tableDesc": "テーブルを挿入"
     },
     "sourceCommand": {
       "linkSource": "ソースをリンク",

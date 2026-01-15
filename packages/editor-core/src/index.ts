@@ -29,6 +29,13 @@ export type {
 	SuggestionExtensionOptions,
 	SuggestionState,
 } from './suggestion/types'
+// Table types
+export type {
+	TableAction,
+	TableCellData,
+	TableData,
+	TableRowData,
+} from './table'
 export type {
 	CommandContext,
 	ContentFormat,

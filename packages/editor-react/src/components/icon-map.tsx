@@ -10,6 +10,7 @@ import {
 	LeftToRightListNumberIcon,
 	Link04Icon,
 	QuoteUpIcon,
+	Table01Icon,
 	Tag01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -31,6 +32,7 @@ export const defaultIconMap: Record<IconId, ReactNode> = {
 	tag: <HugeiconsIcon className="size-4" icon={Tag01Icon} />,
 	ref: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
 	source: <HugeiconsIcon className="size-4" icon={Book02Icon} />,
+	table: <HugeiconsIcon className="size-4" icon={Table01Icon} />,
 }
 
 export type IconMapType = Record<IconId, ReactNode>

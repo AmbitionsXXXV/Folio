@@ -16,6 +16,7 @@ export type IconId =
 	| 'tag'
 	| 'ref'
 	| 'source'
+	| 'table'
 
 /**
  * Context passed to command execution

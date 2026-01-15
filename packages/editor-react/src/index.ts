@@ -41,8 +41,13 @@ export {
 	CodeBlockShiki,
 	CustomCaret,
 	type CustomCaretOptions,
+	CustomTable,
+	CustomTableCell,
+	CustomTableHeader,
+	CustomTableRow,
 	createSlashCommandExtension,
 	type SlashCommandExtensionOptions,
+	TableKit,
 } from './extensions'
 
 // Hooks
