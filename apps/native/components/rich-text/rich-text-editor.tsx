@@ -1,5 +1,6 @@
 'use dom'
 
+import { CustomLink, PasteHandler } from '@folionote/editor-core'
 import type { JSONContent } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -29,6 +30,8 @@ type RichTextEditorProps = {
  * Rich text editor component using Tiptap.
  * Embedded in a WebView via Expo DOM Components.
  * Implements RN ↔ WebView message bridging.
+ *
+ * Uses @folionote/editor-core for shared extensions (Link, PasteHandler).
  */
 export default function RichTextEditor({
 	content,
@@ -48,6 +51,12 @@ export default function RichTextEditor({
 				heading: {
 					levels: [1, 2, 3],
 				},
+			}),
+			// Use shared Link extension from editor-core
+			CustomLink,
+			// Use shared PasteHandler from editor-core
+			PasteHandler.configure({
+				strategy: 'preserve',
 			}),
 			Placeholder.configure({
 				placeholder,

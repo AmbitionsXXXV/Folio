@@ -1,7 +1,5 @@
-import { Book02Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import type { SlashCommandItem } from '@folionote/editor-react'
 import type { Editor, Range } from '@tiptap/core'
-import type { SlashCommandItem } from './slash-command'
 
 /**
  * Source type definition
@@ -39,9 +37,10 @@ export function createSourceCommand(
 	const { onAddSource, getSources, onOpenSourcePicker } = options
 
 	return {
+		id: 'source',
 		title: t('editor.sourceCommand.linkSource'),
 		description: t('editor.sourceCommand.linkSourceDesc'),
-		icon: <HugeiconsIcon className="size-4" icon={Book02Icon} />,
+		iconId: 'source',
 		keywords: ['source', 'link', 'book', 'article', '来源', '书籍', '文章'],
 		group: 'FolioNote',
 		command: ({ editor, range }: { editor: Editor; range: Range }) => {
@@ -80,9 +79,10 @@ export function createSourceCommandWithEvent(
 	t: (key: string) => string
 ): SlashCommandItem {
 	return {
+		id: 'source-event',
 		title: t('editor.sourceCommand.linkSource'),
 		description: t('editor.sourceCommand.linkSourceDesc'),
-		icon: <HugeiconsIcon className="size-4" icon={Book02Icon} />,
+		iconId: 'source',
 		keywords: ['source', 'link', 'book', 'article', '来源', '书籍', '文章'],
 		group: 'FolioNote',
 		command: ({ editor, range }: { editor: Editor; range: Range }) => {

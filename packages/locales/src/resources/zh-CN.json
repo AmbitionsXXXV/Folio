@@ -483,7 +483,9 @@
       "orderedList": "有序列表",
       "orderedListDesc": "编号列表",
       "divider": "分割线",
-      "dividerDesc": "水平分隔线"
+      "dividerDesc": "水平分隔线",
+      "table": "表格",
+      "tableDesc": "插入表格"
     },
     "sourceCommand": {
       "linkSource": "关联来源",

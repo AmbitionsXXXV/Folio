@@ -1,5 +1,11 @@
 # @folionote/config
 
+## 0.2.8
+
+### Patch Changes
+
+- implement table command
+
 ## 0.2.7
 
 ### Patch Changes

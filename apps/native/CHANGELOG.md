@@ -1,5 +1,17 @@
 # native
 
+## 0.2.8
+
+### Patch Changes
+
+- implement table command
+- Updated dependencies
+  - @folionote/editor-core@0.2.8
+  - @folionote/locales@0.2.8
+  - @folionote/api@0.2.8
+  - @folionote/constants@0.2.8
+  - @folionote/utils@0.2.8
+
 ## 0.2.7
 
 ### Patch Changes

@@ -47,6 +47,34 @@
 />
 ```
 
+## 表格（Table）
+
+### 1. 工具栏与交互
+
+**文件**：
+
+- `packages/editor-react/src/components/table-node-view.tsx`
+- `packages/editor-react/src/components/table-controls.tsx`
+- `packages/editor-react/src/components/table-floating-toolbar.tsx`
+
+行为说明：
+
+- 行、列工具栏会跟随鼠标所在行或列进行定位。
+- 行、列工具栏提供新增行列与菜单入口。
+- 表格尺寸变化时，边缘悬浮工具栏会同步更新位置与尺寸。
+
+### 2. 样式约束
+
+**文件**：
+
+- `apps/web/src/styles/table.css`
+
+样式说明：
+
+- 表头行（`th`）背景色与普通行保持一致。
+- 行、列工具栏与表格边界的间距由 `--table-control-gap` 控制，默认设为 `0px` 以保证工具栏可达。
+- 表格内容容器使用 `display: contents`，避免 table 边界与容器错位。
+
 ## 自动保存
 
 ### 1. useAutoSave Hook
@@ -168,6 +196,13 @@ version: text('version').notNull().default('1'),
 - [ ] 保存失败后应显示 "保存失败"
 - [ ] 连续快速编辑应正确节流
 
+### 表格
+
+- [ ] 悬停表格行时显示行工具栏，位置与行垂直居中对齐
+- [ ] 悬停表格列时显示列工具栏，位置与列水平居中对齐
+- [ ] 调整列宽或新增行列后，边缘悬浮工具栏位置应同步更新
+- [ ] 表头行背景色与普通行一致
+
 ### 版本控制
 
 - [ ] 正常保存应更新版本号
@@ -202,13 +237,13 @@ version: text('version').notNull().default('1'),
 
 TOC 样式参考 fumadocs UI（`packages/ui/src/components/toc/index.tsx`、`packages/ui/src/components/toc/default.tsx`、`packages/radix-ui/src/layouts/docs/page/index.tsx`），并将 `fd` 前缀的 CSS 变量/token 翻译为 Folio 自有的：
 
-| fumadocs | Folio |
-| -------- | ----- |
-| `--fd-nav-height` | `--folio-nav-height` |
+| fumadocs                   | Folio                   |
+| -------------------------- | ----------------------- |
+| `--fd-nav-height`          | `--folio-nav-height`    |
 | `text-fd-muted-foreground` | `text-muted-foreground` |
-| `text-fd-primary` | `text-primary` |
-| `border-fd-foreground/10` | `border-foreground/10` |
-| `bg-fd-primary` | `bg-primary` |
+| `text-fd-primary`          | `text-primary`          |
+| `border-fd-foreground/10`  | `border-foreground/10`  |
+| `bg-fd-primary`            | `bg-primary`            |
 
 ### 配置
 

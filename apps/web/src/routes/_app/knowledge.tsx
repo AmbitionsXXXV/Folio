@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { Streamdown } from 'streamdown'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { type AttachedNote, ChatInput } from '@/components/ai-elements/chat-input'
+import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import { Button } from '@/components/ui/button'
 import {
@@ -720,7 +721,7 @@ function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
 					</div>
 				) : (
 					<p className="whitespace-pre-wrap text-pretty text-sm">
-						{message.content}
+						{renderTextWithMentions(message.content, 'user-message')}
 					</p>
 				)}
 

@@ -1,0 +1,463 @@
+/* Table Node Wrapper */
+.table-node-wrapper {
+	position: relative;
+	margin: 1rem 0;
+	padding: 10px 0 18px 10px;
+	width: fit-content;
+	--table-control-gap: 0px;
+}
+
+/* Base Table Styles */
+.ProseMirror table {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: max-content;
+	margin: 0;
+	overflow: hidden;
+	border-radius: 4px;
+	border: 1px solid var(--color-gray-200);
+}
+
+.dark .ProseMirror table {
+	border-color: var(--color-gray-700);
+}
+
+.table-node-wrapper table > tbody > [data-node-view-content-react] {
+	display: contents;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+	min-width: 50px;
+	border: 1px solid var(--color-gray-200);
+	padding: 8px 12px;
+	vertical-align: top;
+	box-sizing: border-box;
+	position: relative;
+	transition: background-color 0.15s ease;
+}
+
+.dark .ProseMirror td,
+.dark .ProseMirror th {
+	border-color: var(--color-gray-700);
+}
+
+.ProseMirror th {
+	font-weight: 600;
+	text-align: left;
+	background-color: transparent;
+}
+
+/* Selected Cell */
+.ProseMirror .selectedCell {
+	position: relative;
+}
+
+/* Border highlight - 使用 outline 实现 */
+.ProseMirror .selectedCell {
+	outline: 2px solid var(--color-blue-500);
+	outline-offset: -1px;
+}
+
+.dark .ProseMirror .selectedCell {
+	outline-color: var(--color-blue-400);
+}
+
+/* Background highlight */
+.ProseMirror .selectedCell::after {
+	z-index: 2;
+	position: absolute;
+	content: "";
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	background: rgba(59, 130, 246, 0.1);
+	pointer-events: none;
+}
+
+.dark .ProseMirror .selectedCell::after {
+	background: rgba(96, 165, 250, 0.15);
+}
+
+/* Column Resize Handle */
+.ProseMirror .column-resize-handle {
+	position: absolute;
+	right: -2px;
+	top: 0;
+	bottom: -2px;
+	width: 4px;
+	background-color: var(--color-blue-500);
+	pointer-events: none;
+	border-radius: 2px;
+	opacity: 0.8;
+}
+
+.ProseMirror.resize-cursor {
+	cursor: col-resize;
+}
+
+/* ==================== */
+/* Table Controls       */
+/* ==================== */
+
+.table-controls {
+	position: absolute;
+	display: flex;
+	gap: 0.25rem;
+	z-index: 10;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+
+.table-node-wrapper:hover .table-controls {
+	opacity: 1;
+}
+
+.table-controls-row {
+	flex-direction: column;
+	transform: translate(calc(-100% - var(--table-control-gap)), -50%);
+}
+
+.table-controls-column {
+	flex-direction: row;
+	transform: translate(-50%, calc(-100% - var(--table-control-gap)));
+}
+
+.table-control-add,
+.table-control-menu {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 0.25rem;
+	border: 1px solid var(--color-gray-200);
+	background-color: var(--color-white);
+	color: var(--color-gray-500);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.dark .table-control-add,
+.dark .table-control-menu {
+	border-color: var(--color-gray-600);
+	background-color: var(--color-gray-800);
+	color: var(--color-gray-400);
+}
+
+.table-control-add:hover,
+.table-control-menu:hover {
+	background-color: var(--color-blue-50);
+	color: var(--color-blue-600);
+	border-color: var(--color-blue-300);
+}
+
+.dark .table-control-add:hover,
+.dark .table-control-menu:hover {
+	background-color: var(--color-blue-900);
+	color: var(--color-blue-300);
+	border-color: var(--color-blue-700);
+}
+
+/* ==================== */
+/* Floating Toolbar     */
+/* ==================== */
+
+.table-floating-toolbar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+}
+
+.table-floating-btn {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--color-gray-100);
+	color: var(--color-gray-500);
+	border: none;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	opacity: 0;
+	pointer-events: auto;
+	border-radius: 2px;
+}
+
+.table-node-wrapper:hover .table-floating-btn {
+	opacity: 1;
+}
+
+.table-floating-btn:hover {
+	background-color: var(--color-blue-100);
+	color: var(--color-blue-600);
+}
+
+.dark .table-floating-btn {
+	background-color: var(--color-gray-800);
+	color: var(--color-gray-400);
+}
+
+.dark .table-floating-btn:hover {
+	background-color: var(--color-blue-900);
+	color: var(--color-blue-300);
+}
+
+.table-floating-btn-column {
+	width: 16px;
+	cursor: col-resize;
+}
+
+.table-floating-btn-row {
+	height: 16px;
+	cursor: row-resize;
+}
+
+.table-floating-btn-corner {
+	width: 16px;
+	height: 16px;
+	cursor: nwse-resize;
+}
+
+.table-floating-btn.active {
+	background-color: var(--color-blue-500);
+	color: white;
+	opacity: 1;
+}
+
+/* ==================== */
+/* Table Context Menu   */
+/* ==================== */
+
+.table-menu {
+	min-width: 200px;
+	max-width: 280px;
+	background-color: var(--color-white);
+	border: 1px solid var(--color-gray-200);
+	border-radius: 8px;
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06),
+		0 10px 15px -3px rgba(0, 0, 0, 0.1);
+	padding: 4px;
+	z-index: 50;
+	animation: table-menu-appear 0.15s ease;
+}
+
+@keyframes table-menu-appear {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.dark .table-menu {
+	background-color: var(--color-gray-800);
+	border-color: var(--color-gray-700);
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.3),
+		0 2px 4px -1px rgba(0, 0, 0, 0.2),
+		0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.table-menu-section {
+	position: relative;
+}
+
+.table-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 10px;
+	text-align: left;
+	font-size: 0.875rem;
+	color: var(--color-gray-700);
+	background: none;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.table-menu-item svg {
+	flex-shrink: 0;
+}
+
+.table-menu-item span {
+	flex: 1;
+}
+
+.dark .table-menu-item {
+	color: var(--color-gray-200);
+}
+
+.table-menu-item:hover {
+	background-color: var(--color-gray-100);
+}
+
+.dark .table-menu-item:hover {
+	background-color: var(--color-gray-700);
+}
+
+.table-menu-item-with-submenu {
+	position: relative;
+}
+
+.table-menu-item-arrow {
+	margin-left: auto;
+	color: var(--color-gray-400);
+	font-size: 1rem;
+}
+
+.table-menu-icon-placeholder {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+}
+
+.table-menu-item-danger {
+	color: var(--color-red-600);
+}
+
+.dark .table-menu-item-danger {
+	color: var(--color-red-400);
+}
+
+.table-menu-item-danger:hover {
+	background-color: var(--color-red-50);
+}
+
+.dark .table-menu-item-danger:hover {
+	background-color: rgba(239, 68, 68, 0.15);
+}
+
+.table-menu-divider {
+	height: 1px;
+	background-color: var(--color-gray-200);
+	margin: 4px 0;
+}
+
+.dark .table-menu-divider {
+	background-color: var(--color-gray-700);
+}
+
+/* ==================== */
+/* Color Picker         */
+/* ==================== */
+
+.table-menu-color-picker {
+	position: absolute;
+	left: 100%;
+	top: 0;
+	margin-left: 4px;
+	min-width: 160px;
+	background-color: var(--color-white);
+	border: 1px solid var(--color-gray-200);
+	border-radius: 8px;
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	padding: 4px;
+	z-index: 51;
+}
+
+.dark .table-menu-color-picker {
+	background-color: var(--color-gray-800);
+	border-color: var(--color-gray-700);
+}
+
+.table-menu-color-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 6px 10px;
+	text-align: left;
+	font-size: 0.8125rem;
+	color: var(--color-gray-700);
+	background: none;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.dark .table-menu-color-item {
+	color: var(--color-gray-200);
+}
+
+.table-menu-color-item:hover {
+	background-color: var(--color-gray-100);
+}
+
+.dark .table-menu-color-item:hover {
+	background-color: var(--color-gray-700);
+}
+
+.table-menu-color-item.active {
+	background-color: var(--color-blue-50);
+}
+
+.dark .table-menu-color-item.active {
+	background-color: var(--color-blue-900);
+}
+
+.table-menu-color-swatch {
+	width: 16px;
+	height: 16px;
+	border-radius: 4px;
+	border: 1px solid var(--color-gray-300);
+	flex-shrink: 0;
+}
+
+.dark .table-menu-color-swatch {
+	border-color: var(--color-gray-600);
+}
+
+.table-menu-color-default {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--color-white);
+	color: var(--color-gray-400);
+}
+
+.dark .table-menu-color-default {
+	background-color: var(--color-gray-800);
+}
+
+/* ==================== */
+/* Row/Column Hover     */
+/* ==================== */
+
+.ProseMirror tr:hover td,
+.ProseMirror tr:hover th {
+	background-color: var(--color-gray-50);
+}
+
+.dark .ProseMirror tr:hover td,
+.dark .ProseMirror tr:hover th {
+	background-color: var(--color-gray-800);
+}
+
+
+
+/* Cell with custom background color should preserve it on hover */
+
+
+.ProseMirror tr:hover td[data-background-color],
+.ProseMirror tr:hover th[data-background-color] {
+	filter: brightness(0.98);
+}
+
+.dark .ProseMirror tr:hover td[data-background-color],
+.dark .ProseMirror tr:hover th[data-background-color] {
+	filter: brightness(1.1);
+}
