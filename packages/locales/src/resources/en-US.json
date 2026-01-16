@@ -502,6 +502,10 @@
       "library": "Browse your collection",
       "search": "Find what you learned"
     },
+    "moreFeatures": {
+      "title": "Explore More",
+      "tagsDesc": "Organize with custom tags"
+    },
     "whatYouCanDo": "What You Can Do",
     "feature": {
       "capture": {

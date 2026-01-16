@@ -493,6 +493,10 @@
       "library": "あなたのコレクションを閲覧",
       "search": "学んだことを検索"
     },
+    "moreFeatures": {
+      "title": "もっと探索",
+      "tagsDesc": "カスタムタグで整理"
+    },
     "whatYouCanDo": "できること",
     "feature": {
       "capture": {

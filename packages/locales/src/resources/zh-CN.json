@@ -29,6 +29,10 @@
       "library": "浏览您的收藏",
       "search": "查找您学到的内容"
     },
+    "moreFeatures": {
+      "title": "探索更多",
+      "tagsDesc": "使用自定义标签整理"
+    },
     "whatYouCanDo": "您可以做什么",
     "feature": {
       "capture": {

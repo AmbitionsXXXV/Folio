@@ -3,6 +3,7 @@ import { useRender } from '@base-ui/react/use-render'
 import { Button } from '@folionote/ui/button'
 import { useIsMobile } from '@folionote/ui/hooks/use-mobile'
 import { Input } from '@folionote/ui/input'
+import { cn } from '@folionote/ui/lib/utils'
 import { Separator } from '@folionote/ui/separator'
 import {
 	Sheet,
@@ -17,7 +18,6 @@ import { SidebarLeftIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
-import { cn } from '@/lib/utils'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -39,7 +39,7 @@ type SidebarContextProps = {
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
 
 function useSidebar() {
-	const context = React.useContext(SidebarContext)
+	const context = React.use(SidebarContext)
 	if (!context) {
 		throw new Error('useSidebar must be used within a SidebarProvider.')
 	}
@@ -123,7 +123,7 @@ function SidebarProvider({
 	)
 
 	return (
-		<SidebarContext.Provider value={contextValue}>
+		<SidebarContext value={contextValue}>
 			<div
 				className={cn(
 					'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
@@ -141,7 +141,7 @@ function SidebarProvider({
 			>
 				{children}
 			</div>
-		</SidebarContext.Provider>
+		</SidebarContext>
 	)
 }
 
