@@ -70,7 +70,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 	component: RootDocument,
 })
 
-function RootDocumentInner() {
+function RootDocument() {
 	const isMobile = useIsMobile()
 	const { i18n: i18nInstance } = useTranslation()
 	const currentLang = i18nInstance.language
@@ -84,42 +84,38 @@ function RootDocumentInner() {
 	const langClass = getLangClass(currentLang)
 
 	return (
-		<html
-			className={cn('no-scrollbar bg-background')}
-			lang={currentLang}
-			suppressHydrationWarning
-		>
-			<head>
-				<HeadContent />
-			</head>
-			<body className={cn('min-h-svh bg-background', langClass)}>
-				<ThemeProvider
-					attribute="class"
-					defaultTheme="dark"
-					disableTransitionOnChange
-					enableSystem
-				>
-					<RouterPendingIndicator />
-					<CommandPaletteProvider>
-						<Outlet />
-						<CommandPalette />
-					</CommandPaletteProvider>
-					<Toaster richColors />
-				</ThemeProvider>
-				<TanStackRouterDevtools position={isMobile ? 'bottom-left' : 'top-right'} />
-				<ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
-				<Scripts />
-			</body>
-		</html>
-	)
-}
-
-function RootDocument() {
-	return (
-		<RootProvider search={{ enabled: false }}>
-			<I18nextProvider i18n={i18n}>
-				<RootDocumentInner />
-			</I18nextProvider>
-		</RootProvider>
+		<I18nextProvider i18n={i18n}>
+			<html
+				className={cn('no-scrollbar bg-background')}
+				lang={currentLang}
+				suppressHydrationWarning
+			>
+				<head>
+					<HeadContent />
+				</head>
+				<body className={cn('min-h-svh bg-background', langClass)}>
+					<RootProvider search={{ enabled: false }}>
+						<ThemeProvider
+							attribute="class"
+							defaultTheme="dark"
+							disableTransitionOnChange
+							enableSystem
+						>
+							<RouterPendingIndicator />
+							<CommandPaletteProvider>
+								<Outlet />
+								<CommandPalette />
+							</CommandPaletteProvider>
+							<Toaster richColors />
+						</ThemeProvider>
+					</RootProvider>
+					<TanStackRouterDevtools
+						position={isMobile ? 'bottom-left' : 'top-right'}
+					/>
+					<ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
+					<Scripts />
+				</body>
+			</html>
+		</I18nextProvider>
 	)
 }

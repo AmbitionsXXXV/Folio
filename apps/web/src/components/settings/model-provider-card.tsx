@@ -167,6 +167,7 @@ export function ModelProviderCard({
 									</Button>
 								)}
 								<Button
+									className="rounded-lg"
 									onClick={() => setConfigDialogOpen(true)}
 									size="sm"
 									variant={isConfigured ? 'outline' : 'default'}

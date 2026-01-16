@@ -20,7 +20,12 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { type AttachedNote, ChatInput } from '@/components/ai-elements/chat-input'
+import {
+	type AttachedNote,
+	type ChatContextUsage,
+	ChatInput,
+	type SessionUsage,
+} from '@/components/ai-elements/chat-input'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import {
 	type ChatMessage,
@@ -44,8 +49,7 @@ export const Route = createFileRoute('/_app/knowledge')({
 
 function KnowledgePage() {
 	const { t } = useTranslation()
-	const { config, isLoaded, configuredProviders, getProviderConfig } =
-		useModelProviderConfig()
+	const { config, isLoaded, getProviderConfig } = useModelProviderConfig()
 
 	// Model catalog for enabled models
 	const {
@@ -139,18 +143,6 @@ function KnowledgePage() {
 		lastUsedModel,
 		findValidProviderAndModel,
 	])
-
-	// When provider changes, ensure selected model is valid
-	const handleProviderChange = useCallback(
-		(providerId: string) => {
-			setSelectedProvider(providerId)
-			const enabledModels = getEnabledChatModels(providerId)
-			const newModel = enabledModels[0]?.id ?? ''
-			setSelectedModel(newModel)
-			saveLastUsed(providerId, newModel)
-		},
-		[getEnabledChatModels, saveLastUsed]
-	)
 
 	// When model changes, save to localStorage
 	const handleModelChange = useCallback(
@@ -307,6 +299,41 @@ function KnowledgePage() {
 			isExceeded: percent >= CONTEXT_CRITICAL_THRESHOLD,
 		}
 	}, [messages, selectedModelInfo])
+
+	// Calculate accumulated session usage for ChatInput context display
+	const chatContextUsage = useMemo<ChatContextUsage | undefined>(() => {
+		if (messages.length === 0) return undefined
+
+		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+		const usedTokens = calculateTotalTokens(messages)
+
+		// Accumulate usage from all messages
+		const sessionUsage = messages.reduce<SessionUsage>(
+			(acc, msg) => {
+				if (!msg.usage) return acc
+				return {
+					inputTokens: (acc.inputTokens ?? 0) + (msg.usage.inputTokens ?? 0),
+					outputTokens: (acc.outputTokens ?? 0) + (msg.usage.outputTokens ?? 0),
+					totalTokens: (acc.totalTokens ?? 0) + (msg.usage.totalTokens ?? 0),
+					reasoningTokens:
+						(acc.reasoningTokens ?? 0) + (msg.usage.reasoningTokens ?? 0),
+				}
+			},
+			{
+				inputTokens: 0,
+				outputTokens: 0,
+				totalTokens: 0,
+				reasoningTokens: 0,
+			}
+		)
+
+		return {
+			usedTokens,
+			maxTokens: contextWindow,
+			sessionUsage,
+			modelId: selectedModel,
+		}
+	}, [messages, selectedModelInfo, selectedModel])
 
 	// State for context exceeded dialog
 	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
@@ -485,13 +512,12 @@ function KnowledgePage() {
 					attachedNotes={attachedNotes}
 					catalogModels={catalogModels}
 					catalogProviders={catalogProviders}
-					configuredProviders={configuredProviders}
+					contextUsage={chatContextUsage}
 					hasApiKey={hasApiKey}
 					isPending={isPending}
 					onAtTrigger={handleAtTrigger}
 					onChange={setInputValue}
 					onModelChange={handleModelChange}
-					onProviderChange={handleProviderChange}
 					onRemoveAttachment={handleRemoveAttachment}
 					onSubmit={handleSendMessage}
 					onThinkingToggle={setThinkingEnabled}

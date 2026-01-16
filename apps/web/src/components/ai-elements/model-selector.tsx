@@ -2,7 +2,6 @@ import type { ModelProviderId } from '@folionote/model-list'
 import { Button } from '@folionote/ui/button'
 import {
 	Command,
-	CommandDialog,
 	CommandEmpty,
 	CommandGroup,
 	CommandInput,
@@ -16,6 +15,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@folionote/ui/dialog'
+import { ArrowDown02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import type { ComponentProps, ReactNode } from 'react'
 import { memo, useMemo, useState } from 'react'
 import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
@@ -72,12 +73,6 @@ export const ModelSelectorContent = ({
 			{children}
 		</Command>
 	</DialogContent>
-)
-
-export type ModelSelectorDialogProps = ComponentProps<typeof CommandDialog>
-
-export const ModelSelectorDialog = (props: ModelSelectorDialogProps) => (
-	<CommandDialog {...props} />
 )
 
 export type ModelSelectorInputProps = ComponentProps<typeof CommandInput>
@@ -224,17 +219,17 @@ function createFilteredGroups(
 }
 
 /**
- * Find a selected option from groups
+ * Find a selected option and its group from groups
  */
 function findSelectedOption(
 	groups: ModelSelectorGroup[],
 	value: string | null
-): ModelSelectorOption | null {
+): { option: ModelSelectorOption; group: ModelSelectorGroup } | null {
 	if (!value) return null
 
 	for (const group of groups) {
 		const match = group.options.find((option) => option.id === value)
-		if (match) return match
+		if (match) return { option: match, group }
 	}
 
 	return null
@@ -253,12 +248,12 @@ type ModelSelectorProps = {
 	disabled?: boolean
 	className?: string
 	dialogTitle?: string
-	dialogDescription?: string
 }
 
 /**
  * Pre-composed Model Selector with built-in trigger and dialog.
  * Uses cmdk-based Command UI for searchable selection.
+ * Selection does NOT close the dialog - user can freely switch between models.
  */
 export function ModelSelector({
 	options,
@@ -268,8 +263,7 @@ export function ModelSelector({
 	placeholder = 'Select a model…',
 	disabled = false,
 	className,
-	dialogTitle = 'Model Selector',
-	dialogDescription = 'Search and select a model',
+	dialogTitle = 'Select Model',
 }: ModelSelectorProps) {
 	const [open, setOpen] = useState(false)
 
@@ -291,46 +285,52 @@ export function ModelSelector({
 
 	const handleSelect = (optionId: string) => {
 		onValueChange(optionId)
-		setOpen(false)
+		// Don't close the dialog - allow user to freely switch models
 	}
 
 	return (
-		<>
-			<Button
-				className={cn('w-full justify-between', className)}
-				disabled={disabled}
-				onClick={() => setOpen(true)}
-				type="button"
-				variant="outline"
+		<Dialog onOpenChange={setOpen} open={open}>
+			<DialogTrigger
+				render={
+					<Button
+						className={cn('w-full justify-between', className)}
+						disabled={disabled}
+						type="button"
+						variant="outline"
+					/>
+				}
 			>
 				<span className="inline-flex min-w-0 flex-1 items-center gap-2">
-					{selected?.iconSrc ? (
+					{selected?.option.iconSrc ? (
 						<ModelSelectorLogo
 							className="size-4"
-							logoUrl={selected.iconSrc}
+							logoUrl={selected.option.iconSrc}
 							provider=""
 						/>
 					) : null}
 					<ModelSelectorName className="truncate">
-						{selected?.name ?? placeholder}
+						{selected?.option.name ?? placeholder}
 					</ModelSelectorName>
 				</span>
-				<span aria-hidden="true" className="shrink-0 text-muted-foreground">
-					⌘K
-				</span>
-			</Button>
+				<HugeiconsIcon
+					className="size-4 shrink-0 text-muted-foreground"
+					icon={ArrowDown02Icon}
+				/>
+			</DialogTrigger>
 
-			<CommandDialog
-				description={dialogDescription}
-				onOpenChange={setOpen}
-				open={open}
-				showCloseButton
-				title={dialogTitle}
-			>
-				<Command>
-					<CommandInput placeholder="Search…" />
-					<CommandList>
-						<CommandEmpty>No results.</CommandEmpty>
+			<DialogContent className="max-h-[80vh] gap-0 p-0" showCloseButton={false}>
+				<DialogTitle className="sr-only">{dialogTitle}</DialogTitle>
+				<Command
+					className="**:data-[slot=command-input-wrapper]:h-auto"
+					shouldFilter
+				>
+					<CommandInput
+						autoFocus
+						placeholder="Search models..."
+						showCloseButton={false}
+					/>
+					<CommandList className="max-h-[60vh]">
+						<CommandEmpty>No models found.</CommandEmpty>
 						{resolvedGroups.map((group) => (
 							<ModelSelectorGroupSection
 								currentValue={value}
@@ -341,8 +341,8 @@ export function ModelSelector({
 						))}
 					</CommandList>
 				</Command>
-			</CommandDialog>
-		</>
+			</DialogContent>
+		</Dialog>
 	)
 }
 
@@ -386,18 +386,24 @@ const ModelSelectorOptionItem = memo(function ModelSelectorOptionItem({
 }: ModelSelectorOptionItemProps) {
 	return (
 		<CommandItem
-			data-checked={isSelected}
+			className="flex items-center gap-2"
 			onSelect={() => onSelect(option.id)}
 			value={`${option.name} ${option.id}`}
 		>
-			<span className="inline-flex min-w-0 flex-1 items-center gap-2">
-				{option.iconSrc ? (
-					<ModelSelectorLogo
-						className="size-4"
-						logoUrl={option.iconSrc}
-						provider=""
-					/>
+			{/* Checkmark indicator */}
+			<span className="flex size-4 shrink-0 items-center justify-center">
+				{isSelected ? (
+					<HugeiconsIcon className="size-4 text-primary" icon={Tick02Icon} />
 				) : null}
+			</span>
+
+			{/* Logo */}
+			{option.iconSrc ? (
+				<ModelSelectorLogo className="size-4" logoUrl={option.iconSrc} provider="" />
+			) : null}
+
+			{/* Model name and ID */}
+			<span className="flex min-w-0 flex-1 items-center gap-2">
 				<span className="truncate">{option.name}</span>
 				<span className="shrink-0 text-muted-foreground text-xs">{option.id}</span>
 			</span>

@@ -1,32 +1,75 @@
 import { Badge } from '@folionote/ui/badge'
 import { Button } from '@folionote/ui/button'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@folionote/ui/dropdown-menu'
-import { Spinner } from '@folionote/ui/spinner'
-import { Textarea } from '@folionote/ui/textarea'
+import { cn } from '@folionote/ui/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import {
 	AiBrain01Icon,
-	ArrowUp02Icon,
 	Cancel01Icon,
 	FileEditIcon,
-	Setting06Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMemo, useRef } from 'react'
+import {
+	type FormEvent,
+	type KeyboardEvent,
+	type RefObject,
+	useMemo,
+	useRef,
+} from 'react'
 import { useTranslation } from 'react-i18next'
-import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
+import {
+	Context,
+	ContextCacheUsage,
+	ContextContent,
+	ContextContentBody,
+	ContextContentFooter,
+	ContextContentHeader,
+	ContextInputUsage,
+	ContextOutputUsage,
+	ContextReasoningUsage,
+	ContextTrigger,
+} from '@/components/ai-elements/context-usage'
+import { AiModelSelector } from '@/components/ai-elements/model-selector'
+import {
+	PromptInput,
+	PromptInputBody,
+	PromptInputFooter,
+	PromptInputHeader,
+	type PromptInputMessage,
+	PromptInputSubmit,
+	PromptInputTextarea,
+	PromptInputTools,
+} from '@/components/ai-elements/prompt-input'
 import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
-import { cn } from '@/lib/utils'
+
+// ============================================================================
+// Types
+// ============================================================================
 
 /** Attached note info for display */
 export type AttachedNote = {
 	id: string
 	title: string
+}
+
+/** Accumulated token usage from messages */
+export type SessionUsage = {
+	inputTokens?: number
+	outputTokens?: number
+	totalTokens?: number
+	reasoningTokens?: number
+	cachedInputTokens?: number
+}
+
+/** Context usage information for the chat session */
+export type ChatContextUsage = {
+	/** Used tokens in context */
+	usedTokens: number
+	/** Max tokens for the model context window */
+	maxTokens: number
+	/** Accumulated usage from all messages */
+	sessionUsage?: SessionUsage
+	/** Model ID for cost calculation (e.g., 'gpt-4o', 'claude-3-5-sonnet') */
+	modelId?: string
 }
 
 export type ChatInputProps = {
@@ -40,9 +83,7 @@ export type ChatInputProps = {
 	// Model selection props
 	selectedProvider: string
 	selectedModel: string
-	onProviderChange: (provider: string) => void
 	onModelChange: (model: string) => void
-	configuredProviders: string[]
 	hasApiKey: boolean
 	// Model catalog (from useAiModelCatalog)
 	catalogProviders: CatalogProvider[]
@@ -55,7 +96,9 @@ export type ChatInputProps = {
 	onRemoveAttachment?: (noteId: string) => void
 	onAtTrigger?: () => void
 	/** External ref for the textarea */
-	textareaRef?: React.RefObject<HTMLTextAreaElement | null>
+	textareaRef?: RefObject<HTMLTextAreaElement | null>
+	/** Context usage for the current session */
+	contextUsage?: ChatContextUsage
 }
 
 export function ChatInput({
@@ -68,9 +111,7 @@ export function ChatInput({
 	className,
 	selectedProvider,
 	selectedModel,
-	onProviderChange,
 	onModelChange,
-	configuredProviders,
 	hasApiKey,
 	catalogProviders,
 	catalogModels,
@@ -80,15 +121,11 @@ export function ChatInput({
 	onRemoveAttachment,
 	onAtTrigger,
 	textareaRef: externalTextareaRef,
+	contextUsage,
 }: ChatInputProps) {
 	const { t } = useTranslation()
 	const internalTextareaRef = useRef<HTMLTextAreaElement>(null)
 	const textareaRef = externalTextareaRef ?? internalTextareaRef
-
-	const providerInfo = useMemo(
-		() => catalogProviders.find((p) => p.id === selectedProvider),
-		[catalogProviders, selectedProvider]
-	)
 
 	// Get enabled chat models for the selected provider from catalog
 	const providerModels = useMemo(() => {
@@ -106,16 +143,12 @@ export function ChatInput({
 	}, [providerModels, selectedModel])
 
 	// Check if the selected model supports thinking/reasoning
-	// A model supports thinking if:
-	// 1. It has reasoning ability (reasoning: true), OR
-	// 2. It has enableReasoning in extendParams (can be toggled on/off)
 	const supportsThinking = useMemo(() => {
 		if (!selectedModelInfo) return false
 		return Boolean(selectedModelInfo.reasoning)
 	}, [selectedModelInfo])
 
-	// Check if the model supports toggle-able reasoning (has enableReasoning param)
-	// This determines if the toggle actually sends the enableReasoning param to the API
+	// Check if the model supports toggle-able reasoning
 	const hasToggleableReasoning = useMemo(() => {
 		return selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
 	}, [selectedModelInfo])
@@ -130,50 +163,38 @@ export function ChatInput({
 			: t('knowledge.enableThinking')
 	}
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
 		// Handle @ trigger
 		if (e.key === '@' && onAtTrigger) {
-			// Trigger entry picker after the @ is typed
 			setTimeout(() => {
 				onAtTrigger()
 			}, 0)
 		}
+	}
 
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault()
-			if (!(disabled || isPending) && value.trim()) {
-				onSubmit()
-			}
+	const handleSubmit = (_message: PromptInputMessage, _event: FormEvent) => {
+		if (disabled || isPending || !hasApiKey || !value.trim()) {
+			return
 		}
+		onSubmit()
 	}
 
 	const canSend = !(disabled || isPending) && hasApiKey && value.trim().length > 0
-
 	const hasAttachments = attachedNotes.length > 0
 
-	// Get known mention titles from attached notes
-	const knownMentions = useMemo(
-		() => attachedNotes.map((note) => note.title).filter(Boolean),
-		[attachedNotes]
-	)
-
-	// Render highlighted content with mentions
-	const highlightedContent = useMemo(() => {
-		return renderTextWithMentions(value, 'default', knownMentions)
-	}, [value, knownMentions])
-
 	return (
-		<div
+		<PromptInput
 			className={cn(
-				'relative rounded-2xl border bg-background shadow-sm transition-shadow',
+				'rounded-xl border bg-background shadow-sm transition-shadow',
 				'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
 				'hover:shadow-md',
 				className
 			)}
+			onSubmit={handleSubmit}
 		>
 			{/* Attached Notes Chips */}
 			{hasAttachments && (
-				<div className="flex flex-wrap gap-1.5 px-3 py-2">
+				<PromptInputHeader className="flex-wrap gap-1.5 px-3 py-2">
 					{attachedNotes.map((note) => (
 						<Badge
 							className="group flex items-center gap-1 pr-1"
@@ -193,6 +214,7 @@ export function ChatInput({
 									className="size-4 p-0 opacity-60 group-hover:opacity-100"
 									onClick={() => onRemoveAttachment(note.id)}
 									size="icon"
+									type="button"
 									variant="ghost"
 								>
 									<HugeiconsIcon className="size-3" icon={Cancel01Icon} />
@@ -200,20 +222,16 @@ export function ChatInput({
 							)}
 						</Badge>
 					))}
-				</div>
+				</PromptInputHeader>
 			)}
 
-			{/* Textarea with mention highlighting */}
-			<div className="relative">
-				{/* Textarea (text color transparent, only caret visible) */}
-				<Textarea
+			{/* Textarea */}
+			<PromptInputBody>
+				<PromptInputTextarea
 					className={cn(
-						'relative max-h-[200px] min-h-[100px] resize-none border-none bg-transparent',
-						'px-4 pb-16',
+						'max-h-[200px] min-h-[100px] resize-none',
 						hasAttachments ? 'pt-2' : 'pt-4',
-						'focus-visible:ring-0 focus-visible:ring-offset-0',
-						'placeholder:text-muted-foreground/60',
-						'text-transparent caret-foreground selection:bg-primary/20'
+						'pb-14'
 					)}
 					disabled={disabled || isPending || !hasApiKey}
 					onChange={(e) => onChange(e.target.value)}
@@ -226,118 +244,48 @@ export function ChatInput({
 					ref={textareaRef}
 					value={value}
 				/>
-
-				{/* Highlighted content overlay (renders on top of textarea) */}
-				<div
-					aria-hidden="true"
-					className={cn(
-						'pointer-events-none absolute inset-0 z-10',
-						'max-h-[200px] min-h-[100px] overflow-hidden',
-						'wrap-break-word whitespace-pre-wrap',
-						'px-4 pb-16',
-						hasAttachments ? 'pt-2' : 'pt-4',
-						'text-sm',
-						'text-foreground'
-					)}
-				>
-					{highlightedContent}
-				</div>
-			</div>
+			</PromptInputBody>
 
 			{/* Bottom Actions Bar */}
-			<div className="absolute right-3 bottom-3 left-3 flex items-center justify-between">
-				{/* Left: Model Selector + Thinking Toggle */}
-				<div className="flex items-center gap-1">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button className="h-8 gap-2 rounded-lg px-3 text-xs" variant="ghost">
-								{providerInfo?.logo && (
-									<img
-										alt=""
-										aria-hidden="true"
-										className="size-4"
-										src={providerInfo.logo}
-									/>
-								)}
-								<span className="max-w-[120px] truncate">
-									{selectedModelInfo?.displayName ||
-										selectedModel ||
-										providerInfo?.name ||
-										t('knowledge.selectModel')}
-								</span>
-								<HugeiconsIcon
-									className="size-4 text-muted-foreground"
-									icon={Setting06Icon}
-								/>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start" className="w-64">
-							{/* Provider Section */}
-							<div className="px-2 py-1.5 font-medium text-muted-foreground text-xs">
-								{t('knowledge.provider')}
-							</div>
-							{catalogProviders.map((p) => {
-								const isConfigured = configuredProviders.includes(p.id)
-								const isSelected = selectedProvider === p.id
-								return (
-									<DropdownMenuItem
-										className={cn(isSelected && 'bg-accent')}
-										key={p.id}
-										onClick={() => {
-											onProviderChange(p.id)
-											onModelChange('')
-										}}
-									>
-										<span className="flex items-center gap-2">
-											{p.logo && (
-												<img
-													alt=""
-													aria-hidden="true"
-													className="size-4 dark:brightness-0 dark:invert"
-													src={p.logo}
-												/>
-											)}
-											{p.name}
-											{!isConfigured && (
-												<span className="text-muted-foreground text-xs">
-													({t('knowledge.notConfigured')})
-												</span>
-											)}
-										</span>
-									</DropdownMenuItem>
-								)
-							})}
-							{/* Model Section */}
-							{providerModels.length > 0 && (
-								<>
-									<div className="mt-2 border-t px-2 pt-2 pb-1.5 font-medium text-muted-foreground text-xs">
-										{t('knowledge.model')}
-									</div>
-									{providerModels.slice(0, 8).map((model) => {
-										const isSelected = selectedModel === model.id
-										return (
-											<DropdownMenuItem
-												className={cn(isSelected && 'bg-accent')}
-												key={model.id}
-												onClick={() => onModelChange(model.id)}
-											>
-												<span className="flex flex-col">
-													<span className="text-sm">
-														{model.displayName || model.id}
-													</span>
-													<span className="text-muted-foreground text-xs">
-														{model.id}
-													</span>
-												</span>
-											</DropdownMenuItem>
-										)
-									})}
-								</>
-							)}
-						</DropdownMenuContent>
-					</DropdownMenu>
+			<PromptInputFooter className="px-3 pb-3">
+				<PromptInputTools>
+					{/* Context Usage Indicator */}
+					{contextUsage && contextUsage.usedTokens > 0 && (
+						<Context
+							maxTokens={contextUsage.maxTokens}
+							modelId={contextUsage.modelId}
+							usage={contextUsage.sessionUsage}
+							usedTokens={contextUsage.usedTokens}
+						>
+							<ContextTrigger
+								className="h-8 gap-1.5 rounded-lg px-2 text-xs"
+								size="sm"
+							/>
+							<ContextContent align="start" side="top">
+								<ContextContentHeader />
+								<ContextContentBody className="space-y-1.5">
+									<ContextInputUsage />
+									<ContextOutputUsage />
+									<ContextReasoningUsage />
+									<ContextCacheUsage />
+								</ContextContentBody>
+								<ContextContentFooter />
+							</ContextContent>
+						</Context>
+					)}
 
-					{/* Thinking Toggle Button - Show for models with reasoning capability */}
+					{/* Model Selector */}
+					<AiModelSelector
+						catalogModels={catalogModels}
+						catalogProviders={catalogProviders}
+						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none hover:bg-accent"
+						disabled={disabled || isPending || !hasApiKey}
+						onValueChange={onModelChange}
+						placeholder={t('knowledge.selectModel')}
+						value={selectedModel}
+					/>
+
+					{/* Thinking Toggle Button */}
 					{supportsThinking && onThinkingToggle && (
 						<Tooltip>
 							<TooltipTrigger
@@ -347,8 +295,6 @@ export function ChatInput({
 									'relative inline-flex size-8 items-center justify-center rounded-lg',
 									'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
 									'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-									// For toggleable models, show active state when enabled
-									// For non-toggleable models (built-in reasoning), always show as active
 									(hasToggleableReasoning ? thinkingEnabled : true) && 'text-primary'
 								)}
 								disabled={!hasToggleableReasoning}
@@ -367,23 +313,14 @@ export function ChatInput({
 							</TooltipContent>
 						</Tooltip>
 					)}
-				</div>
+				</PromptInputTools>
 
-				{/* Right: Submit Button */}
-				<Button
-					aria-label={t('knowledge.send')}
-					className="size-8 shrink-0 rounded-lg"
+				{/* Submit Button */}
+				<PromptInputSubmit
 					disabled={!canSend}
-					onClick={onSubmit}
-					size="icon"
-				>
-					{isPending ? (
-						<Spinner className="size-4" />
-					) : (
-						<HugeiconsIcon className="size-4" icon={ArrowUp02Icon} />
-					)}
-				</Button>
-			</div>
-		</div>
+					status={isPending ? 'submitted' : undefined}
+				/>
+			</PromptInputFooter>
+		</PromptInput>
 	)
 }
