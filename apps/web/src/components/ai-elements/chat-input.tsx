@@ -1,20 +1,17 @@
 import { Badge } from '@folionote/ui/badge'
 import { Button } from '@folionote/ui/button'
 import { cn } from '@folionote/ui/lib/utils'
+import { Textarea } from '@folionote/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import {
 	AiBrain01Icon,
+	ArrowMoveDownLeftIcon,
 	Cancel01Icon,
 	FileEditIcon,
+	RefreshIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {
-	type FormEvent,
-	type KeyboardEvent,
-	type RefObject,
-	useMemo,
-	useRef,
-} from 'react'
+import { type KeyboardEvent, type RefObject, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
 	Context,
@@ -28,17 +25,8 @@ import {
 	ContextReasoningUsage,
 	ContextTrigger,
 } from '@/components/ai-elements/context-usage'
+import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
 import { AiModelSelector } from '@/components/ai-elements/model-selector'
-import {
-	PromptInput,
-	PromptInputBody,
-	PromptInputFooter,
-	PromptInputHeader,
-	type PromptInputMessage,
-	PromptInputSubmit,
-	PromptInputTextarea,
-	PromptInputTools,
-} from '@/components/ai-elements/prompt-input'
 import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
 
 // ============================================================================
@@ -170,31 +158,42 @@ export function ChatInput({
 				onAtTrigger()
 			}, 0)
 		}
-	}
 
-	const handleSubmit = (_message: PromptInputMessage, _event: FormEvent) => {
-		if (disabled || isPending || !hasApiKey || !value.trim()) {
-			return
+		// Handle Enter to submit (without Shift)
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault()
+			if (canSend) {
+				onSubmit()
+			}
 		}
-		onSubmit()
 	}
 
 	const canSend = !(disabled || isPending) && hasApiKey && value.trim().length > 0
 	const hasAttachments = attachedNotes.length > 0
 
+	// Get known mention titles from attached notes
+	const knownMentions = useMemo(
+		() => attachedNotes.map((note) => note.title).filter(Boolean),
+		[attachedNotes]
+	)
+
+	// Render highlighted content with mentions
+	const highlightedContent = useMemo(() => {
+		return renderTextWithMentions(value, 'default', knownMentions)
+	}, [value, knownMentions])
+
 	return (
-		<PromptInput
+		<div
 			className={cn(
-				'rounded-xl border bg-background shadow-sm transition-shadow',
+				'relative rounded-lg border bg-background shadow-sm transition-shadow',
 				'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
 				'hover:shadow-md',
 				className
 			)}
-			onSubmit={handleSubmit}
 		>
 			{/* Attached Notes Chips */}
 			{hasAttachments && (
-				<PromptInputHeader className="flex-wrap gap-1.5 px-3 py-2">
+				<div className="flex flex-wrap gap-1.5 px-3 py-2">
 					{attachedNotes.map((note) => (
 						<Badge
 							className="group flex items-center gap-1 pr-1"
@@ -222,16 +221,20 @@ export function ChatInput({
 							)}
 						</Badge>
 					))}
-				</PromptInputHeader>
+				</div>
 			)}
 
-			{/* Textarea */}
-			<PromptInputBody>
-				<PromptInputTextarea
+			{/* Textarea with mention highlighting */}
+			<div className="relative">
+				{/* Textarea (text color transparent, only caret visible) */}
+				<Textarea
 					className={cn(
-						'max-h-[200px] min-h-[100px] resize-none',
+						'relative max-h-[200px] min-h-[100px] resize-none border-none bg-transparent',
+						'px-4 pb-16',
 						hasAttachments ? 'pt-2' : 'pt-4',
-						'pb-14'
+						'focus-visible:ring-0 focus-visible:ring-offset-0',
+						'placeholder:text-muted-foreground/60',
+						'text-transparent caret-foreground selection:bg-primary/20'
 					)}
 					disabled={disabled || isPending || !hasApiKey}
 					onChange={(e) => onChange(e.target.value)}
@@ -244,11 +247,28 @@ export function ChatInput({
 					ref={textareaRef}
 					value={value}
 				/>
-			</PromptInputBody>
+
+				{/* Highlighted content overlay (renders on top of textarea) */}
+				<div
+					aria-hidden="true"
+					className={cn(
+						'pointer-events-none absolute inset-0 z-10',
+						'max-h-[200px] min-h-[100px] overflow-hidden',
+						'wrap-break-word whitespace-pre-wrap',
+						'px-4 pb-16',
+						hasAttachments ? 'pt-2' : 'pt-4',
+						'text-sm',
+						'text-foreground'
+					)}
+				>
+					{highlightedContent}
+				</div>
+			</div>
 
 			{/* Bottom Actions Bar */}
-			<PromptInputFooter className="px-3 pb-3">
-				<PromptInputTools>
+			<div className="absolute right-3 bottom-3 left-3 flex items-center justify-between">
+				{/* Left: Context Usage + Model Selector + Thinking Toggle */}
+				<div className="flex items-center gap-1">
 					{/* Context Usage Indicator */}
 					{contextUsage && contextUsage.usedTokens > 0 && (
 						<Context
@@ -313,14 +333,23 @@ export function ChatInput({
 							</TooltipContent>
 						</Tooltip>
 					)}
-				</PromptInputTools>
+				</div>
 
-				{/* Submit Button */}
-				<PromptInputSubmit
+				{/* Right: Submit Button */}
+				<Button
+					aria-label={t('knowledge.send')}
+					className="size-8 shrink-0 rounded-lg"
 					disabled={!canSend}
-					status={isPending ? 'submitted' : undefined}
-				/>
-			</PromptInputFooter>
-		</PromptInput>
+					onClick={onSubmit}
+					size="icon"
+				>
+					{isPending ? (
+						<HugeiconsIcon className="size-4 animate-spin" icon={RefreshIcon} />
+					) : (
+						<HugeiconsIcon className="size-4" icon={ArrowMoveDownLeftIcon} />
+					)}
+				</Button>
+			</div>
+		</div>
 	)
 }
