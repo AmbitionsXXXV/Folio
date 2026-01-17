@@ -9,6 +9,7 @@ import { onError } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/fetch'
 import { ZodToJsonSchemaConverter } from '@orpc/zod/zod4'
 import { Hono } from 'hono'
+import { compress } from 'hono/compress'
 import { cors } from 'hono/cors'
 import { languageDetector } from 'hono/language'
 import { logger } from 'hono/logger'
@@ -37,6 +38,11 @@ export const app = new Hono<{
 
 // Request ID middleware - generates unique ID for each request
 app.use('*', requestId())
+
+// Compress middleware - gzip/deflate response compression for self-hosted deployments
+// Note: On Cloudflare Workers/Deno Deploy, compression is automatic
+// Threshold: 1024 bytes (default), smaller responses are not compressed
+app.use('*', compress())
 
 // Language detection middleware - detects user's preferred language
 app.use(

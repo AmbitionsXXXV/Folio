@@ -823,6 +823,9 @@ importers:
       '@folionote/storage':
         specifier: workspace:*
         version: link:../storage
+      '@folionote/utils':
+        specifier: workspace:*
+        version: link:../utils
       '@orpc/client':
         specifier: 'catalog:'
         version: 1.13.4(@opentelemetry/api@1.9.0)

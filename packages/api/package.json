@@ -25,6 +25,7 @@
     "@folionote/log": "workspace:*",
     "@folionote/model-list": "workspace:*",
     "@folionote/storage": "workspace:*",
+    "@folionote/utils": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

@@ -10,10 +10,50 @@ import { createIsomorphicFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 import { getServerUrl } from './api-environment'
 
+/**
+ * Store the last request ID for debugging purposes
+ * Can be accessed via window.__lastRequestId in dev tools
+ */
+let lastRequestId: string | null = null
+
+/**
+ * Get the last request ID from the most recent API call
+ */
+export function getLastRequestId(): string | null {
+	return lastRequestId
+}
+
+/**
+ * Custom error class that includes request ID for tracing
+ */
+export class RPCErrorWithRequestId extends Error {
+	requestId: string | null
+
+	constructor(message: string, requestId: string | null) {
+		super(message)
+		this.name = 'RPCErrorWithRequestId'
+		this.requestId = requestId
+	}
+}
+
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error, query) => {
+			// Extract request ID if available
+			const requestId =
+				error instanceof RPCErrorWithRequestId ? error.requestId : lastRequestId
+
+			// Log to console in development for easier debugging
+			if (import.meta.env.DEV) {
+				console.error('[API Error]', {
+					message: error.message,
+					requestId,
+					queryKey: query.queryKey,
+				})
+			}
+
 			toast.error(`Error: ${error.message}`, {
+				description: requestId ? `Request ID: ${requestId}` : undefined,
 				action: {
 					label: 'retry',
 					onClick: query.invalidate,
@@ -32,11 +72,25 @@ const getORPCClient = createIsomorphicFn()
 	.client((): RouterClient<typeof appRouter> => {
 		const link = new RPCLink({
 			url: `${getServerUrl()}/rpc`,
-			fetch(rpcUrl, options) {
-				return globalThis.fetch(rpcUrl, {
+			async fetch(rpcUrl, options) {
+				const response = await globalThis.fetch(rpcUrl, {
 					...options,
 					credentials: 'include',
 				})
+
+				// Capture request ID from response header for tracing
+				const requestId = response.headers.get('X-Request-Id')
+				if (requestId) {
+					lastRequestId = requestId
+
+					// Expose to window for dev tools access
+					if (import.meta.env.DEV && typeof window !== 'undefined') {
+						;(window as Window & { __lastRequestId?: string }).__lastRequestId =
+							requestId
+					}
+				}
+
+				return response
 			},
 		})
 
