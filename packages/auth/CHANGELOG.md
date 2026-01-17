@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.10
+
+### Patch Changes
+
+- feat: ✨ chat message persistence
+- Updated dependencies
+  - @folionote/db@0.2.10
+  - @folionote/transactional@0.2.10
+
 ## 0.2.9
 
 ### Patch Changes

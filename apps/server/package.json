@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -30,6 +30,7 @@
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "i18next": "catalog:",
+    "nanoid": "^5.1.6",
     "tokenlens": "catalog:",
     "zod": "catalog:"
   },

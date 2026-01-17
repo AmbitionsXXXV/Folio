@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.3
+
+### Patch Changes
+
+- feat: ✨ chat message persistence
+
 ## 0.1.2
 
 ### Patch Changes

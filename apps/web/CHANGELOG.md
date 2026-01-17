@@ -1,5 +1,21 @@
 # web
 
+## 0.2.10
+
+### Patch Changes
+
+- feat: ✨ chat message persistence
+- Updated dependencies
+  - @folionote/api@0.2.10
+  - @folionote/auth@0.2.10
+  - @folionote/constants@0.2.10
+  - @folionote/editor-core@0.2.10
+  - @folionote/editor-react@0.2.10
+  - @folionote/locales@0.2.10
+  - @folionote/model-list@0.1.3
+  - @folionote/ui@0.2.10
+  - @folionote/utils@0.2.10
+
 ## 0.2.9
 
 ### Patch Changes

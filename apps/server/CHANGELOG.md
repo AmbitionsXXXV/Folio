@@ -1,5 +1,19 @@
 # server
 
+## 0.2.10
+
+### Patch Changes
+
+- feat: ✨ chat message persistence
+- Updated dependencies
+  - @folionote/ai@0.2.10
+  - @folionote/api@0.2.10
+  - @folionote/auth@0.2.10
+  - @folionote/db@0.2.10
+  - @folionote/locales@0.2.10
+  - @folionote/log@0.1.4
+  - @folionote/storage@0.2.10
+
 ## 0.2.9
 
 ### Patch Changes

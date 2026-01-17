@@ -5,98 +5,79 @@ import {
 	type DecryptedCredential,
 	PROVIDER_CONFIGS,
 } from '@folionote/ai'
-import { streamTextWithCredential } from '@folionote/ai/stream-text'
+import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
 import { createContext } from '@folionote/api/context'
 import { createLogger } from '@folionote/log'
-import type { UIMessage } from 'ai'
-import { convertToModelMessages } from 'ai'
-import { streamText } from 'hono/streaming'
+import {
+	streamText as aiStreamText,
+	convertToModelMessages,
+	createIdGenerator,
+	type UIMessage,
+} from 'ai'
+import {
+	generateChatId,
+	loadChatMessages,
+	saveChat,
+} from '../services/ai-chat-store'
 import {
 	fetchNotesByIds,
 	MAX_ATTACHED_NOTES,
 	searchNotesForRag,
 } from '../services/notes'
 import type { App } from '../types'
-import { calculateCostFromUsage } from '../utils/cost'
 import { convertToSupportedLanguage } from '../utils/language'
 
 const log = createLogger({ prefix: 'ai-stream' })
 
 const AI_PROVIDERS = ['openai', 'deepseek', 'gemini', 'claude', 'qwen'] as const
 
-/** Request body for AI stream endpoint */
+// =============================================================================
+// Request/Response Types
+// =============================================================================
+
+/**
+ * Request body for AI stream endpoint (AI SDK v6 aligned)
+ *
+ * Two modes supported:
+ * 1. Full messages mode: Send all messages, server persists on completion
+ * 2. Last message mode: Send only the last message + chatId, server loads history
+ */
 type AiStreamRequestBody = {
+	/** Chat session ID for persistence. If omitted for new chat, server generates one. */
+	chatId?: string
+	/** Provider ID */
 	provider: string
+	/** API key (BYOK) */
 	apiKey: string
+	/** Optional base URL override */
 	baseUrl?: string
+	/** Optional model override */
 	model?: string
-	/** The current user prompt (still required for RAG query) */
+	/**
+	 * The user's prompt/question.
+	 * Used for RAG query even when messages are provided.
+	 */
 	prompt: string
-	/** Conversation history as UIMessage array */
+	/**
+	 * Conversation history as UIMessage array.
+	 * For bandwidth optimization, can send only the last message
+	 * when chatId is provided (server loads history).
+	 */
 	messages?: UIMessage[]
+	/** Optional: IDs of notes to attach as context */
 	noteEntryIds?: string[]
+	/** Optional: Number of notes to retrieve via RAG */
 	ragTopK?: number
+	/** Optional: Enable extended thinking/reasoning */
 	enableReasoning?: boolean
 }
 
-type StreamResult = ReturnType<typeof streamTextWithCredential>
-
-/** Stream writer interface compatible with Hono's StreamingApi */
-type StreamWriter = { write: (data: string) => Promise<unknown> }
-
-/**
- * Handle streaming with reasoning enabled
- */
-async function streamWithReasoning(stream: StreamWriter, result: StreamResult) {
-	const fullStream = result.fullStreamResult.fullStream
-	for await (const part of fullStream) {
-		if (part.type === 'reasoning-delta') {
-			await stream.write(`\x1E__THINKING__\x1E${part.text}`)
-		} else if (part.type === 'text-delta') {
-			await stream.write(part.text)
-		}
-	}
-}
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 /**
- * Handle simple text streaming
- */
-async function streamText_(stream: StreamWriter, result: StreamResult) {
-	for await (const chunk of result.textStream) {
-		await stream.write(chunk)
-	}
-}
-
-/**
- * Write usage information to stream
- */
-async function writeUsageInfo(stream: StreamWriter, result: StreamResult) {
-	try {
-		const usage = await result.fullStreamResult.usage
-		if (usage) {
-			const costUSD = calculateCostFromUsage(result.provider, result.modelId, {
-				inputTokens: usage.inputTokens,
-				outputTokens: usage.outputTokens,
-				totalTokens: usage.totalTokens,
-			})
-
-			await stream.write(
-				`\x1E__USAGE__\x1E${JSON.stringify({
-					inputTokens: usage.inputTokens,
-					outputTokens: usage.outputTokens,
-					totalTokens: usage.totalTokens,
-					reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
-					costUSD,
-				})}`
-			)
-		}
-	} catch (usageError) {
-		log.debug('Failed to get usage info:', usageError)
-	}
-}
-
-/**
- * Prepare note context for AI streaming
+ * Prepare note context for AI streaming (RAG)
  */
 async function prepareNoteContext(
 	userId: string,
@@ -122,41 +103,93 @@ async function prepareNoteContext(
 	return { attachedNotes, retrievedNotes }
 }
 
+/** Default reasoning budget tokens */
+const DEFAULT_REASONING_BUDGET_TOKENS = 10_000
+
 /**
- * Create streaming result based on conversation mode
+ * Build provider options for extended thinking/reasoning
+ *
+ * Returns typed provider options for AI SDK streamText.
+ * Uses `as const` assertions to satisfy SharedV3ProviderOptions type.
  */
-async function createStreamResult(
-	credential: DecryptedCredential,
-	systemPrompt: string,
-	prompt: string,
-	messages: UIMessage[] | undefined,
-	model: string | undefined,
-	enableReasoning: boolean | undefined
-) {
-	const hasConversationHistory = messages && messages.length > 0
+function buildProviderOptions(provider: AiProvider, enableReasoning: boolean) {
+	if (!enableReasoning) return undefined
 
-	if (hasConversationHistory) {
-		const modelMessages = await convertToModelMessages(messages)
-		return streamTextWithCredential(credential, {
-			system: systemPrompt,
-			messages: modelMessages,
-			model,
-			enableReasoning,
-		})
+	switch (provider) {
+		case 'claude':
+			return {
+				anthropic: {
+					thinking: {
+						type: 'enabled' as const,
+						budgetTokens: DEFAULT_REASONING_BUDGET_TOKENS,
+					},
+				},
+			}
+		case 'deepseek':
+		case 'qwen':
+			return {
+				openai: {
+					reasoningEffort: 'medium' as const,
+				},
+			}
+		default:
+			return undefined
 	}
-
-	return streamTextWithCredential(credential, {
-		system: systemPrompt,
-		prompt,
-		model,
-		enableReasoning,
-	})
 }
 
+// =============================================================================
+// Route Registration
+// =============================================================================
+
 /**
- * Register AI streaming route
+ * Register AI streaming routes
+ *
+ * Implements AI SDK v6 message persistence best practices:
+ * - Server-generated message IDs via createIdGenerator
+ * - Unified saveChat in onFinish callback
+ * - consumeStream for disconnect resilience
+ * - toUIMessageStreamResponse for proper UIMessage format
  */
 export function registerAiStreamRoute(app: App) {
+	// GET /api/ai/chat/:chatId - Retrieve persisted chat messages
+	app.get('/api/ai/chat/:chatId', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const chatId = c.req.param('chatId')
+		if (!chatId) {
+			return c.json({ error: 'Missing chatId' }, 400)
+		}
+
+		const userId = context.session.user.id
+		const messages = loadChatMessages(userId, chatId)
+
+		return c.json({
+			chatId,
+			messages,
+		})
+	})
+
+	// POST /api/ai/chat - Create a new chat session
+	app.post('/api/ai/chat', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const chatId = generateChatId()
+		return c.json({ chatId })
+	})
+
+	// POST /api/ai/stream - Stream AI response (AI SDK v6 aligned)
 	app.post('/api/ai/stream', async (c) => {
 		const detectedLanguage = c.get('language')
 		const locale = convertToSupportedLanguage(detectedLanguage)
@@ -170,12 +203,13 @@ export function registerAiStreamRoute(app: App) {
 		const body = await c.req.json<AiStreamRequestBody>()
 
 		const {
+			chatId: requestChatId,
 			provider,
 			apiKey,
 			baseUrl,
 			model,
 			prompt,
-			messages,
+			messages: requestMessages,
 			noteEntryIds,
 			ragTopK,
 			enableReasoning,
@@ -200,6 +234,26 @@ export function registerAiStreamRoute(app: App) {
 		try {
 			const userId = context.session.user.id
 
+			// Determine or generate chatId
+			const chatId = requestChatId || generateChatId()
+
+			// Load existing messages if chatId provided but no messages sent
+			// (optimization: client sends only last message)
+			let messages: UIMessage[]
+			if (requestMessages && requestMessages.length > 0) {
+				messages = requestMessages
+			} else {
+				// Load from storage and append user message
+				const storedMessages = loadChatMessages(userId, chatId)
+				const userMessage: UIMessage = {
+					id: `user-${Date.now()}`,
+					role: 'user',
+					parts: [{ type: 'text', text: prompt }],
+				}
+				messages = [...storedMessages, userMessage]
+			}
+
+			// Prepare RAG context
 			const { attachedNotes, retrievedNotes } = await prepareNoteContext(
 				userId,
 				prompt,
@@ -212,22 +266,59 @@ export function registerAiStreamRoute(app: App) {
 				retrievedNotes,
 			})
 
-			const result = await createStreamResult(
-				credential,
-				systemPrompt,
-				prompt,
-				messages,
-				model,
-				enableReasoning
+			// Create the AI model
+			const aiModel = createVercelAiChatModel(credential, { model })
+
+			// Convert UIMessages to model messages
+			const modelMessages = await convertToModelMessages(messages)
+
+			// Build provider options for reasoning
+			const providerOptions = buildProviderOptions(
+				provider as AiProvider,
+				enableReasoning ?? false
 			)
 
-			return streamText(c, async (stream) => {
-				if (enableReasoning) {
-					await streamWithReasoning(stream, result)
-				} else {
-					await streamText_(stream, result)
-				}
-				await writeUsageInfo(stream, result)
+			// Stream text using AI SDK
+			const result = aiStreamText({
+				model: aiModel,
+				system: systemPrompt,
+				messages: modelMessages,
+				// Provider options are typed per-provider; cast to satisfy SDK's strict union type
+				providerOptions: providerOptions as Parameters<
+					typeof aiStreamText
+				>[0]['providerOptions'],
+			})
+
+			// Consume stream to ensure completion even on disconnect
+			// This ensures onFinish is called and messages are saved
+			result.consumeStream()
+
+			// Return AI SDK UI message stream response
+			// This handles proper UIMessage formatting automatically
+			return result.toUIMessageStreamResponse({
+				// Pass original messages to prevent duplication
+				originalMessages: messages,
+				// Server-generated message IDs for persistence consistency
+				generateMessageId: createIdGenerator({
+					prefix: 'msg',
+					size: 16,
+				}),
+				// Unified save point: called when stream completes
+				onFinish: ({ messages: finalMessages }) => {
+					// Save complete conversation to storage
+					saveChat({
+						userId,
+						chatId,
+						messages: finalMessages,
+					})
+
+					// Log completion (usage is available via result.usage promise if needed)
+					log.debug(`Chat ${chatId} completed: ${finalMessages.length} messages`)
+				},
+				// Send chatId in response headers for client to track
+				headers: {
+					'X-Chat-Id': chatId,
+				},
 			})
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
