@@ -1,5 +1,17 @@
 # native
 
+## 0.2.9
+
+### Patch Changes
+
+- feat: ✨ ai integration enhance
+- Updated dependencies
+  - @folionote/editor-core@0.2.9
+  - @folionote/constants@0.2.9
+  - @folionote/locales@0.2.9
+  - @folionote/utils@0.2.9
+  - @folionote/api@0.2.9
+
 ## 0.2.8
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.9
+
+### Patch Changes
+
+- feat: ✨ ai integration enhance
+- Updated dependencies
+  - @folionote/db@0.2.9
+  - @folionote/transactional@0.2.9
+
 ## 0.2.8
 
 ### Patch Changes

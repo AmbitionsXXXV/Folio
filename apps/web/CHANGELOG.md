@@ -1,5 +1,21 @@
 # web
 
+## 0.2.9
+
+### Patch Changes
+
+- feat: ✨ ai integration enhance
+- Updated dependencies
+  - @folionote/editor-react@0.2.9
+  - @folionote/editor-core@0.2.9
+  - @folionote/constants@0.2.9
+  - @folionote/locales@0.2.9
+  - @folionote/utils@0.2.9
+  - @folionote/api@0.2.9
+  - @folionote/ui@0.2.9
+  - @folionote/auth@0.2.9
+  - @folionote/model-list@0.1.2
+
 ## 0.2.8
 
 ### Patch Changes

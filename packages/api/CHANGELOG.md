@@ -1,5 +1,20 @@
 # @folionote/api
 
+## 0.2.9
+
+### Patch Changes
+
+- feat: ✨ ai integration enhance
+- Updated dependencies
+  - @folionote/locales@0.2.9
+  - @folionote/utils@0.2.9
+  - @folionote/ai@0.2.9
+  - @folionote/auth@0.2.9
+  - @folionote/db@0.2.9
+  - @folionote/log@0.1.3
+  - @folionote/model-list@0.1.2
+  - @folionote/storage@0.2.9
+
 ## 0.2.8
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @folionote/constants
 
+## 0.2.9
+
+### Patch Changes
+
+- feat: ✨ ai integration enhance
+- Updated dependencies
+  - @folionote/locales@0.2.9
+
 ## 0.2.8
 
 ### Patch Changes
