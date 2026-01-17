@@ -6,6 +6,10 @@ import { getServerUrl } from '@/utils/api-environment'
 export type ChatMessageInput = UIMessage
 
 type StreamTextParams = {
+	/** Chat session ID for persistence */
+	chatId?: string
+	/** Pre-generated assistant message ID for server-side persistence */
+	assistantMessageId?: string
 	provider: string
 	apiKey: string
 	baseUrl?: string

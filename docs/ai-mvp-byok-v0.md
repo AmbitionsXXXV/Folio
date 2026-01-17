@@ -1143,17 +1143,17 @@ Prompt 由以下四部分组成，按顺序拼接：
 
 ### 24.4 实现文件
 
-| 模块           | 文件路径                                           | 功能                                |
-| -------------- | -------------------------------------------------- | ----------------------------------- |
-| AI Package     | `packages/ai/src/prompts/knowledge-chat.ts`        | Prompt 构建器 + 系统指令常量        |
-| AI Package     | `packages/ai/src/prompts/index.ts`                 | 导出 knowledge-chat                 |
-| AI Tests       | `packages/ai/__tests__/knowledge-chat.test.ts`     | Prompt 构建单测                     |
-| Server         | `apps/server/src/index.ts`                         | `/api/ai/stream` 扩展               |
-| Web Hook       | `apps/web/src/hooks/use-stream-text.ts`            | 支持 noteEntryIds 参数              |
-| Web Component  | `apps/web/src/components/ai-elements/chat-input.tsx` | @ 触发 + 附件 chips UI              |
-| Web Component  | `apps/web/src/components/entry-picker.tsx`         | libraryOnly 过滤支持                |
-| Web Page       | `apps/web/src/routes/_app/knowledge.tsx`           | 附件状态管理 + EntryPicker 集成     |
-| i18n           | `packages/locales/src/resources/*.json`            | 新增 UI 文案                        |
+| 模块          | 文件路径                                             | 功能                            |
+| ------------- | ---------------------------------------------------- | ------------------------------- |
+| AI Package    | `packages/ai/src/prompts/knowledge-chat.ts`          | Prompt 构建器 + 系统指令常量    |
+| AI Package    | `packages/ai/src/prompts/index.ts`                   | 导出 knowledge-chat             |
+| AI Tests      | `packages/ai/__tests__/knowledge-chat.test.ts`       | Prompt 构建单测                 |
+| Server        | `apps/server/src/index.ts`                           | `/api/ai/stream` 扩展           |
+| Web Hook      | `apps/web/src/hooks/use-stream-text.ts`              | 支持 noteEntryIds 参数          |
+| Web Component | `apps/web/src/components/ai-elements/chat-input.tsx` | @ 触发 + 附件 chips UI          |
+| Web Component | `apps/web/src/components/entry-picker.tsx`           | libraryOnly 过滤支持            |
+| Web Page      | `apps/web/src/routes/_app/knowledge.tsx`             | 附件状态管理 + EntryPicker 集成 |
+| i18n          | `packages/locales/src/resources/*.json`              | 新增 UI 文案                    |
 
 ### 24.5 API 扩展
 
@@ -1249,19 +1249,323 @@ const conversationHistory: ChatMessageInput[] = [...messages, userMessage].map(
 
 ### 25.3 文件变更
 
-| 模块           | 文件路径                                                 | 变更                                   |
-| -------------- | -------------------------------------------------------- | -------------------------------------- |
-| Knowledge Type | `apps/web/src/features/knowledge/types.ts`               | 新增 `mentionTitles` 字段              |
-| MessageBubble  | `apps/web/src/features/knowledge/components/message-bubble.tsx` | 传递 `mentionTitles` 给渲染函数        |
-| Knowledge Page | `apps/web/src/routes/_app/knowledge.tsx`                 | 发送时捕获 mention 标题，构造 UIMessage |
-| Stream Hook    | `apps/web/src/hooks/use-stream-text.ts`                  | `ChatMessageInput` 改为 `UIMessage`    |
-| AI Stream      | `apps/server/src/routes/ai-stream.ts`                    | 使用 `convertToModelMessages`          |
-| AI Prompt      | `packages/ai/src/prompts/knowledge-chat.ts`              | 新增 `buildKnowledgeChatSystemPrompt`  |
-| Stream Text    | `packages/ai/src/stream-text.ts`                         | 支持 `ModelMessage[]` 类型             |
-| Tests          | `packages/ai/__tests__/knowledge-chat.test.ts`           | 新增会话模式单测                       |
-| Server deps    | `apps/server/package.json`                               | 新增 `ai` 依赖                         |
+| 模块           | 文件路径                                                        | 变更                                    |
+| -------------- | --------------------------------------------------------------- | --------------------------------------- |
+| Knowledge Type | `apps/web/src/features/knowledge/types.ts`                      | 新增 `mentionTitles` 字段               |
+| MessageBubble  | `apps/web/src/features/knowledge/components/message-bubble.tsx` | 传递 `mentionTitles` 给渲染函数         |
+| Knowledge Page | `apps/web/src/routes/_app/knowledge.tsx`                        | 发送时捕获 mention 标题，构造 UIMessage |
+| Stream Hook    | `apps/web/src/hooks/use-stream-text.ts`                         | `ChatMessageInput` 改为 `UIMessage`     |
+| AI Stream      | `apps/server/src/routes/ai-stream.ts`                           | 使用 `convertToModelMessages`           |
+| AI Prompt      | `packages/ai/src/prompts/knowledge-chat.ts`                     | 新增 `buildKnowledgeChatSystemPrompt`   |
+| Stream Text    | `packages/ai/src/stream-text.ts`                                | 支持 `ModelMessage[]` 类型              |
+| Tests          | `packages/ai/__tests__/knowledge-chat.test.ts`                  | 新增会话模式单测                        |
+| Server deps    | `apps/server/package.json`                                      | 新增 `ai` 依赖                          |
 
 ### 25.4 验证
 
 - 单测：`pnpm vitest run --project=packages packages/ai/__tests__/knowledge-chat.test.ts`
 - 类型检查：`pnpm run check-types`
+
+---
+
+## 26. Knowledge Chat 会话持久化与断线恢复
+
+**实现日期**：2026-01-18
+
+### 26.1 功能概述
+
+Knowledge Chat 会话持久化功能使用户可以：
+
+1. **刷新页面后恢复对话**：消息历史通过 localStorage 持久化，重新打开页面时自动加载
+2. **断线后恢复**：服务端内存存储支持查询已完成的消息，客户端可在断线后重新获取
+3. **多会话支持**：每个会话有唯一的 chatId，"新对话"按钮会生成新 chatId 并清空历史
+
+### 26.2 数据流
+
+```text
+[用户发送消息]
+      ↓
+┌─────────────────────────────────────┐
+│   Web 端                            │
+│   1. 生成 assistantMessageId        │
+│   2. 保存 userMessage 到 localStorage│
+│   3. POST /api/ai/stream            │
+│      - chatId                       │
+│      - assistantMessageId           │
+│      - messages (UIMessage[])       │
+└─────────────────────────────────────┘
+      ↓
+┌─────────────────────────────────────┐
+│   Server 端                         │
+│   1. 保存 messages 到内存存储        │
+│   2. 标记 stream 进行中             │
+│   3. 流式生成 + 累积文本            │
+│   4. 完成后持久化 assistantMessage  │
+└─────────────────────────────────────┘
+      ↓
+[流式响应完成]
+      ↓
+┌─────────────────────────────────────┐
+│   Web 端                            │
+│   1. 更新 messages 状态             │
+│   2. 保存完整消息到 localStorage    │
+└─────────────────────────────────────┘
+```
+
+### 26.3 前端实现
+
+#### 26.3.1 消息序列化工具（`features/knowledge/utils.ts`）
+
+新增函数：
+
+- `generateChatId()`：生成新的 chat ID
+- `getOrCreateChatId()`：获取或生成 chatId（localStorage）
+- `setChatId(chatId)`：设置当前 chatId
+- `clearChatId()`：清除当前 chatId
+- `serializeMessage(message)`：将 `ChatMessage` 序列化（Date → string）
+- `deserializeMessage(message)`：将序列化消息反序列化（string → Date）
+- `saveChatMessages(chatId, messages)`：保存消息到 localStorage
+- `loadChatMessages(chatId)`：从 localStorage 加载消息
+- `clearChatMessages(chatId)`：清除指定 chat 的消息
+
+#### 26.3.2 Knowledge Page 集成（`routes/_app/knowledge.tsx`）
+
+- 初始化时调用 `getOrCreateChatId()` 获取 chatId
+- 初始化时调用 `loadChatMessages(chatId)` 加载历史消息（过滤未完成的流式消息）
+- 发送消息时先保存 userMessage 到 localStorage
+- 流式完成后保存完整消息到 localStorage
+- "新对话"按钮：清除旧消息、生成新 chatId、重置状态
+
+#### 26.3.3 Stream Hook 扩展（`hooks/use-stream-text.ts`）
+
+`StreamTextParams` 新增：
+
+- `chatId?: string`：会话 ID
+- `assistantMessageId?: string`：预生成的助手消息 ID
+
+### 26.4 服务端实现
+
+#### 26.4.1 内存存储模块（`services/ai-chat-store.ts`）
+
+```typescript
+type ChatSession = {
+  userId: string
+  chatId: string
+  messages: UIMessage[]
+  updatedAt: Date
+  streamInProgress: boolean
+  streamingMessageId?: string
+}
+```
+
+API：
+
+- `getChatMessages(userId, chatId)`：获取消息列表
+- `saveChatMessages(userId, chatId, messages)`：保存消息
+- `markStreamInProgress(userId, chatId, assistantMessageId)`：标记流式进行中
+- `completeStream(userId, chatId, assistantMessageId, assistantMessage)`：完成流式并追加消息
+- `isStreamInProgress(userId, chatId)`：检查是否有进行中的流式
+- `deleteChatSession(userId, chatId)`：删除会话
+
+安全特性：
+
+- 按 `userId + chatId` 复合键隔离，防止跨用户访问
+- 自动清理 24 小时以上的旧会话
+- 最大保留 1000 个会话，超出时删除最老的
+
+#### 26.4.2 API 扩展（`routes/ai-stream.ts`）
+
+新增 `GET /api/ai/chat/:chatId`：
+
+- 返回 `{ chatId, messages, streamInProgress }`
+- 需要鉴权，按 userId 隔离
+
+`POST /api/ai/stream` 扩展：
+
+- 请求体新增 `chatId`、`assistantMessageId`
+- 流式开始前保存 messages 并标记进行中
+- 流式完成后持久化 assistantMessage
+
+### 26.5 文件变更
+
+| 模块            | 文件路径                                      | 变更                           |
+| --------------- | --------------------------------------------- | ------------------------------ |
+| Knowledge Utils | `apps/web/src/features/knowledge/utils.ts`    | 新增序列化与 localStorage 工具 |
+| Knowledge Index | `apps/web/src/features/knowledge/index.ts`    | 导出新工具函数                 |
+| Stream Hook     | `apps/web/src/hooks/use-stream-text.ts`       | 新增 chatId/assistantMessageId |
+| Knowledge Page  | `apps/web/src/routes/_app/knowledge.tsx`      | 集成 chatId 与消息持久化       |
+| Chat Store      | `apps/server/src/services/ai-chat-store.ts`   | 新增内存存储模块               |
+| AI Stream       | `apps/server/src/routes/ai-stream.ts`         | 新增 GET 接口与持久化逻辑      |
+| Tests           | `apps/server/__tests__/ai-chat-store.test.ts` | 新增 11 个单测用例             |
+
+### 26.6 验证
+
+- 单测：`pnpm vitest run --project=server apps/server/__tests__/ai-chat-store.test.ts`
+- 类型检查：`pnpm run check-types`
+- Lint：`pnpm check`
+
+### 26.7 限制与后续优化
+
+- **内存存储**：当前使用内存存储，服务重启会丢失历史。后续可扩展为数据库持久化（新增 `chat_conversations` 与 `chat_messages` 表）
+- **断线续传**：当前仅支持查询已完成消息，未实现真正的 resume stream。后续可参考 Vercel AI SDK 的 `resumeStream` 功能
+- **消息同步**：localStorage 与服务端存储独立，无实时同步。后续可通过 WebSocket 或轮询实现
+
+---
+
+## 27. AI SDK v6 消息持久化最佳实践对齐
+
+**实现日期**：2026-01-18
+
+### 27.1 背景
+
+Section 26 的实现虽然实现了基本的会话持久化，但存在以下与 AI SDK v6 最佳实践的偏差：
+
+1. **客户端生成 messageId**：不符合 AI SDK v6 推荐的服务端生成 ID 策略，跨会话一致性难以保证
+2. **持久化源分裂**：前端使用 localStorage，服务端使用内存存储，两者独立且不同步
+3. **持久化时机分散**：流式开始时保存历史消息，完成时单独追加 assistant 消息，而非在 `onFinish` 统一落库
+4. **自定义 streaming 协议**：使用特殊分隔符传递 thinking 和 usage，与 AI SDK 的 `toUIMessageStreamResponse` 格式不兼容
+5. **缺少 `consumeStream`**：断线时流可能中止，导致 `onFinish` 不被调用
+
+### 27.2 AI SDK v6 推荐模式
+
+AI SDK v6 的消息持久化遵循以下核心原则：
+
+1. **UIMessage[] 作为标准格式**：数据库直接存储 `UIMessage[]`，包含 `id`、`role`、`parts` 等完整信息
+2. **服务端生成 messageId**：使用 `createIdGenerator` 或手动在 `createUIMessageStream` 中设置
+3. **onFinish 统一落库**：在 `toUIMessageStreamResponse({ onFinish })` 中一次性保存完整消息数组
+4. **consumeStream 断线保护**：确保即使客户端断开，流仍能完成并触发 onFinish
+5. **prepareSendMessagesRequest 优化带宽**：可选只发送最新消息，服务端加载历史
+
+### 27.3 实现改动
+
+#### 27.3.1 服务端存储重构（`ai-chat-store.ts`）
+
+新增 API（`UIMessage[]` 为中心）：
+
+```typescript
+// 核心 API
+createChat(input): ChatSession        // 创建会话
+loadChat(userId, chatId): ChatSession // 加载会话
+loadChatMessages(userId, chatId): UIMessage[] // 加载消息（用于 useChat initialMessages）
+saveChat(input): void                 // 保存完整消息数组（onFinish 调用）
+deleteChat(userId, chatId): boolean   // 删除会话
+listUserChats(userId): ChatSession[]  // 列出用户会话
+
+// 废弃 API（保留向后兼容）
+markStreamInProgress()  // No-op
+completeStream()        // No-op
+isStreamInProgress()    // 始终返回 false
+```
+
+#### 27.3.2 流式路由重构（`ai-stream.ts`）
+
+```typescript
+// 使用 AI SDK streamText
+const result = aiStreamText({
+  model: aiModel,
+  system: systemPrompt,
+  messages: modelMessages,
+  providerOptions,
+})
+
+// 断线保护
+result.consumeStream()
+
+// 标准 UI 消息响应
+return result.toUIMessageStreamResponse({
+  originalMessages: messages,
+  generateMessageId: createIdGenerator({ prefix: 'msg', size: 16 }),
+  onFinish: ({ messages: finalMessages }) => {
+    saveChat({ userId, chatId, messages: finalMessages })
+  },
+  headers: { 'X-Chat-Id': chatId },
+})
+```
+
+#### 27.3.3 前端 Hook 重构（`use-knowledge-chat.ts`）
+
+新增 `useKnowledgeChat` hook 封装 AI SDK 的 `useChat`：
+
+```typescript
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+
+export function useKnowledgeChat(config: KnowledgeChatConfig) {
+  const transport = new DefaultChatTransport({
+    api: `${getServerUrl()}/api/ai/stream`,
+    credentials: 'include',
+    prepareSendMessagesRequest: ({ id, messages }) => ({
+      body: {
+        chatId: id,
+        provider: config.provider,
+        apiKey: config.apiKey,
+        // ... BYOK 凭证与 RAG 上下文
+        messages,
+      },
+    }),
+  })
+
+  const { messages, sendMessage, status, ... } = useChat({
+    id: config.chatId,
+    messages: config.initialMessages,
+    transport,
+  })
+
+  return { messages, sendMessage, isStreaming: status === 'streaming', ... }
+}
+```
+
+### 27.4 数据流（重构后）
+
+```text
+[用户发送消息]
+      ↓
+┌──────────────────────────────────────┐
+│   Web 端 (useChat)                   │
+│   1. sendMessage({ text })           │
+│   2. transport.prepareSendMessages   │
+│      - chatId                        │
+│      - messages (UIMessage[])        │
+│      - provider/apiKey/model (BYOK)  │
+│      - noteEntryIds (RAG)            │
+└──────────────────────────────────────┘
+      ↓
+┌──────────────────────────────────────┐
+│   Server 端                          │
+│   1. convertToModelMessages(messages)│
+│   2. aiStreamText({ model, messages })│
+│   3. consumeStream() 断线保护        │
+│   4. toUIMessageStreamResponse({     │
+│        generateMessageId,            │
+│        onFinish: saveChat            │
+│      })                              │
+└──────────────────────────────────────┘
+      ↓
+[流式响应 → useChat 自动更新 messages]
+      ↓
+[onFinish 触发 → 服务端统一持久化]
+```
+
+### 27.5 文件变更
+
+| 模块             | 文件路径                                      | 变更                                     |
+| ---------------- | --------------------------------------------- | ---------------------------------------- |
+| Chat Store       | `apps/server/src/services/ai-chat-store.ts`   | 重构为 UIMessage[] 中心 API              |
+| Chat Store Tests | `apps/server/__tests__/ai-chat-store.test.ts` | 更新测试覆盖新 API（21 用例）            |
+| AI Stream        | `apps/server/src/routes/ai-stream.ts`         | 使用 toUIMessageStreamResponse           |
+| Knowledge Chat   | `apps/web/src/hooks/use-knowledge-chat.ts`    | 新增 hook 封装 useChat                   |
+| Knowledge Page   | `apps/web/src/routes/_app/knowledge.tsx`      | 使用 useKnowledgeChat 替代 useStreamText |
+| Web deps         | `apps/web/package.json`                       | 新增 @ai-sdk/react                       |
+| Server deps      | `apps/server/package.json`                    | 新增 nanoid                              |
+
+### 27.6 验证
+
+- 类型检查：`pnpm run check-types`
+- Lint：`pnpm check`
+
+### 27.7 后续优化
+
+- **数据库持久化**：将内存存储替换为 PostgreSQL
+- **消息历史加载**：页面加载时从服务端 API 获取历史消息作为 `initialMessages`
+- **Resume Streams**：实现 AI SDK 的断线续传功能
+- **Thinking/Usage 传递**：通过 AI SDK 的 data parts 或自定义 parts 传递 reasoning 和 usage 信息

@@ -153,6 +153,46 @@ Done:
 对齐 @mention 渲染逻辑与会话上下文拼接。前端使用 `UIMessage[]` 格式携带完整消息历史，服务端通过 `convertToModelMessages` 转换后传递给模型。
 新增 `buildKnowledgeChatSystemPrompt` 函数用于会话模式，避免 system prompt 重复包含用户输入。
 
+### 2.4 Knowledge Chat 会话持久化与断线恢复
+
+- [x] 新增 `apps/web/src/features/knowledge/utils.ts` 中的消息序列化/反序列化工具
+- [x] 新增 chatId 生成与 localStorage 管理函数（`generateChatId`, `getOrCreateChatId`, `setChatId`, `clearChatId`）
+- [x] 新增消息 localStorage 存取函数（`saveChatMessages`, `loadChatMessages`, `clearChatMessages`）
+- [x] 更新 `apps/web/src/features/knowledge/index.ts` 导出新工具函数
+- [x] 更新 `apps/web/src/hooks/use-stream-text.ts` 支持 `chatId` 与 `assistantMessageId` 参数
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx` 集成 chatId 生命周期与消息持久化
+- [x] 新增 `apps/server/src/services/ai-chat-store.ts` 内存存储模块
+- [x] 更新 `apps/server/src/routes/ai-stream.ts` 支持 chatId 持久化与 GET 接口
+- [x] 新增 `apps/server/__tests__/ai-chat-store.test.ts` 单测（11 个测试用例）
+- [x] 运行 `pnpm run check-types` 与 `pnpm check` 确保无错误
+
+Done:
+实现 Knowledge Chat 会话持久化功能。前端通过 localStorage 存储 chatId 与消息历史，刷新页面后可恢复对话。
+服务端新增内存存储模块，支持按 userId + chatId 隔离消息，并提供 GET /api/ai/chat/:chatId 接口查询。
+流式响应完成后自动持久化 assistant 消息，支持断线后客户端重新加载已完成消息。
+
+### 2.5 AI SDK v6 消息持久化最佳实践对齐
+
+- [x] 重构 `apps/server/src/services/ai-chat-store.ts` 为 `UIMessage[]` 统一格式
+- [x] 新增 `createChat`, `loadChat`, `loadChatMessages`, `saveChat`, `deleteChat`, `listUserChats` API
+- [x] 废弃旧的 `markStreamInProgress`, `completeStream`, `isStreamInProgress` 接口
+- [x] 更新 `apps/server/__tests__/ai-chat-store.test.ts` 覆盖新 API（21 个测试用例）
+- [x] 重构 `apps/server/src/routes/ai-stream.ts` 使用 `toUIMessageStreamResponse`
+- [x] 使用 `createIdGenerator` 服务端生成 messageId
+- [x] 在 `onFinish` 回调统一落库完整 `UIMessage[]`
+- [x] 使用 `consumeStream` 确保断线后仍能完成持久化
+- [x] 新增 POST `/api/ai/chat` 接口生成 chatId
+- [x] 新增 `apps/web/src/hooks/use-knowledge-chat.ts` 封装 `useChat` hook
+- [x] 使用 `DefaultChatTransport` + `prepareSendMessagesRequest` 自定义请求体
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx` 使用 `useKnowledgeChat`
+- [x] 删除 `useStreamText` 的使用（保留文件供其他场景使用）
+- [x] 运行 `pnpm run check-types` 确保无类型错误
+
+Done:
+按照 AI SDK v6 消息持久化最佳实践全面重构。服务端使用 `toUIMessageStreamResponse` + `createIdGenerator` + `onFinish` + `consumeStream` 实现规范的持久化流程。
+前端新增 `useKnowledgeChat` hook 封装 AI SDK 的 `useChat`，通过 `DefaultChatTransport` 自定义请求体携带 BYOK 凭证与 RAG 上下文。
+消息 ID 由服务端统一生成，确保跨会话一致性；客户端不再直接持久化消息，改由服务端在流完成时统一落库。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

@@ -30,6 +30,7 @@
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "i18next": "catalog:",
+    "nanoid": "^5.1.6",
     "tokenlens": "catalog:",
     "zod": "catalog:"
   },

@@ -17,6 +17,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -38,9 +39,9 @@ import {
 	mapProviderIdToApi,
 } from '@/features/knowledge'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
+import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
-import { type ChatMessageInput, useStreamText } from '@/hooks/use-stream-text'
 import type { Entry } from '@/types'
 
 export const Route = createFileRoute('/_app/knowledge')({
@@ -65,8 +66,10 @@ function KnowledgePage() {
 	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 
-	// Chat state
-	const [messages, setMessages] = useState<ChatMessage[]>([])
+	// Chat ID for persistence (generated once, server may override via header)
+	const [chatId, setChatIdState] = useState<string>(() => nanoid(16))
+
+	// Input state
 	const [inputValue, setInputValue] = useState('')
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -76,6 +79,53 @@ function KnowledgePage() {
 	// Attached notes state
 	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
 	const entryPickerRef = useRef<EntryPickerRef>(null)
+
+	// Provider config for API key
+	const providerConfig = useMemo(
+		() => getProviderConfig(selectedProvider),
+		[getProviderConfig, selectedProvider]
+	)
+
+	// Knowledge chat hook (AI SDK v6 based)
+	const {
+		messages: chatMessages,
+		isStreaming,
+		isLoading,
+		error: chatError,
+		chatId: serverChatId,
+		sendMessage,
+		resetChat,
+	} = useKnowledgeChat({
+		chatId,
+		provider: mapProviderIdToApi(selectedProvider),
+		apiKey: providerConfig?.apiKey ?? '',
+		baseUrl: providerConfig?.baseUrl?.trim() || undefined,
+		model: selectedModel.trim() || '',
+		enableReasoning: thinkingEnabled,
+	})
+
+	// Convert KnowledgeChatMessage to ChatMessage for existing UI components
+	const messages = useMemo<ChatMessage[]>(
+		() =>
+			chatMessages.map((msg) => ({
+				id: msg.id,
+				role: msg.role,
+				content: msg.content,
+				timestamp: msg.timestamp,
+				isStreaming: msg.isStreaming,
+				thinking: msg.thinking,
+				usage: msg.usage,
+				mentionTitles: msg.mentionTitles,
+			})),
+		[chatMessages]
+	)
+
+	// Update local chatId when server returns one
+	useEffect(() => {
+		if (serverChatId && serverChatId !== chatId) {
+			setChatIdState(serverChatId)
+		}
+	}, [serverChatId, chatId])
 
 	// Get enabled chat models for a provider
 	const getEnabledChatModels = useCallback(
@@ -153,83 +203,14 @@ function KnowledgePage() {
 		[selectedProvider, saveLastUsed]
 	)
 
-	const providerConfig = useMemo(
-		() => getProviderConfig(selectedProvider),
-		[getProviderConfig, selectedProvider]
-	)
-
 	const hasApiKey = Boolean(providerConfig?.apiKey?.trim())
 
-	// Streaming text generation
-	const {
-		stream,
-		isStreaming,
-		text: streamingText,
-		thinking: streamingThinking,
-		usage: streamingUsage,
-		error: streamError,
-		reset: resetStream,
-	} = useStreamText()
-
-	// Track the streaming message ID
-	const streamingMessageIdRef = useRef<string | null>(null)
-
-	// Update the streaming message content as text and thinking come in
+	// Handle chat error
 	useEffect(() => {
-		if (streamingMessageIdRef.current && (streamingText || streamingThinking)) {
-			setMessages((prev) =>
-				prev.map((msg) =>
-					msg.id === streamingMessageIdRef.current
-						? {
-								...msg,
-								content: streamingText,
-								thinking: streamingThinking || undefined,
-							}
-						: msg
-				)
-			)
+		if (chatError) {
+			toast.error(chatError.message || t('knowledge.requestFailed'))
 		}
-	}, [streamingText, streamingThinking])
-
-	// Handle stream completion - update with usage info
-	useEffect(() => {
-		if (!isStreaming && streamingMessageIdRef.current) {
-			const messageId = streamingMessageIdRef.current
-			setMessages((prev) =>
-				prev.map((msg) => {
-					if (msg.id !== messageId) return msg
-
-					return {
-						...msg,
-						isStreaming: false,
-						usage: streamingUsage
-							? {
-									inputTokens: streamingUsage.inputTokens,
-									outputTokens: streamingUsage.outputTokens,
-									totalTokens: streamingUsage.totalTokens,
-									reasoningTokens: streamingUsage.reasoningTokens,
-									costUSD: streamingUsage.costUSD,
-								}
-							: undefined,
-					}
-				})
-			)
-			streamingMessageIdRef.current = null
-		}
-	}, [isStreaming, streamingUsage])
-
-	// Handle stream error
-	useEffect(() => {
-		if (streamError) {
-			toast.error(streamError.message || t('knowledge.requestFailed'))
-			if (streamingMessageIdRef.current) {
-				setMessages((prev) =>
-					prev.filter((msg) => msg.id !== streamingMessageIdRef.current)
-				)
-				streamingMessageIdRef.current = null
-			}
-		}
-	}, [streamError, t])
+	}, [chatError, t])
 
 	// Attachment handlers
 	const handleAtTrigger = useCallback(() => {
@@ -358,81 +339,44 @@ function KnowledgePage() {
 			return
 		}
 
-		// Capture mention titles from attached notes at send time
+		// Capture note IDs and mention titles before clearing
+		const noteEntryIds = attachedNotes.map((n) => n.id)
 		const mentionTitles =
 			attachedNotes.length > 0
 				? attachedNotes.map((n) => n.title).filter(Boolean)
 				: undefined
 
-		const userMessage: ChatMessage = {
-			id: crypto.randomUUID(),
-			role: 'user',
-			content: trimmedInput,
-			timestamp: new Date(),
-			mentionTitles,
-		}
-
-		const assistantMessageId = crypto.randomUUID()
-		const assistantMessage: ChatMessage = {
-			id: assistantMessageId,
-			role: 'assistant',
-			content: '',
-			timestamp: new Date(),
-			isStreaming: true,
-		}
-
-		streamingMessageIdRef.current = assistantMessageId
-		const updatedMessages = [...messages, userMessage, assistantMessage]
-		setMessages(updatedMessages)
+		// Clear input and attachments
 		setInputValue('')
-
-		const noteEntryIds = attachedNotes.map((n) => n.id)
 		setAttachedNotes([])
 
-		// Build UIMessage array for conversation history
-		const conversationHistory: ChatMessageInput[] = [...messages, userMessage].map(
-			(msg) => ({
-				id: msg.id,
-				role: msg.role,
-				content: msg.content,
-				createdAt: msg.timestamp,
-				parts: [{ type: 'text', text: msg.content }],
-			})
-		)
-
-		const apiProviderId = mapProviderIdToApi(selectedProvider)
-		stream({
-			provider: apiProviderId,
-			apiKey: providerConfig?.apiKey ?? '',
-			baseUrl: providerConfig?.baseUrl?.trim() || undefined,
-			model: selectedModel.trim() || undefined,
-			prompt: trimmedInput,
-			messages: conversationHistory,
-			noteEntryIds: noteEntryIds.length > 0 ? noteEntryIds : undefined,
-			enableReasoning: thinkingEnabled,
+		// Send message via AI SDK useChat
+		sendMessage({
+			text: trimmedInput,
+			mentionTitles,
+			noteEntryIds,
 		})
 	}, [
 		inputValue,
 		isStreaming,
 		selectedProvider,
-		providerConfig,
-		selectedModel,
-		stream,
 		attachedNotes,
-		thinkingEnabled,
-		messages,
 		contextUsage,
 		selectedModelInfo,
+		sendMessage,
 	])
 
 	const handleNewChat = useCallback(() => {
-		resetStream()
-		setMessages([])
+		// Generate a new chat ID and reset the chat
+		const newChatId = nanoid(16)
+		setChatIdState(newChatId)
+		resetChat(newChatId)
+
 		setInputValue('')
 		setAttachedNotes([])
-	}, [resetStream])
+	}, [resetChat])
 
-	const isPending = isStreaming
+	const isPending = isStreaming || isLoading
 
 	return (
 		<div className="container mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 py-4">

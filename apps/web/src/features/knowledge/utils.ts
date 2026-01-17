@@ -160,3 +160,129 @@ export function parseContentWithCitations(content: string): ContentPart[] {
 
 	return parts
 }
+
+// ============================================================================
+// Chat Persistence Utilities
+// ============================================================================
+
+/** localStorage key for current chat ID */
+const CHAT_ID_STORAGE_KEY = 'folionote:knowledge:chatId'
+
+/** localStorage key prefix for chat messages */
+const CHAT_MESSAGES_STORAGE_KEY_PREFIX = 'folionote:knowledge:messages:'
+
+/** Serialized message format for localStorage */
+type SerializedChatMessage = Omit<ChatMessage, 'timestamp'> & {
+	timestamp: string
+}
+
+/**
+ * Generate a new chat ID using crypto.randomUUID
+ */
+export function generateChatId(): string {
+	return crypto.randomUUID()
+}
+
+/**
+ * Get the current chat ID from localStorage, or generate a new one
+ */
+export function getOrCreateChatId(): string {
+	if (typeof window === 'undefined') return generateChatId()
+
+	const stored = localStorage.getItem(CHAT_ID_STORAGE_KEY)
+	if (stored) return stored
+
+	const newId = generateChatId()
+	localStorage.setItem(CHAT_ID_STORAGE_KEY, newId)
+	return newId
+}
+
+/**
+ * Set a new chat ID in localStorage
+ */
+export function setChatId(chatId: string): void {
+	if (typeof window === 'undefined') return
+	localStorage.setItem(CHAT_ID_STORAGE_KEY, chatId)
+}
+
+/**
+ * Clear the current chat ID from localStorage
+ */
+export function clearChatId(): void {
+	if (typeof window === 'undefined') return
+	localStorage.removeItem(CHAT_ID_STORAGE_KEY)
+}
+
+/**
+ * Serialize a ChatMessage for storage (converts Date to ISO string)
+ */
+export function serializeMessage(message: ChatMessage): SerializedChatMessage {
+	return {
+		...message,
+		timestamp: message.timestamp.toISOString(),
+	}
+}
+
+/**
+ * Deserialize a ChatMessage from storage (converts ISO string to Date)
+ */
+export function deserializeMessage(message: SerializedChatMessage): ChatMessage {
+	return {
+		...message,
+		timestamp: new Date(message.timestamp),
+	}
+}
+
+/**
+ * Serialize an array of ChatMessages for storage
+ */
+export function serializeMessages(messages: ChatMessage[]): SerializedChatMessage[] {
+	return messages.map(serializeMessage)
+}
+
+/**
+ * Deserialize an array of ChatMessages from storage
+ */
+export function deserializeMessages(
+	messages: SerializedChatMessage[]
+): ChatMessage[] {
+	return messages.map(deserializeMessage)
+}
+
+/**
+ * Save chat messages to localStorage
+ */
+export function saveChatMessages(chatId: string, messages: ChatMessage[]): void {
+	if (typeof window === 'undefined') return
+
+	const key = `${CHAT_MESSAGES_STORAGE_KEY_PREFIX}${chatId}`
+	const serialized = serializeMessages(messages)
+	localStorage.setItem(key, JSON.stringify(serialized))
+}
+
+/**
+ * Load chat messages from localStorage
+ */
+export function loadChatMessages(chatId: string): ChatMessage[] {
+	if (typeof window === 'undefined') return []
+
+	const key = `${CHAT_MESSAGES_STORAGE_KEY_PREFIX}${chatId}`
+	const stored = localStorage.getItem(key)
+	if (!stored) return []
+
+	try {
+		const parsed = JSON.parse(stored) as SerializedChatMessage[]
+		return deserializeMessages(parsed)
+	} catch {
+		return []
+	}
+}
+
+/**
+ * Clear chat messages from localStorage for a specific chat
+ */
+export function clearChatMessages(chatId: string): void {
+	if (typeof window === 'undefined') return
+	const key = `${CHAT_MESSAGES_STORAGE_KEY_PREFIX}${chatId}`
+	localStorage.removeItem(key)
+}
