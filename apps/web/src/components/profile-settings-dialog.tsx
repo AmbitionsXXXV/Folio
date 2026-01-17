@@ -1,6 +1,3 @@
-import { useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
-import { AvatarUploader } from '@/components/avatar-uploader'
 import {
 	Dialog,
 	DialogContent,
@@ -8,7 +5,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@folionote/ui/dialog'
+import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { AvatarUploader } from '@/components/avatar-uploader'
 import { useAvatarState } from '@/hooks/use-avatar-state'
 
 type ProfileSettingsDialogProps = {

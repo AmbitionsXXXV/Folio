@@ -1,3 +1,7 @@
+import { Button } from '@folionote/ui/button'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@folionote/ui/field'
+import { Input } from '@folionote/ui/input'
+import { Spinner } from '@folionote/ui/spinner'
 import {
 	ArrowLeft02Icon,
 	CheckmarkCircle02Icon,
@@ -12,12 +16,8 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import z from 'zod'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { authClient } from '@/lib/auth-client'
 import { prettifyFormErrors } from '@/lib/form-error'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Spinner } from './ui/spinner'
 
 const PASSWORD_MIN_LENGTH = 8
 

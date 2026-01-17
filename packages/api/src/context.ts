@@ -4,8 +4,14 @@ import type { Context as HonoContext } from 'hono'
 
 export type CreateContextOptions = {
 	context: HonoContext
+	/** Pre-resolved locale from language middleware (optional for backward compatibility) */
+	locale?: SupportedLanguage
 }
 
+/**
+ * Resolve locale from headers (fallback when middleware locale is not provided)
+ * Priority: X-Locale header > Accept-Language header > default
+ */
 function resolveLocale(headers: Headers): SupportedLanguage {
 	const xLocale = headers.get('X-Locale')
 	if (xLocale) {
@@ -16,20 +22,25 @@ function resolveLocale(headers: Headers): SupportedLanguage {
 		if (normalized.startsWith('en')) {
 			return 'en-US'
 		}
+		if (normalized.startsWith('ja')) {
+			return 'ja-JP'
+		}
 	}
 
 	const acceptLanguage = headers.get('Accept-Language')
 	return parseAcceptLanguage(acceptLanguage)
 }
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ context, locale }: CreateContextOptions) {
 	const headers = context.req.raw.headers
 	const session = await auth.api.getSession({ headers })
-	const locale = resolveLocale(headers)
+
+	// Use pre-resolved locale from middleware, or fallback to header parsing
+	const resolvedLocale = locale ?? resolveLocale(headers)
 
 	return {
 		session,
-		locale,
+		locale: resolvedLocale,
 	}
 }
 

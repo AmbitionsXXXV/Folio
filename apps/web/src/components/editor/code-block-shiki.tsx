@@ -1,16 +1,16 @@
-import { ArrowDown01Icon, ArrowUp01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from '@tiptap/react'
-import { useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { codeToHtml } from 'shiki'
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/components/ui/select'
+} from '@folionote/ui/select'
+import { ArrowDown01Icon, ArrowUp01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { NodeViewContent, type NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { codeToHtml } from 'shiki'
 
 // Shiki theme that matches FolioNote's design
 const SHIKI_THEME = 'github-dark'

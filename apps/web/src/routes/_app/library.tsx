@@ -1,3 +1,4 @@
+import { Button } from '@folionote/ui/button'
 import { Add01Icon, BookOpen01Icon, StarIcon } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -7,7 +8,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { EntryList } from '@/components/entry-list'
-import { Button } from '@/components/ui/button'
 import { orpc } from '@/utils/orpc'
 
 type FilterType = 'all' | 'starred' | 'pinned'
@@ -102,6 +102,7 @@ function LibraryPage() {
 			<div className="mb-6 flex gap-2">
 				{filters.map(({ key, labelKey, icon }) => (
 					<Button
+						className="rounded-lg"
 						key={key}
 						onClick={() => setFilter(key)}
 						size="sm"

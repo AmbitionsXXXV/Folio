@@ -1,3 +1,15 @@
+import { Button } from '@folionote/ui/button'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@folionote/ui/dialog'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@folionote/ui/field'
+import { Input } from '@folionote/ui/input'
+import { Spinner } from '@folionote/ui/spinner'
 import { getPasswordStrength } from '@folionote/utils'
 import {
 	CheckmarkCircle02Icon,
@@ -14,18 +26,6 @@ import z from 'zod'
 import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 import { ConfirmDeleteDialog } from './confirm-delete-dialog'
-import { Button } from './ui/button'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from './ui/dialog'
-import { Field, FieldError, FieldGroup, FieldLabel } from './ui/field'
-import { Input } from './ui/input'
-import { Spinner } from './ui/spinner'
 
 // 密码强度指示器的稳定 ID
 const STRENGTH_BAR_IDS = ['bar-1', 'bar-2', 'bar-3', 'bar-4'] as const

@@ -155,14 +155,13 @@ function processNotesWithinBudget(
 }
 
 /**
- * Build the final prompt from sections
+ * Assemble note context sections (without user question)
  */
-function assembleFinalPrompt(
-	userPrompt: string,
+function assembleNoteContextSections(
 	attachedFormatted: string[],
 	retrievedFormatted: string[]
-): string {
-	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
+): string[] {
+	const sections: string[] = []
 
 	if (attachedFormatted.length > 0) {
 		sections.push(`## Attached Notes (User Selected)
@@ -176,9 +175,42 @@ ${attachedFormatted.join('\n\n---\n\n')}`)
 ${retrievedFormatted.join('\n\n---\n\n')}`)
 	}
 
+	return sections
+}
+
+/**
+ * Build the final prompt from sections (for single-turn mode)
+ */
+function assembleFinalPrompt(
+	userPrompt: string,
+	attachedFormatted: string[],
+	retrievedFormatted: string[]
+): string {
+	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
+
+	sections.push(
+		...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
+	)
+
 	sections.push(`## User Question
 
 ${userPrompt}`)
+
+	return sections.join('\n\n')
+}
+
+/**
+ * Build system prompt only (for conversation mode where messages carry user questions)
+ */
+function assembleSystemPrompt(
+	attachedFormatted: string[],
+	retrievedFormatted: string[]
+): string {
+	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
+
+	sections.push(
+		...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
+	)
 
 	return sections.join('\n\n')
 }
@@ -241,3 +273,89 @@ export function buildKnowledgeChatPrompt(
 
 /** Default RAG top-k value */
 export const DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K = DEFAULT_RAG_TOP_K
+
+// ============================================================================
+// Conversation Mode - System Prompt Builder
+// ============================================================================
+
+/** Input for building knowledge chat system prompt (conversation mode) */
+export type BuildKnowledgeChatSystemPromptInput = {
+	/** Notes explicitly attached by user via @ mention */
+	attachedNotes?: NoteContext[]
+	/** Notes retrieved via FTS/RAG */
+	retrievedNotes?: NoteContext[]
+	/** Maximum chars for total context (for testing) */
+	maxTotalContextChars?: number
+	/** Maximum chars per single note (for testing) */
+	maxSingleNoteChars?: number
+}
+
+/** Output from building knowledge chat system prompt */
+export type BuildKnowledgeChatSystemPromptResult = {
+	/** System prompt string (without user question) */
+	systemPrompt: string
+	/** Count of attached notes included */
+	attachedNotesCount: number
+	/** Count of retrieved notes included */
+	retrievedNotesCount: number
+	/** Whether any content was truncated */
+	wasTruncated: boolean
+}
+
+/**
+ * Build system prompt for conversation mode
+ *
+ * Unlike `buildKnowledgeChatPrompt`, this does NOT include the user question.
+ * Use this when the user question is already in the `messages` array.
+ */
+export function buildKnowledgeChatSystemPrompt(
+	input: BuildKnowledgeChatSystemPromptInput
+): BuildKnowledgeChatSystemPromptResult {
+	const maxTotalChars = input.maxTotalContextChars ?? MAX_TOTAL_CONTEXT_CHARS
+	const maxSingleChars = input.maxSingleNoteChars ?? MAX_SINGLE_NOTE_CHARS
+
+	const attachedNotes = input.attachedNotes ?? []
+	const retrievedNotes = input.retrievedNotes ?? []
+
+	// Track which note IDs are attached to avoid duplicates in retrieved
+	const attachedIds = new Set(attachedNotes.map((n) => n.id))
+	const uniqueRetrievedNotes = retrievedNotes.filter((n) => !attachedIds.has(n.id))
+
+	// Process attached notes first (user explicitly selected these)
+	const attachedState: NoteBudgetState = {
+		usedChars: 0,
+		wasTruncated: false,
+		included: [],
+	}
+	processNotesWithinBudget(
+		attachedNotes,
+		attachedState,
+		maxTotalChars,
+		maxSingleChars
+	)
+
+	// Process retrieved notes with remaining budget
+	const retrievedState: NoteBudgetState = {
+		usedChars: attachedState.usedChars,
+		wasTruncated: attachedState.wasTruncated,
+		included: [],
+	}
+	processNotesWithinBudget(
+		uniqueRetrievedNotes,
+		retrievedState,
+		maxTotalChars,
+		maxSingleChars
+	)
+
+	const systemPrompt = assembleSystemPrompt(
+		attachedState.included,
+		retrievedState.included
+	)
+
+	return {
+		systemPrompt,
+		attachedNotesCount: attachedState.included.length,
+		retrievedNotesCount: retrievedState.included.length,
+		wasTruncated: retrievedState.wasTruncated,
+	}
+}

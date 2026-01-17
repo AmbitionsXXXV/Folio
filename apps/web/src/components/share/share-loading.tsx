@@ -1,4 +1,4 @@
-import { Spinner } from '@/components/ui/spinner'
+import { Spinner } from '@folionote/ui/spinner'
 
 /**
  * Loading spinner component for share pages

@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -24,6 +24,7 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
+    "ai": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",

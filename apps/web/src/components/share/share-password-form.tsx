@@ -1,11 +1,11 @@
+import { Button } from '@folionote/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@folionote/ui/card'
+import { Input } from '@folionote/ui/input'
+import { Spinner } from '@folionote/ui/spinner'
 import { LockPasswordIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spinner'
 import type { PasswordFormProps } from '@/types/share'
 
 /**

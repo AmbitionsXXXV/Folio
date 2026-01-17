@@ -1,10 +1,10 @@
+import { Button } from '@folionote/ui/button'
+import { Textarea } from '@folionote/ui/textarea'
 import { Add01Icon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type KeyboardEvent, useState } from 'react'
 import { orpc } from '@/utils/orpc'
-import { Button } from './ui/button'
-import { Textarea } from './ui/textarea'
 
 type QuickCaptureProps = {
 	placeholder?: string

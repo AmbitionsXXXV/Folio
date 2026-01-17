@@ -21,3 +21,5 @@ alwaysApply: true
 - Always typecheck after making a series of code changes
 - API routes go in `apps/server/src/index.ts` and `packages/api/src/index.ts` following existing patterns
 - use `agent-browser` cli to replace `web fetch` tool for web search
+
+use `agent-browser` cli to replace `web-search-tool` or `playwright`

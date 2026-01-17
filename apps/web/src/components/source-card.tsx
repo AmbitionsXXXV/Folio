@@ -1,9 +1,9 @@
+import { Badge } from '@folionote/ui/badge'
+import { Button } from '@folionote/ui/button'
+import { Card, CardContent, CardHeader } from '@folionote/ui/card'
 import { Delete02Icon, Edit02Icon, Link04Icon } from '@hugeicons/core-free-icons'
 import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Badge } from './ui/badge'
-import { Button } from './ui/button'
-import { Card, CardContent, CardHeader } from './ui/card'
 
 type SourceCardProps = {
 	id: string

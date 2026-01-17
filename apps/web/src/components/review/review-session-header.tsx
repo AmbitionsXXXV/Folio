@@ -1,5 +1,5 @@
+import { Button } from '@folionote/ui/button'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import type { ReviewSessionHeaderProps } from '@/types/review'
 
 /**

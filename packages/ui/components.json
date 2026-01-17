@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@folionote/ui/components",
+    "utils": "@folionote/ui/lib/utils",
+    "hooks": "@folionote/ui/hooks",
+    "lib": "@folionote/ui/lib",
+    "ui": "@folionote/ui/components"
+  }
+}

@@ -254,6 +254,8 @@ const getModelCatalog = protectedProcedure.handler(async ({ context }) => {
 			reasoning: m.abilities?.reasoning,
 			// Include settings for extended params like enableReasoning
 			settings: m.settings,
+			// Include context window for token tracking
+			contextWindowTokens: m.contextWindowTokens,
 		}
 	})
 

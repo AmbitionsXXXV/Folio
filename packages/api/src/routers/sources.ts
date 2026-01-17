@@ -1,9 +1,10 @@
 import { db, entries, entrySources, sources } from '@folionote/db'
-import { ORPCError } from '@orpc/server'
-import { and, desc, eq, isNull, lt } from 'drizzle-orm'
+import { and, desc, eq, isNotNull, isNull, lt } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { protectedProcedure } from '../index'
+import { findOneOptional, findOneOrNotFound, mutateOne } from '../utils/db-helpers'
+import { unwrapOrThrow } from '../utils/orpc-result'
 
 /**
  * Source type enum
@@ -123,42 +124,43 @@ export const updateSource = protectedProcedure
 			fieldsToUpdate.metadata = updateData.metadata
 		}
 
+		// If no fields to update, just verify the source exists and return it
 		if (Object.keys(fieldsToUpdate).length === 0) {
-			const [existingSource] = await db
-				.select()
-				.from(sources)
-				.where(
-					and(
-						eq(sources.id, id),
-						eq(sources.userId, userId),
-						isNull(sources.deletedAt)
-					)
-				)
-				.limit(1)
-
-			if (!existingSource) {
-				throw new ORPCError('NOT_FOUND', { message: 'Source not found' })
-			}
-			return existingSource
-		}
-
-		const [source] = await db
-			.update(sources)
-			.set(fieldsToUpdate)
-			.where(
-				and(
-					eq(sources.id, id),
-					eq(sources.userId, userId),
-					isNull(sources.deletedAt)
-				)
+			const result = await findOneOrNotFound(
+				() =>
+					db
+						.select()
+						.from(sources)
+						.where(
+							and(
+								eq(sources.id, id),
+								eq(sources.userId, userId),
+								isNull(sources.deletedAt)
+							)
+						)
+						.limit(1),
+				'Source not found'
 			)
-			.returning()
-
-		if (!source) {
-			throw new ORPCError('NOT_FOUND', { message: 'Source not found' })
+			return unwrapOrThrow(result)
 		}
 
-		return source
+		const result = await mutateOne(
+			() =>
+				db
+					.update(sources)
+					.set(fieldsToUpdate)
+					.where(
+						and(
+							eq(sources.id, id),
+							eq(sources.userId, userId),
+							isNull(sources.deletedAt)
+						)
+					)
+					.returning(),
+			'Source not found'
+		)
+
+		return unwrapOrThrow(result)
 	})
 
 /**
@@ -169,22 +171,23 @@ export const deleteSource = protectedProcedure
 	.handler(async ({ context, input }) => {
 		const userId = context.session.user.id
 
-		const [source] = await db
-			.update(sources)
-			.set({ deletedAt: new Date() })
-			.where(
-				and(
-					eq(sources.id, input.id),
-					eq(sources.userId, userId),
-					isNull(sources.deletedAt)
-				)
-			)
-			.returning()
+		const result = await mutateOne(
+			() =>
+				db
+					.update(sources)
+					.set({ deletedAt: new Date() })
+					.where(
+						and(
+							eq(sources.id, input.id),
+							eq(sources.userId, userId),
+							isNull(sources.deletedAt)
+						)
+					)
+					.returning(),
+			'Source not found'
+		)
 
-		if (!source) {
-			throw new ORPCError('NOT_FOUND', { message: 'Source not found' })
-		}
-
+		unwrapOrThrow(result)
 		return { success: true }
 	})
 
@@ -195,27 +198,24 @@ export const restoreSource = protectedProcedure
 	.input(GetSourceInputSchema)
 	.handler(async ({ context, input }) => {
 		const userId = context.session.user.id
-		const { isNotNull } = await import('drizzle-orm')
 
-		const [source] = await db
-			.update(sources)
-			.set({ deletedAt: null })
-			.where(
-				and(
-					eq(sources.id, input.id),
-					eq(sources.userId, userId),
-					isNotNull(sources.deletedAt)
-				)
-			)
-			.returning()
+		const result = await mutateOne(
+			() =>
+				db
+					.update(sources)
+					.set({ deletedAt: null })
+					.where(
+						and(
+							eq(sources.id, input.id),
+							eq(sources.userId, userId),
+							isNotNull(sources.deletedAt)
+						)
+					)
+					.returning(),
+			'Source not found or not deleted'
+		)
 
-		if (!source) {
-			throw new ORPCError('NOT_FOUND', {
-				message: 'Source not found or not deleted',
-			})
-		}
-
-		return source
+		return unwrapOrThrow(result)
 	})
 
 /**
@@ -226,23 +226,23 @@ export const getSource = protectedProcedure
 	.handler(async ({ context, input }) => {
 		const userId = context.session.user.id
 
-		const [source] = await db
-			.select()
-			.from(sources)
-			.where(
-				and(
-					eq(sources.id, input.id),
-					eq(sources.userId, userId),
-					isNull(sources.deletedAt)
-				)
-			)
-			.limit(1)
+		const result = await findOneOrNotFound(
+			() =>
+				db
+					.select()
+					.from(sources)
+					.where(
+						and(
+							eq(sources.id, input.id),
+							eq(sources.userId, userId),
+							isNull(sources.deletedAt)
+						)
+					)
+					.limit(1),
+			'Source not found'
+		)
 
-		if (!source) {
-			throw new ORPCError('NOT_FOUND', { message: 'Source not found' })
-		}
-
-		return source
+		return unwrapOrThrow(result)
 	})
 
 /**
@@ -261,14 +261,16 @@ export const listSources = protectedProcedure
 		}
 
 		if (cursor) {
-			const [cursorSource] = await db
-				.select({ updatedAt: sources.updatedAt })
-				.from(sources)
-				.where(eq(sources.id, cursor))
-				.limit(1)
+			const cursorResult = await findOneOptional(() =>
+				db
+					.select({ updatedAt: sources.updatedAt })
+					.from(sources)
+					.where(eq(sources.id, cursor))
+					.limit(1)
+			)
 
-			if (cursorSource) {
-				conditions.push(lt(sources.updatedAt, cursorSource.updatedAt))
+			if (cursorResult.ok && cursorResult.value) {
+				conditions.push(lt(sources.updatedAt, cursorResult.value.updatedAt))
 			}
 		}
 
@@ -300,59 +302,63 @@ export const addSourceToEntry = protectedProcedure
 		const { entryId, sourceId, position } = input
 
 		// Verify the entry belongs to the user and is not deleted
-		const [entry] = await db
-			.select()
-			.from(entries)
-			.where(
-				and(
-					eq(entries.id, entryId),
-					eq(entries.userId, userId),
-					isNull(entries.deletedAt)
-				)
-			)
-			.limit(1)
-
-		if (!entry) {
-			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
-		}
+		const entryResult = await findOneOrNotFound(
+			() =>
+				db
+					.select()
+					.from(entries)
+					.where(
+						and(
+							eq(entries.id, entryId),
+							eq(entries.userId, userId),
+							isNull(entries.deletedAt)
+						)
+					)
+					.limit(1),
+			'Entry not found'
+		)
+		unwrapOrThrow(entryResult)
 
 		// Verify the source belongs to the user and is not deleted
-		const [source] = await db
-			.select()
-			.from(sources)
-			.where(
-				and(
-					eq(sources.id, sourceId),
-					eq(sources.userId, userId),
-					isNull(sources.deletedAt)
-				)
-			)
-			.limit(1)
-
-		if (!source) {
-			throw new ORPCError('NOT_FOUND', { message: 'Source not found' })
-		}
+		const sourceResult = await findOneOrNotFound(
+			() =>
+				db
+					.select()
+					.from(sources)
+					.where(
+						and(
+							eq(sources.id, sourceId),
+							eq(sources.userId, userId),
+							isNull(sources.deletedAt)
+						)
+					)
+					.limit(1),
+			'Source not found'
+		)
+		unwrapOrThrow(sourceResult)
 
 		// Check if the association already exists
-		const [existingAssociation] = await db
-			.select()
-			.from(entrySources)
-			.where(
-				and(eq(entrySources.entryId, entryId), eq(entrySources.sourceId, sourceId))
-			)
-			.limit(1)
+		const existingResult = await findOneOptional(() =>
+			db
+				.select()
+				.from(entrySources)
+				.where(
+					and(eq(entrySources.entryId, entryId), eq(entrySources.sourceId, sourceId))
+				)
+				.limit(1)
+		)
 
-		if (existingAssociation) {
+		if (existingResult.ok && existingResult.value) {
 			// Update position if provided
 			if (position !== undefined) {
 				const [updated] = await db
 					.update(entrySources)
 					.set({ position })
-					.where(eq(entrySources.id, existingAssociation.id))
+					.where(eq(entrySources.id, existingResult.value.id))
 					.returning()
 				return { success: true, entrySource: updated }
 			}
-			return { success: true, entrySource: existingAssociation }
+			return { success: true, entrySource: existingResult.value }
 		}
 
 		// Create the association
@@ -379,21 +385,22 @@ export const removeSourceFromEntry = protectedProcedure
 		const { entryId, sourceId } = input
 
 		// Verify the entry belongs to the user
-		const [entry] = await db
-			.select()
-			.from(entries)
-			.where(
-				and(
-					eq(entries.id, entryId),
-					eq(entries.userId, userId),
-					isNull(entries.deletedAt)
-				)
-			)
-			.limit(1)
-
-		if (!entry) {
-			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
-		}
+		const entryResult = await findOneOrNotFound(
+			() =>
+				db
+					.select()
+					.from(entries)
+					.where(
+						and(
+							eq(entries.id, entryId),
+							eq(entries.userId, userId),
+							isNull(entries.deletedAt)
+						)
+					)
+					.limit(1),
+			'Entry not found'
+		)
+		unwrapOrThrow(entryResult)
 
 		// Delete the association
 		const result = await db
@@ -415,21 +422,22 @@ export const getEntrySources = protectedProcedure
 		const userId = context.session.user.id
 
 		// Verify the entry belongs to the user
-		const [entry] = await db
-			.select()
-			.from(entries)
-			.where(
-				and(
-					eq(entries.id, input.entryId),
-					eq(entries.userId, userId),
-					isNull(entries.deletedAt)
-				)
-			)
-			.limit(1)
-
-		if (!entry) {
-			throw new ORPCError('NOT_FOUND', { message: 'Entry not found' })
-		}
+		const entryResult = await findOneOrNotFound(
+			() =>
+				db
+					.select()
+					.from(entries)
+					.where(
+						and(
+							eq(entries.id, input.entryId),
+							eq(entries.userId, userId),
+							isNull(entries.deletedAt)
+						)
+					)
+					.limit(1),
+			'Entry not found'
+		)
+		unwrapOrThrow(entryResult)
 
 		// Get all sources for this entry
 		const associations = await db
@@ -453,21 +461,22 @@ export const getSourceEntries = protectedProcedure
 		const userId = context.session.user.id
 
 		// Verify the source belongs to the user
-		const [source] = await db
-			.select()
-			.from(sources)
-			.where(
-				and(
-					eq(sources.id, input.id),
-					eq(sources.userId, userId),
-					isNull(sources.deletedAt)
-				)
-			)
-			.limit(1)
-
-		if (!source) {
-			throw new ORPCError('NOT_FOUND', { message: 'Source not found' })
-		}
+		const sourceResult = await findOneOrNotFound(
+			() =>
+				db
+					.select()
+					.from(sources)
+					.where(
+						and(
+							eq(sources.id, input.id),
+							eq(sources.userId, userId),
+							isNull(sources.deletedAt)
+						)
+					)
+					.limit(1),
+			'Source not found'
+		)
+		unwrapOrThrow(sourceResult)
 
 		// Get all entries for this source
 		const associations = await db

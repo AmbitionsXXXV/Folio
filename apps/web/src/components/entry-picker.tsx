@@ -1,16 +1,16 @@
-import { FileEditIcon, Search01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useQuery } from '@tanstack/react-query'
-import { type Ref, useImperativeHandle, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
+} from '@folionote/ui/dialog'
+import { Input } from '@folionote/ui/input'
+import { Skeleton } from '@folionote/ui/skeleton'
+import { FileEditIcon, Search01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useQuery } from '@tanstack/react-query'
+import { type Ref, useImperativeHandle, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Entry } from '@/types'
 import { orpc } from '@/utils/orpc'
 

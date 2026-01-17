@@ -1,6 +1,6 @@
 {
   "name": "native",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --tunnel",
@@ -35,10 +35,10 @@
     "@shopify/flash-list": "^2.0.2",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "@tiptap/core": "^3.14.0",
-    "@tiptap/extension-placeholder": "^3.14.0",
-    "@tiptap/react": "^3.14.0",
-    "@tiptap/starter-kit": "^3.14.0",
+    "@tiptap/core": "catalog:",
+    "@tiptap/extension-placeholder": "catalog:",
+    "@tiptap/react": "catalog:",
+    "@tiptap/starter-kit": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",

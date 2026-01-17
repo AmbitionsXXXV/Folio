@@ -1,7 +1,3 @@
-import { Alert01Icon, Logout03Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -11,10 +7,14 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+} from '@folionote/ui/alert-dialog'
+import { Button } from '@folionote/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@folionote/ui/card'
+import { Separator } from '@folionote/ui/separator'
+import { Alert01Icon, Logout03Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { DangerZoneProps } from '@/types/profile'
 
 /**

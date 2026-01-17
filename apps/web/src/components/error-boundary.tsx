@@ -1,3 +1,4 @@
+import { Button, buttonVariants } from '@folionote/ui/button'
 import { Alert02Icon, RefreshIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -7,7 +8,6 @@ import {
 	useRouter,
 } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Button, buttonVariants } from './ui/button'
 
 /**
  * Default error boundary component for route errors.

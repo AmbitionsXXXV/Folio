@@ -1,3 +1,5 @@
+import { Button } from '@folionote/ui/button'
+import { cn } from '@folionote/ui/lib/utils'
 import {
 	Activity01Icon,
 	AiBrain01Icon,
@@ -12,9 +14,6 @@ import type { IconSvgElement } from '@hugeicons/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link, useMatchRoute, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useCommandPalette } from '@/contexts/command-palette-context'
-import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
 import {
 	Sidebar,
 	SidebarContent,
@@ -27,7 +26,8 @@ import {
 	SidebarMenuItem,
 	SidebarSeparator,
 	useSidebar,
-} from './ui/sidebar'
+} from '@/components/sidebar'
+import { useCommandPalette } from '@/contexts/command-palette-context'
 import UserMenu from './user-menu'
 
 type NavItem = {

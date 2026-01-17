@@ -1,11 +1,11 @@
+import { Button } from '@folionote/ui/button'
 import { Search01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { SidebarTrigger } from '@/components/sidebar'
 import { useCommandPalette } from '@/contexts/command-palette-context'
 import { SettingsMenu } from './settings-menu'
-import { Button } from './ui/button'
-import { SidebarTrigger } from './ui/sidebar'
 import UserMenu from './user-menu'
 
 /**

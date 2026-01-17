@@ -1,6 +1,6 @@
+import { Card, CardContent } from '@folionote/ui/card'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { StatsCardProps } from '@/types/review'
 

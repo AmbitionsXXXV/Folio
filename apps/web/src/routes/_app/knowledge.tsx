@@ -1,6 +1,17 @@
+import { CONTEXT_CRITICAL_THRESHOLD } from '@folionote/constants'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
+import { Button } from '@folionote/ui/button'
 import {
 	AiBrain01Icon,
-	ArrowDown01Icon,
+	Alert02Icon,
 	MessageAdd01Icon,
 	Setting06Icon,
 } from '@hugeicons/core-free-icons'
@@ -9,86 +20,36 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Streamdown } from 'streamdown'
-import { useStickToBottom } from 'use-stick-to-bottom'
-import { type AttachedNote, ChatInput } from '@/components/ai-elements/chat-input'
-import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
-import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
-import { Button } from '@/components/ui/button'
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { Spinner } from '@/components/ui/spinner'
+	type AttachedNote,
+	type ChatContextUsage,
+	ChatInput,
+	type SessionUsage,
+} from '@/components/ai-elements/chat-input'
+import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
+import {
+	type ChatMessage,
+	ContextUsageIndicator,
+	calculateTotalTokens,
+	EmptyState,
+	estimateTokenCount,
+	isApiSupportedProvider,
+	MessageList,
+	mapProviderIdToApi,
+} from '@/features/knowledge'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
-import { useStreamText } from '@/hooks/use-stream-text'
-import { cn } from '@/lib/utils'
+import { type ChatMessageInput, useStreamText } from '@/hooks/use-stream-text'
 import type { Entry } from '@/types'
-
-// API-compatible provider IDs (subset that the backend supports)
-// These map to the old provider IDs that the API expects
-type ApiProviderId = 'openai' | 'deepseek' | 'gemini' | 'claude' | 'qwen'
-const API_SUPPORTED_PROVIDERS: ApiProviderId[] = [
-	'openai',
-	'deepseek',
-	'gemini',
-	'claude',
-	'qwen',
-]
-
-// Map new model-list provider IDs to old API provider IDs
-const PROVIDER_ID_MAPPING: Record<string, ApiProviderId> = {
-	openai: 'openai',
-	anthropic: 'claude',
-	google: 'gemini',
-	deepseek: 'deepseek',
-	qwen: 'qwen',
-	xai: 'deepseek', // xAI maps to deepseek for now (both use similar API)
-}
-
-function isApiSupportedProvider(id: string): id is ApiProviderId {
-	const mappedId = PROVIDER_ID_MAPPING[id] || id
-	return API_SUPPORTED_PROVIDERS.includes(mappedId as ApiProviderId)
-}
-
-function mapProviderIdToApi(id: string): ApiProviderId {
-	const mappedId = PROVIDER_ID_MAPPING[id] || id
-	if (!API_SUPPORTED_PROVIDERS.includes(mappedId as ApiProviderId)) {
-		throw new Error(`Provider "${id}" is not supported by the API`)
-	}
-	return mappedId as ApiProviderId
-}
 
 export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
 })
 
-type Message = {
-	id: string
-	role: 'user' | 'assistant'
-	content: string
-	timestamp: Date
-	/** Whether this message is currently being streamed */
-	isStreaming?: boolean
-	/** Thinking/reasoning content (for models that support extended thinking) */
-	thinking?: string
-	/** Token usage from the AI provider */
-	usage?: {
-		inputTokens?: number
-		outputTokens?: number
-		totalTokens?: number
-		reasoningTokens?: number
-		costUSD?: number
-	}
-}
-
 function KnowledgePage() {
 	const { t } = useTranslation()
-	const { config, isLoaded, configuredProviders, getProviderConfig } =
-		useModelProviderConfig()
+	const { config, isLoaded, getProviderConfig } = useModelProviderConfig()
 
 	// Model catalog for enabled models
 	const {
@@ -105,7 +66,7 @@ function KnowledgePage() {
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 
 	// Chat state
-	const [messages, setMessages] = useState<Message[]>([])
+	const [messages, setMessages] = useState<ChatMessage[]>([])
 	const [inputValue, setInputValue] = useState('')
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -161,11 +122,9 @@ function KnowledgePage() {
 	)
 
 	// Sync with loaded config and validate against enabled models
-	// Prefer last used model from localStorage
 	useEffect(() => {
 		if (!(isLoaded && isCatalogLoaded)) return
 
-		// Prioritize last used model if available
 		const preferredProvider = lastUsedProvider || config.defaultProvider
 		const preferredModel = lastUsedModel || config.defaultModel || ''
 
@@ -185,25 +144,10 @@ function KnowledgePage() {
 		findValidProviderAndModel,
 	])
 
-	// When provider changes, ensure selected model is valid
-	const handleProviderChange = useCallback(
-		(providerId: string) => {
-			setSelectedProvider(providerId)
-			// Reset model when provider changes
-			const enabledModels = getEnabledChatModels(providerId)
-			const newModel = enabledModels[0]?.id ?? ''
-			setSelectedModel(newModel)
-			// Save to localStorage
-			saveLastUsed(providerId, newModel)
-		},
-		[getEnabledChatModels, saveLastUsed]
-	)
-
 	// When model changes, save to localStorage
 	const handleModelChange = useCallback(
 		(modelId: string) => {
 			setSelectedModel(modelId)
-			// Save to localStorage
 			saveLastUsed(selectedProvider, modelId)
 		},
 		[selectedProvider, saveLastUsed]
@@ -247,11 +191,10 @@ function KnowledgePage() {
 		}
 	}, [streamingText, streamingThinking])
 
-	// Handle stream completion - update with usage info from tokenlens
+	// Handle stream completion - update with usage info
 	useEffect(() => {
 		if (!isStreaming && streamingMessageIdRef.current) {
 			const messageId = streamingMessageIdRef.current
-			// Mark the message as no longer streaming and add usage info
 			setMessages((prev) =>
 				prev.map((msg) => {
 					if (msg.id !== messageId) return msg
@@ -279,7 +222,6 @@ function KnowledgePage() {
 	useEffect(() => {
 		if (streamError) {
 			toast.error(streamError.message || t('knowledge.requestFailed'))
-			// Remove the failed streaming message
 			if (streamingMessageIdRef.current) {
 				setMessages((prev) =>
 					prev.filter((msg) => msg.id !== streamingMessageIdRef.current)
@@ -296,7 +238,6 @@ function KnowledgePage() {
 
 	const handleEntrySelect = useCallback(
 		(entry: Entry) => {
-			// Add the note to attachments if not already attached
 			setAttachedNotes((prev) => {
 				if (prev.some((n) => n.id === entry.id)) {
 					return prev
@@ -310,7 +251,6 @@ function KnowledgePage() {
 				]
 			})
 
-			// Insert @note title at cursor position in textarea
 			if (textareaRef.current) {
 				const textarea = textareaRef.current
 				const start = textarea.selectionStart
@@ -319,15 +259,12 @@ function KnowledgePage() {
 				const noteTitle = entry.title || t('entryPicker.untitled')
 				const insertText = `@${noteTitle} `
 
-				// If triggered by @, we want to replace the @ character
-				// Check if the character before cursor is @
 				const isAtTrigger = start > 0 && text[start - 1] === '@'
 				const replaceStart = isAtTrigger ? start - 1 : start
 
 				const newValue = text.slice(0, replaceStart) + insertText + text.slice(end)
 				setInputValue(newValue)
 
-				// Move cursor to after inserted text
 				setTimeout(() => {
 					const newPosition = replaceStart + insertText.length
 					textarea.setSelectionRange(newPosition, newPosition)
@@ -342,26 +279,101 @@ function KnowledgePage() {
 		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
 	}, [])
 
+	// Get selected model info for context window
+	const selectedModelInfo = useMemo(() => {
+		return catalogModels.find(
+			(m) => m.providerId === selectedProvider && m.id === selectedModel
+		)
+	}, [catalogModels, selectedProvider, selectedModel])
+
+	// Calculate context usage
+	const contextUsage = useMemo(() => {
+		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+		const usedTokens = calculateTotalTokens(messages)
+		const percent = Math.min(100, Math.round((usedTokens / contextWindow) * 100))
+		return {
+			used: usedTokens,
+			total: contextWindow,
+			percent,
+			isWarning: percent >= 80,
+			isExceeded: percent >= CONTEXT_CRITICAL_THRESHOLD,
+		}
+	}, [messages, selectedModelInfo])
+
+	// Calculate accumulated session usage for ChatInput context display
+	const chatContextUsage = useMemo<ChatContextUsage | undefined>(() => {
+		if (messages.length === 0) return undefined
+
+		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+		const usedTokens = calculateTotalTokens(messages)
+
+		// Accumulate usage from all messages
+		const sessionUsage = messages.reduce<SessionUsage>(
+			(acc, msg) => {
+				if (!msg.usage) return acc
+				return {
+					inputTokens: (acc.inputTokens ?? 0) + (msg.usage.inputTokens ?? 0),
+					outputTokens: (acc.outputTokens ?? 0) + (msg.usage.outputTokens ?? 0),
+					totalTokens: (acc.totalTokens ?? 0) + (msg.usage.totalTokens ?? 0),
+					reasoningTokens:
+						(acc.reasoningTokens ?? 0) + (msg.usage.reasoningTokens ?? 0),
+				}
+			},
+			{
+				inputTokens: 0,
+				outputTokens: 0,
+				totalTokens: 0,
+				reasoningTokens: 0,
+			}
+		)
+
+		return {
+			usedTokens,
+			maxTokens: contextWindow,
+			sessionUsage,
+			modelId: selectedModel,
+		}
+	}, [messages, selectedModelInfo, selectedModel])
+
+	// State for context exceeded dialog
+	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
+
 	const handleSendMessage = useCallback(() => {
 		const trimmedInput = inputValue.trim()
 		if (!trimmedInput || isStreaming) return
 
-		// Only API-supported providers can be used for text generation
 		if (!isApiSupportedProvider(selectedProvider)) {
 			toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
 			return
 		}
 
-		const userMessage: Message = {
+		// Check if context would be exceeded with new message
+		const newMessageTokens = estimateTokenCount(trimmedInput)
+		const projectedUsage = contextUsage.used + newMessageTokens
+		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+		const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
+
+		if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
+			setShowContextExceededDialog(true)
+			return
+		}
+
+		// Capture mention titles from attached notes at send time
+		const mentionTitles =
+			attachedNotes.length > 0
+				? attachedNotes.map((n) => n.title).filter(Boolean)
+				: undefined
+
+		const userMessage: ChatMessage = {
 			id: crypto.randomUUID(),
 			role: 'user',
 			content: trimmedInput,
 			timestamp: new Date(),
+			mentionTitles,
 		}
 
-		// Create a placeholder message for the assistant response
 		const assistantMessageId = crypto.randomUUID()
-		const assistantMessage: Message = {
+		const assistantMessage: ChatMessage = {
 			id: assistantMessageId,
 			role: 'assistant',
 			content: '',
@@ -370,14 +382,23 @@ function KnowledgePage() {
 		}
 
 		streamingMessageIdRef.current = assistantMessageId
-		setMessages((prev) => [...prev, userMessage, assistantMessage])
+		const updatedMessages = [...messages, userMessage, assistantMessage]
+		setMessages(updatedMessages)
 		setInputValue('')
 
-		// Collect attached note IDs for the request
 		const noteEntryIds = attachedNotes.map((n) => n.id)
-
-		// Clear attachments after sending
 		setAttachedNotes([])
+
+		// Build UIMessage array for conversation history
+		const conversationHistory: ChatMessageInput[] = [...messages, userMessage].map(
+			(msg) => ({
+				id: msg.id,
+				role: msg.role,
+				content: msg.content,
+				createdAt: msg.timestamp,
+				parts: [{ type: 'text', text: msg.content }],
+			})
+		)
 
 		const apiProviderId = mapProviderIdToApi(selectedProvider)
 		stream({
@@ -386,6 +407,7 @@ function KnowledgePage() {
 			baseUrl: providerConfig?.baseUrl?.trim() || undefined,
 			model: selectedModel.trim() || undefined,
 			prompt: trimmedInput,
+			messages: conversationHistory,
 			noteEntryIds: noteEntryIds.length > 0 ? noteEntryIds : undefined,
 			enableReasoning: thinkingEnabled,
 		})
@@ -398,6 +420,9 @@ function KnowledgePage() {
 		stream,
 		attachedNotes,
 		thinkingEnabled,
+		messages,
+		contextUsage,
+		selectedModelInfo,
 	])
 
 	const handleNewChat = useCallback(() => {
@@ -427,17 +452,60 @@ function KnowledgePage() {
 					</div>
 				</div>
 				<div className="flex items-center gap-2">
+					{messages.length > 0 && (
+						<ContextUsageIndicator
+							contextUsage={contextUsage}
+							onNewChat={handleNewChat}
+						/>
+					)}
 					<Link to="/settings/models">
 						<Button size="sm" variant="ghost">
 							<HugeiconsIcon className="size-4" icon={Setting06Icon} />
 						</Button>
 					</Link>
-					<Button onClick={handleNewChat} size="sm" variant="outline">
+					<Button
+						className="rounded-lg"
+						onClick={handleNewChat}
+						size="sm"
+						variant="outline"
+					>
 						<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
 						{t('knowledge.newChat')}
 					</Button>
 				</div>
 			</div>
+
+			{/* Context Exceeded Dialog */}
+			<AlertDialog
+				onOpenChange={setShowContextExceededDialog}
+				open={showContextExceededDialog}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle className="flex items-center gap-2">
+							<HugeiconsIcon
+								className="size-5 text-destructive"
+								icon={Alert02Icon}
+							/>
+							{t('knowledge.contextExceeded')}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{t('knowledge.contextExceededDescription')}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogAction
+							onClick={() => {
+								setShowContextExceededDialog(false)
+								handleNewChat()
+							}}
+						>
+							<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
+							{t('knowledge.startNewChat')}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 
 			{/* Chat Messages */}
 			<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
@@ -460,14 +528,13 @@ function KnowledgePage() {
 					attachedNotes={attachedNotes}
 					catalogModels={catalogModels}
 					catalogProviders={catalogProviders}
-					configuredProviders={configuredProviders}
+					contextUsage={chatContextUsage}
 					hasApiKey={hasApiKey}
 					isPending={isPending}
 					onAtTrigger={handleAtTrigger}
 					onChange={setInputValue}
 					onModelChange={handleModelChange}
-					onProviderChange={handleProviderChange}
-					onRemoveAttachment={handleRemoveAttachment}
+					onRemoveNoteAttachment={handleRemoveAttachment}
 					onSubmit={handleSendMessage}
 					onThinkingToggle={setThinkingEnabled}
 					selectedModel={selectedModel}
@@ -486,261 +553,6 @@ function KnowledgePage() {
 				ref={entryPickerRef}
 				title={t('knowledge.selectNoteToAttach')}
 			/>
-		</div>
-	)
-}
-
-type EmptyStateProps = {
-	hasApiKey: boolean
-}
-
-function EmptyState({ hasApiKey }: EmptyStateProps) {
-	const { t } = useTranslation()
-
-	return (
-		<div className="flex h-full flex-col items-center justify-center text-center">
-			<HugeiconsIcon
-				className="mb-4 size-12 text-muted-foreground/50"
-				icon={AiBrain01Icon}
-			/>
-			<h3 className="mb-2 text-balance font-medium text-lg">
-				{t('knowledge.emptyState.title')}
-			</h3>
-			<p className="max-w-sm text-pretty text-muted-foreground text-sm">
-				{t('knowledge.emptyState.description')}
-			</p>
-			{!hasApiKey && (
-				<div className="mt-4">
-					<Link to="/settings/models">
-						<Button>
-							<HugeiconsIcon className="mr-2 size-4" icon={Setting06Icon} />
-							{t('knowledge.manageApiKeys')}
-						</Button>
-					</Link>
-				</div>
-			)}
-		</div>
-	)
-}
-
-type MessageListProps = {
-	messages: Message[]
-	isPending: boolean
-	thinkingEnabled: boolean
-}
-
-function MessageList({ messages, isPending, thinkingEnabled }: MessageListProps) {
-	const { t } = useTranslation()
-
-	// Use stick-to-bottom for auto-scroll behavior
-	const { scrollRef, contentRef, isAtBottom, scrollToBottom } = useStickToBottom()
-
-	// Check if there's currently a streaming message with content or thinking
-	const hasStreamingMessageWithContent = messages.some(
-		(m) => m.isStreaming && (m.content.length > 0 || (m.thinking?.length ?? 0) > 0)
-	)
-
-	// Only show waiting indicator when streaming but no content or thinking yet
-	const showWaiting = isPending && !hasStreamingMessageWithContent
-
-	return (
-		<div className="relative h-full">
-			<div className="h-full overflow-y-auto overscroll-contain p-4" ref={scrollRef}>
-				<div className="space-y-4" ref={contentRef}>
-					{messages.map((message) => (
-						<MessageBubble
-							key={message.id}
-							message={message}
-							thinkingEnabled={thinkingEnabled}
-						/>
-					))}
-					{showWaiting && (
-						<div className="flex justify-start">
-							<div className="flex items-center gap-2 rounded-2xl border bg-card px-4 py-2 shadow-sm">
-								<Spinner className="size-4" />
-								<span className="text-muted-foreground text-sm">
-									{t('knowledge.waiting')}
-								</span>
-							</div>
-						</div>
-					)}
-				</div>
-			</div>
-
-			{/* Scroll to bottom button */}
-			{!isAtBottom && (
-				<Button
-					className="absolute right-4 bottom-4 size-8 rounded-full shadow-lg"
-					onClick={() => scrollToBottom()}
-					size="icon"
-					variant="secondary"
-				>
-					<HugeiconsIcon className="size-4" icon={ArrowDown01Icon} />
-				</Button>
-			)}
-		</div>
-	)
-}
-
-type MessageBubbleProps = {
-	message: Message
-	thinkingEnabled: boolean
-}
-
-// Format token count for display
-function formatTokenCount(count?: number): string | number | null {
-	if (!count) return null
-	return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count
-}
-
-// Format cost for display
-function formatCost(cost?: number): string | null {
-	if (!cost) return null
-	if (cost < 0.0001) return '<$0.0001'
-	if (cost < 0.01) return `$${cost.toFixed(4)}`
-	return `$${cost.toFixed(3)}`
-}
-
-type ThinkingCollapseProps = {
-	thinking: string
-	isStreaming: boolean
-	isThinkingOnly: boolean
-	reasoningTokens: string | number | null
-}
-
-function ThinkingCollapse({
-	thinking,
-	isStreaming,
-	isThinkingOnly,
-	reasoningTokens,
-}: ThinkingCollapseProps) {
-	const { t } = useTranslation()
-	const [thinkingOpen, setThinkingOpen] = useState(false)
-
-	return (
-		<Collapsible onOpenChange={setThinkingOpen} open={thinkingOpen}>
-			<CollapsibleTrigger
-				className={cn(
-					'mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5',
-					'bg-muted/50 text-muted-foreground text-xs',
-					'transition-colors hover:bg-muted',
-					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-				)}
-			>
-				<HugeiconsIcon className="size-3.5" icon={AiBrain01Icon} />
-				<span className="flex-1 text-left">
-					{isStreaming && isThinkingOnly
-						? t('knowledge.thinkingInProgress')
-						: t('knowledge.viewThinking')}
-				</span>
-				{reasoningTokens && !isStreaming && (
-					<span className="font-[tabular-nums] text-[10px] opacity-60">
-						{reasoningTokens} tokens
-					</span>
-				)}
-				<svg
-					aria-hidden="true"
-					className={cn('size-3 transition-transform', thinkingOpen && 'rotate-180')}
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						d="M19 9l-7 7-7-7"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={2}
-					/>
-				</svg>
-			</CollapsibleTrigger>
-			<CollapsibleContent>
-				<div
-					className={cn(
-						'mb-2 rounded-lg bg-muted/30 p-3',
-						'prose prose-sm dark:prose-invert max-w-none text-xs',
-						'border-primary/30 border-l-2',
-						isStreaming && isThinkingOnly && 'streaming-cursor'
-					)}
-				>
-					<Streamdown isAnimating={isStreaming && isThinkingOnly}>
-						{thinking}
-					</Streamdown>
-				</div>
-			</CollapsibleContent>
-		</Collapsible>
-	)
-}
-
-function MessageBubble({ message, thinkingEnabled }: MessageBubbleProps) {
-	const isUser = message.role === 'user'
-	const isAssistant = message.role === 'assistant'
-
-	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
-	const isThinkingOnly = hasThinking && !message.content
-
-	// Don't render completely empty streaming messages (no content and no thinking)
-	if (message.isStreaming && !message.content && !message.thinking) {
-		return null
-	}
-
-	const outputTokens = formatTokenCount(message.usage?.outputTokens)
-	const reasoningTokens = formatTokenCount(message.usage?.reasoningTokens)
-	const costDisplay = formatCost(message.usage?.costUSD)
-
-	return (
-		<div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
-			<div
-				className={cn(
-					'max-w-[85%] rounded-2xl px-4 py-2',
-					isUser
-						? 'bg-primary text-primary-foreground'
-						: 'border bg-card text-card-foreground shadow-sm'
-				)}
-			>
-				{/* Thinking content for assistant messages */}
-				{isAssistant && hasThinking && thinkingEnabled && (
-					<ThinkingCollapse
-						isStreaming={message.isStreaming ?? false}
-						isThinkingOnly={isThinkingOnly}
-						reasoningTokens={reasoningTokens}
-						thinking={message.thinking ?? ''}
-					/>
-				)}
-
-				{/* Main content */}
-				{isAssistant ? (
-					<div
-						className={cn(
-							'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm',
-							message.isStreaming && !isThinkingOnly && 'streaming-cursor'
-						)}
-					>
-						<Streamdown isAnimating={message.isStreaming && !isThinkingOnly}>
-							{message.content}
-						</Streamdown>
-					</div>
-				) : (
-					<p className="whitespace-pre-wrap text-pretty text-sm">
-						{renderTextWithMentions(message.content, 'user-message')}
-					</p>
-				)}
-
-				{/* Footer: timestamp, token count and cost */}
-				{!message.isStreaming && (
-					<div
-						className={cn(
-							'mt-1 flex items-center gap-2 font-[tabular-nums] text-[10px]',
-							isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-						)}
-					>
-						<span>{message.timestamp.toLocaleTimeString()}</span>
-						{outputTokens && (
-							<span className="opacity-60">• {outputTokens} tokens</span>
-						)}
-						{costDisplay && <span className="opacity-60">• {costDisplay}</span>}
-					</div>
-				)}
-			</div>
 		</div>
 	)
 }

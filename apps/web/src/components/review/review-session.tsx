@@ -1,11 +1,11 @@
+import { Button } from '@folionote/ui/button'
+import { Skeleton } from '@folionote/ui/skeleton'
 import { RefreshIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
 	getUserTimezoneOffset,
 	REVIEW_RULES,

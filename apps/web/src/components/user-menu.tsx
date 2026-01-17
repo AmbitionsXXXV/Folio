@@ -1,6 +1,30 @@
 import { LANGUAGE_LABELS } from '@folionote/constants'
 import { type SupportedLanguage, supportedLanguages } from '@folionote/locales'
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@folionote/ui/avatar'
+import { Button } from '@folionote/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuPortal,
+	DropdownMenuSeparator,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
+	DropdownMenuTrigger,
+} from '@folionote/ui/dropdown-menu'
+import { Skeleton } from '@folionote/ui/skeleton'
+import {
 	LanguageCircleIcon,
 	Logout03Icon,
 	Moon02Icon,
@@ -12,24 +36,10 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuPortal,
-	DropdownMenuSeparator,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
-import { Skeleton } from './ui/skeleton'
 
 type UserMenuProps = {
 	collapsed?: boolean
@@ -218,6 +228,29 @@ export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 	const { t } = useTranslation()
 	const navigate = useNavigate()
 	const { data: session, isPending } = authClient.useSession()
+	const [showSignOutDialog, setShowSignOutDialog] = useState(false)
+
+	const handleSignOut = useCallback(async () => {
+		setShowSignOutDialog(false)
+		// Revoke all other sessions first to ensure complete sign out
+		try {
+			await authClient.revokeSessions()
+		} catch (error) {
+			console.warn('Failed to revoke sessions:', error)
+		}
+
+		// Then perform the standard signOut
+		authClient.signOut({
+			fetchOptions: {
+				onSuccess: () => {
+					navigate({ to: '/' })
+				},
+			},
+		})
+	}, [navigate])
+
+	// Default side: 'top' for sidebar (non-collapsed), 'bottom' for mobile (collapsed)
+	const menuSide = side ?? (collapsed ? 'bottom' : 'top')
 
 	if (isPending) {
 		return (
@@ -247,68 +280,69 @@ export default function UserMenu({ collapsed = false, side }: UserMenuProps) {
 		)
 	}
 
-	const handleSignOut = async () => {
-		// 首先撤销所有其他session，确保彻底登出
-		try {
-			await authClient.revokeSessions()
-		} catch (error) {
-			console.warn('Failed to revoke sessions:', error)
-		}
-
-		// 然后执行标准的signOut
-		authClient.signOut({
-			fetchOptions: {
-				onSuccess: () => {
-					navigate({ to: '/' })
-				},
-			},
-		})
-	}
-
-	// Default side: 'top' for sidebar (non-collapsed), 'bottom' for mobile (collapsed)
-	const menuSide = side ?? (collapsed ? 'bottom' : 'top')
-
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger>
-				<UserMenuTrigger
-					collapsed={collapsed}
-					imageUrl={session.user.image}
-					userEmail={session.user.email}
-					userName={session.user.name}
-				/>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="end"
-				className="w-56"
-				side={menuSide}
-				sideOffset={8}
-			>
-				<UserMenuHeader
-					imageUrl={session.user.image}
-					userEmail={session.user.email}
-					userName={session.user.name}
-				/>
+		<>
+			<DropdownMenu>
+				<DropdownMenuTrigger>
+					<UserMenuTrigger
+						collapsed={collapsed}
+						imageUrl={session.user.image}
+						userEmail={session.user.email}
+						userName={session.user.name}
+					/>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="end"
+					className="w-56"
+					side={menuSide}
+					sideOffset={8}
+				>
+					<UserMenuHeader
+						imageUrl={session.user.image}
+						userEmail={session.user.email}
+						userName={session.user.name}
+					/>
 
-				<DropdownMenuSeparator />
+					<DropdownMenuSeparator />
 
-				<DropdownMenuItem>
-					<Link className="flex w-full items-center gap-2" to="/settings/general">
-						<HugeiconsIcon className="mr-2 size-4" icon={Settings02Icon} />
-						{t('nav.settings', 'Settings')}
-					</Link>
-				</DropdownMenuItem>
+					<DropdownMenuItem>
+						<Link className="flex w-full items-center gap-2" to="/settings/general">
+							<HugeiconsIcon className="mr-2 size-4" icon={Settings02Icon} />
+							{t('nav.settings', 'Settings')}
+						</Link>
+					</DropdownMenuItem>
 
-				<LanguageSubmenu />
-				<ThemeSubmenu />
+					<LanguageSubmenu />
+					<ThemeSubmenu />
 
-				<DropdownMenuSeparator />
+					<DropdownMenuSeparator />
 
-				<DropdownMenuItem onClick={handleSignOut} variant="destructive">
-					<HugeiconsIcon className="mr-2 size-4" icon={Logout03Icon} />
-					{t('auth.signOut')}
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+					<DropdownMenuItem
+						onClick={() => setShowSignOutDialog(true)}
+						variant="destructive"
+					>
+						<HugeiconsIcon className="mr-2 size-4" icon={Logout03Icon} />
+						{t('auth.signOut')}
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			<AlertDialog onOpenChange={setShowSignOutDialog} open={showSignOutDialog}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>{t('profile.signOutConfirmTitle')}</AlertDialogTitle>
+						<AlertDialogDescription>
+							{t('profile.signOutConfirmDescription')}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+						<AlertDialogAction onClick={handleSignOut} variant="destructive">
+							{t('auth.signOut')}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	)
 }

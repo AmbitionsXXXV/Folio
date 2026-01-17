@@ -1,13 +1,13 @@
-import { Calendar01Icon, Time01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
+import { Button } from '@folionote/ui/button'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '@folionote/ui/dropdown-menu'
+import { Calendar01Icon, Time01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useTranslation } from 'react-i18next'
 import { SNOOZE_PRESETS } from '@/constants'
 import type { SnoozeDropdownProps } from '@/types/review'
 

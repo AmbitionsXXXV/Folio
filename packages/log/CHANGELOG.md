@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.3
+
+### Patch Changes
+
+- feat: ✨ ai integration enhance
+
 ## 0.1.2
 
 ### Patch Changes

@@ -5,13 +5,26 @@
  * Returns a text stream that can be consumed progressively.
  */
 
-import { streamText as aiStreamText } from 'ai'
+import { streamText as aiStreamText, type ModelMessage } from 'ai'
 import type { DecryptedCredential } from './credentials/types'
 import type { AiProvider } from './providers/types'
 import { createVercelAiChatModel } from './vercel-ai'
 
 export type StreamTextInput = {
-	prompt: string
+	/**
+	 * Single prompt for simple requests (will be converted to user message)
+	 */
+	prompt?: string
+	/**
+	 * Conversation history for multi-turn chat with context continuity.
+	 * Should be ModelMessage[] from `convertToModelMessages(uiMessages)`.
+	 * Takes precedence over `prompt` if both are provided.
+	 */
+	messages?: ModelMessage[]
+	/**
+	 * System prompt to prepend to messages.
+	 */
+	system?: string
 	/**
 	 * Optional model override.
 	 * If omitted, falls back to BYOK credential/model defaults.
@@ -84,6 +97,10 @@ function buildProviderOptions(
  *
  * This is intended for server-side execution only.
  * Returns a streaming result that can be consumed progressively.
+ *
+ * Supports two modes:
+ * 1. Simple prompt mode: Pass `prompt` for single-turn requests
+ * 2. Conversation mode: Pass `messages` (from `convertToModelMessages`) for multi-turn chat
  */
 export function streamTextWithCredential(
 	credential: DecryptedCredential,
@@ -97,11 +114,22 @@ export function streamTextWithCredential(
 		input.reasoningBudgetTokens ?? DEFAULT_REASONING_BUDGET_TOKENS
 	)
 
-	const result = aiStreamText({
-		model,
-		prompt: input.prompt,
-		providerOptions,
-	})
+	// Determine whether to use messages or prompt mode
+	const hasMessages = input.messages && input.messages.length > 0
+
+	const result = hasMessages
+		? aiStreamText({
+				model,
+				system: input.system,
+				messages: input.messages as NonNullable<typeof input.messages>,
+				providerOptions,
+			})
+		: aiStreamText({
+				model,
+				system: input.system,
+				prompt: input.prompt ?? '',
+				providerOptions,
+			})
 
 	return {
 		provider: credential.provider,

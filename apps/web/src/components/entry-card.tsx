@@ -1,3 +1,12 @@
+import { Button } from '@folionote/ui/button'
+import { Card, CardContent, CardHeader } from '@folionote/ui/card'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@folionote/ui/dropdown-menu'
 import {
 	Delete02Icon,
 	MoreVerticalIcon,
@@ -9,15 +18,6 @@ import { Link } from '@tanstack/react-router'
 import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { Button } from './ui/button'
-import { Card, CardContent, CardHeader } from './ui/card'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from './ui/dropdown-menu'
 
 type EntryCardProps = {
 	id: string

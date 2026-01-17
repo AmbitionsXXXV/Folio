@@ -1,0 +1,151 @@
+import { Button } from '@folionote/ui/button'
+import { Input } from '@folionote/ui/input'
+import { Textarea } from '@folionote/ui/textarea'
+import { cva, type VariantProps } from 'class-variance-authority'
+import type * as React from 'react'
+import { cn } from '@/lib/utils'
+
+function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
+	return (
+		<div
+			className={cn(
+				'group/input-group etc-input-group relative flex w-full min-w-0 items-center outline-none has-[>textarea]:h-auto',
+				className
+			)}
+			data-slot="input-group"
+			role="group"
+			{...props}
+		/>
+	)
+}
+
+const inputGroupAddonVariants = cva(
+	'etc-input-group-addon flex cursor-text select-none items-center justify-center',
+	{
+		variants: {
+			align: {
+				'inline-start': 'etc-input-group-addon-align-inline-start order-first',
+				'inline-end': 'etc-input-group-addon-align-inline-end order-last',
+				'block-start':
+					'etc-input-group-addon-align-block-start order-first w-full justify-start',
+				'block-end':
+					'etc-input-group-addon-align-block-end order-last w-full justify-start',
+			},
+		},
+		defaultVariants: {
+			align: 'inline-start',
+		},
+	}
+)
+
+function InputGroupAddon({
+	className,
+	align = 'inline-start',
+	...props
+}: React.ComponentProps<'div'> & VariantProps<typeof inputGroupAddonVariants>) {
+	return (
+		<div
+			className={cn(inputGroupAddonVariants({ align }), className)}
+			data-align={align}
+			data-slot="input-group-addon"
+			onMouseDown={(e) => {
+				const target = e.target as HTMLElement
+				if (!e.currentTarget.contains(target)) return
+				const isInteractive = target.closest('button, a, input, select, textarea')
+				if (isInteractive) return
+				e.preventDefault()
+				const parent = e.currentTarget.parentElement
+				const input = parent?.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+					'input, textarea'
+				)
+				if (input && !parent?.querySelector('input:focus, textarea:focus')) {
+					input.focus()
+				}
+			}}
+			role="group"
+			{...props}
+		/>
+	)
+}
+
+const inputGroupButtonVariants = cva(
+	'etc-input-group-button flex items-center shadow-none',
+	{
+		variants: {
+			size: {
+				xs: 'etc-input-group-button-size-xs',
+				sm: 'etc-input-group-button-size-sm',
+				'icon-xs': 'etc-input-group-button-size-icon-xs',
+				'icon-sm': 'etc-input-group-button-size-icon-sm',
+			},
+		},
+		defaultVariants: {
+			size: 'xs',
+		},
+	}
+)
+
+function InputGroupButton({
+	className,
+	type = 'button',
+	variant = 'ghost',
+	size = 'xs',
+	...props
+}: Omit<React.ComponentProps<typeof Button>, 'size' | 'type'> &
+	VariantProps<typeof inputGroupButtonVariants> & {
+		type?: 'button' | 'submit' | 'reset'
+	}) {
+	return (
+		<Button
+			className={cn(inputGroupButtonVariants({ size }), className)}
+			data-size={size}
+			type={type}
+			variant={variant}
+			{...props}
+		/>
+	)
+}
+
+function InputGroupText({ className, ...props }: React.ComponentProps<'span'>) {
+	return (
+		<span
+			className={cn(
+				'etc-input-group-text flex items-center [&_svg]:pointer-events-none',
+				className
+			)}
+			{...props}
+		/>
+	)
+}
+
+function InputGroupInput({ className, ...props }: React.ComponentProps<'input'>) {
+	return (
+		<Input
+			className={cn('etc-input-group-input flex-1', className)}
+			data-slot="input-group-control"
+			{...props}
+		/>
+	)
+}
+
+function InputGroupTextarea({
+	className,
+	...props
+}: React.ComponentProps<'textarea'>) {
+	return (
+		<Textarea
+			className={cn('etc-input-group-textarea flex-1 resize-none', className)}
+			data-slot="input-group-control"
+			{...props}
+		/>
+	)
+}
+
+export {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupButton,
+	InputGroupText,
+	InputGroupInput,
+	InputGroupTextarea,
+}

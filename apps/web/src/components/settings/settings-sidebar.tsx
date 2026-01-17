@@ -1,3 +1,5 @@
+import { Button } from '@folionote/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import {
 	AccountSetting01Icon,
 	AiBeautifyIcon,
@@ -10,8 +12,6 @@ import { Link, useMatchRoute } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 type SettingsNavItem = {

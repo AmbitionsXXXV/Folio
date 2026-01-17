@@ -1,14 +1,17 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { AppSidebar } from '@/components/app-sidebar'
 import { MobileHeader } from '@/components/mobile-header'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider } from '@/components/sidebar'
 import { getUser } from '@/functions/get-user'
 
 export const Route = createFileRoute('/_app')({
-	beforeLoad: async () => {
+	beforeLoad: async ({ location }) => {
 		const session = await getUser()
 		if (!session) {
-			throw redirect({ to: '/login' })
+			throw redirect({
+				to: '/login',
+				search: { redirect: location.href },
+			})
 		}
 		return { session }
 	},
