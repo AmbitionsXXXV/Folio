@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.4
+
+### Patch Changes
+
+- feat: ✨ chat message persistence
+
 ## 0.1.3
 
 ### Patch Changes
