@@ -121,6 +121,38 @@ Done:
 实现用户级模型启用开关功能，支持全类型（chat/embedding/image/tts/stt 等）与全站生效。
 新增 `user_ai_model_settings` 表存储用户覆盖，API 层合并默认与用户设置，Web 端提供搜索+开关 UI。
 
+### 2.2 ChatInput 附件整合
+
+- [x] 设计 ChatInput 文件附件 props 与类型（`AttachedFile`，受控模式）
+- [x] 新增 `apps/web/src/components/ai-elements/chat-input/file-attachment.tsx`
+- [x] 更新 `apps/web/src/components/ai-elements/chat-input/types.ts` 新增 `AttachedFile` 与 props
+- [x] 更新 `apps/web/src/components/ai-elements/chat-input/chat-input.tsx` 渲染文件与笔记附件
+- [x] 更新 `apps/web/src/components/ai-elements/chat-input/index.ts` 导出新组件与类型
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx` 适配 prop 重命名
+- [x] 更新 i18n 资源文件（en-US / zh-CN / ja-JP）新增 `image`、`attachment` key
+- [x] 更新 `docs/ai-input-caret.md` 补充 ChatInput 附件使用说明
+- [x] 运行 `pnpm run check-types` 确保无类型错误
+
+Done:
+整合 ChatInput 附件能力，支持笔记附件与文件附件的受控渲染。
+新增 `FileAttachment` 组件，与 `NoteAttachment` 保持一致的 UI 风格与交互模式。
+
+### 2.3 会话上下文与 @mention 对齐
+
+- [x] 为 `ChatMessage` 增加 `mentionTitles` 字段
+- [x] 更新 `MessageBubble` 渲染用户消息时传递 `mentionTitles`
+- [x] 前端请求改用 `UIMessage[]` 格式并在发送时捕获 mention 标题
+- [x] 服务端使用 `convertToModelMessages` 转换消息格式
+- [x] 新增 `buildKnowledgeChatSystemPrompt` 会话模式系统提示构造
+- [x] 更新 `packages/ai/src/stream-text.ts` 支持 `ModelMessage[]`
+- [x] 补充会话模式单测
+- [x] 更新 `docs/ai-mvp-byok-v0.md` 新增 Section 25
+- [x] 运行 `pnpm run check-types` 确保无类型错误
+
+Done:
+对齐 @mention 渲染逻辑与会话上下文拼接。前端使用 `UIMessage[]` 格式携带完整消息历史，服务端通过 `convertToModelMessages` 转换后传递给模型。
+新增 `buildKnowledgeChatSystemPrompt` 函数用于会话模式，避免 system prompt 重复包含用户输入。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

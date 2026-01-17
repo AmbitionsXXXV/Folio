@@ -32,6 +32,8 @@ export type ChatMessage = {
 		reasoningTokens?: number
 		costUSD?: number
 	}
+	/** Mention titles for rendering @mentions in user messages */
+	mentionTitles?: string[]
 }
 
 /** Context usage information */

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	buildKnowledgeChatPrompt,
+	buildKnowledgeChatSystemPrompt,
 	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
 	KNOWLEDGE_CHAT_SYSTEM_PROMPT,
 	type NoteContext,
@@ -222,5 +223,102 @@ describe('constants', () => {
 	it('exports system prompt', () => {
 		expect(KNOWLEDGE_CHAT_SYSTEM_PROMPT).toContain('knowledge base')
 		expect(KNOWLEDGE_CHAT_SYSTEM_PROMPT).toContain('Markdown')
+	})
+})
+
+describe('buildKnowledgeChatSystemPrompt (conversation mode)', () => {
+	const createNote = (
+		id: string,
+		title: string,
+		contentText: string
+	): NoteContext => ({
+		id,
+		title,
+		contentText,
+	})
+
+	it('builds system prompt without user question', () => {
+		const result = buildKnowledgeChatSystemPrompt({})
+
+		expect(result.systemPrompt).toContain(KNOWLEDGE_CHAT_SYSTEM_PROMPT)
+		expect(result.systemPrompt).not.toContain('## User Question')
+		expect(result.attachedNotesCount).toBe(0)
+		expect(result.retrievedNotesCount).toBe(0)
+		expect(result.wasTruncated).toBe(false)
+	})
+
+	it('includes attached notes in system prompt', () => {
+		const attachedNotes = [
+			createNote('1', 'Note A', 'Content A'),
+			createNote('2', 'Note B', 'Content B'),
+		]
+
+		const result = buildKnowledgeChatSystemPrompt({ attachedNotes })
+
+		expect(result.systemPrompt).toContain('## Attached Notes (User Selected)')
+		expect(result.systemPrompt).toContain('### Note A')
+		expect(result.systemPrompt).toContain('### Note B')
+		expect(result.systemPrompt).not.toContain('## User Question')
+		expect(result.attachedNotesCount).toBe(2)
+	})
+
+	it('includes retrieved notes in system prompt', () => {
+		const retrievedNotes = [createNote('1', 'RAG Note', 'RAG content')]
+
+		const result = buildKnowledgeChatSystemPrompt({ retrievedNotes })
+
+		expect(result.systemPrompt).toContain('## Related Notes (Retrieved)')
+		expect(result.systemPrompt).toContain('### RAG Note')
+		expect(result.systemPrompt).not.toContain('## User Question')
+		expect(result.retrievedNotesCount).toBe(1)
+	})
+
+	it('deduplicates retrieved notes that are also attached', () => {
+		const attachedNotes = [createNote('1', 'Same', 'Content')]
+		const retrievedNotes = [
+			createNote('1', 'Same', 'Content'),
+			createNote('2', 'Different', 'Other'),
+		]
+
+		const result = buildKnowledgeChatSystemPrompt({
+			attachedNotes,
+			retrievedNotes,
+		})
+
+		expect(result.attachedNotesCount).toBe(1)
+		expect(result.retrievedNotesCount).toBe(1)
+	})
+
+	it('maintains correct structure order', () => {
+		const attachedNotes = [createNote('1', 'Attached', 'A')]
+		const retrievedNotes = [createNote('2', 'Retrieved', 'B')]
+
+		const result = buildKnowledgeChatSystemPrompt({
+			attachedNotes,
+			retrievedNotes,
+		})
+
+		const systemIdx = result.systemPrompt.indexOf(KNOWLEDGE_CHAT_SYSTEM_PROMPT)
+		const attachedIdx = result.systemPrompt.indexOf('## Attached Notes')
+		const retrievedIdx = result.systemPrompt.indexOf('## Related Notes')
+
+		expect(systemIdx).toBeLessThan(attachedIdx)
+		expect(attachedIdx).toBeLessThan(retrievedIdx)
+		// Should not have user question section
+		expect(result.systemPrompt).not.toContain('## User Question')
+	})
+
+	it('respects budget constraints', () => {
+		const notes = Array.from({ length: 10 }, (_, i) =>
+			createNote(`${i}`, `Note ${i}`, 'A'.repeat(200))
+		)
+
+		const result = buildKnowledgeChatSystemPrompt({
+			attachedNotes: notes,
+			maxTotalContextChars: 500,
+			maxSingleNoteChars: 300,
+		})
+
+		expect(result.attachedNotesCount).toBeLessThan(10)
 	})
 })

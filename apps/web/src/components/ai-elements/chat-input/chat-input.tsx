@@ -1,17 +1,8 @@
-import { Badge } from '@folionote/ui/badge'
-import { Button } from '@folionote/ui/button'
 import { cn } from '@folionote/ui/lib/utils'
-import { Textarea } from '@folionote/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
-import {
-	AiBrain01Icon,
-	ArrowMoveDownLeftIcon,
-	Cancel01Icon,
-	FileEditIcon,
-	RefreshIcon,
-} from '@hugeicons/core-free-icons'
+import { AiBrain01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { type KeyboardEvent, type RefObject, useMemo, useRef } from 'react'
+import { type KeyboardEvent, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
 	Context,
@@ -27,67 +18,19 @@ import {
 } from '@/components/ai-elements/context-usage'
 import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
 import { AiModelSelector } from '@/components/ai-elements/model-selector'
-import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
-
-// ============================================================================
-// Types
-// ============================================================================
-
-/** Attached note info for display */
-export type AttachedNote = {
-	id: string
-	title: string
-}
-
-/** Accumulated token usage from messages */
-export type SessionUsage = {
-	inputTokens?: number
-	outputTokens?: number
-	totalTokens?: number
-	reasoningTokens?: number
-	cachedInputTokens?: number
-}
-
-/** Context usage information for the chat session */
-export type ChatContextUsage = {
-	/** Used tokens in context */
-	usedTokens: number
-	/** Max tokens for the model context window */
-	maxTokens: number
-	/** Accumulated usage from all messages */
-	sessionUsage?: SessionUsage
-	/** Model ID for cost calculation (e.g., 'gpt-4o', 'claude-3-5-sonnet') */
-	modelId?: string
-}
-
-export type ChatInputProps = {
-	value: string
-	onChange: (value: string) => void
-	onSubmit: () => void
-	disabled?: boolean
-	isPending?: boolean
-	placeholder?: string
-	className?: string
-	// Model selection props
-	selectedProvider: string
-	selectedModel: string
-	onModelChange: (model: string) => void
-	hasApiKey: boolean
-	// Model catalog (from useAiModelCatalog)
-	catalogProviders: CatalogProvider[]
-	catalogModels: CatalogModel[]
-	// Thinking/reasoning toggle
-	thinkingEnabled?: boolean
-	onThinkingToggle?: (enabled: boolean) => void
-	// Attachment props
-	attachedNotes?: AttachedNote[]
-	onRemoveAttachment?: (noteId: string) => void
-	onAtTrigger?: () => void
-	/** External ref for the textarea */
-	textareaRef?: RefObject<HTMLTextAreaElement | null>
-	/** Context usage for the current session */
-	contextUsage?: ChatContextUsage
-}
+import {
+	PromptInput,
+	PromptInputBody,
+	PromptInputFooter,
+	PromptInputHeader,
+	type PromptInputMessage,
+	PromptInputSubmit,
+	PromptInputTools,
+} from '@/components/ai-elements/prompt-input'
+import { FileAttachment } from './file-attachment'
+import { HighlightedTextarea } from './highlighted-textarea'
+import { NoteAttachment } from './note-attachment'
+import type { ChatInputProps } from './types'
 
 export function ChatInput({
 	value,
@@ -106,14 +49,14 @@ export function ChatInput({
 	thinkingEnabled = false,
 	onThinkingToggle,
 	attachedNotes = [],
-	onRemoveAttachment,
+	onRemoveNoteAttachment,
 	onAtTrigger,
-	textareaRef: externalTextareaRef,
+	attachedFiles = [],
+	onRemoveFileAttachment,
+	textareaRef,
 	contextUsage,
 }: ChatInputProps) {
 	const { t } = useTranslation()
-	const internalTextareaRef = useRef<HTMLTextAreaElement>(null)
-	const textareaRef = externalTextareaRef ?? internalTextareaRef
 
 	// Get enabled chat models for the selected provider from catalog
 	const providerModels = useMemo(() => {
@@ -163,13 +106,17 @@ export function ChatInput({
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault()
 			if (canSend) {
-				onSubmit()
+				e.currentTarget.form?.requestSubmit()
 			}
 		}
 	}
 
-	const canSend = !(disabled || isPending) && hasApiKey && value.trim().length > 0
-	const hasAttachments = attachedNotes.length > 0
+	const isDisabled = disabled || isPending
+	const hasMessage = Boolean(value.trim())
+	const canSend = !isDisabled && hasApiKey && hasMessage
+	const hasNoteAttachments = attachedNotes.length > 0
+	const hasFileAttachments = attachedFiles.length > 0
+	const hasAttachments = hasNoteAttachments || hasFileAttachments
 
 	// Get known mention titles from attached notes
 	const knownMentions = useMemo(
@@ -182,93 +129,53 @@ export function ChatInput({
 		return renderTextWithMentions(value, 'default', knownMentions)
 	}, [value, knownMentions])
 
+	const handlePromptSubmit = (message: PromptInputMessage) => {
+		if (isDisabled || !hasApiKey) return
+		if (!message.text.trim()) return
+		onSubmit()
+	}
+
 	return (
-		<div
-			className={cn(
-				'relative rounded-lg border bg-background shadow-sm transition-shadow',
-				'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
-				'hover:shadow-md',
-				className
-			)}
-		>
-			{/* Attached Notes Chips */}
+		<PromptInput className={className} onSubmit={handlePromptSubmit}>
+			{/* Attachments (Notes + Files) */}
 			{hasAttachments && (
-				<div className="flex flex-wrap gap-1.5 px-3 py-2">
+				<PromptInputHeader className="gap-2 px-3 pt-2">
 					{attachedNotes.map((note) => (
-						<Badge
-							className="group flex items-center gap-1 pr-1"
-							key={note.id}
-							variant="secondary"
-						>
-							<HugeiconsIcon
-								className="size-3 text-muted-foreground"
-								icon={FileEditIcon}
-							/>
-							<span className="max-w-[150px] truncate text-xs">
-								{note.title || t('entryPicker.untitled')}
-							</span>
-							{onRemoveAttachment && (
-								<Button
-									aria-label={t('knowledge.removeAttachment')}
-									className="size-4 p-0 opacity-60 group-hover:opacity-100"
-									onClick={() => onRemoveAttachment(note.id)}
-									size="icon"
-									type="button"
-									variant="ghost"
-								>
-									<HugeiconsIcon className="size-3" icon={Cancel01Icon} />
-								</Button>
-							)}
-						</Badge>
+						<NoteAttachment
+							key={`note-${note.id}`}
+							note={note}
+							onRemove={onRemoveNoteAttachment}
+						/>
 					))}
-				</div>
+					{attachedFiles.map((file) => (
+						<FileAttachment
+							file={file}
+							key={`file-${file.id}`}
+							onRemove={onRemoveFileAttachment}
+						/>
+					))}
+				</PromptInputHeader>
 			)}
 
-			{/* Textarea with mention highlighting */}
-			<div className="relative">
-				{/* Textarea (text color transparent, only caret visible) */}
-				<Textarea
-					className={cn(
-						'relative max-h-[200px] min-h-[100px] resize-none border-none bg-transparent',
-						'px-4 pb-16',
-						hasAttachments ? 'pt-2' : 'pt-4',
-						'focus-visible:ring-0 focus-visible:ring-offset-0',
-						'placeholder:text-muted-foreground/60',
-						'text-transparent caret-foreground selection:bg-primary/20'
-					)}
-					disabled={disabled || isPending || !hasApiKey}
-					onChange={(e) => onChange(e.target.value)}
+			<PromptInputBody>
+				<HighlightedTextarea
+					disabled={isDisabled || !hasApiKey}
+					highlightedContent={highlightedContent}
+					name="message"
+					onChange={onChange}
 					onKeyDown={handleKeyDown}
 					placeholder={
 						hasApiKey
 							? placeholder || t('knowledge.inputPlaceholder')
 							: t('knowledge.configureApiKeyFirst')
 					}
-					ref={textareaRef}
+					textareaRef={textareaRef}
 					value={value}
 				/>
+			</PromptInputBody>
 
-				{/* Highlighted content overlay (renders on top of textarea) */}
-				<div
-					aria-hidden="true"
-					className={cn(
-						'pointer-events-none absolute inset-0 z-10',
-						'max-h-[200px] min-h-[100px] overflow-hidden',
-						'wrap-break-word whitespace-pre-wrap',
-						'px-4 pb-16',
-						hasAttachments ? 'pt-2' : 'pt-4',
-						'text-sm',
-						'text-foreground'
-					)}
-				>
-					{highlightedContent}
-				</div>
-			</div>
-
-			{/* Bottom Actions Bar */}
-			<div className="absolute right-3 bottom-3 left-3 flex items-center justify-between">
-				{/* Left: Context Usage + Model Selector + Thinking Toggle */}
-				<div className="flex items-center gap-1">
+			<PromptInputFooter className="px-3">
+				<PromptInputTools>
 					{/* Context Usage Indicator */}
 					{contextUsage && contextUsage.usedTokens > 0 && (
 						<Context
@@ -299,7 +206,7 @@ export function ChatInput({
 						catalogModels={catalogModels}
 						catalogProviders={catalogProviders}
 						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none hover:bg-accent"
-						disabled={disabled || isPending || !hasApiKey}
+						disabled={isDisabled || !hasApiKey}
 						onValueChange={onModelChange}
 						placeholder={t('knowledge.selectModel')}
 						value={selectedModel}
@@ -333,23 +240,14 @@ export function ChatInput({
 							</TooltipContent>
 						</Tooltip>
 					)}
-				</div>
+				</PromptInputTools>
 
-				{/* Right: Submit Button */}
-				<Button
+				<PromptInputSubmit
 					aria-label={t('knowledge.send')}
-					className="size-8 shrink-0 rounded-lg"
 					disabled={!canSend}
-					onClick={onSubmit}
-					size="icon"
-				>
-					{isPending ? (
-						<HugeiconsIcon className="size-4 animate-spin" icon={RefreshIcon} />
-					) : (
-						<HugeiconsIcon className="size-4" icon={ArrowMoveDownLeftIcon} />
-					)}
-				</Button>
-			</div>
-		</div>
+					status={isPending ? 'submitted' : 'ready'}
+				/>
+			</PromptInputFooter>
+		</PromptInput>
 	)
 }

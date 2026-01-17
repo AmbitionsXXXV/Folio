@@ -5,31 +5,24 @@
  * Returns a text stream that can be consumed progressively.
  */
 
-import { streamText as aiStreamText } from 'ai'
+import { streamText as aiStreamText, type ModelMessage } from 'ai'
 import type { DecryptedCredential } from './credentials/types'
 import type { AiProvider } from './providers/types'
 import { createVercelAiChatModel } from './vercel-ai'
 
-/** Message type for conversation history */
-export type ChatMessage = {
-	role: 'user' | 'assistant' | 'system'
-	content: string
-}
-
 export type StreamTextInput = {
 	/**
 	 * Single prompt for simple requests (will be converted to user message)
-	 * @deprecated Use `messages` instead for conversation continuity
 	 */
 	prompt?: string
 	/**
 	 * Conversation history for multi-turn chat with context continuity.
+	 * Should be ModelMessage[] from `convertToModelMessages(uiMessages)`.
 	 * Takes precedence over `prompt` if both are provided.
 	 */
-	messages?: ChatMessage[]
+	messages?: ModelMessage[]
 	/**
 	 * System prompt to prepend to messages.
-	 * Only used when `messages` is provided.
 	 */
 	system?: string
 	/**
@@ -100,18 +93,6 @@ function buildProviderOptions(
 }
 
 /**
- * Convert ChatMessage array to format expected by Vercel AI SDK
- */
-function convertToMessages(
-	messages: ChatMessage[]
-): Array<{ role: 'user' | 'assistant' | 'system'; content: string }> {
-	return messages.map((msg) => ({
-		role: msg.role,
-		content: msg.content,
-	}))
-}
-
-/**
  * Stream text using a decrypted BYOK credential.
  *
  * This is intended for server-side execution only.
@@ -119,7 +100,7 @@ function convertToMessages(
  *
  * Supports two modes:
  * 1. Simple prompt mode: Pass `prompt` for single-turn requests
- * 2. Conversation mode: Pass `messages` for multi-turn chat with context continuity
+ * 2. Conversation mode: Pass `messages` (from `convertToModelMessages`) for multi-turn chat
  */
 export function streamTextWithCredential(
 	credential: DecryptedCredential,
@@ -140,11 +121,12 @@ export function streamTextWithCredential(
 		? aiStreamText({
 				model,
 				system: input.system,
-				messages: convertToMessages(input.messages ?? []),
+				messages: input.messages as NonNullable<typeof input.messages>,
 				providerOptions,
 			})
 		: aiStreamText({
 				model,
+				system: input.system,
 				prompt: input.prompt ?? '',
 				providerOptions,
 			})

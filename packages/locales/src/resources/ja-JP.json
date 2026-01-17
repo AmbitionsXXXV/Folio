@@ -818,6 +818,7 @@
     "manageApiKeys": "APIキーを管理",
     "selectNoteToAttach": "添付するノートを選択",
     "removeAttachment": "添付を削除",
+    "noteAttachment": "ノート添付",
     "toggleThinking": "拡張思考を切り替え",
     "enableThinking": "拡張思考を有効化",
     "thinkingEnabled": "拡張思考が有効",
@@ -832,6 +833,8 @@
     "startNewChat": "新しいチャットを開始",
     "contextWarning": "コンテキストがほぼ満杯 ({{percent}}%)",
     "estimatedTokens": "約 {{count}} トークン",
+    "image": "画像",
+    "attachment": "添付ファイル",
     "emptyState": {
       "title": "会話を開始",
       "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。@ で特定のノートをコンテキストとして添付できます。"

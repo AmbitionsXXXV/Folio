@@ -1,19 +1,18 @@
+import type { UIMessage } from 'ai'
 import { useCallback, useRef, useState } from 'react'
 import { getServerUrl } from '@/utils/api-environment'
 
-/** Message type for conversation history */
-export type ChatMessageInput = {
-	role: 'user' | 'assistant' | 'system'
-	content: string
-}
+/** Message type for conversation history (UI format from Vercel AI SDK) */
+export type ChatMessageInput = UIMessage
 
 type StreamTextParams = {
 	provider: string
 	apiKey: string
 	baseUrl?: string
 	model?: string
+	/** The current user prompt (still required for RAG query) */
 	prompt: string
-	/** Optional: Conversation history for context continuity */
+	/** Conversation history as UIMessage array for context continuity */
 	messages?: ChatMessageInput[]
 	/** Optional: IDs of notes to attach as context */
 	noteEntryIds?: string[]

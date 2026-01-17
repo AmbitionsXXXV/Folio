@@ -818,6 +818,7 @@
     "manageApiKeys": "管理 API 密钥",
     "selectNoteToAttach": "选择要附加的笔记",
     "removeAttachment": "移除附件",
+    "noteAttachment": "笔记附件",
     "toggleThinking": "切换深度思考",
     "enableThinking": "启用深度思考",
     "thinkingEnabled": "深度思考已启用",
@@ -832,6 +833,8 @@
     "startNewChat": "开启新对话",
     "contextWarning": "上下文即将用尽 ({{percent}}%)",
     "estimatedTokens": "约 {{count}} tokens",
+    "image": "图片",
+    "attachment": "附件",
     "emptyState": {
       "title": "开始对话",
       "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。输入 @ 附加特定笔记作为上下文。"

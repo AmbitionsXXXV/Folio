@@ -23,7 +23,6 @@ import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupButton,
-	InputGroupTextarea,
 } from '@folionote/ui/input-group'
 import { cn } from '@folionote/ui/lib/utils'
 import {
@@ -796,7 +795,7 @@ export const PromptInputBody = ({ className, ...props }: PromptInputBodyProps) =
 	<div className={cn('contents', className)} {...props} />
 )
 
-export type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea>
+export type PromptInputTextareaProps = ComponentProps<'textarea'>
 
 export const PromptInputTextarea = ({
 	onChange,
@@ -881,8 +880,12 @@ export const PromptInputTextarea = ({
 			}
 
 	return (
-		<InputGroupTextarea
-			className={cn('field-sizing-content max-h-48 min-h-16', className)}
+		<textarea
+			className={cn(
+				'etc-input-group-textarea field-sizing-content max-h-48 min-h-16 flex-1 resize-none text-base outline-none md:text-sm',
+				className
+			)}
+			data-slot="input-group-control"
 			name="message"
 			onCompositionEnd={() => setIsComposing(false)}
 			onCompositionStart={() => setIsComposing(true)}

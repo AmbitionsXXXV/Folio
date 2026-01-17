@@ -1,6 +1,6 @@
 import {
 	type AiProvider,
-	buildKnowledgeChatPrompt,
+	buildKnowledgeChatSystemPrompt,
 	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
 	type DecryptedCredential,
 	PROVIDER_CONFIGS,
@@ -8,6 +8,8 @@ import {
 import { streamTextWithCredential } from '@folionote/ai/stream-text'
 import { createContext } from '@folionote/api/context'
 import { createLogger } from '@folionote/log'
+import type { UIMessage } from 'ai'
+import { convertToModelMessages } from 'ai'
 import { streamText } from 'hono/streaming'
 import {
 	fetchNotesByIds,
@@ -22,20 +24,16 @@ const log = createLogger({ prefix: 'ai-stream' })
 
 const AI_PROVIDERS = ['openai', 'deepseek', 'gemini', 'claude', 'qwen'] as const
 
-/** Message type for conversation history */
-type ChatMessageInput = {
-	role: 'user' | 'assistant' | 'system'
-	content: string
-}
-
 /** Request body for AI stream endpoint */
 type AiStreamRequestBody = {
 	provider: string
 	apiKey: string
 	baseUrl?: string
 	model?: string
+	/** The current user prompt (still required for RAG query) */
 	prompt: string
-	messages?: ChatMessageInput[]
+	/** Conversation history as UIMessage array */
+	messages?: UIMessage[]
 	noteEntryIds?: string[]
 	ragTopK?: number
 	enableReasoning?: boolean
@@ -98,6 +96,64 @@ async function writeUsageInfo(stream: StreamWriter, result: StreamResult) {
 }
 
 /**
+ * Prepare note context for AI streaming
+ */
+async function prepareNoteContext(
+	userId: string,
+	prompt: string,
+	noteEntryIds: string[] | undefined,
+	ragTopK: number | undefined
+) {
+	const sanitizedNoteIds = (noteEntryIds ?? [])
+		.filter((id) => typeof id === 'string' && id.length > 0)
+		.slice(0, MAX_ATTACHED_NOTES)
+
+	const uniqueNoteIds = [...new Set(sanitizedNoteIds)]
+	const attachedNotes = await fetchNotesByIds(userId, uniqueNoteIds)
+
+	const effectiveRagTopK = ragTopK ?? DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K
+	const retrievedNotes = await searchNotesForRag(
+		userId,
+		prompt,
+		uniqueNoteIds,
+		effectiveRagTopK
+	)
+
+	return { attachedNotes, retrievedNotes }
+}
+
+/**
+ * Create streaming result based on conversation mode
+ */
+async function createStreamResult(
+	credential: DecryptedCredential,
+	systemPrompt: string,
+	prompt: string,
+	messages: UIMessage[] | undefined,
+	model: string | undefined,
+	enableReasoning: boolean | undefined
+) {
+	const hasConversationHistory = messages && messages.length > 0
+
+	if (hasConversationHistory) {
+		const modelMessages = await convertToModelMessages(messages)
+		return streamTextWithCredential(credential, {
+			system: systemPrompt,
+			messages: modelMessages,
+			model,
+			enableReasoning,
+		})
+	}
+
+	return streamTextWithCredential(credential, {
+		system: systemPrompt,
+		prompt,
+		model,
+		enableReasoning,
+	})
+}
+
+/**
  * Register AI streaming route
  */
 export function registerAiStreamRoute(app: App) {
@@ -144,44 +200,26 @@ export function registerAiStreamRoute(app: App) {
 		try {
 			const userId = context.session.user.id
 
-			const sanitizedNoteIds = (noteEntryIds ?? [])
-				.filter((id) => typeof id === 'string' && id.length > 0)
-				.slice(0, MAX_ATTACHED_NOTES)
-
-			const uniqueNoteIds = [...new Set(sanitizedNoteIds)]
-			const attachedNotes = await fetchNotesByIds(userId, uniqueNoteIds)
-
-			const effectiveRagTopK = ragTopK ?? DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K
-			const retrievedNotes = await searchNotesForRag(
+			const { attachedNotes, retrievedNotes } = await prepareNoteContext(
 				userId,
 				prompt,
-				uniqueNoteIds,
-				effectiveRagTopK
+				noteEntryIds,
+				ragTopK
 			)
 
-			const { prompt: systemPromptWithContext } = buildKnowledgeChatPrompt({
-				userPrompt: prompt,
+			const { systemPrompt } = buildKnowledgeChatSystemPrompt({
 				attachedNotes,
 				retrievedNotes,
 			})
 
-			const hasConversationHistory = messages && messages.length > 0
-
-			const result = hasConversationHistory
-				? streamTextWithCredential(credential, {
-						system: systemPromptWithContext,
-						messages: messages.map((m) => ({
-							role: m.role,
-							content: m.content,
-						})),
-						model,
-						enableReasoning,
-					})
-				: streamTextWithCredential(credential, {
-						prompt: systemPromptWithContext,
-						model,
-						enableReasoning,
-					})
+			const result = await createStreamResult(
+				credential,
+				systemPrompt,
+				prompt,
+				messages,
+				model,
+				enableReasoning
+			)
 
 			return streamText(c, async (stream) => {
 				if (enableReasoning) {

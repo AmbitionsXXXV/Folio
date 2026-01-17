@@ -189,14 +189,16 @@ const CitationBadge = memo(function CitationBadge({
 
 type UserMessageContentProps = {
 	content: string
+	mentionTitles?: string[]
 }
 
 const UserMessageContent = memo(function UserMessageContent({
 	content,
+	mentionTitles,
 }: UserMessageContentProps) {
 	return (
 		<p className="whitespace-pre-wrap text-pretty text-sm">
-			{renderTextWithMentions(content, 'user-message')}
+			{renderTextWithMentions(content, 'user-message', mentionTitles)}
 		</p>
 	)
 })
@@ -283,7 +285,10 @@ export const MessageBubble = memo(function MessageBubble({
 
 				{/* Main content */}
 				{isUser ? (
-					<UserMessageContent content={message.content} />
+					<UserMessageContent
+						content={message.content}
+						mentionTitles={message.mentionTitles}
+					/>
 				) : (
 					<AssistantMessageContent
 						citations={message.citations}

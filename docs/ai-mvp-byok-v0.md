@@ -1189,3 +1189,79 @@ Prompt 由以下四部分组成，按顺序拼接：
   - 覆盖 Prompt 拼接、截断、去重逻辑
 - **类型检查**：`pnpm run check-types`
 - **Lint**：`pnpm check:fix`
+
+---
+
+## 25. 会话上下文与 @mention 对齐
+
+### 25.1 背景
+
+原有实现存在以下问题：
+
+1. **@mention 渲染不一致**：输入框高亮依赖 `attachedNotes` 的 `title` 列表，但消息气泡渲染时无法获取这些标题，导致用户消息中的 @mention 不会以徽章形式显示。
+2. **会话上下文断联**：长对话中发送的历史消息未正确携带给模型，导致多轮对话失去上下文。
+3. **请求体格式**：使用简化的 `{ role, content }` 格式，与 Vercel AI SDK 推荐的 `UIMessage[]` + `convertToModelMessages` 模式不一致。
+
+### 25.2 修改点
+
+#### 25.2.1 ChatMessage 类型扩展
+
+在 `features/knowledge/types.ts` 中为 `ChatMessage` 新增 `mentionTitles?: string[]` 字段，在发送消息时将 `attachedNotes` 的标题列表持久化到用户消息：
+
+```typescript
+export type ChatMessage = {
+  // ... existing fields
+  /** Mention titles for rendering @mentions in user messages */
+  mentionTitles?: string[]
+}
+```
+
+#### 25.2.2 MessageBubble 渲染对齐
+
+`UserMessageContent` 组件接收 `mentionTitles` 并传递给 `renderTextWithMentions`，与输入框高亮逻辑保持一致。
+
+#### 25.2.3 前端请求改用 UIMessage[]
+
+`use-stream-text.ts` 的 `ChatMessageInput` 类型改为 `UIMessage`（来自 `ai` 包），前端构造完整的 UIMessage 数组：
+
+```typescript
+const conversationHistory: ChatMessageInput[] = [...messages, userMessage].map(
+  (msg) => ({
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    createdAt: msg.timestamp,
+    parts: [{ type: 'text', text: msg.content }],
+  })
+)
+```
+
+#### 25.2.4 服务端转换
+
+`ai-stream.ts` 接收 `UIMessage[]`，使用 `convertToModelMessages` 将其转换为模型可识别的格式。会话模式下使用 `buildKnowledgeChatSystemPrompt` 构造不含 "User Question" 的系统提示，避免重复。
+
+#### 25.2.5 Prompt 构造函数
+
+新增 `buildKnowledgeChatSystemPrompt`（conversation mode）与原有 `buildKnowledgeChatPrompt`（single-turn mode）区分：
+
+- `buildKnowledgeChatPrompt`：返回 `{ prompt }` 包含完整提示（含 User Question 节）
+- `buildKnowledgeChatSystemPrompt`：返回 `{ systemPrompt }` 仅含系统指令与笔记上下文
+
+### 25.3 文件变更
+
+| 模块           | 文件路径                                                 | 变更                                   |
+| -------------- | -------------------------------------------------------- | -------------------------------------- |
+| Knowledge Type | `apps/web/src/features/knowledge/types.ts`               | 新增 `mentionTitles` 字段              |
+| MessageBubble  | `apps/web/src/features/knowledge/components/message-bubble.tsx` | 传递 `mentionTitles` 给渲染函数        |
+| Knowledge Page | `apps/web/src/routes/_app/knowledge.tsx`                 | 发送时捕获 mention 标题，构造 UIMessage |
+| Stream Hook    | `apps/web/src/hooks/use-stream-text.ts`                  | `ChatMessageInput` 改为 `UIMessage`    |
+| AI Stream      | `apps/server/src/routes/ai-stream.ts`                    | 使用 `convertToModelMessages`          |
+| AI Prompt      | `packages/ai/src/prompts/knowledge-chat.ts`              | 新增 `buildKnowledgeChatSystemPrompt`  |
+| Stream Text    | `packages/ai/src/stream-text.ts`                         | 支持 `ModelMessage[]` 类型             |
+| Tests          | `packages/ai/__tests__/knowledge-chat.test.ts`           | 新增会话模式单测                       |
+| Server deps    | `apps/server/package.json`                               | 新增 `ai` 依赖                         |
+
+### 25.4 验证
+
+- 单测：`pnpm vitest run --project=packages packages/ai/__tests__/knowledge-chat.test.ts`
+- 类型检查：`pnpm run check-types`

@@ -358,11 +358,18 @@ function KnowledgePage() {
 			return
 		}
 
+		// Capture mention titles from attached notes at send time
+		const mentionTitles =
+			attachedNotes.length > 0
+				? attachedNotes.map((n) => n.title).filter(Boolean)
+				: undefined
+
 		const userMessage: ChatMessage = {
 			id: crypto.randomUUID(),
 			role: 'user',
 			content: trimmedInput,
 			timestamp: new Date(),
+			mentionTitles,
 		}
 
 		const assistantMessageId = crypto.randomUUID()
@@ -382,10 +389,14 @@ function KnowledgePage() {
 		const noteEntryIds = attachedNotes.map((n) => n.id)
 		setAttachedNotes([])
 
+		// Build UIMessage array for conversation history
 		const conversationHistory: ChatMessageInput[] = [...messages, userMessage].map(
 			(msg) => ({
+				id: msg.id,
 				role: msg.role,
 				content: msg.content,
+				createdAt: msg.timestamp,
+				parts: [{ type: 'text', text: msg.content }],
 			})
 		)
 
@@ -452,7 +463,12 @@ function KnowledgePage() {
 							<HugeiconsIcon className="size-4" icon={Setting06Icon} />
 						</Button>
 					</Link>
-					<Button onClick={handleNewChat} size="sm" variant="outline">
+					<Button
+						className="rounded-lg"
+						onClick={handleNewChat}
+						size="sm"
+						variant="outline"
+					>
 						<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
 						{t('knowledge.newChat')}
 					</Button>
@@ -518,7 +534,7 @@ function KnowledgePage() {
 					onAtTrigger={handleAtTrigger}
 					onChange={setInputValue}
 					onModelChange={handleModelChange}
-					onRemoveAttachment={handleRemoveAttachment}
+					onRemoveNoteAttachment={handleRemoveAttachment}
 					onSubmit={handleSendMessage}
 					onThinkingToggle={setThinkingEnabled}
 					selectedModel={selectedModel}

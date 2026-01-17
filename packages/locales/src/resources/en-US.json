@@ -827,6 +827,7 @@
     "manageApiKeys": "Manage API Keys",
     "selectNoteToAttach": "Select note to attach",
     "removeAttachment": "Remove attachment",
+    "noteAttachment": "Note attachment",
     "toggleThinking": "Toggle extended thinking",
     "enableThinking": "Enable extended thinking",
     "thinkingEnabled": "Extended thinking enabled",
@@ -841,6 +842,8 @@
     "startNewChat": "Start New Chat",
     "contextWarning": "Context almost full ({{percent}}%)",
     "estimatedTokens": "~{{count}} tokens",
+    "image": "Image",
+    "attachment": "Attachment",
     "emptyState": {
       "title": "Start a Conversation",
       "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance. Type @ to attach specific notes for context."

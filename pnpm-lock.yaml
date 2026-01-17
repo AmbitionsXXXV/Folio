@@ -484,6 +484,9 @@ importers:
       '@orpc/zod':
         specifier: 'catalog:'
         version: 1.13.4(@opentelemetry/api@1.9.0)(@orpc/contract@1.13.4(@opentelemetry/api@1.9.0))(@orpc/server@1.13.4(@opentelemetry/api@1.9.0)(crossws@0.4.1(srvx@0.10.0))(ws@8.18.3))(crossws@0.4.1(srvx@0.10.0))(ws@8.18.3)(zod@4.3.5)
+      ai:
+        specifier: 'catalog:'
+        version: 6.0.38(zod@4.3.5)
       better-auth:
         specifier: 'catalog:'
         version: 1.4.13(@tanstack/start-server-core@1.150.0(crossws@0.4.1(srvx@0.10.0)))(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(@upstash/redis@1.36.1)(expo-sqlite@16.0.10(expo@54.0.31)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.2.7)(react@19.2.3))(react@19.2.3))(kysely@0.28.9)(pg@8.16.3))(next@16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(pg@8.16.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(solid-js@1.9.10)(vitest@4.0.17)
