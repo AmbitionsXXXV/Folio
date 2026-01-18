@@ -39,7 +39,15 @@ export function MentionBadge({
 			)}
 		>
 			<HugeiconsIcon className="size-3 shrink-0" icon={FileEditIcon} />
-			<span className="max-w-[100px] truncate">{title}</span>
+			<span
+				className={cn(
+					'truncate',
+					variant === 'default' && 'max-w-[100px]',
+					(variant === 'message' || variant === 'user-message') && 'max-w-[180px]'
+				)}
+			>
+				{title}
+			</span>
 		</span>
 	)
 }

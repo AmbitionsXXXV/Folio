@@ -835,6 +835,14 @@
     "estimatedTokens": "約 {{count}} トークン",
     "image": "画像",
     "attachment": "添付ファイル",
+    "contextUsageComponent": {
+      "modelContextUsage": "モデルのコンテキスト使用",
+      "totalCost": "総コスト",
+      "input": "入力",
+      "output": "出力",
+      "reasoning": "推論",
+      "cache": "キャッシュ"
+    },
     "emptyState": {
       "title": "会話を開始",
       "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。@ で特定のノートをコンテキストとして添付できます。"

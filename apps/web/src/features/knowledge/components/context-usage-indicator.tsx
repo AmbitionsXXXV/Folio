@@ -1,4 +1,5 @@
 import { Button } from '@folionote/ui/button'
+import { Progress, ProgressIndicator, ProgressTrack } from '@folionote/ui/progress'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -56,12 +57,16 @@ export const ContextUsageIndicator = memo(function ContextUsageIndicator({
 								{contextUsage.percent}%
 							</span>
 						</div>
-						<div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
-							<div
-								className={cn('h-full transition-all', progressColor)}
-								style={{ width: `${Math.min(100, contextUsage.percent)}%` }}
-							/>
-						</div>
+						<Progress
+							className="h-1 w-16"
+							value={Math.min(100, contextUsage.percent)}
+						>
+							<ProgressTrack className="overflow-hidden rounded-full bg-muted">
+								<ProgressIndicator
+									className={cn('h-full transition-all', progressColor)}
+								/>
+							</ProgressTrack>
+						</Progress>
 					</div>
 					{contextUsage.isExceeded && (
 						<Button
