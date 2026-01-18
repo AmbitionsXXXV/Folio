@@ -20,6 +20,7 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
+    "dev:ai-devtools": "npx @ai-sdk/devtools",
     "db:push": "turbo -F @folionote/db db:push",
     "db:push:prod": "turbo -F @folionote/db db:push:prod",
     "db:studio": "turbo -F @folionote/db db:studio",

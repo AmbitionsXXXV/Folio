@@ -16,11 +16,19 @@
  */
 
 import { createAnthropic } from '@ai-sdk/anthropic'
+import { devToolsMiddleware } from '@ai-sdk/devtools'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { EmbeddingModelV3, LanguageModelV3 } from '@ai-sdk/provider'
+import { wrapLanguageModel } from 'ai'
 import type { DecryptedCredential } from './credentials/types'
 import { getProviderConfig } from './providers/types'
+
+/**
+ * Check if DevTools should be enabled.
+ * Only enable in development environment for security.
+ */
+const isDevToolsEnabled = process.env.NODE_ENV !== 'production'
 
 const TRAILING_SLASHES_REGEX = /\/+$/
 const MODELS_PREFIX = 'models/'
@@ -80,13 +88,32 @@ function isGeminiOpenAiCompatibilityBaseUrl(baseUrl: string): boolean {
 }
 
 /**
+ * Wrap a language model with DevTools middleware (development only).
+ * In production, returns the model unchanged.
+ */
+function maybeWrapWithDevTools(model: LanguageModelV3): LanguageModelV3 {
+	if (!isDevToolsEnabled) {
+		return model
+	}
+	return wrapLanguageModel({
+		model,
+		middleware: devToolsMiddleware(),
+	})
+}
+
+/**
  * Create a Vercel AI SDK chat model from decrypted BYOK credential.
+ *
+ * In development, the model is automatically wrapped with DevTools middleware
+ * for debugging and inspection. Run `npx @ai-sdk/devtools` to view interactions.
  */
 export function createVercelAiChatModel(
 	credential: DecryptedCredential,
 	options: CreateChatModelOptions = {}
 ): LanguageModelV3 {
 	const modelId = resolveChatModelId(credential, options.model)
+
+	let model: LanguageModelV3
 
 	switch (credential.provider) {
 		case 'openai':
@@ -97,14 +124,16 @@ export function createVercelAiChatModel(
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
 			})
-			return openai(modelId)
+			model = openai(modelId)
+			break
 		}
 		case 'claude': {
 			const anthropic = createAnthropic({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
 			})
-			return anthropic(modelId)
+			model = anthropic(modelId)
+			break
 		}
 		case 'gemini': {
 			if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
@@ -112,20 +141,24 @@ export function createVercelAiChatModel(
 					apiKey: credential.apiKey,
 					baseURL: credential.baseUrl,
 				})
-				return openaiCompatible(stripModelsPrefix(modelId))
+				model = openaiCompatible(stripModelsPrefix(modelId))
+				break
 			}
 
 			const google = createGoogleGenerativeAI({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
 			})
-			return google(stripModelsPrefix(modelId))
+			model = google(stripModelsPrefix(modelId))
+			break
 		}
 		default: {
 			const unreachableProvider: never = credential.provider
 			throw new Error(`Unsupported provider: ${unreachableProvider}`)
 		}
 	}
+
+	return maybeWrapWithDevTools(model)
 }
 /**
  * Create a Vercel AI SDK embedding model from decrypted BYOK credential.

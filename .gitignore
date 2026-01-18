@@ -48,6 +48,9 @@ coverage
 tmp
 temp
 
+# AI SDK DevTools (contains sensitive AI interaction data)
+.devtools
+
 .react-email
 
 interview/
