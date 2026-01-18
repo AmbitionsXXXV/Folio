@@ -2,6 +2,8 @@
  * AI Provider types and capability declarations
  */
 
+import { AI_PROVIDER_IDS, type AiProviderId } from '@folionote/constants'
+
 /**
  * AI SDK integration modes (docs parity)
  *
@@ -37,16 +39,17 @@ export type ProviderBaseUrlOption = {
 
 /**
  * Supported AI providers (BYOK)
+ *
+ * Re-exported from @folionote/constants for convenience.
+ * The canonical source of truth is AI_PROVIDER_IDS in @folionote/constants.
  */
-export const AI_PROVIDERS = [
-	'openai',
-	'deepseek',
-	'gemini',
-	'claude',
-	'qwen',
-] as const
+export const AI_PROVIDERS = AI_PROVIDER_IDS
 
-export type AiProvider = (typeof AI_PROVIDERS)[number]
+/**
+ * Type for AI provider IDs.
+ * Alias for AiProviderId from @folionote/constants.
+ */
+export type AiProvider = AiProviderId
 
 /**
  * Provider capabilities
@@ -253,6 +256,37 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 		],
 		defaultModels: {
 			chat: 'qwen-turbo',
+			embedding: 'text-embedding-v3',
+		},
+	},
+	moonshot: {
+		id: 'moonshot',
+		name: 'Moonshot',
+		defaultBaseUrl: 'https://api.moonshot.cn/v1',
+		baseUrlOptions: [
+			{
+				id: 'default',
+				name: 'Moonshot (default)',
+				baseUrl: 'https://api.moonshot.cn/v1',
+			},
+		],
+		aiSdk: {
+			createInstance: {
+				importFrom: '@ai-sdk/openai',
+				factoryName: 'createOpenAI',
+				supportsBaseUrl: true,
+			},
+		},
+		capabilities: [
+			'chat',
+			'embedding',
+			'structured_output',
+			'function_calling',
+			'vision',
+			'streaming',
+		],
+		defaultModels: {
+			chat: 'moonshot-chat',
 			embedding: 'text-embedding-v3',
 		},
 	},

@@ -88,6 +88,27 @@ export function useSetModelEnabled() {
 	})
 }
 
+type SetProviderEnabledInput = {
+	providerId: string
+	enabled: boolean
+}
+
+/**
+ * Hook to toggle provider enabled status.
+ */
+export function useSetProviderEnabled() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (input: SetProviderEnabledInput) =>
+			orpc.ai.setProviderEnabled.call(input),
+		onSuccess: () => {
+			// Invalidate model catalog cache to refresh the UI
+			queryClient.invalidateQueries({ queryKey: MODEL_CATALOG_QUERY_KEY })
+		},
+	})
+}
+
 /**
  * Get enabled models of a specific type for a specific provider
  */

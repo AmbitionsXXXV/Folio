@@ -22,6 +22,7 @@
     "@ai-sdk/openai": "^3.0.9",
     "@ai-sdk/provider": "^3.0.2",
     "@ai-sdk/xai": "^3.0.22",
+    "@folionote/constants": "workspace:*",
     "ai": "catalog:",
     "tokenlens": "catalog:",
     "zod": "catalog:"

@@ -3,6 +3,7 @@ import type { ModelProviderCard } from '../types/llm'
 import AnthropicProvider from './anthropic'
 import DeepSeekProvider from './deepseek'
 import GoogleProvider from './google'
+import MoonshotProvider from './moonshot'
 import OpenAIProvider from './openai'
 import QwenProvider from './qwen'
 import XAIProvider from './xai'
@@ -11,6 +12,7 @@ import XAIProvider from './xai'
 export { default as AnthropicProvider } from './anthropic'
 export { default as DeepSeekProvider } from './deepseek'
 export { default as GoogleProvider } from './google'
+export { default as MoonshotProvider } from './moonshot'
 export { default as OpenAIProvider } from './openai'
 export { default as QwenProvider } from './qwen'
 export { default as XAIProvider } from './xai'
@@ -26,6 +28,7 @@ export const DEFAULT_MODEL_PROVIDER_LIST: ModelProviderCard[] = [
 	DeepSeekProvider,
 	QwenProvider,
 	XAIProvider,
+	MoonshotProvider,
 ]
 
 /**

@@ -30,8 +30,10 @@ import { useTranslation } from 'react-i18next'
 import { ModelProviderCard } from '@/components/settings/model-provider-card'
 import {
 	type CatalogModel,
+	type CatalogProvider,
 	useAiModelCatalog,
 	useSetModelEnabled,
+	useSetProviderEnabled,
 } from '@/hooks/use-ai-model-catalog'
 import {
 	type ModelProviderConfig,
@@ -64,6 +66,7 @@ function ModelsSettingsPage() {
 		isLoading: isCatalogLoading,
 	} = useAiModelCatalog()
 	const setModelEnabled = useSetModelEnabled()
+	const setProviderEnabled = useSetProviderEnabled()
 
 	// Filter state for model list
 	const [searchQuery, setSearchQuery] = useState('')
@@ -100,6 +103,16 @@ function ModelsSettingsPage() {
 			})
 		},
 		[setModelEnabled]
+	)
+
+	const handleToggleProvider = useCallback(
+		(provider: CatalogProvider) => {
+			setProviderEnabled.mutate({
+				providerId: provider.id,
+				enabled: !provider.enabled,
+			})
+		},
+		[setProviderEnabled]
 	)
 
 	const configuredCount = Object.values(config.providers || {}).filter((p) =>
@@ -142,7 +155,7 @@ function ModelsSettingsPage() {
 
 	// Get provider info by id
 	const getProviderInfo = useCallback(
-		(providerId: string) => {
+		(providerId: string): CatalogProvider => {
 			return (
 				catalogProviders.find((p) => p.id === providerId) || {
 					id: providerId,
@@ -415,7 +428,8 @@ function ModelsSettingsPage() {
 						getProviderInfo={getProviderInfo}
 						isCatalogLoading={isCatalogLoading}
 						modelsByProvider={modelsByProvider}
-						onToggle={handleToggleModel}
+						onToggleModel={handleToggleModel}
+						onToggleProvider={handleToggleProvider}
 						t={t}
 					/>
 				</div>
@@ -435,14 +449,16 @@ function ModelListContent({
 	filteredModels,
 	modelsByProvider,
 	getProviderInfo,
-	onToggle,
+	onToggleModel,
+	onToggleProvider,
 	t,
 }: {
 	isCatalogLoading: boolean
 	filteredModels: CatalogModel[]
 	modelsByProvider: Map<string, CatalogModel[]>
-	getProviderInfo: (id: string) => { id: string; name: string; logo?: string }
-	onToggle: (model: CatalogModel) => void
+	getProviderInfo: (id: string) => CatalogProvider
+	onToggleModel: (model: CatalogModel) => void
+	onToggleProvider: (provider: CatalogProvider) => void
 	t: ReturnType<typeof useTranslation>['t']
 }) {
 	if (isCatalogLoading) {
@@ -470,7 +486,8 @@ function ModelListContent({
 					getProviderInfo={getProviderInfo}
 					key={providerId}
 					models={models}
-					onToggle={onToggle}
+					onToggleModel={onToggleModel}
+					onToggleProvider={onToggleProvider}
 					providerId={providerId}
 					t={t}
 				/>
@@ -486,13 +503,15 @@ function ModelProviderGroup({
 	providerId,
 	models,
 	getProviderInfo,
-	onToggle,
+	onToggleModel,
+	onToggleProvider,
 	t,
 }: {
 	providerId: string
 	models: CatalogModel[]
-	getProviderInfo: (id: string) => { id: string; name: string; logo?: string }
-	onToggle: (model: CatalogModel) => void
+	getProviderInfo: (id: string) => CatalogProvider
+	onToggleModel: (model: CatalogModel) => void
+	onToggleProvider: (provider: CatalogProvider) => void
 	t: ReturnType<typeof useTranslation>['t']
 }) {
 	const provider = getProviderInfo(providerId)
@@ -500,29 +519,40 @@ function ModelProviderGroup({
 	return (
 		<div>
 			{/* Provider header */}
-			<div className="flex items-center gap-2 bg-muted/30 px-4 py-2">
-				{provider.logo && (
-					<img
-						alt={provider.name}
-						className="size-4 rounded-sm object-contain dark:brightness-0 dark:invert"
-						src={provider.logo}
-					/>
-				)}
-				<span className="font-medium text-sm">{provider.name}</span>
-				<span className="text-muted-foreground text-xs">({models.length})</span>
+			<div className="flex items-center justify-between bg-muted/30 px-4 py-2">
+				<div className="flex items-center gap-2">
+					{provider.logo && (
+						<img
+							alt={provider.name}
+							className="size-4 rounded-sm object-contain dark:brightness-0 dark:invert"
+							src={provider.logo}
+						/>
+					)}
+					<span className="font-medium text-sm">{provider.name}</span>
+					<span className="text-muted-foreground text-xs">({models.length})</span>
+				</div>
+				<Switch
+					aria-label={t('settings.models.modelList.toggleProvider', {
+						provider: provider.name,
+					})}
+					checked={provider.enabled}
+					onCheckedChange={() => onToggleProvider(provider)}
+				/>
 			</div>
 
-			{/* Model list */}
-			<div className="divide-y divide-border/50">
-				{models.map((model) => (
-					<ModelRow
-						key={`${model.providerId}-${model.id}-${model.type}`}
-						model={model}
-						onToggle={onToggle}
-						t={t}
-					/>
-				))}
-			</div>
+			{/* Model list - only show if provider is enabled */}
+			{provider.enabled && (
+				<div className="divide-y divide-border/50">
+					{models.map((model) => (
+						<ModelRow
+							key={`${model.providerId}-${model.id}-${model.type}`}
+							model={model}
+							onToggle={onToggleModel}
+							t={t}
+						/>
+					))}
+				</div>
+			)}
 		</div>
 	)
 }

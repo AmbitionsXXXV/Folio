@@ -1,7 +1,12 @@
 // Auth schema
 
 // AI schema
-import { userAiModelSettings, userAiModelSettingsRelations } from './schema/ai'
+import {
+	userAiModelSettings,
+	userAiModelSettingsRelations,
+	userAiProviderSettings,
+	userAiProviderSettingsRelations,
+} from './schema/ai'
 import {
 	account,
 	accountRelations,
@@ -73,6 +78,8 @@ const schema = {
 	// AI
 	userAiModelSettings,
 	userAiModelSettingsRelations,
+	userAiProviderSettings,
+	userAiProviderSettingsRelations,
 }
 
 // 数据库连接初始化
@@ -83,6 +90,8 @@ export const db = drizzle(process.env.DATABASE_URL || '', { schema })
 export {
 	userAiModelSettings,
 	userAiModelSettingsRelations,
+	userAiProviderSettings,
+	userAiProviderSettingsRelations,
 } from './schema/ai'
 // Re-export schema for external use
 export {

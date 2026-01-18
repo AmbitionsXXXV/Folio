@@ -3,7 +3,10 @@
  * This module defines the structure for managing API keys per provider.
  */
 
-export type AiProviderId = 'openai' | 'deepseek' | 'gemini' | 'claude' | 'qwen'
+import { AI_PROVIDER_IDS, type AiProviderId } from '@folionote/constants'
+
+// Re-export for convenience
+export type { AiProviderId } from '@folionote/constants'
 
 export type AiProviderInfo = {
 	id: AiProviderId
@@ -14,46 +17,57 @@ export type AiProviderInfo = {
 }
 
 /**
- * All supported AI providers with their metadata.
+ * Provider metadata keyed by ID.
+ * Using Record ensures all providers from AI_PROVIDER_IDS are covered.
  */
-export const AI_PROVIDERS: AiProviderInfo[] = [
-	{
-		id: 'openai',
+const AI_PROVIDER_INFO: Record<AiProviderId, Omit<AiProviderInfo, 'id'>> = {
+	openai: {
 		name: 'OpenAI',
 		iconSrc: '/svg/models/openai.svg',
 		defaultBaseUrl: 'https://api.openai.com/v1',
 		docsUrl: 'https://platform.openai.com/api-keys',
 	},
-	{
-		id: 'deepseek',
+	deepseek: {
 		name: 'DeepSeek',
 		iconSrc: '/svg/models/deepseek.svg',
 		defaultBaseUrl: 'https://api.deepseek.com/v1',
 		docsUrl: 'https://platform.deepseek.com/api_keys',
 	},
-	{
-		id: 'gemini',
+	gemini: {
 		name: 'Gemini',
 		iconSrc: '/svg/models/gemini.svg',
 		defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
 		docsUrl: 'https://aistudio.google.com/apikey',
 	},
-	{
-		id: 'claude',
+	claude: {
 		name: 'Claude',
 		iconSrc: '/svg/models/claude.svg',
 		defaultBaseUrl: 'https://api.anthropic.com/v1',
 		docsUrl: 'https://console.anthropic.com/settings/keys',
 	},
-	{
-		id: 'qwen',
+	qwen: {
 		name: 'Qwen',
 		iconSrc: '/svg/models/qwen.svg',
 		defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
 		docsUrl:
 			'https://help.aliyun.com/zh/model-studio/developer-reference/get-api-key',
 	},
-]
+	moonshot: {
+		name: 'Moonshot',
+		iconSrc: '/svg/models/kimi.svg',
+		defaultBaseUrl: 'https://api.moonshot.cn/v1',
+		docsUrl: 'https://platform.moonshot.cn/docs/intro',
+	},
+}
+
+/**
+ * All supported AI providers with their metadata.
+ * Derived from AI_PROVIDER_IDS to ensure consistency with the canonical list.
+ */
+export const AI_PROVIDERS: AiProviderInfo[] = AI_PROVIDER_IDS.map((id) => ({
+	id,
+	...AI_PROVIDER_INFO[id],
+}))
 
 /**
  * Get provider info by ID.

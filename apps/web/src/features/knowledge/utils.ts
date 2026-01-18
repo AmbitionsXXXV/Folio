@@ -1,18 +1,20 @@
+import { AI_PROVIDER_IDS } from '@folionote/constants'
 import type { ApiProviderId, ChatMessage, CitationSource } from './types'
 
 // ============================================================================
 // Provider Mapping Utilities
 // ============================================================================
 
-const API_SUPPORTED_PROVIDERS: ApiProviderId[] = [
-	'openai',
-	'deepseek',
-	'gemini',
-	'claude',
-	'qwen',
-]
+/**
+ * API supported providers derived from canonical list.
+ */
+const API_SUPPORTED_PROVIDERS: readonly string[] = AI_PROVIDER_IDS
 
-/** Map new model-list provider IDs to old API provider IDs */
+/**
+ * Map model-list provider IDs to API provider IDs.
+ * model-list uses: openai, deepseek, google, anthropic, qwen, xai, moonshot
+ * API uses: openai, deepseek, gemini, claude, qwen, moonshot
+ */
 const PROVIDER_ID_MAPPING: Record<string, ApiProviderId> = {
 	openai: 'openai',
 	anthropic: 'claude',
@@ -20,6 +22,7 @@ const PROVIDER_ID_MAPPING: Record<string, ApiProviderId> = {
 	deepseek: 'deepseek',
 	qwen: 'qwen',
 	xai: 'deepseek', // xAI maps to deepseek for now (both use similar API)
+	moonshot: 'moonshot',
 }
 
 export function isApiSupportedProvider(id: string): id is ApiProviderId {

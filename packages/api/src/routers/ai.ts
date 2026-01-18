@@ -18,7 +18,7 @@ import {
 	PROVIDER_CONFIGS,
 } from '@folionote/ai'
 import { generateTextWithCredential } from '@folionote/ai/generate-text'
-import { db, userAiModelSettings } from '@folionote/db'
+import { db, userAiModelSettings, userAiProviderSettings } from '@folionote/db'
 import {
 	DEFAULT_MODEL_PROVIDER_LIST,
 	FOLIO_DEFAULT_MODEL_LIST,
@@ -176,8 +176,38 @@ const generateText = protectedProcedure
 // ==================== Model Catalog APIs ====================
 
 /**
+ * Check if a provider is enabled for a user
+ * Returns the user's override if exists, otherwise returns the default enabled status
+ */
+async function checkProviderEnabled(
+	userId: string,
+	providerId: string
+): Promise<boolean> {
+	// First check if user has an override
+	const [userSetting] = await db
+		.select({ enabled: userAiProviderSettings.enabled })
+		.from(userAiProviderSettings)
+		.where(
+			and(
+				eq(userAiProviderSettings.userId, userId),
+				eq(userAiProviderSettings.providerId, providerId)
+			)
+		)
+		.limit(1)
+
+	if (userSetting !== undefined) {
+		return userSetting.enabled
+	}
+
+	// Fall back to default from model-list
+	const provider = DEFAULT_MODEL_PROVIDER_LIST.find((p) => p.id === providerId)
+	return Boolean(provider?.enabled)
+}
+
+/**
  * Check if a model is enabled for a user
  * Returns the user's override if exists, otherwise returns the default enabled status
+ * Also checks if the provider is enabled first
  */
 async function checkModelEnabled(
 	userId: string,
@@ -185,7 +215,13 @@ async function checkModelEnabled(
 	modelId: string,
 	type: string
 ): Promise<boolean> {
-	// First check if user has an override
+	// First check if provider is enabled
+	const providerEnabled = await checkProviderEnabled(userId, providerId)
+	if (!providerEnabled) {
+		return false
+	}
+
+	// Then check if user has a model override
 	const [userSetting] = await db
 		.select({ enabled: userAiModelSettings.enabled })
 		.from(userAiModelSettings)
@@ -218,30 +254,46 @@ const getModelCatalog = protectedProcedure.handler(async ({ context }) => {
 	const userId = context.session.user.id
 
 	// Get all user's model settings
-	const userSettings = await db
+	const userModelSettings = await db
 		.select()
 		.from(userAiModelSettings)
 		.where(eq(userAiModelSettings.userId, userId))
 
-	// Create a map for quick lookup
-	const userSettingsMap = new Map<string, boolean>()
-	for (const setting of userSettings) {
+	// Get all user's provider settings
+	const userProviderSettings = await db
+		.select()
+		.from(userAiProviderSettings)
+		.where(eq(userAiProviderSettings.userId, userId))
+
+	// Create maps for quick lookup
+	const userModelSettingsMap = new Map<string, boolean>()
+	for (const setting of userModelSettings) {
 		const key = `${setting.providerId}:${setting.modelId}:${setting.type}`
-		userSettingsMap.set(key, setting.enabled)
+		userModelSettingsMap.set(key, setting.enabled)
 	}
 
-	// Build providers list (with logos)
-	const providers = DEFAULT_MODEL_PROVIDER_LIST.map((p) => ({
-		id: p.id,
-		name: p.name,
-		logo: p.logo,
-		enabled: p.enabled ?? false,
-	}))
+	const userProviderSettingsMap = new Map<string, boolean>()
+	for (const setting of userProviderSettings) {
+		userProviderSettingsMap.set(setting.providerId, setting.enabled)
+	}
+
+	// Build providers list (with logos) with user overrides applied
+	const providers = DEFAULT_MODEL_PROVIDER_LIST.map((p) => {
+		const userEnabled = userProviderSettingsMap.get(p.id)
+		const enabled = userEnabled !== undefined ? userEnabled : Boolean(p.enabled)
+
+		return {
+			id: p.id,
+			name: p.name,
+			logo: p.logo,
+			enabled,
+		}
+	})
 
 	// Build models list with user overrides applied
 	const models = FOLIO_DEFAULT_MODEL_LIST.map((m) => {
 		const key = `${m.providerId}:${m.id}:${m.type}`
-		const userEnabled = userSettingsMap.get(key)
+		const userEnabled = userModelSettingsMap.get(key)
 		const enabled = userEnabled !== undefined ? userEnabled : Boolean(m.enabled)
 
 		return {
@@ -330,6 +382,65 @@ const setModelEnabled = protectedProcedure
 		return { success: true }
 	})
 
+const SetProviderEnabledInputSchema = z.object({
+	providerId: z.string().min(1),
+	enabled: z.boolean(),
+})
+
+/**
+ * Set provider enabled status for current user
+ */
+const setProviderEnabled = protectedProcedure
+	.input(SetProviderEnabledInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+
+		// Validate that the provider exists in the default list
+		const providerExists = DEFAULT_MODEL_PROVIDER_LIST.some(
+			(p) => p.id === input.providerId
+		)
+
+		if (!providerExists) {
+			throw new ORPCError('NOT_FOUND', {
+				message: `Provider 不存在：${input.providerId}`,
+			})
+		}
+
+		// Upsert the user's provider setting
+		// First try to find existing record
+		const [existing] = await db
+			.select({ id: userAiProviderSettings.id })
+			.from(userAiProviderSettings)
+			.where(
+				and(
+					eq(userAiProviderSettings.userId, userId),
+					eq(userAiProviderSettings.providerId, input.providerId)
+				)
+			)
+			.limit(1)
+
+		if (existing) {
+			// Update existing record
+			await db
+				.update(userAiProviderSettings)
+				.set({
+					enabled: input.enabled,
+					updatedAt: new Date(),
+				})
+				.where(eq(userAiProviderSettings.id, existing.id))
+		} else {
+			// Insert new record
+			await db.insert(userAiProviderSettings).values({
+				id: nanoid(),
+				userId,
+				providerId: input.providerId,
+				enabled: input.enabled,
+			})
+		}
+
+		return { success: true }
+	})
+
 export const aiRouter = {
 	healthCheck,
 	listProviders,
@@ -340,4 +451,5 @@ export const aiRouter = {
 	// Model catalog
 	getModelCatalog,
 	setModelEnabled,
+	setProviderEnabled,
 }
