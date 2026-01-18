@@ -629,7 +629,8 @@
         },
         "allTypes": "All Types",
         "enableAll": "Enable All",
-        "disableAll": "Disable All"
+        "disableAll": "Disable All",
+        "toggleProvider": "Toggle {{provider}} provider"
       }
     }
   },
@@ -844,6 +845,14 @@
     "estimatedTokens": "~{{count}} tokens",
     "image": "Image",
     "attachment": "Attachment",
+    "contextUsageComponent": {
+      "modelContextUsage": "Model context usage",
+      "totalCost": "Total cost",
+      "input": "Input",
+      "output": "Output",
+      "reasoning": "Reasoning",
+      "cache": "Cache"
+    },
     "emptyState": {
       "title": "Start a Conversation",
       "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance. Type @ to attach specific notes for context."

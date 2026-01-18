@@ -1,5 +1,21 @@
 # web
 
+## 0.2.11
+
+### Patch Changes
+
+- feat: ✨ centralize AI provider management and implement user-level toggles
+- Updated dependencies
+  - @folionote/model-list@0.1.4
+  - @folionote/constants@0.2.11
+  - @folionote/locales@0.2.11
+  - @folionote/api@0.2.11
+  - @folionote/auth@0.2.11
+  - @folionote/editor-core@0.2.11
+  - @folionote/editor-react@0.2.11
+  - @folionote/ui@0.2.11
+  - @folionote/utils@0.2.11
+
 ## 0.2.10
 
 ### Patch Changes

@@ -45,5 +45,8 @@ export type ContextUsage = {
 	isExceeded: boolean
 }
 
-/** API-compatible provider IDs (subset that the backend supports) */
-export type ApiProviderId = 'openai' | 'deepseek' | 'gemini' | 'claude' | 'qwen'
+/**
+ * API-compatible provider IDs (subset that the backend supports).
+ * Re-exported from @folionote/constants for convenience.
+ */
+export type { AiProviderId as ApiProviderId } from '@folionote/constants'

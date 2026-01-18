@@ -1,4 +1,5 @@
 import {
+	AI_PROVIDERS,
 	type AiProvider,
 	buildKnowledgeChatSystemPrompt,
 	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
@@ -28,8 +29,6 @@ import type { App } from '../types'
 import { convertToSupportedLanguage } from '../utils/language'
 
 const log = createLogger({ prefix: 'ai-stream' })
-
-const AI_PROVIDERS = ['openai', 'deepseek', 'gemini', 'claude', 'qwen'] as const
 
 // =============================================================================
 // Request/Response Types

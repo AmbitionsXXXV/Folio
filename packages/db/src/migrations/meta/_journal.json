@@ -43,6 +43,13 @@
       "when": 1768355916135,
       "tag": "0005_nifty_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1768736046793,
+      "tag": "0006_broad_chimera",
+      "breakpoints": true
     }
   ]
 }

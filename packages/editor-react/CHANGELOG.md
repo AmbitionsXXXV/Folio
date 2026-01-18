@@ -1,5 +1,13 @@
 # @folionote/editor-react
 
+## 0.2.11
+
+### Patch Changes
+
+- feat: ✨ centralize AI provider management and implement user-level toggles
+- Updated dependencies
+  - @folionote/editor-core@0.2.11
+
 ## 0.2.10
 
 ### Patch Changes

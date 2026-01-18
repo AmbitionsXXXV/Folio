@@ -620,7 +620,8 @@
         },
         "allTypes": "全部类型",
         "enableAll": "全部启用",
-        "disableAll": "全部禁用"
+        "disableAll": "全部禁用",
+        "toggleProvider": "切换 {{provider}} 提供商"
       }
     }
   },
@@ -835,6 +836,14 @@
     "estimatedTokens": "约 {{count}} tokens",
     "image": "图片",
     "attachment": "附件",
+    "contextUsageComponent": {
+      "modelContextUsage": "模型上下文使用",
+      "totalCost": "总成本",
+      "input": "输入",
+      "output": "输出",
+      "reasoning": "推理",
+      "cache": "缓存"
+    },
     "emptyState": {
       "title": "开始对话",
       "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。输入 @ 附加特定笔记作为上下文。"

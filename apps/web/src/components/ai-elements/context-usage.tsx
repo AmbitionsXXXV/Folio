@@ -7,6 +7,7 @@ import {
 import { cn } from '@folionote/ui/lib/utils'
 import { Progress } from '@folionote/ui/progress'
 import { type ComponentProps, createContext, use } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const PERCENT_MAX = 100
 const ICON_RADIUS = 10
@@ -68,6 +69,7 @@ export const Context = ({
 )
 
 const ContextIcon = () => {
+	const { t } = useTranslation()
 	const { usedTokens, maxTokens } = useContextValue()
 	const circumference = 2 * Math.PI * ICON_RADIUS
 	const usedPercent = usedTokens / maxTokens
@@ -75,7 +77,7 @@ const ContextIcon = () => {
 
 	return (
 		<svg
-			aria-label="Model context usage"
+			aria-label={t('knowledge.contextUsageComponent.modelContextUsage')}
 			height="20"
 			role="img"
 			style={{ color: 'currentcolor' }}
@@ -199,6 +201,7 @@ export const ContextContentFooter = ({
 	className,
 	...props
 }: ContextContentFooterProps) => {
+	const { t } = useTranslation()
 	const { usage } = useContextValue()
 	const totalCost = new Intl.NumberFormat('en-US', {
 		style: 'currency',
@@ -215,7 +218,9 @@ export const ContextContentFooter = ({
 		>
 			{children ?? (
 				<>
-					<span className="text-muted-foreground">Total cost</span>
+					<span className="text-muted-foreground">
+						{t('knowledge.contextUsageComponent.totalCost')}
+					</span>
 					<span>{totalCost}</span>
 				</>
 			)}
@@ -230,6 +235,7 @@ export const ContextInputUsage = ({
 	children,
 	...props
 }: ContextInputUsageProps) => {
+	const { t } = useTranslation()
 	const { usage } = useContextValue()
 	const inputTokens = usage?.inputTokens ?? 0
 
@@ -246,7 +252,9 @@ export const ContextInputUsage = ({
 			className={cn('flex items-center justify-between text-xs', className)}
 			{...props}
 		>
-			<span className="text-muted-foreground">Input</span>
+			<span className="text-muted-foreground">
+				{t('knowledge.contextUsageComponent.input')}
+			</span>
 			<TokensWithCost tokens={inputTokens} />
 		</div>
 	)
@@ -259,6 +267,7 @@ export const ContextOutputUsage = ({
 	children,
 	...props
 }: ContextOutputUsageProps) => {
+	const { t } = useTranslation()
 	const { usage } = useContextValue()
 	const outputTokens = usage?.outputTokens ?? 0
 
@@ -275,7 +284,9 @@ export const ContextOutputUsage = ({
 			className={cn('flex items-center justify-between text-xs', className)}
 			{...props}
 		>
-			<span className="text-muted-foreground">Output</span>
+			<span className="text-muted-foreground">
+				{t('knowledge.contextUsageComponent.output')}
+			</span>
 			<TokensWithCost tokens={outputTokens} />
 		</div>
 	)
@@ -288,6 +299,7 @@ export const ContextReasoningUsage = ({
 	children,
 	...props
 }: ContextReasoningUsageProps) => {
+	const { t } = useTranslation()
 	const { usage } = useContextValue()
 	const reasoningTokens = usage?.reasoningTokens ?? 0
 
@@ -304,7 +316,9 @@ export const ContextReasoningUsage = ({
 			className={cn('flex items-center justify-between text-xs', className)}
 			{...props}
 		>
-			<span className="text-muted-foreground">Reasoning</span>
+			<span className="text-muted-foreground">
+				{t('knowledge.contextUsageComponent.reasoning')}
+			</span>
 			<TokensWithCost tokens={reasoningTokens} />
 		</div>
 	)
@@ -317,6 +331,7 @@ export const ContextCacheUsage = ({
 	children,
 	...props
 }: ContextCacheUsageProps) => {
+	const { t } = useTranslation()
 	const { usage } = useContextValue()
 	const cacheTokens = usage?.cachedInputTokens ?? 0
 
@@ -333,7 +348,9 @@ export const ContextCacheUsage = ({
 			className={cn('flex items-center justify-between text-xs', className)}
 			{...props}
 		>
-			<span className="text-muted-foreground">Cache</span>
+			<span className="text-muted-foreground">
+				{t('knowledge.contextUsageComponent.cache')}
+			</span>
 			<TokensWithCost tokens={cacheTokens} />
 		</div>
 	)

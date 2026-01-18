@@ -1,5 +1,6 @@
 import type { SupportedLanguage } from '@folionote/locales'
 
+export * from './ai-providers'
 export * from './auth'
 export * from './avatar'
 export * from './knowledge'

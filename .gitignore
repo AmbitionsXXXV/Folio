@@ -51,3 +51,5 @@ temp
 .react-email
 
 interview/
+
+__pycache__

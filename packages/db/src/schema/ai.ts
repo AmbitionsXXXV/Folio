@@ -66,3 +66,54 @@ export const userAiModelSettingsRelations = relations(
 		}),
 	})
 )
+
+/**
+ * user_ai_provider_settings - 用户 AI Provider 启用/禁用覆盖
+ *
+ * 用途：
+ * - 记录用户对 provider 的 enabled 覆盖
+ * - 用于设置页展示与服务端校验
+ *
+ * 设计：
+ * - 仅存储用户显式修改过的 provider 配置
+ * - 若用户未修改，则使用 model-list 包中的默认 enabled 值
+ */
+export const userAiProviderSettings = pgTable(
+	'user_ai_provider_settings',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		/** model-list provider id（如 openai / google / anthropic / deepseek / qwen / xai / moonshot） */
+		providerId: text('provider_id').notNull(),
+		/** 用户设置的启用状态 */
+		enabled: boolean('enabled').notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		// 唯一约束：每个用户对同一 provider 只能有一条覆盖记录
+		uniqueIndex('user_ai_provider_settings_unique_idx').on(
+			table.userId,
+			table.providerId
+		),
+		// 按用户查询索引
+		index('user_ai_provider_settings_user_id_idx').on(table.userId),
+	]
+)
+
+export const userAiProviderSettingsRelations = relations(
+	userAiProviderSettings,
+	({ one }) => ({
+		user: one(user, {
+			fields: [userAiProviderSettings.userId],
+			references: [user.id],
+		}),
+	})
+)

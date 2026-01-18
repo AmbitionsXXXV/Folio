@@ -140,6 +140,9 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	// Track current request's note IDs (can be overridden per-message)
 	const currentNoteEntryIdsRef = useRef<string[]>(defaultNoteEntryIds)
 
+	// Track mention titles by message content (since we don't have ID until after send)
+	const mentionTitlesMapRef = useRef<Map<string, string[]>>(new Map())
+
 	// State for last chatId returned from server
 	const [serverChatId, setServerChatId] = useState<string>(chatId)
 
@@ -213,10 +216,21 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	})
 
 	// Convert UIMessages to KnowledgeChatMessages for UI
-	const messages = useMemo<KnowledgeChatMessage[]>(
-		() => uiMessages.map(uiMessageToKnowledgeMessage),
-		[uiMessages]
-	)
+	const messages = useMemo<KnowledgeChatMessage[]>(() => {
+		return uiMessages.map((msg) => {
+			const base = uiMessageToKnowledgeMessage(msg)
+
+			// For user messages, look up mentionTitles by content
+			if (msg.role === 'user') {
+				const mentionTitles = mentionTitlesMapRef.current.get(base.content)
+				if (mentionTitles) {
+					return { ...base, mentionTitles }
+				}
+			}
+
+			return base
+		})
+	}, [uiMessages])
 
 	// Derived states
 	const isStreaming = status === 'streaming'
@@ -225,7 +239,12 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	// Send a message with optional note attachments
 	const sendMessage = useCallback(
 		(options: SendMessageOptions) => {
-			const { text, noteEntryIds = [] } = options
+			const { text, mentionTitles, noteEntryIds = [] } = options
+
+			// Store mention titles by message text for later lookup
+			if (mentionTitles && mentionTitles.length > 0) {
+				mentionTitlesMapRef.current.set(text, mentionTitles)
+			}
 
 			// Update note IDs for this request
 			currentNoteEntryIdsRef.current =
@@ -240,6 +259,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	// Clear all messages (for new chat)
 	const clearMessages = useCallback(() => {
 		setUIMessages([])
+		mentionTitlesMapRef.current.clear()
 	}, [setUIMessages])
 
 	// Reset for new chat

@@ -91,7 +91,8 @@ export function createVercelAiChatModel(
 	switch (credential.provider) {
 		case 'openai':
 		case 'deepseek':
-		case 'qwen': {
+		case 'qwen':
+		case 'moonshot': {
 			const openai = createOpenAI({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
@@ -141,7 +142,8 @@ export function createVercelAiEmbeddingModel(
 	switch (credential.provider) {
 		case 'openai':
 		case 'deepseek':
-		case 'qwen': {
+		case 'qwen':
+		case 'moonshot': {
 			const openai = createOpenAI({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,

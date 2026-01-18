@@ -193,6 +193,41 @@ Done:
 前端新增 `useKnowledgeChat` hook 封装 AI SDK 的 `useChat`，通过 `DefaultChatTransport` 自定义请求体携带 BYOK 凭证与 RAG 上下文。
 消息 ID 由服务端统一生成，确保跨会话一致性；客户端不再直接持久化消息，改由服务端在流完成时统一落库。
 
+### 2.6 Provider ID 单一来源与 Moonshot 补齐
+
+- [x] 新增 `packages/constants/src/ai-providers.ts` 导出 `AI_PROVIDER_IDS` 与 `AiProviderId`
+- [x] 更新 `packages/constants/src/index.ts` 导出新常量
+- [x] 更新 `packages/ai/package.json` 添加 `@folionote/constants` 依赖
+- [x] 重构 `packages/ai/src/providers/types.ts` 使用 `AI_PROVIDER_IDS` 生成 `AI_PROVIDERS`
+- [x] 删除 `apps/server/src/routes/ai-stream.ts` 本地 `AI_PROVIDERS` 列表
+- [x] 重构 `apps/web/src/lib/ai-provider-config.ts` 使用共享类型
+- [x] 重构 `apps/web/src/features/knowledge/types.ts` 与 `utils.ts` 使用共享类型
+- [x] 补齐 `packages/model-list/src/model-providers/index.ts` Moonshot 注册
+- [x] 补齐 `packages/model-list/src/ai-models/index.ts` Moonshot 注册
+- [x] 新增 provider 一致性单测
+- [x] 运行 `pnpm run check-types` 确保无类型错误
+
+Done:
+将 provider ID 类型集中到 `@folionote/constants`，各消费方从单一来源派生，新增 provider 时只需修改常量文件。
+补齐 Moonshot 在 model-list 的注册，修正 iconSrc 为 kimi.svg。
+
+### 2.7 用户级 Provider 启用开关
+
+- [x] 在 `packages/db/src/schema/ai.ts` 新增 `user_ai_provider_settings` 表
+- [x] 更新 `packages/db/src/index.ts` 与 `packages/db/src/index.lazy.ts` 注册并导出 schema
+- [x] 在 `packages/api/src/routers/ai.ts` 新增 `checkProviderEnabled` 辅助函数
+- [x] 在 `packages/api/src/routers/ai.ts` 更新 `checkModelEnabled` 先校验 provider enabled
+- [x] 在 `packages/api/src/routers/ai.ts` 更新 `getModelCatalog` 合并用户 provider 覆盖
+- [x] 在 `packages/api/src/routers/ai.ts` 新增 `setProviderEnabled` 接口
+- [x] 在 `apps/web/src/hooks/use-ai-model-catalog.ts` 新增 `useSetProviderEnabled` mutation
+- [x] 在 `apps/web/src/routes/_app/settings/models.tsx` provider 分组 header 新增开关
+- [x] 更新 i18n 资源文件（en-US / zh-CN / ja-JP）新增 `toggleProvider` key
+- [x] 运行 `pnpm run check-types` 确保无类型错误
+
+Done:
+实现用户级 Provider 启用开关功能，关闭 provider 后其下所有模型被视为禁用，设置页模型列表隐藏该 provider 的模型。
+新增 `user_ai_provider_settings` 表存储用户覆盖，API 层合并默认与用户设置，Web 端 provider header 带开关。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

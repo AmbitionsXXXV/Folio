@@ -176,31 +176,6 @@ export function ChatInput({
 
 			<PromptInputFooter className="px-3">
 				<PromptInputTools>
-					{/* Context Usage Indicator */}
-					{contextUsage && contextUsage.usedTokens > 0 && (
-						<Context
-							maxTokens={contextUsage.maxTokens}
-							modelId={contextUsage.modelId}
-							usage={contextUsage.sessionUsage}
-							usedTokens={contextUsage.usedTokens}
-						>
-							<ContextTrigger
-								className="h-8 gap-1.5 rounded-lg px-2 text-xs"
-								size="sm"
-							/>
-							<ContextContent align="start" side="top">
-								<ContextContentHeader />
-								<ContextContentBody className="space-y-1.5">
-									<ContextInputUsage />
-									<ContextOutputUsage />
-									<ContextReasoningUsage />
-									<ContextCacheUsage />
-								</ContextContentBody>
-								<ContextContentFooter />
-							</ContextContent>
-						</Context>
-					)}
-
 					{/* Model Selector */}
 					<AiModelSelector
 						catalogModels={catalogModels}
@@ -242,11 +217,38 @@ export function ChatInput({
 					)}
 				</PromptInputTools>
 
-				<PromptInputSubmit
-					aria-label={t('knowledge.send')}
-					disabled={!canSend}
-					status={isPending ? 'submitted' : 'ready'}
-				/>
+				<div className="flex items-center gap-1">
+					{/* Context Usage Indicator */}
+					{contextUsage && contextUsage.usedTokens > 0 && (
+						<Context
+							maxTokens={contextUsage.maxTokens}
+							modelId={contextUsage.modelId}
+							usage={contextUsage.sessionUsage}
+							usedTokens={contextUsage.usedTokens}
+						>
+							<ContextTrigger
+								className="h-8 gap-1.5 rounded-lg px-2 text-xs"
+								size="sm"
+							/>
+							<ContextContent align="start" side="top">
+								<ContextContentHeader />
+								<ContextContentBody className="space-y-1.5">
+									<ContextInputUsage />
+									<ContextOutputUsage />
+									<ContextReasoningUsage />
+									<ContextCacheUsage />
+								</ContextContentBody>
+								<ContextContentFooter />
+							</ContextContent>
+						</Context>
+					)}
+
+					<PromptInputSubmit
+						aria-label={t('knowledge.send')}
+						disabled={!canSend}
+						status={isPending ? 'submitted' : 'ready'}
+					/>
+				</div>
 			</PromptInputFooter>
 		</PromptInput>
 	)

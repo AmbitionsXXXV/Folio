@@ -6,6 +6,7 @@ import type {
 import anthropic from './anthropic'
 import deepseek from './deepseek'
 import google from './google'
+import moonshot from './moonshot'
 import openai from './openai'
 import qwen from './qwen'
 import xai from './xai'
@@ -14,6 +15,7 @@ import xai from './xai'
 export { default as anthropicModels } from './anthropic'
 export { default as deepseekModels } from './deepseek'
 export { default as googleModels } from './google'
+export { default as moonshotModels } from './moonshot'
 export { default as openaiModels } from './openai'
 export { default as qwenModels } from './qwen'
 export { default as xaiModels } from './xai'
@@ -45,6 +47,7 @@ export const FOLIO_DEFAULT_MODEL_LIST = buildDefaultModelList({
 	anthropic,
 	deepseek,
 	google,
+	moonshot,
 	openai,
 	qwen,
 	xai,
