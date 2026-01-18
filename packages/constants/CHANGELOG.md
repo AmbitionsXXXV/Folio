@@ -1,5 +1,13 @@
 # @folionote/constants
 
+## 0.2.11
+
+### Patch Changes
+
+- feat: ✨ centralize AI provider management and implement user-level toggles
+- Updated dependencies
+  - @folionote/locales@0.2.11
+
 ## 0.2.10
 
 ### Patch Changes

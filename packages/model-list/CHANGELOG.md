@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.4
+
+### Patch Changes
+
+- feat: ✨ centralize AI provider management and implement user-level toggles
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.5
+
+### Patch Changes
+
+- feat: ✨ centralize AI provider management and implement user-level toggles
+
 ## 0.1.4
 
 ### Patch Changes
