@@ -73,7 +73,7 @@ app.use(
 			}
 			return null
 		},
-		allowMethods: ['GET', 'POST', 'OPTIONS'],
+		allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
 		allowHeaders: ['Content-Type', 'Authorization', 'X-Locale', 'Accept-Language'],
 		credentials: true,
 	}),

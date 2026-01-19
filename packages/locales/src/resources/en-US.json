@@ -862,6 +862,8 @@
     "noChats": "No chats yet",
     "startNewChatDescription": "Start a new conversation to begin your AI journey",
     "messages": "messages",
+    "deleteChatConfirmTitle": "Delete chat?",
+    "deleteChatConfirmDescription": "This will permanently delete \"{{title}}\" and its messages. This action cannot be undone.",
     "deleteChat": "Delete chat",
     "deleteChatFailed": "Failed to delete chat",
     "loadChatFailed": "Failed to load chat"

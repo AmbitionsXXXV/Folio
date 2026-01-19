@@ -853,6 +853,8 @@
     "noChats": "暂无对话",
     "startNewChatDescription": "开始新对话以开启 AI 助手之旅",
     "messages": "条消息",
+    "deleteChatConfirmTitle": "确认删除对话？",
+    "deleteChatConfirmDescription": "将永久删除 “{{title}}” 及其消息，删除后将无法恢复。",
     "deleteChat": "删除对话",
     "deleteChatFailed": "删除对话失败",
     "loadChatFailed": "加载对话失败"

@@ -1,3 +1,13 @@
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@folionote/ui/alert-dialog'
 import { Button } from '@folionote/ui/button'
 import { Skeleton } from '@folionote/ui/skeleton'
 import {
@@ -42,6 +52,11 @@ type ChatItemProps = {
 	isSelected: boolean
 	onSelect: () => void
 	onDelete: () => void
+}
+
+type DeleteChatCandidate = {
+	chatId: string
+	title: string
 }
 
 const ChatItem = memo(function ChatItem({
@@ -118,7 +133,7 @@ const ChatItem = memo(function ChatItem({
 				{(isHovered || isSelected) && (
 					<Button
 						aria-label={t('knowledge.deleteChat')}
-						className="size-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+						className="size-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
 						onClick={handleDelete}
 						size="icon"
 						variant="ghost"
@@ -211,7 +226,31 @@ export const ChatHistoryPanel = memo(function ChatHistoryPanel({
 	className,
 }: ChatHistoryPanelProps) {
 	const { t } = useTranslation()
+	const [deleteCandidate, setDeleteCandidate] = useState<DeleteChatCandidate | null>(
+		null
+	)
 	let chatListContent: JSX.Element
+
+	const requestDeleteChat = useCallback((chatId: string, title: string) => {
+		setDeleteCandidate({ chatId, title })
+	}, [])
+
+	const confirmDeleteChat = useCallback(() => {
+		if (!deleteCandidate) {
+			return
+		}
+
+		onDeleteChat(deleteCandidate.chatId)
+		setDeleteCandidate(null)
+	}, [deleteCandidate, onDeleteChat])
+
+	const handleDeleteDialogOpenChange = useCallback((isOpen: boolean) => {
+		if (!isOpen) {
+			setDeleteCandidate(null)
+		}
+	}, [])
+
+	const deleteChatTitle = deleteCandidate?.title || t('knowledge.untitledChat')
 
 	if (isLoading) {
 		chatListContent = (
@@ -226,15 +265,19 @@ export const ChatHistoryPanel = memo(function ChatHistoryPanel({
 	} else {
 		chatListContent = (
 			<div className="space-y-1">
-				{sessions.map((session) => (
-					<ChatItem
-						isSelected={session.chatId === selectedChatId}
-						key={session.chatId}
-						onDelete={() => onDeleteChat(session.chatId)}
-						onSelect={() => onSelectChat(session.chatId)}
-						session={session}
-					/>
-				))}
+				{sessions.map((session) => {
+					const displayTitle = session.title || t('knowledge.untitledChat')
+
+					return (
+						<ChatItem
+							isSelected={session.chatId === selectedChatId}
+							key={session.chatId}
+							onDelete={() => requestDeleteChat(session.chatId, displayTitle)}
+							onSelect={() => onSelectChat(session.chatId)}
+							session={session}
+						/>
+					)
+				})}
 			</div>
 		)
 	}
@@ -262,6 +305,29 @@ export const ChatHistoryPanel = memo(function ChatHistoryPanel({
 			>
 				{chatListContent}
 			</div>
+			<AlertDialog
+				onOpenChange={handleDeleteDialogOpenChange}
+				open={Boolean(deleteCandidate)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							{t('knowledge.deleteChatConfirmTitle')}
+						</AlertDialogTitle>
+						<AlertDialogDescription className="text-pretty">
+							{t('knowledge.deleteChatConfirmDescription', {
+								title: deleteChatTitle,
+							})}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+						<AlertDialogAction onClick={confirmDeleteChat} variant="destructive">
+							{t('knowledge.deleteChat')}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	)
 })

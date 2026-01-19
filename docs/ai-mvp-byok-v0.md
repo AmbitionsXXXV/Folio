@@ -1650,6 +1650,8 @@ Knowledge Chat 会话历史持久化功能使用户可以：
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+补充：前端跨域调用 `DELETE /api/ai/chat/:chatId` 需要服务端 CORS `allowMethods` 包含 `DELETE`，否则预检会失败。
+
 ### 28.3 数据库表设计
 
 ```sql
@@ -1719,3 +1721,4 @@ CREATE INDEX ai_chat_sessions_user_id_idx ON ai_chat_sessions(user_id);
 - 修复 ai-chat-store 测试的非空断言与多余 async，避免 lint 报错。
 - 抽取 lastOpenedAt 更新逻辑，降低 loadChat 复杂度并保持 Redis 缓存一致。
 - ChatHistoryPanel 改为显式条件渲染，避免嵌套三元表达式。
+- ChatHistoryPanel 删除会话新增二次确认弹窗，降低误删风险。

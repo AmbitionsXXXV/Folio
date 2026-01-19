@@ -853,6 +853,8 @@
     "noChats": "チャットがありません",
     "startNewChatDescription": "新しい会話を始めてAIアシスタントとの旅を始めましょう",
     "messages": "件のメッセージ",
+    "deleteChatConfirmTitle": "チャットを削除しますか？",
+    "deleteChatConfirmDescription": "「{{title}}」とメッセージが完全に削除されます。この操作は取り消せません。",
     "deleteChat": "チャットを削除",
     "deleteChatFailed": "チャットの削除に失敗しました",
     "loadChatFailed": "チャットの読み込みに失敗しました"
