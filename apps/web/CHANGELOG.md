@@ -1,5 +1,21 @@
 # web
 
+## 0.2.12
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+- Updated dependencies
+  - @folionote/locales@0.2.12
+  - @folionote/ui@0.2.12
+  - @folionote/api@0.2.12
+  - @folionote/auth@0.2.12
+  - @folionote/constants@0.2.12
+  - @folionote/editor-core@0.2.12
+  - @folionote/editor-react@0.2.12
+  - @folionote/model-list@0.1.5
+  - @folionote/utils@0.2.12
+
 ## 0.2.11
 
 ### Patch Changes

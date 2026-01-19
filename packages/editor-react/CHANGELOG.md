@@ -1,5 +1,13 @@
 # @folionote/editor-react
 
+## 0.2.12
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+- Updated dependencies
+  - @folionote/editor-core@0.2.12
+
 ## 0.2.11
 
 ### Patch Changes

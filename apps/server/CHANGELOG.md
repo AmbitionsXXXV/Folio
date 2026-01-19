@@ -1,5 +1,19 @@
 # server
 
+## 0.2.12
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+- Updated dependencies
+  - @folionote/locales@0.2.12
+  - @folionote/ai@0.2.12
+  - @folionote/db@0.2.12
+  - @folionote/api@0.2.12
+  - @folionote/auth@0.2.12
+  - @folionote/log@0.1.6
+  - @folionote/storage@0.2.12
+
 ## 0.2.11
 
 ### Patch Changes

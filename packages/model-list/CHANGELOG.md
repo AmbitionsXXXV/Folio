@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.5
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+
 ## 0.1.4
 
 ### Patch Changes
