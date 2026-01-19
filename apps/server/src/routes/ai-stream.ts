@@ -18,6 +18,7 @@ import {
 import {
 	createChat,
 	deleteChat,
+	deleteEmptyChat,
 	generateChatId,
 	listUserChats,
 	loadChat,
@@ -280,6 +281,29 @@ export function registerAiStreamRoute(app: App) {
 		await touchChat(userId, chatId)
 
 		return c.json({ success: true })
+	})
+
+	// DELETE /api/ai/chat/:chatId/empty - Delete an empty chat session (for cleanup on switch)
+	app.delete('/api/ai/chat/:chatId/empty', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const chatId = c.req.param('chatId')
+		if (!chatId) {
+			return c.json({ error: 'Missing chatId' }, 400)
+		}
+
+		const userId = context.session.user.id
+		const deleted = await deleteEmptyChat(userId, chatId)
+
+		// Return success even if not deleted (session was not empty or not found)
+		// This is a best-effort cleanup operation
+		return c.json({ success: true, deleted })
 	})
 
 	// POST /api/ai/stream - Stream AI response (AI SDK v6 aligned)

@@ -80,6 +80,7 @@ function KnowledgePage() {
 		createChat: createNewChatSession,
 		deleteChat: deleteChatSession,
 		refreshSessions,
+		isSessionEmpty,
 	} = useChatSessions()
 
 	// Chat ID for persistence
@@ -403,8 +404,19 @@ function KnowledgePage() {
 	])
 
 	const handleNewChat = useCallback(async () => {
+		// If current session is already empty, don't create a new one
+		// Just focus on the input (the server will reuse the empty session anyway)
+		if (selectedChatId && isSessionEmpty(selectedChatId) && messages.length === 0) {
+			// Already on an empty session, just reset UI state
+			setInputValue('')
+			setAttachedNotes([])
+			setIsSidebarOpen(false)
+			return
+		}
+
 		try {
 			// Create a new chat session on the server
+			// Server will reuse existing empty session or create new one
 			const newChatId = await createNewChatSession()
 			setChatIdState(newChatId)
 			resetChat(newChatId)
@@ -426,7 +438,13 @@ function KnowledgePage() {
 			setInputValue('')
 			setAttachedNotes([])
 		}
-	}, [createNewChatSession, resetChat])
+	}, [
+		createNewChatSession,
+		resetChat,
+		selectedChatId,
+		isSessionEmpty,
+		messages.length,
+	])
 
 	const handleSelectChat = useCallback(
 		(chatIdToSelect: string) => {

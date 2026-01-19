@@ -1292,6 +1292,7 @@ Knowledge Chat 会话持久化功能使用户可以：
 1. **刷新页面后恢复对话**：消息历史通过 localStorage 持久化，重新打开页面时自动加载
 2. **断线后恢复**：服务端内存存储支持查询已完成的消息，客户端可在断线后重新获取
 3. **多会话支持**：每个会话有唯一的 chatId，"新对话"按钮会生成新 chatId 并清空历史
+4. **空会话去重与自动清理**：创建空会话时复用最近空会话；切换到有记录会话时自动清理上一空会话，避免占位
 
 ### 26.2 数据流
 
@@ -1681,24 +1682,24 @@ CREATE INDEX ai_chat_sessions_user_id_idx ON ai_chat_sessions(user_id);
 
 ### 28.5 文件变更
 
-| 模块 | 文件路径 | 变更 |
-| ---- | -------- | ---- |
-| DB Schema | `packages/db/src/schema/ai.ts` | 新增 `ai_chat_sessions` 表 |
-| DB Index | `packages/db/src/index.ts` | 导出新 schema |
-| DB Index Lazy | `packages/db/src/index.lazy.ts` | 导出新 schema |
-| Server Redis | `apps/server/src/utils/redis.ts` | 新增 Redis 客户端封装 |
-| Chat Store | `apps/server/src/services/ai-chat-store.ts` | 重构为 DB + Redis |
-| AI Stream | `apps/server/src/routes/ai-stream.ts` | 新增会话列表与删除 API |
-| Knowledge Types | `apps/web/src/features/knowledge/types.ts` | 新增 `ChatSessionSummary` |
-| Knowledge Utils | `apps/web/src/features/knowledge/utils.ts` | 新增 `getLastChatId` / `setLastChatId` |
-| Chat Sessions Hook | `apps/web/src/hooks/use-chat-sessions.ts` | 新增会话列表管理 hook |
-| Knowledge Chat Hook | `apps/web/src/hooks/use-knowledge-chat.ts` | 新增 `switchChat` / `loadMessages` |
-| Chat History Panel | `apps/web/src/features/knowledge/components/chat-history-panel.tsx` | 新增会话列表 UI |
-| Knowledge Page | `apps/web/src/routes/_app/knowledge.tsx` | 集成会话列表与切换 |
-| i18n zh-CN | `packages/locales/src/resources/zh-CN.json` | 新增 i18n keys |
-| i18n en-US | `packages/locales/src/resources/en-US.json` | 新增 i18n keys |
-| i18n ja-JP | `packages/locales/src/resources/ja-JP.json` | 新增 i18n keys |
-| Chat Store Tests | `apps/server/__tests__/ai-chat-store.test.ts` | 更新测试（26 用例） |
+| 模块                | 文件路径                                                            | 变更                                   |
+| ------------------- | ------------------------------------------------------------------- | -------------------------------------- |
+| DB Schema           | `packages/db/src/schema/ai.ts`                                      | 新增 `ai_chat_sessions` 表             |
+| DB Index            | `packages/db/src/index.ts`                                          | 导出新 schema                          |
+| DB Index Lazy       | `packages/db/src/index.lazy.ts`                                     | 导出新 schema                          |
+| Server Redis        | `apps/server/src/utils/redis.ts`                                    | 新增 Redis 客户端封装                  |
+| Chat Store          | `apps/server/src/services/ai-chat-store.ts`                         | 重构为 DB + Redis                      |
+| AI Stream           | `apps/server/src/routes/ai-stream.ts`                               | 新增会话列表与删除 API                 |
+| Knowledge Types     | `apps/web/src/features/knowledge/types.ts`                          | 新增 `ChatSessionSummary`              |
+| Knowledge Utils     | `apps/web/src/features/knowledge/utils.ts`                          | 新增 `getLastChatId` / `setLastChatId` |
+| Chat Sessions Hook  | `apps/web/src/hooks/use-chat-sessions.ts`                           | 新增会话列表管理 hook                  |
+| Knowledge Chat Hook | `apps/web/src/hooks/use-knowledge-chat.ts`                          | 新增 `switchChat` / `loadMessages`     |
+| Chat History Panel  | `apps/web/src/features/knowledge/components/chat-history-panel.tsx` | 新增会话列表 UI                        |
+| Knowledge Page      | `apps/web/src/routes/_app/knowledge.tsx`                            | 集成会话列表与切换                     |
+| i18n zh-CN          | `packages/locales/src/resources/zh-CN.json`                         | 新增 i18n keys                         |
+| i18n en-US          | `packages/locales/src/resources/en-US.json`                         | 新增 i18n keys                         |
+| i18n ja-JP          | `packages/locales/src/resources/ja-JP.json`                         | 新增 i18n keys                         |
+| Chat Store Tests    | `apps/server/__tests__/ai-chat-store.test.ts`                       | 更新测试（26 用例）                    |
 
 ### 28.6 验证
 

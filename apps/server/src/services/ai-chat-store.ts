@@ -19,7 +19,7 @@
 import { aiChatSessions, db } from '@folionote/db'
 import { createLogger } from '@folionote/log'
 import type { UIMessage } from 'ai'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { getRedisClient, isRedisConfigured } from '../utils/redis'
 
@@ -204,6 +204,197 @@ function dbRowToSession(row: typeof aiChatSessions.$inferSelect): ChatSession {
 }
 
 /**
+ * Check if a session is empty (no messages)
+ *
+ * Empty session definition: messageCount === 0 AND lastMessageAt is null
+ */
+export function isEmptySession(session: ChatSession | ChatSessionSummary): boolean {
+	return session.messageCount === 0 && session.lastMessageAt === null
+}
+
+/**
+ * Find the most recent empty session for a user
+ */
+async function findRecentEmptySession(
+	userId: string
+): Promise<ChatSession | undefined> {
+	if (useMemoryStore) {
+		const sessions: ChatSession[] = []
+		for (const session of memoryStore.values()) {
+			if (session.userId === userId && isEmptySession(session)) {
+				sessions.push(session)
+			}
+		}
+		if (sessions.length === 0) return undefined
+		// Sort by lastOpenedAt descending
+		sessions.sort((a, b) => b.lastOpenedAt.getTime() - a.lastOpenedAt.getTime())
+		return sessions[0]
+	}
+
+	const rows = await db
+		.select()
+		.from(aiChatSessions)
+		.where(
+			and(
+				eq(aiChatSessions.userId, userId),
+				eq(aiChatSessions.messageCount, 0),
+				isNull(aiChatSessions.lastMessageAt)
+			)
+		)
+		.orderBy(desc(aiChatSessions.lastOpenedAt))
+		.limit(1)
+
+	const row = rows[0]
+	return row ? dbRowToSession(row) : undefined
+}
+
+/**
+ * Delete all empty sessions for a user except the one with the given chatId
+ *
+ * @returns Number of deleted sessions
+ */
+async function cleanupEmptySessions(
+	userId: string,
+	exceptChatId?: string
+): Promise<number> {
+	if (useMemoryStore) {
+		return await cleanupEmptySessionsInMemory(userId, exceptChatId)
+	}
+
+	return await cleanupEmptySessionsInDb(userId, exceptChatId)
+}
+
+function getEmptySessionKeysToDelete(
+	userId: string,
+	exceptChatId?: string
+): string[] {
+	const keysToDelete: string[] = []
+	for (const [key, session] of memoryStore.entries()) {
+		if (
+			session.userId === userId &&
+			isEmptySession(session) &&
+			session.chatId !== exceptChatId
+		) {
+			keysToDelete.push(key)
+		}
+	}
+	return keysToDelete
+}
+
+function cleanupEmptySessionsInMemory(
+	userId: string,
+	exceptChatId?: string
+): number {
+	const keysToDelete = getEmptySessionKeysToDelete(userId, exceptChatId)
+	for (const key of keysToDelete) {
+		memoryStore.delete(key)
+	}
+	if (keysToDelete.length > 0) {
+		log.debug(
+			`[memory] Cleaned up ${keysToDelete.length} empty sessions for user ${userId}`
+		)
+	}
+	return keysToDelete.length
+}
+
+async function cleanupEmptySessionsInDb(
+	userId: string,
+	exceptChatId?: string
+): Promise<number> {
+	const idsToDelete = await getEmptySessionIdsToDelete(userId, exceptChatId)
+	if (idsToDelete.length === 0) return 0
+
+	const deletedCount = await deleteEmptySessionsByIds(userId, idsToDelete)
+	if (deletedCount > 0) {
+		await invalidateChatListCache(userId)
+		log.debug(`Cleaned up ${deletedCount} empty sessions for user ${userId}`)
+	}
+
+	return deletedCount
+}
+
+async function getEmptySessionIdsToDelete(
+	userId: string,
+	exceptChatId?: string
+): Promise<string[]> {
+	const rows = await db
+		.select({ id: aiChatSessions.id })
+		.from(aiChatSessions)
+		.where(
+			and(
+				eq(aiChatSessions.userId, userId),
+				eq(aiChatSessions.messageCount, 0),
+				isNull(aiChatSessions.lastMessageAt)
+			)
+		)
+
+	return rows.map((row) => row.id).filter((id) => id !== exceptChatId)
+}
+
+async function deleteEmptySessionsByIds(
+	userId: string,
+	chatIds: string[]
+): Promise<number> {
+	let deletedCount = 0
+	for (const chatId of chatIds) {
+		const deleted = await deleteChatSessionById(userId, chatId)
+		if (deleted) {
+			deletedCount += 1
+		}
+	}
+	return deletedCount
+}
+
+async function deleteChatSessionById(
+	userId: string,
+	chatId: string
+): Promise<boolean> {
+	const result = await db
+		.delete(aiChatSessions)
+		.where(and(eq(aiChatSessions.id, chatId), eq(aiChatSessions.userId, userId)))
+		.returning({ id: aiChatSessions.id })
+
+	if (result.length === 0) return false
+
+	await clearChatCacheForDeletedSession(userId, chatId)
+	return true
+}
+
+async function clearChatCacheForDeletedSession(
+	userId: string,
+	chatId: string
+): Promise<void> {
+	if (!isRedisConfigured()) return
+	try {
+		const redis = getRedisClient()
+		await redis.del(getChatRedisKey(userId, chatId))
+	} catch (err) {
+		log.warn('Failed to clear Redis cache for deleted session:', err)
+	}
+}
+
+async function invalidateChatCache(userId: string, chatId: string): Promise<void> {
+	if (!isRedisConfigured()) return
+	try {
+		const redis = getRedisClient()
+		await redis.del(getChatRedisKey(userId, chatId))
+		await redis.del(getListRedisKey(userId))
+	} catch (err) {
+		log.warn('Failed to invalidate Redis cache:', err)
+	}
+}
+
+async function invalidateChatListCache(userId: string): Promise<void> {
+	if (!isRedisConfigured()) return
+	try {
+		const redis = getRedisClient()
+		await redis.del(getListRedisKey(userId))
+	} catch (err) {
+		log.warn('Failed to invalidate Redis list cache:', err)
+	}
+}
+
+/**
  * Update lastOpenedAt in DB and synchronize caches.
  */
 async function updateLastOpenedAt(
@@ -247,51 +438,93 @@ export function generateChatId(): string {
 	return nanoid(16)
 }
 
-/**
- * Create a new chat session
- *
- * @returns The created chat session with chatId
- */
-export async function createChat(input: CreateChatInput): Promise<ChatSession> {
-	const chatId = input.chatId ?? generateChatId()
-	const now = new Date()
-	const messages = input.messages ?? []
-	const title = generateTitle(messages, input.title)
-	const preview = extractPreview(messages)
+type NewChatSessionInput = {
+	userId: string
+	chatId: string
+	messages: UIMessage[]
+	title: string
+	preview: string
+	now: Date
+}
 
-	// Memory store fallback
+function shouldReuseEmptySessionInput(
+	input: CreateChatInput,
+	messages: UIMessage[]
+): boolean {
+	return messages.length === 0 && !input.chatId && !input.title
+}
+
+async function reuseEmptySessionIfAvailable(
+	userId: string
+): Promise<ChatSession | undefined> {
+	const existingEmpty = await findRecentEmptySession(userId)
+	if (!existingEmpty) return undefined
+
+	await touchEmptySession(userId, existingEmpty)
+	await cleanupEmptySessions(userId, existingEmpty.chatId)
+
+	return existingEmpty
+}
+
+async function touchEmptySession(
+	userId: string,
+	session: ChatSession
+): Promise<void> {
+	const now = new Date()
+	session.lastOpenedAt = now
+	session.updatedAt = now
+
 	if (useMemoryStore) {
-		const session: ChatSession = {
-			userId: input.userId,
-			chatId,
-			title,
-			messages,
-			messageCount: messages.length,
-			lastMessagePreview: preview,
-			lastMessageAt: messages.length > 0 ? now : null,
-			lastOpenedAt: now,
-			createdAt: now,
-			updatedAt: now,
-		}
-		memoryStore.set(`${input.userId}:${chatId}`, session)
-		log.debug(`[memory] Created chat session: ${chatId} for user ${input.userId}`)
-		return session
+		log.debug(`[memory] Reused empty session: ${session.chatId} for user ${userId}`)
+		return
 	}
 
-	// PostgreSQL insert
+	await db
+		.update(aiChatSessions)
+		.set({ lastOpenedAt: now, updatedAt: now })
+		.where(
+			and(eq(aiChatSessions.id, session.chatId), eq(aiChatSessions.userId, userId))
+		)
+
+	await invalidateChatCache(userId, session.chatId)
+
+	log.debug(`Reused empty session: ${session.chatId} for user ${userId}`)
+}
+
+function createChatInMemory(input: NewChatSessionInput): ChatSession {
+	const session: ChatSession = {
+		userId: input.userId,
+		chatId: input.chatId,
+		title: input.title,
+		messages: input.messages,
+		messageCount: input.messages.length,
+		lastMessagePreview: input.preview,
+		lastMessageAt: input.messages.length > 0 ? input.now : null,
+		lastOpenedAt: input.now,
+		createdAt: input.now,
+		updatedAt: input.now,
+	}
+	memoryStore.set(`${input.userId}:${input.chatId}`, session)
+	log.debug(
+		`[memory] Created chat session: ${input.chatId} for user ${input.userId}`
+	)
+	return session
+}
+
+async function createChatInDb(input: NewChatSessionInput): Promise<ChatSession> {
 	const [row] = await db
 		.insert(aiChatSessions)
 		.values({
-			id: chatId,
+			id: input.chatId,
 			userId: input.userId,
-			title,
-			messagesJson: JSON.stringify(messages),
-			messageCount: messages.length,
-			lastMessagePreview: preview,
-			lastMessageAt: messages.length > 0 ? now : null,
-			lastOpenedAt: now,
-			createdAt: now,
-			updatedAt: now,
+			title: input.title,
+			messagesJson: JSON.stringify(input.messages),
+			messageCount: input.messages.length,
+			lastMessagePreview: input.preview,
+			lastMessageAt: input.messages.length > 0 ? input.now : null,
+			lastOpenedAt: input.now,
+			createdAt: input.now,
+			updatedAt: input.now,
 		})
 		.returning()
 
@@ -300,19 +533,55 @@ export async function createChat(input: CreateChatInput): Promise<ChatSession> {
 	}
 
 	const session = dbRowToSession(row)
+	await invalidateChatListCache(input.userId)
 
-	// Invalidate list cache
-	if (isRedisConfigured()) {
-		try {
-			const redis = getRedisClient()
-			await redis.del(getListRedisKey(input.userId))
-		} catch (err) {
-			log.warn('Failed to invalidate Redis list cache:', err)
+	log.debug(`Created chat session: ${input.chatId} for user ${input.userId}`)
+	return session
+}
+
+/**
+ * Create a new chat session
+ *
+ * If creating an empty session (no messages, no specific chatId), this will:
+ * 1. Try to reuse an existing empty session (update its lastOpenedAt)
+ * 2. Clean up any other empty sessions to avoid accumulation
+ * 3. Only create a new session if no empty session exists to reuse
+ *
+ * @returns The created (or reused) chat session with chatId
+ */
+export async function createChat(input: CreateChatInput): Promise<ChatSession> {
+	const messages = input.messages ?? []
+	if (shouldReuseEmptySessionInput(input, messages)) {
+		const reusedSession = await reuseEmptySessionIfAvailable(input.userId)
+		if (reusedSession) {
+			return reusedSession
 		}
 	}
 
-	log.debug(`Created chat session: ${chatId} for user ${input.userId}`)
-	return session
+	const chatId = input.chatId ?? generateChatId()
+	const now = new Date()
+	const title = generateTitle(messages, input.title)
+	const preview = extractPreview(messages)
+
+	if (useMemoryStore) {
+		return createChatInMemory({
+			userId: input.userId,
+			chatId,
+			messages,
+			title,
+			preview,
+			now,
+		})
+	}
+
+	return createChatInDb({
+		userId: input.userId,
+		chatId,
+		messages,
+		title,
+		preview,
+		now,
+	})
 }
 
 /**
@@ -532,6 +801,8 @@ export async function deleteChat(userId: string, chatId: string): Promise<boolea
 /**
  * List all chat sessions for a user (summaries only, without full messages)
  *
+ * Also triggers empty session cleanup to ensure only one empty session exists.
+ *
  * @returns Array of chat session summaries sorted by lastOpenedAt (newest first)
  */
 export async function listUserChats(userId: string): Promise<ChatSessionSummary[]> {
@@ -544,9 +815,22 @@ export async function listUserChats(userId: string): Promise<ChatSessionSummary[
 				sessions.push(summary)
 			}
 		}
-		return sessions.sort(
+		const sorted = sessions.sort(
 			(a, b) => b.lastOpenedAt.getTime() - a.lastOpenedAt.getTime()
 		)
+
+		// Cleanup empty sessions (keep only the most recent one)
+		const emptySessions = sorted.filter((s) => isEmptySession(s))
+		const mostRecentEmpty = emptySessions[0]
+		if (mostRecentEmpty) {
+			await cleanupEmptySessions(userId, mostRecentEmpty.chatId)
+			// Re-filter after cleanup
+			return sorted.filter(
+				(s) => !isEmptySession(s) || s.chatId === mostRecentEmpty.chatId
+			)
+		}
+
+		return sorted
 	}
 
 	// Try Redis cache first
@@ -581,7 +865,7 @@ export async function listUserChats(userId: string): Promise<ChatSessionSummary[
 		.orderBy(desc(aiChatSessions.lastOpenedAt))
 		.limit(MAX_CHATS_IN_LIST)
 
-	const summaries: ChatSessionSummary[] = rows.map((row) => ({
+	let summaries: ChatSessionSummary[] = rows.map((row) => ({
 		userId: row.userId,
 		chatId: row.id,
 		title: row.title,
@@ -592,6 +876,17 @@ export async function listUserChats(userId: string): Promise<ChatSessionSummary[
 		updatedAt: row.updatedAt,
 		createdAt: row.createdAt,
 	}))
+
+	// Cleanup empty sessions (keep only the most recent one)
+	const emptyInList = summaries.find((summary) => isEmptySession(summary))
+	const emptySessionToKeep = emptyInList ?? (await findRecentEmptySession(userId))
+	if (emptySessionToKeep) {
+		await cleanupEmptySessions(userId, emptySessionToKeep.chatId)
+		// Filter out deleted empty sessions from result
+		summaries = summaries.filter(
+			(s) => !isEmptySession(s) || s.chatId === emptySessionToKeep.chatId
+		)
+	}
 
 	// Cache in Redis
 	if (isRedisConfigured()) {
@@ -606,6 +901,74 @@ export async function listUserChats(userId: string): Promise<ChatSessionSummary[
 	}
 
 	return summaries
+}
+
+/**
+ * Delete an empty chat session (for cleanup when switching away)
+ *
+ * Only deletes if the session exists and is empty.
+ *
+ * @returns true if the session was deleted, false if not found or not empty
+ */
+export async function deleteEmptyChat(
+	userId: string,
+	chatId: string
+): Promise<boolean> {
+	// Memory store fallback
+	if (useMemoryStore) {
+		const session = memoryStore.get(`${userId}:${chatId}`)
+		const isEmpty = session && isEmptySession(session)
+		if (!isEmpty) {
+			return false
+		}
+		memoryStore.delete(`${userId}:${chatId}`)
+		log.debug(`[memory] Deleted empty chat session: ${chatId} for user ${userId}`)
+		return true
+	}
+
+	// Check if session exists and is empty
+	const rows = await db
+		.select({
+			id: aiChatSessions.id,
+			messageCount: aiChatSessions.messageCount,
+			lastMessageAt: aiChatSessions.lastMessageAt,
+		})
+		.from(aiChatSessions)
+		.where(and(eq(aiChatSessions.id, chatId), eq(aiChatSessions.userId, userId)))
+		.limit(1)
+
+	const row = rows[0]
+	if (!row) return false
+
+	// Only delete if empty
+	if (row.messageCount !== 0 || row.lastMessageAt !== null) {
+		return false
+	}
+
+	// Delete from PostgreSQL
+	const result = await db
+		.delete(aiChatSessions)
+		.where(and(eq(aiChatSessions.id, chatId), eq(aiChatSessions.userId, userId)))
+		.returning({ id: aiChatSessions.id })
+
+	const deleted = result.length > 0
+
+	// Clear Redis cache
+	if (deleted && isRedisConfigured()) {
+		try {
+			const redis = getRedisClient()
+			await redis.del(getChatRedisKey(userId, chatId))
+			await redis.del(getListRedisKey(userId))
+		} catch (err) {
+			log.warn('Failed to clear Redis cache:', err)
+		}
+	}
+
+	if (deleted) {
+		log.debug(`Deleted empty chat session: ${chatId} for user ${userId}`)
+	}
+
+	return deleted
 }
 
 /**
