@@ -5,21 +5,15 @@ import {
 	createChat,
 	deleteChat,
 	// Legacy API (for backward compatibility tests)
-	deleteChatSession,
 	deleteEmptyChat,
 	disableMemoryStore,
 	enableMemoryStore,
 	generateChatId,
-	getChatMessages,
-	getChatSession,
-	getUserChatSessions,
 	isEmptySession,
-	isStreamInProgress,
 	listUserChats,
 	loadChat,
 	loadChatMessages,
 	saveChat,
-	saveChatMessages,
 } from '../src/services/ai-chat-store'
 
 describe('ai-chat-store', () => {
@@ -541,55 +535,4 @@ describe('ai-chat-store', () => {
 	// ==========================================================================
 	// Legacy API Tests (backward compatibility)
 	// ==========================================================================
-
-	describe('legacy API', () => {
-		it('saveChatMessages / getChatMessages work as aliases', async () => {
-			const messages: UIMessage[] = [
-				createTestMessage('msg-1', 'user', 'Hello'),
-				createTestMessage('msg-2', 'assistant', 'Hi there!'),
-			]
-
-			await saveChatMessages(testUserId, testChatId, messages)
-			const retrieved = await getChatMessages(testUserId, testChatId)
-
-			expect(retrieved).toEqual(messages)
-		})
-
-		it('getChatSession returns session data', async () => {
-			const messages: UIMessage[] = [createTestMessage('msg-1', 'user', 'Test')]
-			await createChat({ userId: testUserId, chatId: testChatId, messages })
-
-			const session = await getChatSession(testUserId, testChatId)
-
-			expect(session).toBeDefined()
-			expect(session?.userId).toBe(testUserId)
-			expect(session?.chatId).toBe(testChatId)
-			expect(session?.messages).toEqual(messages)
-		})
-
-		it('deleteChatSession works as alias', async () => {
-			await createChat({ userId: testUserId, chatId: testChatId })
-
-			const deleted = await deleteChatSession(testUserId, testChatId)
-
-			expect(deleted).toBe(true)
-			expect(await loadChat(testUserId, testChatId)).toBeUndefined()
-		})
-
-		it('getUserChatSessions works as alias', async () => {
-			await createChat({ userId: testUserId, chatId: testChatId })
-
-			const sessions = await getUserChatSessions(testUserId)
-
-			expect(sessions).toHaveLength(1)
-			expect(sessions[0]?.chatId).toBe(testChatId)
-		})
-
-		it('isStreamInProgress always returns false (deprecated)', async () => {
-			await createChat({ userId: testUserId, chatId: testChatId })
-
-			// Stream tracking is deprecated; always returns false
-			expect(isStreamInProgress(testUserId, testChatId)).toBe(false)
-		})
-	})
 })
