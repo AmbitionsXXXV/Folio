@@ -2,6 +2,7 @@
 
 // Components
 export {
+	ChatHistoryPanel,
 	ContextUsageIndicator,
 	EmptyState,
 	MessageBubble,
@@ -10,6 +11,8 @@ export {
 export type {
 	ApiProviderId,
 	ChatMessage,
+	ChatSessionFull,
+	ChatSessionSummary,
 	CitationSource,
 	ContextUsage,
 } from './types'
@@ -19,6 +22,7 @@ export {
 	calculateTotalTokens,
 	clearChatId,
 	clearChatMessages,
+	clearLastChatId,
 	deserializeMessage,
 	deserializeMessages,
 	estimateTokenCount,
@@ -26,6 +30,7 @@ export {
 	formatTokenCount,
 	generateChatId,
 	getCitationByIndex,
+	getLastChatId,
 	getOrCreateChatId,
 	isApiSupportedProvider,
 	loadChatMessages,
@@ -36,4 +41,5 @@ export {
 	serializeMessage,
 	serializeMessages,
 	setChatId,
+	setLastChatId,
 } from './utils'

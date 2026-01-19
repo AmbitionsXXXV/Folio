@@ -124,7 +124,7 @@ const MessageFooter = memo(function MessageFooter({
 		<div
 			className={cn(
 				'mt-1 flex items-center gap-2 font-[tabular-nums] text-[10px]',
-				isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
+				isUser ? 'text-primary' : 'text-foreground'
 			)}
 		>
 			<span>{timestamp.toLocaleTimeString()}</span>

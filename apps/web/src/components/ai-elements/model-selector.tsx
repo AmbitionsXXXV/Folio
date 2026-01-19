@@ -243,7 +243,7 @@ type ModelSelectorProps = {
 	options?: ModelSelectorOption[]
 	groups?: ModelSelectorGroup[]
 	value: string | null
-	onValueChange: (nextValue: string) => void
+	onValueChange: (nextValue: string, providerId?: string) => void
 	placeholder?: string
 	disabled?: boolean
 	className?: string
@@ -283,8 +283,8 @@ export function ModelSelector({
 		[resolvedGroups, value]
 	)
 
-	const handleSelect = (optionId: string) => {
-		onValueChange(optionId)
+	const handleSelect = (optionId: string, providerId?: string) => {
+		onValueChange(optionId, providerId)
 		// Don't close the dialog - allow user to freely switch models
 	}
 
@@ -350,7 +350,7 @@ export function ModelSelector({
 type ModelSelectorGroupSectionProps = {
 	group: ModelSelectorGroup
 	currentValue: string | null
-	onSelect: (optionId: string) => void
+	onSelect: (optionId: string, providerId: string) => void
 }
 
 const ModelSelectorGroupSection = memo(function ModelSelectorGroupSection({
@@ -366,6 +366,7 @@ const ModelSelectorGroupSection = memo(function ModelSelectorGroupSection({
 					key={option.id}
 					onSelect={onSelect}
 					option={option}
+					providerId={group.id}
 				/>
 			))}
 		</CommandGroup>
@@ -376,18 +377,20 @@ const ModelSelectorGroupSection = memo(function ModelSelectorGroupSection({
 type ModelSelectorOptionItemProps = {
 	option: ModelSelectorOption
 	isSelected: boolean
-	onSelect: (optionId: string) => void
+	providerId: string
+	onSelect: (optionId: string, providerId: string) => void
 }
 
 const ModelSelectorOptionItem = memo(function ModelSelectorOptionItem({
 	option,
 	isSelected,
+	providerId,
 	onSelect,
 }: ModelSelectorOptionItemProps) {
 	return (
 		<CommandItem
 			className="flex items-center gap-2"
-			onSelect={() => onSelect(option.id)}
+			onSelect={() => onSelect(option.id, providerId)}
 			value={`${option.name} ${option.id}`}
 		>
 			{/* Checkmark indicator */}

@@ -43,7 +43,7 @@ export type ChatInputProps = {
 	// Model selection props
 	selectedProvider: string
 	selectedModel: string
-	onModelChange: (model: string) => void
+	onModelChange: (model: string, providerId?: string) => void
 	hasApiKey: boolean
 	// Model catalog (from useAiModelCatalog)
 	catalogProviders: CatalogProvider[]

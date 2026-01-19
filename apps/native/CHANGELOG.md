@@ -1,5 +1,17 @@
 # native
 
+## 0.2.12
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+- Updated dependencies
+  - @folionote/locales@0.2.12
+  - @folionote/api@0.2.12
+  - @folionote/constants@0.2.12
+  - @folionote/editor-core@0.2.12
+  - @folionote/utils@0.2.12
+
 ## 0.2.11
 
 ### Patch Changes

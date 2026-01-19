@@ -2,6 +2,8 @@
 
 // AI schema
 import {
+	aiChatSessions,
+	aiChatSessionsRelations,
 	userAiModelSettings,
 	userAiModelSettingsRelations,
 	userAiProviderSettings,
@@ -80,6 +82,8 @@ const schema = {
 	userAiModelSettingsRelations,
 	userAiProviderSettings,
 	userAiProviderSettingsRelations,
+	aiChatSessions,
+	aiChatSessionsRelations,
 }
 
 // 数据库连接初始化
@@ -88,6 +92,8 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 export const db = drizzle(process.env.DATABASE_URL || '', { schema })
 
 export {
+	aiChatSessions,
+	aiChatSessionsRelations,
 	userAiModelSettings,
 	userAiModelSettingsRelations,
 	userAiProviderSettings,

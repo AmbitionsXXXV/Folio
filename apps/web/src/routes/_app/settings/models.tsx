@@ -540,19 +540,17 @@ function ModelProviderGroup({
 				/>
 			</div>
 
-			{/* Model list - only show if provider is enabled */}
-			{provider.enabled && (
-				<div className="divide-y divide-border/50">
-					{models.map((model) => (
-						<ModelRow
-							key={`${model.providerId}-${model.id}-${model.type}`}
-							model={model}
-							onToggle={onToggleModel}
-							t={t}
-						/>
-					))}
-				</div>
-			)}
+			{/* Model list - always show regardless of provider enabled state */}
+			<div className="divide-y divide-border/50">
+				{models.map((model) => (
+					<ModelRow
+						key={`${model.providerId}-${model.id}-${model.type}`}
+						model={model}
+						onToggle={onToggleModel}
+						t={t}
+					/>
+				))}
+			</div>
 		</div>
 	)
 }

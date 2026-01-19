@@ -1,5 +1,11 @@
 # @folionote/locales
 
+## 0.2.12
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+
 ## 0.2.11
 
 ### Patch Changes

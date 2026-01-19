@@ -48,8 +48,18 @@ coverage
 tmp
 temp
 
+# AI SDK DevTools (contains sensitive AI interaction data)
+.devtools
+
 .react-email
 
 interview/
 
 __pycache__
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

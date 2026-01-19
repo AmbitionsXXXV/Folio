@@ -16,9 +16,14 @@ import {
 	type UIMessage,
 } from 'ai'
 import {
+	createChat,
+	deleteChat,
 	generateChatId,
+	listUserChats,
+	loadChat,
 	loadChatMessages,
 	saveChat,
+	touchChat,
 } from '../services/ai-chat-store'
 import {
 	fetchNotesByIds,
@@ -150,7 +155,26 @@ function buildProviderOptions(provider: AiProvider, enableReasoning: boolean) {
  * - toUIMessageStreamResponse for proper UIMessage format
  */
 export function registerAiStreamRoute(app: App) {
+	// GET /api/ai/chats - List all chat sessions for the user
+	app.get('/api/ai/chats', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const userId = context.session.user.id
+		const chats = await listUserChats(userId)
+
+		return c.json({
+			chats,
+		})
+	})
+
 	// GET /api/ai/chat/:chatId - Retrieve persisted chat messages
+	// Also updates lastOpenedAt to track most recently opened chat
 	app.get('/api/ai/chat/:chatId', async (c) => {
 		const detectedLanguage = c.get('language')
 		const locale = convertToSupportedLanguage(detectedLanguage)
@@ -166,11 +190,22 @@ export function registerAiStreamRoute(app: App) {
 		}
 
 		const userId = context.session.user.id
-		const messages = loadChatMessages(userId, chatId)
+
+		// Load chat and update lastOpenedAt
+		const session = await loadChat(userId, chatId, true)
+
+		if (!session) {
+			return c.json({ error: 'Chat not found' }, 404)
+		}
 
 		return c.json({
-			chatId,
-			messages,
+			chatId: session.chatId,
+			title: session.title,
+			messages: session.messages,
+			messageCount: session.messageCount,
+			lastOpenedAt: session.lastOpenedAt.toISOString(),
+			updatedAt: session.updatedAt.toISOString(),
+			createdAt: session.createdAt.toISOString(),
 		})
 	})
 
@@ -184,8 +219,67 @@ export function registerAiStreamRoute(app: App) {
 			return c.json({ error: 'Unauthorized' }, 401)
 		}
 
-		const chatId = generateChatId()
-		return c.json({ chatId })
+		const userId = context.session.user.id
+		const body = await c.req
+			.json<{ title?: string }>()
+			.catch(() => ({ title: undefined }))
+
+		const session = await createChat({
+			userId,
+			title: body.title,
+		})
+
+		return c.json({
+			chatId: session.chatId,
+			title: session.title,
+			createdAt: session.createdAt.toISOString(),
+		})
+	})
+
+	// DELETE /api/ai/chat/:chatId - Delete a chat session
+	app.delete('/api/ai/chat/:chatId', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const chatId = c.req.param('chatId')
+		if (!chatId) {
+			return c.json({ error: 'Missing chatId' }, 400)
+		}
+
+		const userId = context.session.user.id
+		const deleted = await deleteChat(userId, chatId)
+
+		if (!deleted) {
+			return c.json({ error: 'Chat not found' }, 404)
+		}
+
+		return c.json({ success: true })
+	})
+
+	// POST /api/ai/chat/:chatId/touch - Update lastOpenedAt without loading messages
+	app.post('/api/ai/chat/:chatId/touch', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const chatId = c.req.param('chatId')
+		if (!chatId) {
+			return c.json({ error: 'Missing chatId' }, 400)
+		}
+
+		const userId = context.session.user.id
+		await touchChat(userId, chatId)
+
+		return c.json({ success: true })
 	})
 
 	// POST /api/ai/stream - Stream AI response (AI SDK v6 aligned)
@@ -243,7 +337,7 @@ export function registerAiStreamRoute(app: App) {
 				messages = requestMessages
 			} else {
 				// Load from storage and append user message
-				const storedMessages = loadChatMessages(userId, chatId)
+				const storedMessages = await loadChatMessages(userId, chatId)
 				const userMessage: UIMessage = {
 					id: `user-${Date.now()}`,
 					role: 'user',

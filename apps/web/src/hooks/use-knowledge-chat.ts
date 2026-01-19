@@ -271,6 +271,51 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		[clearMessages]
 	)
 
+	// Load messages from server for a given chat
+	const loadMessages = useCallback(
+		async (targetChatId: string) => {
+			try {
+				const response = await fetch(
+					`${getServerUrl()}/api/ai/chat/${targetChatId}`,
+					{ credentials: 'include' }
+				)
+
+				if (!response.ok) {
+					if (response.status === 404) {
+						// Chat not found, clear messages
+						clearMessages()
+						return
+					}
+					throw new Error(`Failed to load chat: ${response.status}`)
+				}
+
+				const data = (await response.json()) as {
+					chatId: string
+					messages: UIMessage[]
+				}
+
+				// Update messages
+				setUIMessages(data.messages)
+				setServerChatId(data.chatId)
+			} catch (err) {
+				console.error('Failed to load chat messages:', err)
+				throw err
+			}
+		},
+		[clearMessages, setUIMessages]
+	)
+
+	// Switch to a different chat
+	const switchChat = useCallback(
+		async (newChatId: string) => {
+			if (newChatId === serverChatId) return
+
+			setServerChatId(newChatId)
+			await loadMessages(newChatId)
+		},
+		[serverChatId, loadMessages]
+	)
+
 	return {
 		// State
 		messages,
@@ -283,6 +328,8 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		sendMessage,
 		clearMessages,
 		resetChat,
+		loadMessages,
+		switchChat,
 		stop,
 	}
 }

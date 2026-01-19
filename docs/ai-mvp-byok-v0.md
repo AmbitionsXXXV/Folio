@@ -219,6 +219,17 @@ packages/api/src/routers
 
 * **不通过 env 管理**：默认值由 `@folionote/ai` 的 Provider registry（代码）提供
 * 后续可以演进为 **用户级配置**（存到 `user_ai_credentials` 或独立的 user settings 表），从而按用户覆盖默认模型
+* 前端切换模型时同步切换 provider 与 baseUrl，确保请求与模型所属 provider 对齐
+
+### 6.1 本地调试（AI SDK DevTools）
+
+DevTools 数据写入当前进程目录的 `.devtools/generations.json`。在本仓库中，server 进程的工作目录是 `apps/server`，因此 viewer 需要在同一目录启动：
+
+```bash
+pnpm dev:ai-devtools
+# 或
+cd apps/server && npx @ai-sdk/devtools
+```
 
 当前代码默认值（仅供开发期参考）：
 
@@ -227,6 +238,8 @@ packages/api/src/routers
 * Gemini baseUrl（OpenAI compatible，可选）：`https://generativelanguage.googleapis.com/v1beta/openai`
 * Qwen baseUrl（CN）：`https://dashscope.aliyuncs.com/compatible-mode/v1`
 * Qwen baseUrl（INTL，可选）：`https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+
+> 提示：OpenAI 兼容 Provider（DeepSeek / Qwen / Moonshot / Gemini OpenAI compatible）默认走 `/chat/completions`，不走 `/responses`。
 
 > 注意：Gemini embedding 目前仅支持 native baseUrl（`/v1beta`）；若使用 OpenAI compatible baseUrl（`/v1beta/openai`），embedding 会直接报错。
 
@@ -1565,7 +1578,143 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 ### 27.7 后续优化
 
-- **数据库持久化**：将内存存储替换为 PostgreSQL
-- **消息历史加载**：页面加载时从服务端 API 获取历史消息作为 `initialMessages`
+- ~~**数据库持久化**：将内存存储替换为 PostgreSQL~~ ✅ 已在 Section 28 实现
+- ~~**消息历史加载**：页面加载时从服务端 API 获取历史消息作为 `initialMessages`~~ ✅ 已在 Section 28 实现
 - **Resume Streams**：实现 AI SDK 的断线续传功能
 - **Thinking/Usage 传递**：通过 AI SDK 的 data parts 或自定义 parts 传递 reasoning 和 usage 信息
+
+---
+
+## 28. Knowledge Chat 历史持久化与可视化
+
+**实现日期**：2026-01-19
+
+### 28.1 功能概述
+
+Knowledge Chat 会话历史持久化功能使用户可以：
+
+1. **跨设备共享会话历史**：会话数据存储在服务端数据库，登录后即可访问
+2. **刷新后自动恢复**：页面刷新后自动回到最近打开的会话
+3. **会话列表可视化**：左侧边栏展示历史会话列表，支持切换、新建、删除
+
+### 28.2 架构设计
+
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                           前端 (Web)                                │
+├─────────────────────────────────────────────────────────────────────┤
+│  localStorage                                                       │
+│  ├── lastChatId         # 最近打开的 chatId（轻量缓存）            │
+│  └── (无完整消息存储)   # 避免 localStorage 容量限制问题            │
+│                                                                     │
+│  Hooks                                                              │
+│  ├── useChatSessions()  # 会话列表管理                              │
+│  └── useKnowledgeChat() # 消息与流式响应                            │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓ HTTP
+┌─────────────────────────────────────────────────────────────────────┐
+│                           服务端 (Server)                            │
+├─────────────────────────────────────────────────────────────────────┤
+│  API Routes                                                          │
+│  ├── GET  /api/ai/chats              # 会话列表                      │
+│  ├── GET  /api/ai/chat/:chatId       # 获取消息 + 更新 lastOpenedAt  │
+│  ├── POST /api/ai/chat               # 创建新会话                    │
+│  ├── DELETE /api/ai/chat/:chatId     # 删除会话                      │
+│  ├── POST /api/ai/chat/:chatId/touch # 更新 lastOpenedAt             │
+│  └── POST /api/ai/stream             # 流式响应 + onFinish 落库      │
+│                                                                      │
+│  Services                                                            │
+│  └── ai-chat-store.ts   # DB + Redis 存储层                          │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                           存储层                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  PostgreSQL (主存储)                                                 │
+│  └── ai_chat_sessions 表                                             │
+│      ├── id (chatId)                                                 │
+│      ├── userId                                                      │
+│      ├── title                                                       │
+│      ├── messagesJson (UIMessage[] JSON)                             │
+│      ├── messageCount                                                │
+│      ├── lastMessagePreview                                          │
+│      ├── lastMessageAt                                               │
+│      ├── lastOpenedAt   # 刷新后恢复最近会话的关键字段               │
+│      ├── createdAt                                                   │
+│      └── updatedAt                                                   │
+│                                                                      │
+│  Redis (读缓存)                                                      │
+│  ├── ai:chat:{userId}:{chatId}  # 单个会话缓存 (TTL 1h)              │
+│  └── ai:chatlist:{userId}       # 会话列表缓存 (TTL 1h)              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 28.3 数据库表设计
+
+```sql
+CREATE TABLE ai_chat_sessions (
+  id TEXT PRIMARY KEY,           -- chatId (nanoid)
+  user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  title TEXT NOT NULL DEFAULT '',
+  messages_json TEXT NOT NULL DEFAULT '[]',  -- UIMessage[] JSON
+  message_count INTEGER NOT NULL DEFAULT 0,
+  last_message_preview TEXT NOT NULL DEFAULT '',
+  last_message_at TIMESTAMP WITH TIME ZONE,
+  last_opened_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- 索引
+CREATE INDEX ai_chat_sessions_user_last_opened_idx ON ai_chat_sessions(user_id, last_opened_at);
+CREATE INDEX ai_chat_sessions_user_updated_idx ON ai_chat_sessions(user_id, updated_at);
+CREATE INDEX ai_chat_sessions_user_id_idx ON ai_chat_sessions(user_id);
+```
+
+### 28.4 前端缓存策略
+
+为避免 localStorage 容量限制（通常 5-10MB）：
+
+- **仅缓存元数据**：`lastChatId` 存储最近打开的会话 ID
+- **不缓存完整消息**：消息从服务端获取，避免大量文本占用 localStorage
+- **按需评估 IndexedDB**：若需离线大缓存可后续迁移，当前服务端存储已足够
+
+### 28.5 文件变更
+
+| 模块 | 文件路径 | 变更 |
+| ---- | -------- | ---- |
+| DB Schema | `packages/db/src/schema/ai.ts` | 新增 `ai_chat_sessions` 表 |
+| DB Index | `packages/db/src/index.ts` | 导出新 schema |
+| DB Index Lazy | `packages/db/src/index.lazy.ts` | 导出新 schema |
+| Server Redis | `apps/server/src/utils/redis.ts` | 新增 Redis 客户端封装 |
+| Chat Store | `apps/server/src/services/ai-chat-store.ts` | 重构为 DB + Redis |
+| AI Stream | `apps/server/src/routes/ai-stream.ts` | 新增会话列表与删除 API |
+| Knowledge Types | `apps/web/src/features/knowledge/types.ts` | 新增 `ChatSessionSummary` |
+| Knowledge Utils | `apps/web/src/features/knowledge/utils.ts` | 新增 `getLastChatId` / `setLastChatId` |
+| Chat Sessions Hook | `apps/web/src/hooks/use-chat-sessions.ts` | 新增会话列表管理 hook |
+| Knowledge Chat Hook | `apps/web/src/hooks/use-knowledge-chat.ts` | 新增 `switchChat` / `loadMessages` |
+| Chat History Panel | `apps/web/src/features/knowledge/components/chat-history-panel.tsx` | 新增会话列表 UI |
+| Knowledge Page | `apps/web/src/routes/_app/knowledge.tsx` | 集成会话列表与切换 |
+| i18n zh-CN | `packages/locales/src/resources/zh-CN.json` | 新增 i18n keys |
+| i18n en-US | `packages/locales/src/resources/en-US.json` | 新增 i18n keys |
+| i18n ja-JP | `packages/locales/src/resources/ja-JP.json` | 新增 i18n keys |
+| Chat Store Tests | `apps/server/__tests__/ai-chat-store.test.ts` | 更新测试（26 用例） |
+
+### 28.6 验证
+
+- 类型检查：`pnpm run check-types`
+- 单测：`pnpm vitest run --project=server apps/server/__tests__/ai-chat-store.test.ts`
+- Lint：`pnpm check`
+
+### 28.7 后续优化
+
+- **会话搜索**：在会话列表中支持搜索
+- **会话重命名**：允许用户自定义会话标题
+- **会话导出**：支持导出会话为 Markdown / JSON
+- **离线缓存**：使用 IndexedDB 实现离线消息缓存（可选）
+
+### 28.8 质量修复记录（2026-01-19）
+
+- 修复 ai-chat-store 测试的非空断言与多余 async，避免 lint 报错。
+- 抽取 lastOpenedAt 更新逻辑，降低 loadChat 复杂度并保持 Redis 缓存一致。
+- ChatHistoryPanel 改为显式条件渲染，避免嵌套三元表达式。

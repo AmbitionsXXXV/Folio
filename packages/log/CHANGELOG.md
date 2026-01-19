@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.6
+
+### Patch Changes
+
+- feat: ✨ implement Knowledge Chat history persistence and visualization
+
 ## 0.1.5
 
 ### Patch Changes
