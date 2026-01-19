@@ -856,7 +856,15 @@
     "emptyState": {
       "title": "Start a Conversation",
       "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance. Type @ to attach specific notes for context."
-    }
+    },
+    "chatHistory": "Chat History",
+    "untitledChat": "New Chat",
+    "noChats": "No chats yet",
+    "startNewChatDescription": "Start a new conversation to begin your AI journey",
+    "messages": "messages",
+    "deleteChat": "Delete chat",
+    "deleteChatFailed": "Failed to delete chat",
+    "loadChatFailed": "Failed to load chat"
   },
   "aiProvider": {
     "title": "AI Provider Settings",

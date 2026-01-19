@@ -847,7 +847,15 @@
     "emptyState": {
       "title": "会話を開始",
       "description": "ナレッジベースについて質問したり、要約を取得したり、AIアシスタントでアイデアを探求したりしましょう。@ で特定のノートをコンテキストとして添付できます。"
-    }
+    },
+    "chatHistory": "チャット履歴",
+    "untitledChat": "新しいチャット",
+    "noChats": "チャットがありません",
+    "startNewChatDescription": "新しい会話を始めてAIアシスタントとの旅を始めましょう",
+    "messages": "件のメッセージ",
+    "deleteChat": "チャットを削除",
+    "deleteChatFailed": "チャットの削除に失敗しました",
+    "loadChatFailed": "チャットの読み込みに失敗しました"
   },
   "aiProvider": {
     "title": "AIプロバイダー設定",

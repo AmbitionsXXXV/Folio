@@ -50,3 +50,35 @@ export type ContextUsage = {
  * Re-exported from @folionote/constants for convenience.
  */
 export type { AiProviderId as ApiProviderId } from '@folionote/constants'
+
+// =============================================================================
+// Chat Session Types
+// =============================================================================
+
+/** Chat session summary for the chat list (without full messages) */
+export type ChatSessionSummary = {
+	/** Chat ID */
+	chatId: string
+	/** User ID (owner) */
+	userId: string
+	/** Session title */
+	title: string
+	/** Message count */
+	messageCount: number
+	/** Last message preview (truncated) */
+	lastMessagePreview: string
+	/** Last message timestamp (ISO string from server) */
+	lastMessageAt: string | null
+	/** Last opened timestamp (ISO string from server) */
+	lastOpenedAt: string
+	/** Last update timestamp (ISO string from server) */
+	updatedAt: string
+	/** Creation timestamp (ISO string from server) */
+	createdAt: string
+}
+
+/** Full chat session with messages */
+export type ChatSessionFull = ChatSessionSummary & {
+	/** Full message array (UIMessage[] format stored as JSON) */
+	messages: unknown[]
+}

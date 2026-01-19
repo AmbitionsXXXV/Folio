@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm'
 import {
 	boolean,
 	index,
+	integer,
 	pgTable,
 	text,
 	timestamp,
@@ -117,3 +118,70 @@ export const userAiProviderSettingsRelations = relations(
 		}),
 	})
 )
+
+// =============================================================================
+// AI Chat Sessions
+// =============================================================================
+
+/**
+ * ai_chat_sessions - AI 聊天会话
+ *
+ * 用途：
+ * - 存储 Knowledge Chat 会话与完整消息历史
+ * - 支持会话列表展示、会话切换、刷新后恢复
+ *
+ * 设计：
+ * - messagesJson 存储 UIMessage[] 的 JSON 字符串（AI SDK v6 格式）
+ * - lastOpenedAt 用于记录最近打开时间，实现"刷新后回到最近会话"
+ * - lastMessagePreview 存储最后一条消息摘要，用于列表展示
+ */
+export const aiChatSessions = pgTable(
+	'ai_chat_sessions',
+	{
+		/** 会话 ID（nanoid 生成） */
+		id: text('id').primaryKey(),
+		/** 用户 ID */
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		/** 会话标题（可由首条消息自动生成或用户自定义） */
+		title: text('title').notNull().default(''),
+		/** 消息数组的 JSON 字符串（UIMessage[] 格式） */
+		messagesJson: text('messages_json').notNull().default('[]'),
+		/** 消息数量 */
+		messageCount: integer('message_count').notNull().default(0),
+		/** 最后一条消息摘要（用于列表展示，截断至 100 字符） */
+		lastMessagePreview: text('last_message_preview').notNull().default(''),
+		/** 最后一条消息时间 */
+		lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
+		/** 最近打开时间（用于刷新后恢复最近会话） */
+		lastOpenedAt: timestamp('last_opened_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		// 按用户 + 最近打开时间查询（刷新后恢复）
+		index('ai_chat_sessions_user_last_opened_idx').on(
+			table.userId,
+			table.lastOpenedAt
+		),
+		// 按用户 + 更新时间查询（会话列表排序）
+		index('ai_chat_sessions_user_updated_idx').on(table.userId, table.updatedAt),
+		// 按用户查询索引
+		index('ai_chat_sessions_user_id_idx').on(table.userId),
+	]
+)
+
+export const aiChatSessionsRelations = relations(aiChatSessions, ({ one }) => ({
+	user: one(user, {
+		fields: [aiChatSessions.userId],
+		references: [user.id],
+	}),
+}))

@@ -12,6 +12,7 @@ import { Button } from '@folionote/ui/button'
 import {
 	AiBrain01Icon,
 	Alert02Icon,
+	Menu01Icon,
 	MessageAdd01Icon,
 	Setting06Icon,
 } from '@hugeicons/core-free-icons'
@@ -29,6 +30,7 @@ import {
 } from '@/components/ai-elements/chat-input'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import {
+	ChatHistoryPanel,
 	type ChatMessage,
 	ContextUsageIndicator,
 	calculateTotalTokens,
@@ -37,11 +39,14 @@ import {
 	isApiSupportedProvider,
 	MessageList,
 	mapProviderIdToApi,
+	setLastChatId,
 } from '@/features/knowledge'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
+import { useChatSessions } from '@/hooks/use-chat-sessions'
 import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
+import { cn } from '@/lib/utils'
 import type { Entry } from '@/types'
 
 export const Route = createFileRoute('/_app/knowledge')({
@@ -66,8 +71,22 @@ function KnowledgePage() {
 	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 
-	// Chat ID for persistence (generated once, server may override via header)
+	// Chat sessions management
+	const {
+		sessions,
+		selectedChatId,
+		isLoading: isSessionsLoading,
+		selectChat,
+		createChat: createNewChatSession,
+		deleteChat: deleteChatSession,
+		refreshSessions,
+	} = useChatSessions()
+
+	// Chat ID for persistence
 	const [chatId, setChatIdState] = useState<string>(() => nanoid(16))
+
+	// Sidebar visibility (mobile)
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
 	// Input state
 	const [inputValue, setInputValue] = useState('')
@@ -95,6 +114,7 @@ function KnowledgePage() {
 		chatId: serverChatId,
 		sendMessage,
 		resetChat,
+		switchChat,
 	} = useKnowledgeChat({
 		chatId,
 		provider: mapProviderIdToApi(selectedProvider),
@@ -126,6 +146,17 @@ function KnowledgePage() {
 			setChatIdState(serverChatId)
 		}
 	}, [serverChatId, chatId])
+
+	// Sync chatId with selected session
+	useEffect(() => {
+		if (selectedChatId && selectedChatId !== chatId) {
+			setChatIdState(selectedChatId)
+			switchChat(selectedChatId).catch((err) => {
+				console.error('Failed to switch chat:', err)
+				toast.error(t('knowledge.loadChatFailed'))
+			})
+		}
+	}, [selectedChatId, chatId, switchChat, t])
 
 	// Get enabled chat models for a provider
 	const getEnabledChatModels = useCallback(
@@ -371,137 +402,224 @@ function KnowledgePage() {
 		sendMessage,
 	])
 
-	const handleNewChat = useCallback(() => {
-		// Generate a new chat ID and reset the chat
-		const newChatId = nanoid(16)
-		setChatIdState(newChatId)
-		resetChat(newChatId)
+	const handleNewChat = useCallback(async () => {
+		try {
+			// Create a new chat session on the server
+			const newChatId = await createNewChatSession()
+			setChatIdState(newChatId)
+			resetChat(newChatId)
+			setLastChatId(newChatId)
 
-		setInputValue('')
-		setAttachedNotes([])
-	}, [resetChat])
+			setInputValue('')
+			setAttachedNotes([])
+
+			// Close sidebar on mobile
+			setIsSidebarOpen(false)
+		} catch (err) {
+			console.error('Failed to create new chat:', err)
+			// Fallback to local-only chat ID
+			const newChatId = nanoid(16)
+			setChatIdState(newChatId)
+			resetChat(newChatId)
+			setLastChatId(newChatId)
+
+			setInputValue('')
+			setAttachedNotes([])
+		}
+	}, [createNewChatSession, resetChat])
+
+	const handleSelectChat = useCallback(
+		(chatIdToSelect: string) => {
+			selectChat(chatIdToSelect)
+			// Close sidebar on mobile
+			setIsSidebarOpen(false)
+		},
+		[selectChat]
+	)
+
+	const handleDeleteChat = useCallback(
+		async (chatIdToDelete: string) => {
+			try {
+				await deleteChatSession(chatIdToDelete)
+				// If we deleted the current chat, the hook will auto-select another
+				if (chatIdToDelete === chatId) {
+					// Refresh will trigger auto-select
+					await refreshSessions()
+				}
+			} catch (err) {
+				console.error('Failed to delete chat:', err)
+				toast.error(t('knowledge.deleteChatFailed'))
+			}
+		},
+		[deleteChatSession, chatId, refreshSessions, t]
+	)
 
 	const isPending = isStreaming || isLoading
 
 	return (
-		<div className="container mx-auto flex h-[calc(100dvh-4rem)] max-w-4xl flex-col px-4 py-4">
-			{/* Header */}
-			<div className="mb-4 flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-						<HugeiconsIcon className="size-6 text-primary" icon={AiBrain01Icon} />
-					</div>
-					<div>
-						<h1 className="text-balance font-semibold text-lg">
-							{t('knowledge.title')}
-						</h1>
-						<p className="text-pretty text-muted-foreground text-sm">
-							{t('knowledge.subtitle')}
-						</p>
-					</div>
-				</div>
-				<div className="flex items-center gap-2">
-					{messages.length > 0 && (
-						<ContextUsageIndicator
-							contextUsage={contextUsage}
-							onNewChat={handleNewChat}
-						/>
-					)}
-					<Link to="/settings/models">
-						<Button size="sm" variant="ghost">
-							<HugeiconsIcon className="size-4" icon={Setting06Icon} />
-						</Button>
-					</Link>
-					<Button
-						className="rounded-lg"
-						onClick={handleNewChat}
-						size="sm"
-						variant="outline"
-					>
-						<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
-						{t('knowledge.newChat')}
-					</Button>
-				</div>
-			</div>
-
-			{/* Context Exceeded Dialog */}
-			<AlertDialog
-				onOpenChange={setShowContextExceededDialog}
-				open={showContextExceededDialog}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className="flex items-center gap-2">
-							<HugeiconsIcon
-								className="size-5 text-destructive"
-								icon={Alert02Icon}
-							/>
-							{t('knowledge.contextExceeded')}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t('knowledge.contextExceededDescription')}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogAction
-							onClick={() => {
-								setShowContextExceededDialog(false)
-								handleNewChat()
-							}}
-						>
-							<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
-							{t('knowledge.startNewChat')}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-
-			{/* Chat Messages */}
-			<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
-				{messages.length === 0 ? (
-					<div className="flex h-full items-center justify-center p-4">
-						<EmptyState hasApiKey={hasApiKey} />
-					</div>
-				) : (
-					<MessageList
-						isPending={isPending}
-						messages={messages}
-						thinkingEnabled={thinkingEnabled}
-					/>
+		<div className="flex h-[calc(100dvh-4rem)]">
+			{/* Sidebar - Chat History */}
+			<div
+				className={cn(
+					'absolute inset-y-0 left-0 z-40 w-72 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0',
+					isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
 				)}
-			</div>
-
-			{/* Input Area with integrated model selector */}
-			<div className="mt-4">
-				<ChatInput
-					attachedNotes={attachedNotes}
-					catalogModels={catalogModels}
-					catalogProviders={catalogProviders}
-					contextUsage={chatContextUsage}
-					hasApiKey={hasApiKey}
-					isPending={isPending}
-					onAtTrigger={handleAtTrigger}
-					onChange={setInputValue}
-					onModelChange={handleModelChange}
-					onRemoveNoteAttachment={handleRemoveAttachment}
-					onSubmit={handleSendMessage}
-					onThinkingToggle={setThinkingEnabled}
-					selectedModel={selectedModel}
-					selectedProvider={selectedProvider}
-					textareaRef={textareaRef}
-					thinkingEnabled={thinkingEnabled}
-					value={inputValue}
+			>
+				<ChatHistoryPanel
+					className="h-full"
+					isLoading={isSessionsLoading}
+					onDeleteChat={handleDeleteChat}
+					onNewChat={handleNewChat}
+					onSelectChat={handleSelectChat}
+					selectedChatId={selectedChatId}
+					sessions={sessions}
 				/>
 			</div>
 
-			{/* Entry Picker for @ mentions */}
-			<EntryPicker
-				excludeIds={attachedNotes.map((n) => n.id)}
-				libraryOnly
-				onSelect={handleEntrySelect}
-				ref={entryPickerRef}
-				title={t('knowledge.selectNoteToAttach')}
-			/>
+			{/* Overlay for mobile */}
+			{isSidebarOpen && (
+				<button
+					aria-label="Close sidebar"
+					className="fixed inset-0 z-30 bg-black/50 md:hidden"
+					onClick={() => setIsSidebarOpen(false)}
+					type="button"
+				/>
+			)}
+
+			{/* Main Content */}
+			<div className="flex flex-1 flex-col overflow-hidden">
+				<div className="container mx-auto flex h-full max-w-4xl flex-col px-4 py-4">
+					{/* Header */}
+					<div className="mb-4 flex items-center justify-between">
+						<div className="flex items-center gap-3">
+							{/* Mobile menu button */}
+							<Button
+								className="md:hidden"
+								onClick={() => setIsSidebarOpen(true)}
+								size="icon"
+								variant="ghost"
+							>
+								<HugeiconsIcon className="size-5" icon={Menu01Icon} />
+							</Button>
+							<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+								<HugeiconsIcon
+									className="size-6 text-primary"
+									icon={AiBrain01Icon}
+								/>
+							</div>
+							<div>
+								<h1 className="text-balance font-semibold text-lg">
+									{t('knowledge.title')}
+								</h1>
+								<p className="text-pretty text-muted-foreground text-sm">
+									{t('knowledge.subtitle')}
+								</p>
+							</div>
+						</div>
+						<div className="flex items-center gap-2">
+							{messages.length > 0 && (
+								<ContextUsageIndicator
+									contextUsage={contextUsage}
+									onNewChat={handleNewChat}
+								/>
+							)}
+							<Link to="/settings/models">
+								<Button size="sm" variant="ghost">
+									<HugeiconsIcon className="size-4" icon={Setting06Icon} />
+								</Button>
+							</Link>
+							<Button
+								className="rounded-lg"
+								onClick={handleNewChat}
+								size="sm"
+								variant="outline"
+							>
+								<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
+								{t('knowledge.newChat')}
+							</Button>
+						</div>
+					</div>
+
+					{/* Context Exceeded Dialog */}
+					<AlertDialog
+						onOpenChange={setShowContextExceededDialog}
+						open={showContextExceededDialog}
+					>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle className="flex items-center gap-2">
+									<HugeiconsIcon
+										className="size-5 text-destructive"
+										icon={Alert02Icon}
+									/>
+									{t('knowledge.contextExceeded')}
+								</AlertDialogTitle>
+								<AlertDialogDescription>
+									{t('knowledge.contextExceededDescription')}
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogAction
+									onClick={() => {
+										setShowContextExceededDialog(false)
+										handleNewChat()
+									}}
+								>
+									<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
+									{t('knowledge.startNewChat')}
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+
+					{/* Chat Messages */}
+					<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
+						{messages.length === 0 ? (
+							<div className="flex h-full items-center justify-center p-4">
+								<EmptyState hasApiKey={hasApiKey} />
+							</div>
+						) : (
+							<MessageList
+								isPending={isPending}
+								messages={messages}
+								thinkingEnabled={thinkingEnabled}
+							/>
+						)}
+					</div>
+
+					{/* Input Area with integrated model selector */}
+					<div className="mt-4">
+						<ChatInput
+							attachedNotes={attachedNotes}
+							catalogModels={catalogModels}
+							catalogProviders={catalogProviders}
+							contextUsage={chatContextUsage}
+							hasApiKey={hasApiKey}
+							isPending={isPending}
+							onAtTrigger={handleAtTrigger}
+							onChange={setInputValue}
+							onModelChange={handleModelChange}
+							onRemoveNoteAttachment={handleRemoveAttachment}
+							onSubmit={handleSendMessage}
+							onThinkingToggle={setThinkingEnabled}
+							selectedModel={selectedModel}
+							selectedProvider={selectedProvider}
+							textareaRef={textareaRef}
+							thinkingEnabled={thinkingEnabled}
+							value={inputValue}
+						/>
+					</div>
+
+					{/* Entry Picker for @ mentions */}
+					<EntryPicker
+						excludeIds={attachedNotes.map((n) => n.id)}
+						libraryOnly
+						onSelect={handleEntrySelect}
+						ref={entryPickerRef}
+						title={t('knowledge.selectNoteToAttach')}
+					/>
+				</div>
+			</div>
 		</div>
 	)
 }

@@ -16,7 +16,7 @@ export function MentionBadge({
 	return (
 		<span
 			className={cn(
-				'inline-flex items-center gap-0.5 rounded px-1 py-px',
+				'inline-flex items-center gap-0.5 rounded px-1.5 py-px',
 				'align-middle font-medium text-xs leading-tight',
 				// Default variant (for input box)
 				variant === 'default' && [

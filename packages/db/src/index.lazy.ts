@@ -2,6 +2,8 @@
 
 // AI schema
 import {
+	aiChatSessions,
+	aiChatSessionsRelations,
 	userAiModelSettings,
 	userAiModelSettingsRelations,
 	userAiProviderSettings,
@@ -80,6 +82,8 @@ const schema = {
 	userAiModelSettingsRelations,
 	userAiProviderSettings,
 	userAiProviderSettingsRelations,
+	aiChatSessions,
+	aiChatSessionsRelations,
 }
 
 // 延迟初始化数据库连接，避免模块循环依赖导致的初始化问题
@@ -105,6 +109,8 @@ export const db = new Proxy({} as DbType, {
 }) as DbType
 
 export {
+	aiChatSessions,
+	aiChatSessionsRelations,
 	userAiModelSettings,
 	userAiModelSettingsRelations,
 	userAiProviderSettings,

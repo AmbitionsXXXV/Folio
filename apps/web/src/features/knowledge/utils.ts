@@ -165,13 +165,13 @@ export function parseContentWithCitations(content: string): ContentPart[] {
 }
 
 // ============================================================================
-// Chat Persistence Utilities
+// Chat Persistence Utilities (Lightweight Local Cache)
 // ============================================================================
 
-/** localStorage key for current chat ID */
-const CHAT_ID_STORAGE_KEY = 'folionote:knowledge:chatId'
+/** localStorage key for last opened chat ID */
+const LAST_CHAT_ID_STORAGE_KEY = 'folionote:knowledge:lastChatId'
 
-/** localStorage key prefix for chat messages */
+/** localStorage key for chat messages (legacy, kept for migration) */
 const CHAT_MESSAGES_STORAGE_KEY_PREFIX = 'folionote:knowledge:messages:'
 
 /** Serialized message format for localStorage */
@@ -187,33 +187,55 @@ export function generateChatId(): string {
 }
 
 /**
- * Get the current chat ID from localStorage, or generate a new one
+ * Get the last opened chat ID from localStorage
+ */
+export function getLastChatId(): string | null {
+	if (typeof window === 'undefined') return null
+	return localStorage.getItem(LAST_CHAT_ID_STORAGE_KEY)
+}
+
+/**
+ * Set the last opened chat ID in localStorage
+ */
+export function setLastChatId(chatId: string): void {
+	if (typeof window === 'undefined') return
+	localStorage.setItem(LAST_CHAT_ID_STORAGE_KEY, chatId)
+}
+
+/**
+ * Clear the last opened chat ID from localStorage
+ */
+export function clearLastChatId(): void {
+	if (typeof window === 'undefined') return
+	localStorage.removeItem(LAST_CHAT_ID_STORAGE_KEY)
+}
+
+/**
+ * @deprecated Use getLastChatId instead. Kept for backward compatibility.
  */
 export function getOrCreateChatId(): string {
 	if (typeof window === 'undefined') return generateChatId()
 
-	const stored = localStorage.getItem(CHAT_ID_STORAGE_KEY)
+	const stored = localStorage.getItem(LAST_CHAT_ID_STORAGE_KEY)
 	if (stored) return stored
 
 	const newId = generateChatId()
-	localStorage.setItem(CHAT_ID_STORAGE_KEY, newId)
+	localStorage.setItem(LAST_CHAT_ID_STORAGE_KEY, newId)
 	return newId
 }
 
 /**
- * Set a new chat ID in localStorage
+ * @deprecated Use setLastChatId instead. Kept for backward compatibility.
  */
 export function setChatId(chatId: string): void {
-	if (typeof window === 'undefined') return
-	localStorage.setItem(CHAT_ID_STORAGE_KEY, chatId)
+	setLastChatId(chatId)
 }
 
 /**
- * Clear the current chat ID from localStorage
+ * @deprecated Use clearLastChatId instead. Kept for backward compatibility.
  */
 export function clearChatId(): void {
-	if (typeof window === 'undefined') return
-	localStorage.removeItem(CHAT_ID_STORAGE_KEY)
+	clearLastChatId()
 }
 
 /**
@@ -253,7 +275,7 @@ export function deserializeMessages(
 }
 
 /**
- * Save chat messages to localStorage
+ * @deprecated Messages are now stored server-side. This is kept for migration only.
  */
 export function saveChatMessages(chatId: string, messages: ChatMessage[]): void {
 	if (typeof window === 'undefined') return
@@ -264,7 +286,7 @@ export function saveChatMessages(chatId: string, messages: ChatMessage[]): void 
 }
 
 /**
- * Load chat messages from localStorage
+ * @deprecated Messages are now stored server-side. This is kept for migration only.
  */
 export function loadChatMessages(chatId: string): ChatMessage[] {
 	if (typeof window === 'undefined') return []
@@ -282,7 +304,7 @@ export function loadChatMessages(chatId: string): ChatMessage[] {
 }
 
 /**
- * Clear chat messages from localStorage for a specific chat
+ * @deprecated Messages are now stored server-side. This is kept for migration only.
  */
 export function clearChatMessages(chatId: string): void {
 	if (typeof window === 'undefined') return

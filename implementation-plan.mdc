@@ -248,6 +248,28 @@ Done:
 OpenAI 兼容 Provider 默认使用 `/chat/completions`，避免 `/responses` 不支持导致 404。
 更新模型工厂选择逻辑，并补充文档提示该调用路径。
 
+### 2.10 Knowledge Chat 历史持久化与可视化
+
+- [x] 在 `packages/db/src/schema/ai.ts` 新增 `ai_chat_sessions` 表
+- [x] 更新 `packages/db/src/index.ts` 与 `packages/db/src/index.lazy.ts` 注册并导出 schema
+- [x] 重构 `apps/server/src/services/ai-chat-store.ts` 使用 PostgreSQL 为主存储、Redis 为缓存
+- [x] 新增 `apps/server/src/utils/redis.ts` 封装 Redis 客户端
+- [x] 新增 API 路由：`GET /api/ai/chats`、`DELETE /api/ai/chat/:chatId`、`POST /api/ai/chat/:chatId/touch`
+- [x] 更新 `GET /api/ai/chat/:chatId` 同时更新 `lastOpenedAt`
+- [x] 新增 `apps/web/src/features/knowledge/types.ts` 的 `ChatSessionSummary` 类型
+- [x] 新增 `apps/web/src/features/knowledge/utils.ts` 的 `getLastChatId` / `setLastChatId` 工具
+- [x] 新增 `apps/web/src/hooks/use-chat-sessions.ts` 会话列表管理 hook
+- [x] 更新 `apps/web/src/hooks/use-knowledge-chat.ts` 新增 `switchChat` / `loadMessages`
+- [x] 新增 `apps/web/src/features/knowledge/components/chat-history-panel.tsx` 会话列表 UI
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx` 集成会话列表与切换
+- [x] 更新 i18n 资源文件（en-US / zh-CN / ja-JP）
+- [x] 更新单测 `apps/server/__tests__/ai-chat-store.test.ts`（26 个测试用例）
+- [x] 运行 `pnpm run check-types` 确保无类型错误
+
+Done:
+实现 Knowledge Chat 会话历史的服务端持久化（PostgreSQL + Redis 缓存）与前端可视化。
+新增会话列表 UI，支持会话切换、新建、删除；刷新后自动恢复最近打开的会话。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

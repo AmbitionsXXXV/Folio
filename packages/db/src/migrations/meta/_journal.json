@@ -50,6 +50,13 @@
       "when": 1768736046793,
       "tag": "0006_broad_chimera",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1768807516637,
+      "tag": "0007_huge_siren",
+      "breakpoints": true
     }
   ]
 }
