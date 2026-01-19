@@ -56,3 +56,10 @@ temp
 interview/
 
 __pycache__
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

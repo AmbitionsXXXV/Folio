@@ -219,6 +219,17 @@ packages/api/src/routers
 
 * **不通过 env 管理**：默认值由 `@folionote/ai` 的 Provider registry（代码）提供
 * 后续可以演进为 **用户级配置**（存到 `user_ai_credentials` 或独立的 user settings 表），从而按用户覆盖默认模型
+* 前端切换模型时同步切换 provider 与 baseUrl，确保请求与模型所属 provider 对齐
+
+### 6.1 本地调试（AI SDK DevTools）
+
+DevTools 数据写入当前进程目录的 `.devtools/generations.json`。在本仓库中，server 进程的工作目录是 `apps/server`，因此 viewer 需要在同一目录启动：
+
+```bash
+pnpm dev:ai-devtools
+# 或
+cd apps/server && npx @ai-sdk/devtools
+```
 
 当前代码默认值（仅供开发期参考）：
 
@@ -227,6 +238,8 @@ packages/api/src/routers
 * Gemini baseUrl（OpenAI compatible，可选）：`https://generativelanguage.googleapis.com/v1beta/openai`
 * Qwen baseUrl（CN）：`https://dashscope.aliyuncs.com/compatible-mode/v1`
 * Qwen baseUrl（INTL，可选）：`https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+
+> 提示：OpenAI 兼容 Provider（DeepSeek / Qwen / Moonshot / Gemini OpenAI compatible）默认走 `/chat/completions`，不走 `/responses`。
 
 > 注意：Gemini embedding 目前仅支持 native baseUrl（`/v1beta`）；若使用 OpenAI compatible baseUrl（`/v1beta/openai`），embedding 会直接报错。
 

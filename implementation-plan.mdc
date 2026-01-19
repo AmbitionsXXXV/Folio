@@ -228,6 +228,26 @@ Done:
 实现用户级 Provider 启用开关功能，关闭 provider 后其下所有模型被视为禁用，设置页模型列表隐藏该 provider 的模型。
 新增 `user_ai_provider_settings` 表存储用户覆盖，API 层合并默认与用户设置，Web 端 provider header 带开关。
 
+### 2.8 模型选择自动同步 Provider 与 baseUrl
+
+- [x] 为模型选择回调补充 providerId 透传
+- [x] Knowledge Chat 切换模型时同步切换 provider 与 baseUrl
+- [x] 更新 BYOK 文档，说明模型切换的 Provider 同步规则
+
+Done:
+模型切换时同步更新 provider 与 baseUrl，确保模型调用落在正确的 Provider 配置。
+更新选择器回调与知识聊天入口的状态同步逻辑，并补充文档说明。
+
+### 2.9 OpenAI 兼容 Provider 使用 Chat Completions
+
+- [x] 对 OpenAI 兼容 Provider 改用 `chat` 模型入口
+- [x] Gemini OpenAI compatible baseUrl 改用 `chat` 模型入口
+- [x] 更新 BYOK 文档，说明 OpenAI 兼容 Provider 的调用路径
+
+Done:
+OpenAI 兼容 Provider 默认使用 `/chat/completions`，避免 `/responses` 不支持导致 404。
+更新模型工厂选择逻辑，并补充文档提示该调用路径。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

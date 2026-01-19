@@ -116,15 +116,23 @@ export function createVercelAiChatModel(
 	let model: LanguageModelV3
 
 	switch (credential.provider) {
-		case 'openai':
-		case 'deepseek':
-		case 'qwen':
-		case 'moonshot': {
+		case 'openai': {
 			const openai = createOpenAI({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
 			})
 			model = openai(modelId)
+			break
+		}
+		case 'deepseek':
+		case 'qwen':
+		case 'moonshot': {
+			const openaiCompatible = createOpenAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			// OpenAI-compatible providers do not support /v1/responses.
+			model = openaiCompatible.chat(modelId)
 			break
 		}
 		case 'claude': {
@@ -141,7 +149,8 @@ export function createVercelAiChatModel(
 					apiKey: credential.apiKey,
 					baseURL: credential.baseUrl,
 				})
-				model = openaiCompatible(stripModelsPrefix(modelId))
+				// Gemini OpenAI-compatible baseUrl does not support /v1/responses.
+				model = openaiCompatible.chat(stripModelsPrefix(modelId))
 				break
 			}
 

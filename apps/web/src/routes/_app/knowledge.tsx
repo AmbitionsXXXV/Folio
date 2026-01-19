@@ -196,11 +196,16 @@ function KnowledgePage() {
 
 	// When model changes, save to localStorage
 	const handleModelChange = useCallback(
-		(modelId: string) => {
+		(modelId: string, providerId?: string) => {
+			const matchedProviderId =
+				providerId ??
+				catalogModels.find((model) => model.id === modelId)?.providerId ??
+				selectedProvider
+			setSelectedProvider(matchedProviderId)
 			setSelectedModel(modelId)
-			saveLastUsed(selectedProvider, modelId)
+			saveLastUsed(matchedProviderId, modelId)
 		},
-		[selectedProvider, saveLastUsed]
+		[catalogModels, selectedProvider, saveLastUsed]
 	)
 
 	const hasApiKey = Boolean(providerConfig?.apiKey?.trim())
