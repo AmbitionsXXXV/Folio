@@ -68,6 +68,10 @@
 | `EntryPasswordDialog` | `apps/web/src/components/entry-password-dialog.tsx` | Entry 密码保护弹窗 |
 | Share Page | `apps/web/src/routes/share/$token.tsx` | 公开分享页面 |
 
+### UI 细节
+
+- 分享页 TOC 跳转时，标题会使用 `scroll-margin-top` 预留 Header 高度，避免被遮挡。
+
 ### Native 端
 
 | 组件 | 路径 | 说明 |
