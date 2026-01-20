@@ -204,7 +204,7 @@ const ToolCardContainer = memo(function ToolCardContainer({
 	return (
 		<div
 			className={cn(
-				'rounded-lg border bg-background/60 p-3 text-sm shadow-sm',
+				// 'rounded-lg border bg-background/60 p-3 text-sm shadow-sm',
 				className
 			)}
 		>

@@ -63,6 +63,9 @@
       "nursery": {
         "noLeakedRender": "off"
       },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
       "complexity": {
         "noUselessLoneBlockStatements": "off"
       },

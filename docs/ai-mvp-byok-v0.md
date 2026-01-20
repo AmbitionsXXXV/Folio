@@ -1682,6 +1682,8 @@ CREATE INDEX ai_chat_sessions_user_id_idx ON ai_chat_sessions(user_id);
 - **不缓存完整消息**：消息从服务端获取，避免大量文本占用 localStorage
 - **按需评估 IndexedDB**：若需离线大缓存可后续迁移，当前服务端存储已足够
 
+补充：Redis 缓存会将 Date 序列化为 ISO 字符串，读取缓存时需要把 `lastOpenedAt`、`updatedAt`、`createdAt` 转回 Date，避免 `.toISOString()` 报错。
+
 ### 28.5 文件变更
 
 | 模块                | 文件路径                                                            | 变更                                   |
