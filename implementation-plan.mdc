@@ -297,6 +297,17 @@ Done:
 新增天气与股票工具并在 AI 流式接口按 provider 能力注入。
 Web 端保留 UIMessage parts 渲染工具卡片，并补齐文档与最小单测。
 
+### 2.13 Knowledge Chat 工具卡片 UI 设计
+
+- [x] 新增 WeatherCard / StockCard bento 组件
+- [x] 更新工具卡片渲染以接入新组件
+- [x] 新增 Web 端单测覆盖卡片渲染与格式化
+- [x] 更新 Generative UI 文档说明字段映射
+
+Done:
+新增 bento 风格的 WeatherCard 与 StockCard，并在工具卡片输出状态中复用渲染。
+补齐 Web 端单测与文档说明，确保字段映射与展示一致。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

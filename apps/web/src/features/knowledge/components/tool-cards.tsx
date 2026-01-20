@@ -2,6 +2,8 @@ import type { UIMessage } from 'ai'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { StockCard, type StockChangeTone } from './stock-card'
+import { WeatherCard } from './weather-card'
 
 // =============================================================================
 // Constants
@@ -14,11 +16,13 @@ const TEMPERATURE_UNIT_LABELS = {
 
 const DEFAULT_TEMPERATURE_UNIT = 'c'
 const DEFAULT_CURRENCY_FALLBACK = 'USD'
+const WIND_SPEED_UNIT = 'kph'
 const PERCENT_DIVISOR = 100
 const PERCENT_MIN_FRACTION_DIGITS = 2
 const PERCENT_MAX_FRACTION_DIGITS = 2
 const PRICE_MIN_FRACTION_DIGITS = 2
 const PRICE_MAX_FRACTION_DIGITS = 2
+const CHANGE_PERCENT_FLAT_THRESHOLD = 0
 
 // =============================================================================
 // Types
@@ -278,41 +282,23 @@ export const WeatherToolCard = memo(function WeatherToolCard({
 	const unitLabel =
 		TEMPERATURE_UNIT_LABELS[output.unit] ??
 		TEMPERATURE_UNIT_LABELS[DEFAULT_TEMPERATURE_UNIT]
+	const temperatureValue = `${output.temperature}${unitLabel}`
+	const humidityValue = `${output.humidityPercent}%`
+	const windValue = `${output.windKph} ${WIND_SPEED_UNIT}`
 
 	return (
 		<ToolCardContainer>
-			<div className="flex items-center justify-between gap-2">
-				<div className="font-medium">{t('knowledge.toolCards.weather.title')}</div>
-				<div className="text-muted-foreground text-xs">{output.location}</div>
-			</div>
-			<div className="mt-2 text-muted-foreground text-xs">{output.condition}</div>
-			<div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.weather.temperature')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{output.temperature}
-						{unitLabel}
-					</span>
-				</div>
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.weather.humidity')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{output.humidityPercent}%
-					</span>
-				</div>
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.weather.wind')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{output.windKph} kph
-					</span>
-				</div>
-			</div>
+			<WeatherCard
+				condition={output.condition}
+				humidityLabel={t('knowledge.toolCards.weather.humidity')}
+				humidityValue={humidityValue}
+				location={output.location}
+				temperatureLabel={t('knowledge.toolCards.weather.temperature')}
+				temperatureValue={temperatureValue}
+				title={t('knowledge.toolCards.weather.title')}
+				windLabel={t('knowledge.toolCards.weather.wind')}
+				windValue={windValue}
+			/>
 		</ToolCardContainer>
 	)
 })
@@ -385,31 +371,26 @@ export const StockToolCard = memo(function StockToolCard({
 
 	const formattedPrice = formatCurrency(output.price, output.currency)
 	const formattedChange = formatPercent(output.changePercent)
-	const changePrefix = output.changePercent > 0 ? '+' : ''
+	let changeTone: StockChangeTone = 'flat'
+	if (output.changePercent > CHANGE_PERCENT_FLAT_THRESHOLD) {
+		changeTone = 'up'
+	} else if (output.changePercent < CHANGE_PERCENT_FLAT_THRESHOLD) {
+		changeTone = 'down'
+	}
+	const changePrefix = changeTone === 'up' ? '+' : ''
+	const changeValue = `${changePrefix}${formattedChange}`
 
 	return (
 		<ToolCardContainer>
-			<div className="flex items-center justify-between gap-2">
-				<div className="font-medium">{t('knowledge.toolCards.stock.title')}</div>
-				<div className="text-muted-foreground text-xs">{output.symbol}</div>
-			</div>
-			<div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.stock.price')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">{formattedPrice}</span>
-				</div>
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.stock.change')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{changePrefix}
-						{formattedChange}
-					</span>
-				</div>
-			</div>
+			<StockCard
+				changeLabel={t('knowledge.toolCards.stock.change')}
+				changeTone={changeTone}
+				changeValue={changeValue}
+				priceLabel={t('knowledge.toolCards.stock.price')}
+				priceValue={formattedPrice}
+				symbol={output.symbol}
+				title={t('knowledge.toolCards.stock.title')}
+			/>
 		</ToolCardContainer>
 	)
 })

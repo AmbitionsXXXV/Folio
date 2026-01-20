@@ -24,6 +24,13 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 2. Render tool parts (`tool-displayWeather`, `tool-getStockPrice`) in `apps/web/src/features/knowledge/components/tool-cards.tsx`.
 3. Display tool cards in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
 
+## Tool Card 组件
+
+WeatherCard 与 StockCard 在 Web 端完成渲染，不依赖 RSC。工具输出字段与组件 props 的映射如下：
+
+1. WeatherCard 对应字段：`location`、`condition`、`temperature`、`unit`、`humidityPercent`、`windKph`
+2. StockCard 对应字段：`symbol`、`price`、`currency`、`changePercent`
+
 ## Example Prompts
 
 - "What's the weather in Tokyo?"
