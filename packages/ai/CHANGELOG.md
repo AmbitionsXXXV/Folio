@@ -1,5 +1,13 @@
 # @folionote/ai
 
+## 0.2.13
+
+### Patch Changes
+
+- feat: ✨ support tools
+- Updated dependencies
+  - @folionote/constants@0.2.13
+
 ## 0.2.12
 
 ### Patch Changes

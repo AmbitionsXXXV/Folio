@@ -1,5 +1,21 @@
 # web
 
+## 0.2.13
+
+### Patch Changes
+
+- feat: ✨ support tools
+- Updated dependencies
+  - @folionote/locales@0.2.13
+  - @folionote/api@0.2.13
+  - @folionote/auth@0.2.13
+  - @folionote/constants@0.2.13
+  - @folionote/editor-core@0.2.13
+  - @folionote/editor-react@0.2.13
+  - @folionote/model-list@0.1.6
+  - @folionote/ui@0.2.13
+  - @folionote/utils@0.2.13
+
 ## 0.2.12
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.6
+
+### Patch Changes
+
+- feat: ✨ support tools
+
 ## 0.1.5
 
 ### Patch Changes

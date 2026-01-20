@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.7
+
+### Patch Changes
+
+- feat: ✨ support tools
+
 ## 0.1.6
 
 ### Patch Changes
