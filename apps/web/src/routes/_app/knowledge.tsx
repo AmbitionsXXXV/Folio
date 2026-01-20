@@ -133,6 +133,7 @@ function KnowledgePage() {
 				role: msg.role,
 				content: msg.content,
 				timestamp: msg.timestamp,
+				parts: msg.parts,
 				isStreaming: msg.isStreaming,
 				thinking: msg.thinking,
 				usage: msg.usage,

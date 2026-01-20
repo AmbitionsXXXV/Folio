@@ -287,6 +287,16 @@ Done:
 实现空会话去重与自动清理功能。服务端在创建新空会话时复用现有空会话并清理重复项；前端切换会话时自动删除前一空会话。
 New Chat 按钮在当前已是空会话时不再重复创建。
 
+### 2.12 生成式 UI（Knowledge Chat 工具卡片）
+
+- [x] 新增服务端工具与工具调用接入（天气 + 股票）
+- [x] Web 端保留 UIMessage parts 并渲染工具卡片
+- [x] 补充文档与最小单测
+
+Done:
+新增天气与股票工具并在 AI 流式接口按 provider 能力注入。
+Web 端保留 UIMessage parts 渲染工具卡片，并补齐文档与最小单测。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

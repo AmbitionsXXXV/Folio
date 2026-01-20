@@ -27,6 +27,12 @@ import { Message, MessageContent, MessageResponse } from '@/components/chat-mess
 import { cn } from '@/lib/utils'
 import type { ChatMessage, CitationSource } from '../types'
 import { formatCost, formatTokenCount } from '../utils'
+import {
+	isDisplayWeatherPart,
+	isStockPricePart,
+	StockToolCard,
+	WeatherToolCard,
+} from './tool-cards'
 
 // ============================================================================
 // Thinking Collapse Component
@@ -296,6 +302,29 @@ export const MessageBubble = memo(function MessageBubble({
 						isStreaming={message.isStreaming && !isThinkingOnly}
 					/>
 				)}
+
+				{/* Tool UI cards for assistant messages */}
+				{!isUser && message.parts?.length ? (
+					<div className="mt-2 grid gap-2">
+						{message.parts.map((part) => {
+							const fallbackState =
+								'state' in part && typeof part.state === 'string'
+									? part.state
+									: 'tool'
+							const toolKey =
+								'toolCallId' in part && typeof part.toolCallId === 'string'
+									? part.toolCallId
+									: `${message.id}-${part.type}-${fallbackState}`
+							if (isDisplayWeatherPart(part)) {
+								return <WeatherToolCard key={`weather-${toolKey}`} part={part} />
+							}
+							if (isStockPricePart(part)) {
+								return <StockToolCard key={`stock-${toolKey}`} part={part} />
+							}
+							return null
+						})}
+					</div>
+				) : null}
 
 				{/* Footer: timestamp, token count and cost */}
 				{showFooter ? (

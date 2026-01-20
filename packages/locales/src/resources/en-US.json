@@ -853,6 +853,25 @@
       "reasoning": "Reasoning",
       "cache": "Cache"
     },
+    "toolCards": {
+      "weather": {
+        "title": "Weather",
+        "loading": "Loading weather… {{location}}",
+        "errorTitle": "Weather tool failed",
+        "errorFallback": "Unable to load weather data",
+        "temperature": "Temperature",
+        "humidity": "Humidity",
+        "wind": "Wind"
+      },
+      "stock": {
+        "title": "Stock",
+        "loading": "Loading stock price… {{symbol}}",
+        "errorTitle": "Stock tool failed",
+        "errorFallback": "Unable to load stock data",
+        "price": "Price",
+        "change": "Change"
+      }
+    },
     "emptyState": {
       "title": "Start a Conversation",
       "description": "Ask questions about your knowledge base, get summaries, or explore ideas with AI assistance. Type @ to attach specific notes for context."

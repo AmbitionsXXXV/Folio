@@ -844,6 +844,25 @@
       "reasoning": "推理",
       "cache": "缓存"
     },
+    "toolCards": {
+      "weather": {
+        "title": "天气",
+        "loading": "正在加载天气… {{location}}",
+        "errorTitle": "天气工具失败",
+        "errorFallback": "无法加载天气数据",
+        "temperature": "温度",
+        "humidity": "湿度",
+        "wind": "风速"
+      },
+      "stock": {
+        "title": "股票",
+        "loading": "正在加载股票价格… {{symbol}}",
+        "errorTitle": "股票工具失败",
+        "errorFallback": "无法加载股票数据",
+        "price": "价格",
+        "change": "变动"
+      }
+    },
     "emptyState": {
       "title": "开始对话",
       "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。输入 @ 附加特定笔记作为上下文。"

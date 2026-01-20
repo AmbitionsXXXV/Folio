@@ -5,6 +5,7 @@ import {
 	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
 	type DecryptedCredential,
 	PROVIDER_CONFIGS,
+	providerSupports,
 } from '@folionote/ai'
 import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
 import { createContext } from '@folionote/api/context'
@@ -26,6 +27,7 @@ import {
 	saveChat,
 	touchChat,
 } from '../services/ai-chat-store'
+import { aiTools } from '../services/ai-tools'
 import {
 	fetchNotesByIds,
 	MAX_ATTACHED_NOTES,
@@ -395,11 +397,17 @@ export function registerAiStreamRoute(app: App) {
 				enableReasoning ?? false
 			)
 
+			const shouldEnableTools = providerSupports(
+				provider as AiProvider,
+				'function_calling'
+			)
+
 			// Stream text using AI SDK
 			const result = aiStreamText({
 				model: aiModel,
 				system: systemPrompt,
 				messages: modelMessages,
+				tools: shouldEnableTools ? aiTools : undefined,
 				// Provider options are typed per-provider; cast to satisfy SDK's strict union type
 				providerOptions: providerOptions as Parameters<
 					typeof aiStreamText
