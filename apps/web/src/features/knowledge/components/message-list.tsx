@@ -54,8 +54,17 @@ export function MessageList({
 	// Derive waiting state from messages - show only when pending but no streaming content
 	const showWaiting = useMemo(() => {
 		if (!isPending) return false
+		const hasToolParts = (message: ChatMessage) =>
+			(message.parts ?? []).some(
+				(part) =>
+					'type' in part &&
+					typeof part.type === 'string' &&
+					part.type.startsWith('tool-')
+			)
 		return !messages.some(
-			(m) => m.isStreaming && (m.content.length > 0 || (m.thinking?.length ?? 0) > 0)
+			(m) =>
+				m.isStreaming &&
+				(m.content.length > 0 || (m.thinking?.length ?? 0) > 0 || hasToolParts(m))
 		)
 	}, [isPending, messages])
 

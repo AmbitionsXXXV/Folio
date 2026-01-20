@@ -1,5 +1,19 @@
 # server
 
+## 0.2.13
+
+### Patch Changes
+
+- feat: ✨ support tools
+- Updated dependencies
+  - @folionote/locales@0.2.13
+  - @folionote/ai@0.2.13
+  - @folionote/api@0.2.13
+  - @folionote/auth@0.2.13
+  - @folionote/db@0.2.13
+  - @folionote/log@0.1.7
+  - @folionote/storage@0.2.13
+
 ## 0.2.12
 
 ### Patch Changes

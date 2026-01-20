@@ -28,6 +28,8 @@ export type KnowledgeChatMessage = {
 	role: 'user' | 'assistant'
 	content: string
 	timestamp: Date
+	/** Raw UIMessage parts for tool rendering */
+	parts?: UIMessage['parts']
 	/** Whether this message is currently being streamed */
 	isStreaming?: boolean
 	/** Thinking/reasoning content (for models that support extended thinking) */
@@ -80,8 +82,10 @@ export type SendMessageOptions = {
  * Convert UIMessage to KnowledgeChatMessage for UI rendering
  */
 function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
+	const parts = msg.parts ?? []
+
 	// Extract text content from parts
-	const textPart = msg.parts?.find((p) => p.type === 'text')
+	const textPart = parts.find((p) => p.type === 'text')
 	const content = textPart && 'text' in textPart ? textPart.text : ''
 
 	// Extract reasoning/thinking content if present
@@ -96,6 +100,7 @@ function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
 		role: msg.role as 'user' | 'assistant',
 		content,
 		timestamp: new Date(),
+		parts,
 		thinking,
 	}
 }
@@ -104,10 +109,15 @@ function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
  * Convert KnowledgeChatMessage to UIMessage for the API
  */
 function knowledgeMessageToUIMessage(msg: KnowledgeChatMessage): UIMessage {
+	const fallbackParts: UIMessage['parts'] = [
+		{ type: 'text' as const, text: msg.content },
+	]
+	const parts = msg.parts && msg.parts.length > 0 ? msg.parts : fallbackParts
+
 	return {
 		id: msg.id,
 		role: msg.role,
-		parts: [{ type: 'text', text: msg.content }],
+		parts,
 	}
 }
 

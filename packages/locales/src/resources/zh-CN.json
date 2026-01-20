@@ -844,6 +844,25 @@
       "reasoning": "推理",
       "cache": "缓存"
     },
+    "toolCards": {
+      "weather": {
+        "title": "天气",
+        "loading": "正在加载天气… {{location}}",
+        "errorTitle": "天气工具失败",
+        "errorFallback": "无法加载天气数据",
+        "temperature": "温度",
+        "humidity": "湿度",
+        "wind": "风速"
+      },
+      "stock": {
+        "title": "股票",
+        "loading": "正在加载股票价格… {{symbol}}",
+        "errorTitle": "股票工具失败",
+        "errorFallback": "无法加载股票数据",
+        "price": "价格",
+        "change": "变动"
+      }
+    },
     "emptyState": {
       "title": "开始对话",
       "description": "询问关于知识库的问题、获取摘要，或借助 AI 探索想法。输入 @ 附加特定笔记作为上下文。"
@@ -853,6 +872,8 @@
     "noChats": "暂无对话",
     "startNewChatDescription": "开始新对话以开启 AI 助手之旅",
     "messages": "条消息",
+    "deleteChatConfirmTitle": "确认删除对话？",
+    "deleteChatConfirmDescription": "将永久删除 “{{title}}” 及其消息，删除后将无法恢复。",
     "deleteChat": "删除对话",
     "deleteChatFailed": "删除对话失败",
     "loadChatFailed": "加载对话失败"

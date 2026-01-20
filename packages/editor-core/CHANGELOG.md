@@ -1,5 +1,11 @@
 # @folionote/editor-core
 
+## 0.2.13
+
+### Patch Changes
+
+- feat: ✨ support tools
+
 ## 0.2.12
 
 ### Patch Changes

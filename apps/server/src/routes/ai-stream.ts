@@ -5,6 +5,7 @@ import {
 	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
 	type DecryptedCredential,
 	PROVIDER_CONFIGS,
+	providerSupports,
 } from '@folionote/ai'
 import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
 import { createContext } from '@folionote/api/context'
@@ -18,6 +19,7 @@ import {
 import {
 	createChat,
 	deleteChat,
+	deleteEmptyChat,
 	generateChatId,
 	listUserChats,
 	loadChat,
@@ -25,6 +27,7 @@ import {
 	saveChat,
 	touchChat,
 } from '../services/ai-chat-store'
+import { aiTools } from '../services/ai-tools'
 import {
 	fetchNotesByIds,
 	MAX_ATTACHED_NOTES,
@@ -282,6 +285,29 @@ export function registerAiStreamRoute(app: App) {
 		return c.json({ success: true })
 	})
 
+	// DELETE /api/ai/chat/:chatId/empty - Delete an empty chat session (for cleanup on switch)
+	app.delete('/api/ai/chat/:chatId/empty', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const chatId = c.req.param('chatId')
+		if (!chatId) {
+			return c.json({ error: 'Missing chatId' }, 400)
+		}
+
+		const userId = context.session.user.id
+		const deleted = await deleteEmptyChat(userId, chatId)
+
+		// Return success even if not deleted (session was not empty or not found)
+		// This is a best-effort cleanup operation
+		return c.json({ success: true, deleted })
+	})
+
 	// POST /api/ai/stream - Stream AI response (AI SDK v6 aligned)
 	app.post('/api/ai/stream', async (c) => {
 		const detectedLanguage = c.get('language')
@@ -371,11 +397,17 @@ export function registerAiStreamRoute(app: App) {
 				enableReasoning ?? false
 			)
 
+			const shouldEnableTools = providerSupports(
+				provider as AiProvider,
+				'function_calling'
+			)
+
 			// Stream text using AI SDK
 			const result = aiStreamText({
 				model: aiModel,
 				system: systemPrompt,
 				messages: modelMessages,
+				tools: shouldEnableTools ? aiTools : undefined,
 				// Provider options are typed per-provider; cast to satisfy SDK's strict union type
 				providerOptions: providerOptions as Parameters<
 					typeof aiStreamText

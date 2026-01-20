@@ -12,12 +12,16 @@ export type CitationSource = {
 	quote?: string
 }
 
+import type { UIMessage } from 'ai'
+
 /** Chat message type for the knowledge page */
 export type ChatMessage = {
 	id: string
 	role: 'user' | 'assistant'
 	content: string
 	timestamp: Date
+	/** Raw UIMessage parts for rendering tool UI */
+	parts?: UIMessage['parts']
 	/** Whether this message is currently being streamed */
 	isStreaming?: boolean
 	/** Thinking/reasoning content (for models that support extended thinking) */

@@ -5,19 +5,15 @@ import {
 	createChat,
 	deleteChat,
 	// Legacy API (for backward compatibility tests)
-	deleteChatSession,
+	deleteEmptyChat,
 	disableMemoryStore,
 	enableMemoryStore,
 	generateChatId,
-	getChatMessages,
-	getChatSession,
-	getUserChatSessions,
-	isStreamInProgress,
+	isEmptySession,
 	listUserChats,
 	loadChat,
 	loadChatMessages,
 	saveChat,
-	saveChatMessages,
 } from '../src/services/ai-chat-store'
 
 describe('ai-chat-store', () => {
@@ -352,57 +348,191 @@ describe('ai-chat-store', () => {
 	})
 
 	// ==========================================================================
-	// Legacy API Tests (backward compatibility)
+	// Empty Session Management Tests
 	// ==========================================================================
 
-	describe('legacy API', () => {
-		it('saveChatMessages / getChatMessages work as aliases', async () => {
-			const messages: UIMessage[] = [
-				createTestMessage('msg-1', 'user', 'Hello'),
-				createTestMessage('msg-2', 'assistant', 'Hi there!'),
-			]
+	describe('empty session management', () => {
+		describe('isEmptySession', () => {
+			it('returns true for session with no messages', async () => {
+				const session = await createChat({ userId: testUserId })
 
-			await saveChatMessages(testUserId, testChatId, messages)
-			const retrieved = await getChatMessages(testUserId, testChatId)
+				expect(isEmptySession(session)).toBe(true)
+			})
 
-			expect(retrieved).toEqual(messages)
+			it('returns false for session with messages', async () => {
+				const messages: UIMessage[] = [createTestMessage('msg-1', 'user', 'Hello')]
+				const session = await createChat({
+					userId: testUserId,
+					chatId: testChatId,
+					messages,
+				})
+
+				expect(isEmptySession(session)).toBe(false)
+			})
 		})
 
-		it('getChatSession returns session data', async () => {
-			const messages: UIMessage[] = [createTestMessage('msg-1', 'user', 'Test')]
-			await createChat({ userId: testUserId, chatId: testChatId, messages })
+		describe('createChat empty session reuse', () => {
+			it('reuses existing empty session when creating new empty session', async () => {
+				// Create first empty session
+				const first = await createChat({ userId: testUserId })
 
-			const session = await getChatSession(testUserId, testChatId)
+				// Create second empty session (should reuse first)
+				const second = await createChat({ userId: testUserId })
 
-			expect(session).toBeDefined()
-			expect(session?.userId).toBe(testUserId)
-			expect(session?.chatId).toBe(testChatId)
-			expect(session?.messages).toEqual(messages)
+				// Should return the same chatId
+				expect(second.chatId).toBe(first.chatId)
+
+				// Only one session should exist
+				const sessions = await listUserChats(testUserId)
+				expect(sessions).toHaveLength(1)
+			})
+
+			it('creates new session when chatId is explicitly provided', async () => {
+				// Create first empty session
+				const first = await createChat({ userId: testUserId })
+
+				// Create second with explicit chatId
+				const second = await createChat({
+					userId: testUserId,
+					chatId: 'explicit-id',
+				})
+
+				// Should be different
+				expect(second.chatId).not.toBe(first.chatId)
+				expect(second.chatId).toBe('explicit-id')
+			})
+
+			it('creates new session when messages are provided', async () => {
+				// Create first empty session
+				const first = await createChat({ userId: testUserId })
+
+				// Create second with messages
+				const messages: UIMessage[] = [createTestMessage('msg-1', 'user', 'Hello')]
+				const second = await createChat({ userId: testUserId, messages })
+
+				// Should be different
+				expect(second.chatId).not.toBe(first.chatId)
+			})
+
+			it('creates new session when title is provided', async () => {
+				// Create first empty session
+				const first = await createChat({ userId: testUserId })
+
+				// Create second with title
+				const second = await createChat({
+					userId: testUserId,
+					title: 'My Chat',
+				})
+
+				// Should be different
+				expect(second.chatId).not.toBe(first.chatId)
+			})
+
+			it('cleans up other empty sessions when reusing', async () => {
+				// Create first empty session with explicit ID
+				await createChat({ userId: testUserId, chatId: 'empty-1' })
+
+				// Create second empty session with explicit ID
+				await createChat({ userId: testUserId, chatId: 'empty-2' })
+
+				// Verify both exist
+				let sessions = await listUserChats(testUserId)
+				// listUserChats will clean up duplicates, keeping only the most recent
+				expect(sessions.length).toBeLessThanOrEqual(2)
+
+				// Create third empty session (should reuse and clean up)
+				const third = await createChat({ userId: testUserId })
+
+				// Only one empty session should remain
+				sessions = await listUserChats(testUserId)
+				const emptySessions = sessions.filter((s) => s.messageCount === 0)
+				expect(emptySessions).toHaveLength(1)
+				expect(emptySessions[0]?.chatId).toBe(third.chatId)
+			})
 		})
 
-		it('deleteChatSession works as alias', async () => {
-			await createChat({ userId: testUserId, chatId: testChatId })
+		describe('deleteEmptyChat', () => {
+			it('deletes an empty chat session', async () => {
+				const session = await createChat({
+					userId: testUserId,
+					chatId: testChatId,
+				})
 
-			const deleted = await deleteChatSession(testUserId, testChatId)
+				expect(isEmptySession(session)).toBe(true)
 
-			expect(deleted).toBe(true)
-			expect(await loadChat(testUserId, testChatId)).toBeUndefined()
+				const deleted = await deleteEmptyChat(testUserId, testChatId)
+
+				expect(deleted).toBe(true)
+				expect(await loadChat(testUserId, testChatId)).toBeUndefined()
+			})
+
+			it('does not delete non-empty chat session', async () => {
+				const messages: UIMessage[] = [createTestMessage('msg-1', 'user', 'Hello')]
+				await createChat({
+					userId: testUserId,
+					chatId: testChatId,
+					messages,
+				})
+
+				const deleted = await deleteEmptyChat(testUserId, testChatId)
+
+				expect(deleted).toBe(false)
+				// Session should still exist
+				const session = await loadChat(testUserId, testChatId)
+				expect(session).toBeDefined()
+			})
+
+			it('returns false for non-existent chat', async () => {
+				const deleted = await deleteEmptyChat(testUserId, 'non-existent')
+
+				expect(deleted).toBe(false)
+			})
+
+			it('isolates by userId', async () => {
+				// Create empty session for test user
+				await createChat({ userId: testUserId, chatId: testChatId })
+
+				// Try to delete with different user
+				const deleted = await deleteEmptyChat(otherUserId, testChatId)
+
+				expect(deleted).toBe(false)
+
+				// Original session should still exist
+				const session = await loadChat(testUserId, testChatId)
+				expect(session).toBeDefined()
+			})
 		})
 
-		it('getUserChatSessions works as alias', async () => {
-			await createChat({ userId: testUserId, chatId: testChatId })
+		describe('listUserChats empty session cleanup', () => {
+			it('keeps only the most recent empty session in list', async () => {
+				// Create multiple empty sessions with explicit IDs
+				await createChat({ userId: testUserId, chatId: 'empty-old' })
+				await new Promise((resolve) => setTimeout(resolve, 10))
+				await createChat({ userId: testUserId, chatId: 'empty-new' })
 
-			const sessions = await getUserChatSessions(testUserId)
+				// Also create a non-empty session
+				const messages: UIMessage[] = [createTestMessage('msg-1', 'user', 'Hello')]
+				await createChat({
+					userId: testUserId,
+					chatId: 'has-messages',
+					messages,
+				})
 
-			expect(sessions).toHaveLength(1)
-			expect(sessions[0]?.chatId).toBe(testChatId)
-		})
+				// List should clean up duplicates
+				const sessions = await listUserChats(testUserId)
 
-		it('isStreamInProgress always returns false (deprecated)', async () => {
-			await createChat({ userId: testUserId, chatId: testChatId })
+				// Should have non-empty session and at most one empty session
+				const emptySessions = sessions.filter((s) => s.messageCount === 0)
+				const nonEmptySessions = sessions.filter((s) => s.messageCount > 0)
 
-			// Stream tracking is deprecated; always returns false
-			expect(isStreamInProgress(testUserId, testChatId)).toBe(false)
+				expect(emptySessions.length).toBeLessThanOrEqual(1)
+				expect(nonEmptySessions).toHaveLength(1)
+				expect(nonEmptySessions[0]?.chatId).toBe('has-messages')
+			})
 		})
 	})
+
+	// ==========================================================================
+	// Legacy API Tests (backward compatibility)
+	// ==========================================================================
 })

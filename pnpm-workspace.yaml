@@ -24,7 +24,7 @@ catalog:
   "@tiptap/react": ^3.15.3
   "@tiptap/starter-kit": ^3.15.3
   "@tiptap/suggestion": ^3.15.3
-  "@types/node": ^25.0.6
+  "@types/node": ^25.0.9
   "@vitest/coverage-v8": ^4.0.17
   "@vitest/ui": ^4.0.17
   ai: ^6.0.38

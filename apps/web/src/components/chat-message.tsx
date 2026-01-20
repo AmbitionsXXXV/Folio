@@ -13,6 +13,10 @@ import {
 	MultiplicationSignIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { cjk } from '@streamdown/cjk'
+import { code } from '@streamdown/code'
+import { math } from '@streamdown/math'
+import { mermaid } from '@streamdown/mermaid'
 import type { FileUIPart, UIMessage } from 'ai'
 import type { ComponentProps, HTMLAttributes, ReactElement } from 'react'
 import { createContext, memo, useContext, useEffect, useState } from 'react'
@@ -202,11 +206,7 @@ export type MessageBranchSelectorProps = HTMLAttributes<HTMLDivElement> & {
 	from: UIMessage['role']
 }
 
-export const MessageBranchSelector = ({
-	className,
-	from,
-	...props
-}: MessageBranchSelectorProps) => {
+export const MessageBranchSelector = ({ ...props }: MessageBranchSelectorProps) => {
 	const { totalBranches } = useMessageBranch()
 
 	// Don't render if there's only one branch
@@ -249,7 +249,6 @@ export type MessageBranchNextProps = ComponentProps<typeof Button>
 
 export const MessageBranchNext = ({
 	children,
-	className,
 	...props
 }: MessageBranchNextProps) => {
 	const { goToNext, totalBranches } = useMessageBranch()
@@ -298,6 +297,7 @@ export const MessageResponse = memo(
 				'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
 				className
 			)}
+			plugins={{ code, mermaid, math, cjk }}
 			{...props}
 		/>
 	),

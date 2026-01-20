@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.13
+
+### Patch Changes
+
+- feat: ✨ support tools
+- Updated dependencies
+  - @folionote/db@0.2.13
+  - @folionote/transactional@0.2.13
+
 ## 0.2.12
 
 ### Patch Changes
