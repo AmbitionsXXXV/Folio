@@ -83,6 +83,20 @@ type AiStreamRequestBody = {
 // Helper Functions
 // =============================================================================
 
+const DATE_PART_PAD_LENGTH = 2
+const MONTH_INDEX_OFFSET = 1
+
+function padDatePart(value: number): string {
+	return String(value).padStart(DATE_PART_PAD_LENGTH, '0')
+}
+
+function getLocalDateString(date: Date): string {
+	const year = date.getFullYear()
+	const month = padDatePart(date.getMonth() + MONTH_INDEX_OFFSET)
+	const day = padDatePart(date.getDate())
+	return `${year}-${month}-${day}`
+}
+
 /**
  * Prepare note context for AI streaming (RAG)
  */
@@ -380,9 +394,11 @@ export function registerAiStreamRoute(app: App) {
 				ragTopK
 			)
 
+			const currentDate = getLocalDateString(new Date())
 			const { systemPrompt } = buildKnowledgeChatSystemPrompt({
 				attachedNotes,
 				retrievedNotes,
+				currentDate,
 			})
 
 			// Create the AI model

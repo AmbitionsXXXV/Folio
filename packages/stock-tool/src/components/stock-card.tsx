@@ -1,26 +1,8 @@
 import { type ChartConfig, ChartContainer } from '@folionote/ui/charts'
+import { cn } from '@folionote/ui/lib/utils'
 import { memo } from 'react'
 import { Area, AreaChart } from 'recharts'
-import { cn } from '@/lib/utils'
-
-export type StockChangeTone = 'up' | 'down' | 'flat'
-
-type StockDataPoint = {
-	time: string
-	price: number
-}
-
-type StockCardProps = {
-	title: string
-	symbol: string
-	priceLabel: string
-	priceValue: string
-	changeLabel: string
-	changeValue: string
-	changeTone: StockChangeTone
-	chartData?: StockDataPoint[]
-	className?: string
-}
+import type { StockCardProps, StockChangeTone } from '../types'
 
 const changeToneConfig: Record<
 	StockChangeTone,

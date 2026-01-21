@@ -475,9 +475,15 @@ importers:
       '@folionote/log':
         specifier: workspace:*
         version: link:../../packages/log
+      '@folionote/stock-tool':
+        specifier: workspace:*
+        version: link:../../packages/stock-tool
       '@folionote/storage':
         specifier: workspace:*
         version: link:../../packages/storage
+      '@folionote/weather-tool':
+        specifier: workspace:*
+        version: link:../../packages/weather-tool
       '@hono/node-server':
         specifier: ^1.19.8
         version: 1.19.8(hono@4.11.4)
@@ -569,12 +575,18 @@ importers:
       '@folionote/model-list':
         specifier: workspace:*
         version: link:../../packages/model-list
+      '@folionote/stock-tool':
+        specifier: workspace:*
+        version: link:../../packages/stock-tool
       '@folionote/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@folionote/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@folionote/weather-tool':
+        specifier: workspace:*
+        version: link:../../packages/weather-tool
       '@hugeicons/core-free-icons':
         specifier: 'catalog:'
         version: 3.1.1
@@ -1128,6 +1140,34 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
+  packages/stock-tool:
+    dependencies:
+      '@folionote/ui':
+        specifier: workspace:*
+        version: link:../ui
+      ai:
+        specifier: 'catalog:'
+        version: 6.0.38(zod@4.3.5)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.3
+      recharts:
+        specifier: 'catalog:'
+        version: 3.6.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react-is@19.2.3)(react@19.2.3)(redux@5.0.1)
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.5
+    devDependencies:
+      '@folionote/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/react':
+        specifier: 19.2.7
+        version: 19.2.7
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   packages/storage:
     dependencies:
       '@aws-sdk/client-s3':
@@ -1247,6 +1287,31 @@ importers:
       '@folionote/config':
         specifier: workspace:*
         version: link:../config
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/weather-tool:
+    dependencies:
+      '@folionote/ui':
+        specifier: workspace:*
+        version: link:../ui
+      ai:
+        specifier: 'catalog:'
+        version: 6.0.38(zod@4.3.5)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.5
+    devDependencies:
+      '@folionote/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/react':
+        specifier: 19.2.7
+        version: 19.2.7
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

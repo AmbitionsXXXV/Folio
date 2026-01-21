@@ -1,3 +1,9 @@
+---
+description: 
+globs: apps/**/*.tsx
+alwaysApply: false
+---
+
 # React Best Practices
 
 **Version 0.1.0**  

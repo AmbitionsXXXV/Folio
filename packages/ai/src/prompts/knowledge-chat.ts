@@ -32,12 +32,16 @@ export const KNOWLEDGE_CHAT_SYSTEM_PROMPT = `You are a knowledgeable assistant t
 5. **Be concise but thorough**: Provide complete answers without unnecessary verbosity.
 
 6. **Respect boundaries**: Only use information from the provided context. Do not make assumptions about content not shown.
-7. **Use tools when appropriate**: If the user asks about weather or stock prices, call the relevant tool and use its output. Do not fabricate tool results.
+7. **Use current date for time reasoning**: When interpreting dates, use the current date provided in the prompt. Do not refuse requests based on the model's training cutoff; only treat dates after the current date as future.
+8. **Use tools when appropriate**: If the user asks about weather or stock prices, call the relevant tool and use its output. Do not fabricate tool results.
+9. **Stock trend date ranges**: When the user asks for stock trend history or uses phrases like 走势/趋势/历史, call getStockTrend with startDate and endDate in YYYY-MM-DD format. For relative ranges like 最近一周/过去一周/近 7 天/last week/past week, set endDate to today's date (user locale) and startDate to endDate minus 6 days (7-day window).
+10. **Company names to tickers**: If the user provides a clear company name (e.g., Apple), map to its common ticker symbol (AAPL). If ambiguous, ask for the ticker.
 
 ## Available Tools
 
 - displayWeather: Get current weather for a location
-- getStockPrice: Get the current price for a stock symbol`
+- getStockPrice: Get the current price for a stock symbol
+- getStockTrend: Get historical stock price data over a date range`
 
 /** Note data structure for prompt building */
 export type NoteContext = {
@@ -50,6 +54,8 @@ export type NoteContext = {
 export type BuildKnowledgeChatPromptInput = {
 	/** User's question/prompt */
 	userPrompt: string
+	/** Current date in YYYY-MM-DD format (local runtime) */
+	currentDate?: string
 	/** Notes explicitly attached by user via @ mention */
 	attachedNotes?: NoteContext[]
 	/** Notes retrieved via FTS/RAG */
@@ -185,15 +191,29 @@ ${retrievedFormatted.join('\n\n---\n\n')}`)
 }
 
 /**
+ * Assemble current date section (optional)
+ */
+function assembleCurrentDateSection(currentDate?: string): string[] {
+	if (!currentDate) return []
+	return [
+		`## Current Date
+
+${currentDate}`,
+	]
+}
+
+/**
  * Build the final prompt from sections (for single-turn mode)
  */
 function assembleFinalPrompt(
 	userPrompt: string,
 	attachedFormatted: string[],
-	retrievedFormatted: string[]
+	retrievedFormatted: string[],
+	currentDate?: string
 ): string {
 	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
 
+	sections.push(...assembleCurrentDateSection(currentDate))
 	sections.push(
 		...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
 	)
@@ -210,10 +230,12 @@ ${userPrompt}`)
  */
 function assembleSystemPrompt(
 	attachedFormatted: string[],
-	retrievedFormatted: string[]
+	retrievedFormatted: string[],
+	currentDate?: string
 ): string {
 	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
 
+	sections.push(...assembleCurrentDateSection(currentDate))
 	sections.push(
 		...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
 	)
@@ -266,7 +288,8 @@ export function buildKnowledgeChatPrompt(
 	const prompt = assembleFinalPrompt(
 		input.userPrompt,
 		attachedState.included,
-		retrievedState.included
+		retrievedState.included,
+		input.currentDate
 	)
 
 	return {
@@ -290,6 +313,8 @@ export type BuildKnowledgeChatSystemPromptInput = {
 	attachedNotes?: NoteContext[]
 	/** Notes retrieved via FTS/RAG */
 	retrievedNotes?: NoteContext[]
+	/** Current date in YYYY-MM-DD format (local runtime) */
+	currentDate?: string
 	/** Maximum chars for total context (for testing) */
 	maxTotalContextChars?: number
 	/** Maximum chars per single note (for testing) */
@@ -355,7 +380,8 @@ export function buildKnowledgeChatSystemPrompt(
 
 	const systemPrompt = assembleSystemPrompt(
 		attachedState.included,
-		retrievedState.included
+		retrievedState.included,
+		input.currentDate
 	)
 
 	return {

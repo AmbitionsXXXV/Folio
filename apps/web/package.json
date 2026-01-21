@@ -24,6 +24,8 @@
     "@folionote/model-list": "workspace:*",
     "@folionote/ui": "workspace:*",
     "@folionote/utils": "workspace:*",
+    "@folionote/stock-tool": "workspace:*",
+    "@folionote/weather-tool": "workspace:*",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
     "@orpc/client": "catalog:",

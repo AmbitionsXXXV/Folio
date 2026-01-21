@@ -1,18 +1,6 @@
+import { cn } from '@folionote/ui/lib/utils'
 import { memo, useMemo } from 'react'
-import { cn } from '@/lib/utils'
-
-type WeatherCardProps = {
-	title: string
-	location: string
-	condition: string
-	temperatureLabel: string
-	temperatureValue: string
-	humidityLabel: string
-	humidityValue: string
-	windLabel: string
-	windValue: string
-	className?: string
-}
+import type { WeatherCardProps } from '../types'
 
 // 根据天气条件判断天气类型
 function getWeatherType(
@@ -243,7 +231,7 @@ export const WeatherCard = memo(function WeatherCard({
 						</div>
 					</div>
 					<div className="rounded-lg bg-background/40 px-3 py-2 shadow-sm backdrop-blur-sm transition-colors hover:bg-background/60">
-						<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+						<div className="text-muted-foreground text-xs uppercase tracking-wide">
 							{humidityLabel}
 						</div>
 						<div className="font-[tabular-nums] font-semibold text-foreground">

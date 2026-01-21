@@ -861,6 +861,12 @@
         "errorFallback": "无法加载股票数据",
         "price": "价格",
         "change": "变动"
+      },
+      "stockTrend": {
+        "title": "股票走势",
+        "loading": "正在加载股票走势… {{symbol}}",
+        "errorTitle": "股票走势工具失败",
+        "errorFallback": "无法加载股票走势数据"
       }
     },
     "emptyState": {

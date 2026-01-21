@@ -870,6 +870,12 @@
         "errorFallback": "Unable to load stock data",
         "price": "Price",
         "change": "Change"
+      },
+      "stockTrend": {
+        "title": "Stock Trend",
+        "loading": "Loading stock trend… {{symbol}}",
+        "errorTitle": "Stock trend tool failed",
+        "errorFallback": "Unable to load stock trend data"
       }
     },
     "emptyState": {

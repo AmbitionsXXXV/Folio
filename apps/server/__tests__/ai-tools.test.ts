@@ -53,6 +53,61 @@ const ALT_STOCK_API_RESPONSE = {
 	},
 }
 
+const STOCK_TREND_START_DATE = '2024-01-02'
+const STOCK_TREND_END_DATE = '2024-01-03'
+
+const STOCK_TREND_OPEN_DAY_ONE = 98
+const STOCK_TREND_HIGH_DAY_ONE = 102
+const STOCK_TREND_LOW_DAY_ONE = 97
+const STOCK_TREND_CLOSE_DAY_ONE = 100
+const STOCK_TREND_VOLUME_DAY_ONE = 123_456
+
+const STOCK_TREND_OPEN_DAY_TWO = 108
+const STOCK_TREND_HIGH_DAY_TWO = 112
+const STOCK_TREND_LOW_DAY_TWO = 107
+const STOCK_TREND_CLOSE_DAY_TWO = 110
+const STOCK_TREND_VOLUME_DAY_TWO = 654_321
+
+const STOCK_TREND_OUTSIDE_OPEN = 90
+const STOCK_TREND_OUTSIDE_HIGH = 95
+const STOCK_TREND_OUTSIDE_LOW = 85
+const STOCK_TREND_OUTSIDE_CLOSE = 92
+const STOCK_TREND_OUTSIDE_VOLUME = 99_999
+
+const STOCK_TREND_CLOSE_CHANGE_PERCENT =
+	((STOCK_TREND_CLOSE_DAY_TWO - STOCK_TREND_CLOSE_DAY_ONE) /
+		STOCK_TREND_CLOSE_DAY_ONE) *
+	100
+
+const STOCK_TREND_API_RESPONSE = {
+	'Meta Data': {
+		'2. Symbol': STOCK_SYMBOL,
+	},
+	'Time Series (Daily)': {
+		'2024-01-03': {
+			'1. open': STOCK_TREND_OPEN_DAY_TWO.toString(),
+			'2. high': STOCK_TREND_HIGH_DAY_TWO.toString(),
+			'3. low': STOCK_TREND_LOW_DAY_TWO.toString(),
+			'4. close': STOCK_TREND_CLOSE_DAY_TWO.toString(),
+			'5. volume': STOCK_TREND_VOLUME_DAY_TWO.toString(),
+		},
+		'2024-01-02': {
+			'1. open': STOCK_TREND_OPEN_DAY_ONE.toString(),
+			'2. high': STOCK_TREND_HIGH_DAY_ONE.toString(),
+			'3. low': STOCK_TREND_LOW_DAY_ONE.toString(),
+			'4. close': STOCK_TREND_CLOSE_DAY_ONE.toString(),
+			'5. volume': STOCK_TREND_VOLUME_DAY_ONE.toString(),
+		},
+		'2024-01-01': {
+			'1. open': STOCK_TREND_OUTSIDE_OPEN.toString(),
+			'2. high': STOCK_TREND_OUTSIDE_HIGH.toString(),
+			'3. low': STOCK_TREND_OUTSIDE_LOW.toString(),
+			'4. close': STOCK_TREND_OUTSIDE_CLOSE.toString(),
+			'5. volume': STOCK_TREND_OUTSIDE_VOLUME.toString(),
+		},
+	},
+}
+
 type FetchResponse = {
 	ok: boolean
 	status: number
@@ -194,5 +249,37 @@ describe('ai-tools', () => {
 		expect(output.symbol).toBe(ALT_STOCK_SYMBOL)
 		expect(output.price).toBe(ALT_STOCK_PRICE)
 		expect(output.changePercent).toBe(ALT_STOCK_CHANGE_PERCENT)
+	})
+
+	it('returns stock trend output for a date range', async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValue(createFetchResponse(STOCK_TREND_API_RESPONSE))
+		vi.stubGlobal('fetch', fetchMock)
+
+		const result = await aiTools.getStockTrend.execute(
+			{
+				symbol: STOCK_SYMBOL,
+				startDate: STOCK_TREND_START_DATE,
+				endDate: STOCK_TREND_END_DATE,
+			},
+			{
+				toolCallId: 'test-call-5',
+				messages: [],
+			}
+		)
+		const output = await resolveToolOutput(result)
+
+		expect(output.symbol).toBe(STOCK_SYMBOL)
+		expect(output.currency).toBe(STOCK_CURRENCY)
+		expect(output.startDate).toBe(STOCK_TREND_START_DATE)
+		expect(output.endDate).toBe(STOCK_TREND_END_DATE)
+		expect(output.dataPoints).toHaveLength(2)
+		expect(output.dataPoints[0]?.date).toBe(STOCK_TREND_START_DATE)
+		expect(output.dataPoints[1]?.date).toBe(STOCK_TREND_END_DATE)
+		expect(output.periodChangePercent).toBeCloseTo(
+			STOCK_TREND_CLOSE_CHANGE_PERCENT,
+			5
+		)
 	})
 })

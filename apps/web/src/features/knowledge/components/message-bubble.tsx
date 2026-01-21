@@ -30,7 +30,9 @@ import { formatCost, formatTokenCount } from '../utils'
 import {
 	isDisplayWeatherPart,
 	isStockPricePart,
+	isStockTrendPart,
 	StockToolCard,
+	StockTrendToolCard,
 	WeatherToolCard,
 } from './tool-cards'
 
@@ -320,6 +322,11 @@ export const MessageBubble = memo(function MessageBubble({
 							}
 							if (isStockPricePart(part)) {
 								return <StockToolCard key={`stock-${toolKey}`} part={part} />
+							}
+							if (isStockTrendPart(part)) {
+								return (
+									<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
+								)
 							}
 							return null
 						})}
