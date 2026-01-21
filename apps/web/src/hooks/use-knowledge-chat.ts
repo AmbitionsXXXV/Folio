@@ -79,6 +79,14 @@ export type SendMessageOptions = {
 // =============================================================================
 
 /**
+ * Message metadata type from server
+ * Contains usage information attached via messageMetadata callback
+ */
+type MessageMetadata = {
+	usage?: KnowledgeChatMessage['usage']
+}
+
+/**
  * Convert UIMessage to KnowledgeChatMessage for UI rendering
  */
 function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
@@ -95,6 +103,10 @@ function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
 			? (reasoningPart as { type: 'reasoning'; reasoning: string }).reasoning
 			: undefined
 
+	// Extract usage from metadata (sent via messageMetadata on server)
+	const metadata = msg.metadata as MessageMetadata | undefined
+	const usage = metadata?.usage
+
 	return {
 		id: msg.id,
 		role: msg.role as 'user' | 'assistant',
@@ -102,6 +114,7 @@ function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
 		timestamp: new Date(),
 		parts,
 		thinking,
+		usage,
 	}
 }
 

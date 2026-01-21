@@ -444,6 +444,21 @@ export function registerAiStreamRoute(app: App) {
 					prefix: 'msg',
 					size: 16,
 				}),
+				// Attach usage data to message metadata for client consumption
+				messageMetadata: ({ part }) => {
+					// Send usage when generation finishes
+					if (part.type === 'finish') {
+						return {
+							usage: {
+								inputTokens: part.totalUsage.inputTokens,
+								outputTokens: part.totalUsage.outputTokens,
+								totalTokens: part.totalUsage.totalTokens,
+								reasoningTokens: part.totalUsage.outputTokenDetails?.reasoningTokens,
+							},
+						}
+					}
+					return undefined
+				},
 				// Unified save point: called when stream completes
 				onFinish: ({ messages: finalMessages }) => {
 					// Save complete conversation to storage
