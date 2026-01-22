@@ -43,6 +43,7 @@ catalog:
   react: ^19.2.3
   react-dom: ^19.2.3
   react-i18next: ^16.5.2
+  recharts: ^3.6.0
   shiki: ^3.21.0
   tailwind-merge: ^3.4.0
   tailwindcss: ^4.1.18

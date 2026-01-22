@@ -9,6 +9,8 @@
 @import "./styles/caret.css";
 @import "./styles/table.css";
 @source "../node_modules/streamdown/dist/*.js";
+@source "../../../packages/stock-tool/src/**/*.{ts,tsx}";
+@source "../../../packages/weather-tool/src/**/*.{ts,tsx}";
 
 :root {
 	--radius: 1.5rem;
@@ -16,4 +18,88 @@
 
 .dark {
 	--radius: 1.5rem;
+}
+
+/* globals.css */
+@keyframes rain {
+	0% {
+		transform: translateY(-10px);
+		opacity: 0;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		transform: translateY(120px);
+		opacity: 0;
+	}
+}
+
+@keyframes snow {
+	0% {
+		transform: translateY(-10px) rotate(0deg);
+		opacity: 0;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		transform: translateY(100px) rotate(360deg);
+		opacity: 0;
+	}
+}
+
+@keyframes cloud-drift {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	50% {
+		transform: translateX(-10px);
+	}
+}
+
+@keyframes ray-spin {
+	0%,
+	100% {
+		opacity: 0.4;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+@keyframes lightning {
+	0%,
+	90%,
+	100% {
+		opacity: 0;
+	}
+	92%,
+	94% {
+		opacity: 1;
+	}
+	93%,
+	95% {
+		opacity: 0;
+	}
+	96% {
+		opacity: 0.8;
+	}
+}
+
+.animate-rain {
+	animation: rain 0.8s linear infinite;
+}
+.animate-snow {
+	animation: snow 3s linear infinite;
+}
+.animate-cloud-drift {
+	animation: cloud-drift 4s ease-in-out infinite;
+}
+.animate-ray-spin {
+	animation: ray-spin 3s ease-in-out infinite;
+}
+.animate-lightning {
+	animation: lightning 4s ease-in-out infinite;
 }

@@ -33,6 +33,10 @@ BETTER_AUTH_URL=https://api.folionote.xyz
 CORS_ORIGIN=https://web.folionote.xyz
 ```
 
+## 开发环境切换
+
+在开发环境，`ApiEnvironmentSettings` 切换本地 / 远程 API 后会刷新页面。`authClient` 的 `baseURL` 使用 `getServerUrl()`，登录与会话请求会跟随同一环境。
+
 ## 验证方式
 
 1. 部署最新 server 后，在浏览器清理 `folionote.xyz` 相关 cookie（或使用无痕窗口）。

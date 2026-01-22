@@ -12,7 +12,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import type { ComponentProps, ReactNode } from 'react'
-import { createContext, memo, useContext, useMemo } from 'react'
+import { createContext, memo, use, useMemo } from 'react'
 import { useUncontrolled } from '@/hooks/use-uncontrolled'
 
 type ChainOfThoughtContextValue = {
@@ -23,7 +23,7 @@ type ChainOfThoughtContextValue = {
 const ChainOfThoughtContext = createContext<ChainOfThoughtContextValue | null>(null)
 
 const useChainOfThought = () => {
-	const context = useContext(ChainOfThoughtContext)
+	const context = use(ChainOfThoughtContext)
 	if (!context) {
 		throw new Error('ChainOfThought components must be used within ChainOfThought')
 	}
@@ -57,11 +57,11 @@ export const ChainOfThought = memo(
 		)
 
 		return (
-			<ChainOfThoughtContext.Provider value={chainOfThoughtContext}>
+			<ChainOfThoughtContext value={chainOfThoughtContext}>
 				<div className={cn('not-prose max-w-prose space-y-4', className)} {...props}>
 					{children}
 				</div>
-			</ChainOfThoughtContext.Provider>
+			</ChainOfThoughtContext>
 		)
 	}
 )
@@ -76,14 +76,20 @@ export const ChainOfThoughtHeader = memo(
 			<Collapsible onOpenChange={setIsOpen} open={isOpen}>
 				<CollapsibleTrigger
 					className={cn(
-						'flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground',
+						'flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground',
 						className
 					)}
 					{...props}
 				>
 					<HugeiconsIcon className="size-4" icon={Brain01Icon} />
 					<span className="flex-1 text-left">{children ?? 'Chain of Thought'}</span>
-					<HugeiconsIcon className="size-4" icon={ArrowDown01Icon} />
+					<HugeiconsIcon
+						className={cn(
+							'size-4 transition-transform',
+							isOpen ? 'rotate-180' : 'rotate-0'
+						)}
+						icon={ArrowDown01Icon}
+					/>
 				</CollapsibleTrigger>
 			</Collapsible>
 		)

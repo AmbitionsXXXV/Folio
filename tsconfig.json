@@ -5,6 +5,8 @@
     { "path": "packages/db" },
     { "path": "packages/auth" },
     { "path": "packages/api" },
+    { "path": "packages/stock-tool" },
+    { "path": "packages/weather-tool" },
     { "path": "apps/server" },
     { "path": "apps/web" },
     { "path": "apps/native" }

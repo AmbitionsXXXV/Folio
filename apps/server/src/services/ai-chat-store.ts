@@ -185,11 +185,43 @@ function parseMessagesJson(json: string | null): UIMessage[] {
 	}
 }
 
+type DateInput = Date | string | number | null | undefined
+
+function parseOptionalDate(value: DateInput): Date | null {
+	if (value === null || value === undefined) return null
+	if (value instanceof Date) {
+		return Number.isNaN(value.getTime()) ? null : value
+	}
+	const parsedDate = new Date(value)
+	return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+}
+
+function parseRequiredDate(value: DateInput, fallbackDate: Date): Date {
+	const parsedDate = parseOptionalDate(value)
+	return parsedDate ?? fallbackDate
+}
+
+type ChatSessionDateFields = Pick<
+	ChatSession,
+	'lastMessageAt' | 'lastOpenedAt' | 'updatedAt' | 'createdAt'
+>
+
+function normalizeChatSessionDates<T extends ChatSessionDateFields>(session: T): T {
+	const fallbackDate = new Date()
+	return {
+		...session,
+		lastMessageAt: parseOptionalDate(session.lastMessageAt),
+		lastOpenedAt: parseRequiredDate(session.lastOpenedAt, fallbackDate),
+		updatedAt: parseRequiredDate(session.updatedAt, fallbackDate),
+		createdAt: parseRequiredDate(session.createdAt, fallbackDate),
+	}
+}
+
 /**
  * Convert DB row to ChatSession
  */
 function dbRowToSession(row: typeof aiChatSessions.$inferSelect): ChatSession {
-	return {
+	return normalizeChatSessionDates({
 		userId: row.userId,
 		chatId: row.id,
 		title: row.title,
@@ -200,7 +232,7 @@ function dbRowToSession(row: typeof aiChatSessions.$inferSelect): ChatSession {
 		lastOpenedAt: row.lastOpenedAt,
 		updatedAt: row.updatedAt,
 		createdAt: row.createdAt,
-	}
+	})
 }
 
 /**
@@ -610,14 +642,15 @@ export async function loadChat(
 			const redis = getRedisClient()
 			const cached = await redis.get<ChatSession>(getChatRedisKey(userId, chatId))
 			if (cached) {
+				const normalizedSession = normalizeChatSessionDates(cached)
 				log.debug(`[redis] Cache hit for chat ${chatId}`)
 
 				// Update lastOpenedAt if needed (still need DB write)
 				if (updateLastOpened) {
-					await updateLastOpenedAt(userId, chatId, cached)
+					await updateLastOpenedAt(userId, chatId, normalizedSession)
 				}
 
-				return cached
+				return normalizedSession
 			}
 		} catch (err) {
 			log.warn('Redis cache read failed:', err)
@@ -839,8 +872,11 @@ export async function listUserChats(userId: string): Promise<ChatSessionSummary[
 			const redis = getRedisClient()
 			const cached = await redis.get<ChatSessionSummary[]>(getListRedisKey(userId))
 			if (cached) {
+				const normalizedSummaries = cached.map((summary) =>
+					normalizeChatSessionDates(summary)
+				)
 				log.debug(`[redis] Cache hit for chat list of user ${userId}`)
-				return cached
+				return normalizedSummaries
 			}
 		} catch (err) {
 			log.warn('Redis list cache read failed:', err)
@@ -865,17 +901,19 @@ export async function listUserChats(userId: string): Promise<ChatSessionSummary[
 		.orderBy(desc(aiChatSessions.lastOpenedAt))
 		.limit(MAX_CHATS_IN_LIST)
 
-	let summaries: ChatSessionSummary[] = rows.map((row) => ({
-		userId: row.userId,
-		chatId: row.id,
-		title: row.title,
-		messageCount: row.messageCount,
-		lastMessagePreview: row.lastMessagePreview,
-		lastMessageAt: row.lastMessageAt,
-		lastOpenedAt: row.lastOpenedAt,
-		updatedAt: row.updatedAt,
-		createdAt: row.createdAt,
-	}))
+	let summaries: ChatSessionSummary[] = rows.map((row) =>
+		normalizeChatSessionDates({
+			userId: row.userId,
+			chatId: row.id,
+			title: row.title,
+			messageCount: row.messageCount,
+			lastMessagePreview: row.lastMessagePreview,
+			lastMessageAt: row.lastMessageAt,
+			lastOpenedAt: row.lastOpenedAt,
+			updatedAt: row.updatedAt,
+			createdAt: row.createdAt,
+		})
+	)
 
 	// Cleanup empty sessions (keep only the most recent one)
 	const emptyInList = summaries.find((summary) => isEmptySession(summary))

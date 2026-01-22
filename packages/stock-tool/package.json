@@ -1,0 +1,41 @@
+{
+  "name": "@folionote/stock-tool",
+  "version": "0.1.0",
+  "description": "Stock price and trend tools with UI components for FolioNote AI",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./tools": {
+      "types": "./src/tools/index.ts",
+      "default": "./src/tools/index.ts"
+    },
+    "./components": {
+      "types": "./src/components/index.ts",
+      "default": "./src/components/index.ts"
+    },
+    "./types": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ai": "catalog:",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "@folionote/ui": "workspace:*",
+    "react": "catalog:",
+    "recharts": "catalog:"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "@types/react": "19.2.7",
+    "typescript": "catalog:"
+  }
+}

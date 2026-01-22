@@ -20,6 +20,8 @@
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
     "@folionote/storage": "workspace:*",
+    "@folionote/stock-tool": "workspace:*",
+    "@folionote/weather-tool": "workspace:*",
     "@hono/node-server": "^1.19.8",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

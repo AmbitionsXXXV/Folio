@@ -136,7 +136,15 @@ export function ShareContent({ entryData }: ShareContentProps) {
 
 						{/* Content */}
 						<div
-							className="prose prose-lg dark:prose-invert max-w-none"
+							className={cn(
+								'prose prose-lg dark:prose-invert max-w-none',
+								'[&_h1]:scroll-mt-(--folio-nav-height)',
+								'[&_h2]:scroll-mt-(--folio-nav-height)',
+								'[&_h3]:scroll-mt-(--folio-nav-height)',
+								'[&_h4]:scroll-mt-(--folio-nav-height)',
+								'[&_h5]:scroll-mt-(--folio-nav-height)',
+								'[&_h6]:scroll-mt-(--folio-nav-height)'
+							)}
 							ref={contentRef}
 						>
 							{entry.contentJson ? (

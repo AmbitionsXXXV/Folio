@@ -31,6 +31,17 @@ describe('buildKnowledgeChatPrompt', () => {
 		expect(result.wasTruncated).toBe(false)
 	})
 
+	it('includes current date section when provided', () => {
+		const currentDate = '2026-01-21'
+		const result = buildKnowledgeChatPrompt({
+			userPrompt: 'Show AAPL trend',
+			currentDate,
+		})
+
+		expect(result.prompt).toContain('## Current Date')
+		expect(result.prompt).toContain(currentDate)
+	})
+
 	it('includes attached notes in prompt', () => {
 		const attachedNotes = [
 			createNote(
@@ -245,6 +256,14 @@ describe('buildKnowledgeChatSystemPrompt (conversation mode)', () => {
 		expect(result.attachedNotesCount).toBe(0)
 		expect(result.retrievedNotesCount).toBe(0)
 		expect(result.wasTruncated).toBe(false)
+	})
+
+	it('includes current date section when provided', () => {
+		const currentDate = '2026-01-21'
+		const result = buildKnowledgeChatSystemPrompt({ currentDate })
+
+		expect(result.systemPrompt).toContain('## Current Date')
+		expect(result.systemPrompt).toContain(currentDate)
 	})
 
 	it('includes attached notes in system prompt', () => {

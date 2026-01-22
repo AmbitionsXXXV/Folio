@@ -138,7 +138,6 @@ export function CodeBlockShikiView({
 				<div
 					className="code-block-highlighted"
 					contentEditable={false}
-					// biome-ignore lint/security/noDangerouslySetInnerHtml: safe - shiki output
 					dangerouslySetInnerHTML={{ __html: highlightedHtml }}
 				/>
 			) : null}
@@ -203,7 +202,6 @@ export function CodeBlockShikiView({
 								<div
 									className="code-block-highlighted code-block-preview"
 									contentEditable={false}
-									// biome-ignore lint/security/noDangerouslySetInnerHtml: safe - shiki output
 									dangerouslySetInnerHTML={{ __html: previewHtml }}
 								/>
 							) : (

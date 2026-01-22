@@ -297,6 +297,27 @@ Done:
 新增天气与股票工具并在 AI 流式接口按 provider 能力注入。
 Web 端保留 UIMessage parts 渲染工具卡片，并补齐文档与最小单测。
 
+### 2.13 Knowledge Chat 工具卡片 UI 设计
+
+- [x] 新增 WeatherCard / StockCard bento 组件
+- [x] 更新工具卡片渲染以接入新组件
+- [x] 新增 Web 端单测覆盖卡片渲染与格式化
+- [x] 更新 Generative UI 文档说明字段映射
+
+Done:
+新增 bento 风格的 WeatherCard 与 StockCard，并在工具卡片输出状态中复用渲染。
+补齐 Web 端单测与文档说明，确保字段映射与展示一致。
+
+### 2.14 Knowledge Chat Thinking 组件集成
+
+- [x] 在 `apps/web/src/features/knowledge/components/message-bubble.tsx` 用 `Reasoning` 替换 `ThinkingCollapse`。
+- [x] 在 `MessageBubble` 渲染工具调用步骤，使用 `ChainOfThought` 展示状态与参数摘要。
+- [x] 更新 `docs/ai-generative-ui.md` 记录 Thinking 与工具步骤渲染位置。
+
+Done:
+集成 `Reasoning` 到 Knowledge Chat 的 thinking 展示，替换原 `ThinkingCollapse`。
+新增 `ChainOfThought` 工具步骤展示，并补充 Generative UI 文档说明。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

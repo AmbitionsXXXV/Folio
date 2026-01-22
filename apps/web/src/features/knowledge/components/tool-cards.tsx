@@ -1,3 +1,19 @@
+import {
+	StockCard,
+	type StockChangeTone,
+	type StockDataPoint,
+	type StockPriceInput,
+	type StockPriceOutput,
+	StockTrendCard,
+	type StockTrendInput,
+	type StockTrendOutput,
+} from '@folionote/stock-tool'
+import {
+	type TemperatureUnit,
+	WeatherCard,
+	type WeatherToolInput,
+	type WeatherToolOutput,
+} from '@folionote/weather-tool'
 import type { UIMessage } from 'ai'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,51 +23,42 @@ import { cn } from '@/lib/utils'
 // Constants
 // =============================================================================
 
-const TEMPERATURE_UNIT_LABELS = {
+const TEMPERATURE_UNIT_LABELS: Record<TemperatureUnit, string> = {
 	c: '°C',
 	f: '°F',
-} as const
+}
 
-const DEFAULT_TEMPERATURE_UNIT = 'c'
+const DEFAULT_TEMPERATURE_UNIT: TemperatureUnit = 'c'
 const DEFAULT_CURRENCY_FALLBACK = 'USD'
+const WIND_SPEED_UNIT = 'kph'
 const PERCENT_DIVISOR = 100
 const PERCENT_MIN_FRACTION_DIGITS = 2
 const PERCENT_MAX_FRACTION_DIGITS = 2
 const PRICE_MIN_FRACTION_DIGITS = 2
 const PRICE_MAX_FRACTION_DIGITS = 2
+const CHANGE_PERCENT_FLAT_THRESHOLD = 0
+const DATE_RANGE_SEPARATOR = '–'
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+const DATE_PARSE_RADIX = 10
+const MONTH_INDEX_OFFSET = 1
+const MIN_MONTH = 1
+const MAX_MONTH = 12
+const MIN_DAY = 1
+const MAX_DAY = 31
+const DATE_RANGE_TIME_ZONE = 'UTC'
+
+const dateRangeFormatter = new Intl.DateTimeFormat(undefined, {
+	month: 'short',
+	day: 'numeric',
+	year: 'numeric',
+	timeZone: DATE_RANGE_TIME_ZONE,
+})
 
 // =============================================================================
 // Types
 // =============================================================================
 
 type UIMessagePart = NonNullable<UIMessage['parts']>[number]
-
-type TemperatureUnit = keyof typeof TEMPERATURE_UNIT_LABELS
-
-type WeatherToolInput = {
-	location: string
-	unit?: TemperatureUnit
-}
-
-type WeatherToolOutput = {
-	location: string
-	condition: string
-	temperature: number
-	unit: TemperatureUnit
-	humidityPercent: number
-	windKph: number
-}
-
-type StockToolInput = {
-	symbol: string
-}
-
-type StockToolOutput = {
-	symbol: string
-	price: number
-	currency: string
-	changePercent: number
-}
 
 // =============================================================================
 // Type Guards
@@ -63,6 +70,10 @@ export function isDisplayWeatherPart(part: UIMessagePart): boolean {
 
 export function isStockPricePart(part: UIMessagePart): boolean {
 	return part.type === 'tool-getStockPrice'
+}
+
+export function isStockTrendPart(part: UIMessagePart): boolean {
+	return part.type === 'tool-getStockTrend'
 }
 
 // =============================================================================
@@ -116,14 +127,14 @@ function parseWeatherOutput(value: unknown): WeatherToolOutput | null {
 	}
 }
 
-function parseStockInput(value: unknown): StockToolInput | null {
+function parseStockInput(value: unknown): StockPriceInput | null {
 	if (!isRecord(value)) return null
 	const symbol = typeof value.symbol === 'string' ? value.symbol : null
 	if (!symbol) return null
 	return { symbol }
 }
 
-function parseStockOutput(value: unknown): StockToolOutput | null {
+function parseStockOutput(value: unknown): StockPriceOutput | null {
 	if (!isRecord(value)) return null
 	const symbol = typeof value.symbol === 'string' ? value.symbol : null
 	const price = typeof value.price === 'number' ? value.price : null
@@ -140,6 +151,88 @@ function parseStockOutput(value: unknown): StockToolOutput | null {
 		price,
 		currency,
 		changePercent,
+	}
+}
+
+function parseStockTrendInput(value: unknown): StockTrendInput | null {
+	if (!isRecord(value)) return null
+	const symbol = typeof value.symbol === 'string' ? value.symbol : null
+	const startDate = typeof value.startDate === 'string' ? value.startDate : null
+	const endDate = typeof value.endDate === 'string' ? value.endDate : null
+	if (!(symbol && startDate && endDate)) return null
+	return { symbol, startDate, endDate }
+}
+
+function parseStockDataPoint(value: unknown): StockDataPoint | null {
+	if (!isRecord(value)) return null
+	const date = typeof value.date === 'string' ? value.date : null
+	const open = typeof value.open === 'number' ? value.open : null
+	const high = typeof value.high === 'number' ? value.high : null
+	const low = typeof value.low === 'number' ? value.low : null
+	const close = typeof value.close === 'number' ? value.close : null
+	const volume = typeof value.volume === 'number' ? value.volume : null
+
+	if (
+		!date ||
+		open === null ||
+		high === null ||
+		low === null ||
+		close === null ||
+		volume === null
+	) {
+		return null
+	}
+
+	return {
+		date,
+		open,
+		high,
+		low,
+		close,
+		volume,
+	}
+}
+
+function parseStockTrendOutput(value: unknown): StockTrendOutput | null {
+	if (!isRecord(value)) return null
+	const symbol = typeof value.symbol === 'string' ? value.symbol : null
+	const currency = typeof value.currency === 'string' ? value.currency : null
+	const startDate = typeof value.startDate === 'string' ? value.startDate : null
+	const endDate = typeof value.endDate === 'string' ? value.endDate : null
+	const periodChangePercent =
+		typeof value.periodChangePercent === 'number' ? value.periodChangePercent : null
+	const dataPointsRaw = Array.isArray(value.dataPoints) ? value.dataPoints : null
+	const parsedDataPoints = dataPointsRaw
+		? dataPointsRaw.map(parseStockDataPoint)
+		: null
+	const dataPoints = parsedDataPoints
+		? parsedDataPoints.filter((point): point is StockDataPoint => point !== null)
+		: null
+
+	if (
+		[symbol, currency, startDate, endDate].some((value) => !value) ||
+		periodChangePercent === null ||
+		!dataPoints ||
+		dataPoints.length === 0 ||
+		parsedDataPoints?.length !== dataPoints.length
+	) {
+		return null
+	}
+
+	// At this point, we've validated all values are non-null
+	const validSymbol = symbol as string
+	const validCurrency = currency as string
+	const validStartDate = startDate as string
+	const validEndDate = endDate as string
+	const validDataPoints = dataPoints as StockDataPoint[]
+
+	return {
+		symbol: validSymbol,
+		currency: validCurrency,
+		startDate: validStartDate,
+		endDate: validEndDate,
+		periodChangePercent,
+		dataPoints: validDataPoints,
 	}
 }
 
@@ -184,6 +277,42 @@ function formatPercent(value: number): string {
 	return percentFormatter.format(value / PERCENT_DIVISOR)
 }
 
+function parseIsoDate(value: string): Date | null {
+	const match = ISO_DATE_PATTERN.exec(value)
+	if (!match) return null
+
+	const [, yearText, monthText, dayText] = match
+	if (!(yearText && monthText && dayText)) {
+		return null
+	}
+
+	const year = Number.parseInt(yearText, DATE_PARSE_RADIX)
+	const month = Number.parseInt(monthText, DATE_PARSE_RADIX)
+	const day = Number.parseInt(dayText, DATE_PARSE_RADIX)
+
+	if (
+		[year, month, day].some((value) => !Number.isFinite(value)) ||
+		month < MIN_MONTH ||
+		month > MAX_MONTH ||
+		day < MIN_DAY ||
+		day > MAX_DAY
+	) {
+		return null
+	}
+
+	return new Date(Date.UTC(year, month - MONTH_INDEX_OFFSET, day))
+}
+
+function formatDateRange(startDate: string, endDate: string): string {
+	const start = parseIsoDate(startDate)
+	const end = parseIsoDate(endDate)
+	if (!(start && end)) {
+		return `${startDate} ${DATE_RANGE_SEPARATOR} ${endDate}`
+	}
+
+	return `${dateRangeFormatter.format(start)} ${DATE_RANGE_SEPARATOR} ${dateRangeFormatter.format(end)}`
+}
+
 // =============================================================================
 // Shared UI
 // =============================================================================
@@ -200,7 +329,7 @@ const ToolCardContainer = memo(function ToolCardContainer({
 	return (
 		<div
 			className={cn(
-				'rounded-lg border bg-background/60 p-3 text-sm shadow-sm',
+				// 'rounded-lg border bg-background/60 p-3 text-sm shadow-sm',
 				className
 			)}
 		>
@@ -278,41 +407,23 @@ export const WeatherToolCard = memo(function WeatherToolCard({
 	const unitLabel =
 		TEMPERATURE_UNIT_LABELS[output.unit] ??
 		TEMPERATURE_UNIT_LABELS[DEFAULT_TEMPERATURE_UNIT]
+	const temperatureValue = `${output.temperature}${unitLabel}`
+	const humidityValue = `${output.humidityPercent}%`
+	const windValue = `${output.windKph} ${WIND_SPEED_UNIT}`
 
 	return (
 		<ToolCardContainer>
-			<div className="flex items-center justify-between gap-2">
-				<div className="font-medium">{t('knowledge.toolCards.weather.title')}</div>
-				<div className="text-muted-foreground text-xs">{output.location}</div>
-			</div>
-			<div className="mt-2 text-muted-foreground text-xs">{output.condition}</div>
-			<div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.weather.temperature')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{output.temperature}
-						{unitLabel}
-					</span>
-				</div>
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.weather.humidity')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{output.humidityPercent}%
-					</span>
-				</div>
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.weather.wind')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{output.windKph} kph
-					</span>
-				</div>
-			</div>
+			<WeatherCard
+				condition={output.condition}
+				humidityLabel={t('knowledge.toolCards.weather.humidity')}
+				humidityValue={humidityValue}
+				location={output.location}
+				temperatureLabel={t('knowledge.toolCards.weather.temperature')}
+				temperatureValue={temperatureValue}
+				title={t('knowledge.toolCards.weather.title')}
+				windLabel={t('knowledge.toolCards.weather.wind')}
+				windValue={windValue}
+			/>
 		</ToolCardContainer>
 	)
 })
@@ -385,31 +496,122 @@ export const StockToolCard = memo(function StockToolCard({
 
 	const formattedPrice = formatCurrency(output.price, output.currency)
 	const formattedChange = formatPercent(output.changePercent)
-	const changePrefix = output.changePercent > 0 ? '+' : ''
+	let changeTone: StockChangeTone = 'flat'
+	if (output.changePercent > CHANGE_PERCENT_FLAT_THRESHOLD) {
+		changeTone = 'up'
+	} else if (output.changePercent < CHANGE_PERCENT_FLAT_THRESHOLD) {
+		changeTone = 'down'
+	}
+	const changePrefix = changeTone === 'up' ? '+' : ''
+	const changeValue = `${changePrefix}${formattedChange}`
 
 	return (
 		<ToolCardContainer>
-			<div className="flex items-center justify-between gap-2">
-				<div className="font-medium">{t('knowledge.toolCards.stock.title')}</div>
-				<div className="text-muted-foreground text-xs">{output.symbol}</div>
-			</div>
-			<div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.stock.price')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">{formattedPrice}</span>
+			<StockCard
+				changeLabel={t('knowledge.toolCards.stock.change')}
+				changeTone={changeTone}
+				changeValue={changeValue}
+				priceLabel={t('knowledge.toolCards.stock.price')}
+				priceValue={formattedPrice}
+				symbol={output.symbol}
+				title={t('knowledge.toolCards.stock.title')}
+			/>
+		</ToolCardContainer>
+	)
+})
+
+// =============================================================================
+// Stock Trend Tool Card
+// =============================================================================
+
+type StockTrendToolCardProps = {
+	part: UIMessagePart
+}
+
+export const StockTrendToolCard = memo(function StockTrendToolCard({
+	part,
+}: StockTrendToolCardProps) {
+	const { t } = useTranslation()
+	if (part.type !== 'tool-getStockTrend') return null
+	if (!('state' in part)) return null
+	const state = typeof part.state === 'string' ? part.state : null
+	if (!state) return null
+	const input = 'input' in part ? part.input : undefined
+	const outputValue = 'output' in part ? part.output : undefined
+	const errorText =
+		'errorText' in part && typeof part.errorText === 'string'
+			? part.errorText
+			: undefined
+
+	if (state === 'input-available') {
+		const parsedInput = parseStockTrendInput(input)
+		return (
+			<ToolCardContainer>
+				<div className="font-medium">
+					{t('knowledge.toolCards.stockTrend.title')}
 				</div>
-				<div className="font-[tabular-nums]">
-					<span className="text-muted-foreground">
-						{t('knowledge.toolCards.stock.change')}
-					</span>
-					<span className="ml-2 font-medium text-foreground">
-						{changePrefix}
-						{formattedChange}
-					</span>
+				<div className="mt-1 text-muted-foreground text-xs">
+					{t('knowledge.toolCards.stockTrend.loading', {
+						symbol: parsedInput?.symbol ?? '',
+					})}
 				</div>
-			</div>
+			</ToolCardContainer>
+		)
+	}
+
+	if (state === 'output-error') {
+		return (
+			<ToolCardContainer>
+				<div className="font-medium text-destructive">
+					{t('knowledge.toolCards.stockTrend.errorTitle')}
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs">
+					{errorText || t('knowledge.toolCards.stockTrend.errorFallback')}
+				</div>
+			</ToolCardContainer>
+		)
+	}
+
+	if (state !== 'output-available') return null
+
+	const output = parseStockTrendOutput(outputValue)
+	const lastPoint = output?.dataPoints.at(-1)
+	if (!(output && lastPoint)) {
+		return (
+			<ToolCardContainer>
+				<div className="font-medium text-destructive">
+					{t('knowledge.toolCards.stockTrend.errorTitle')}
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs">
+					{t('knowledge.toolCards.stockTrend.errorFallback')}
+				</div>
+			</ToolCardContainer>
+		)
+	}
+
+	const formattedPrice = formatCurrency(lastPoint.close, output.currency)
+	const formattedChange = formatPercent(output.periodChangePercent)
+	let changeTone: StockChangeTone = 'flat'
+	if (output.periodChangePercent > CHANGE_PERCENT_FLAT_THRESHOLD) {
+		changeTone = 'up'
+	} else if (output.periodChangePercent < CHANGE_PERCENT_FLAT_THRESHOLD) {
+		changeTone = 'down'
+	}
+	const changePrefix = changeTone === 'up' ? '+' : ''
+	const changeValue = `${changePrefix}${formattedChange}`
+	const dateRange = formatDateRange(output.startDate, output.endDate)
+
+	return (
+		<ToolCardContainer>
+			<StockTrendCard
+				changeTone={changeTone}
+				currentPrice={formattedPrice}
+				dataPoints={output.dataPoints}
+				dateRange={dateRange}
+				periodChange={changeValue}
+				symbol={output.symbol}
+				title={t('knowledge.toolCards.stockTrend.title')}
+			/>
 		</ToolCardContainer>
 	)
 })
