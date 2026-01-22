@@ -1,15 +1,28 @@
-import { Spinner } from '@folionote/ui/spinner'
+import { CollapsibleContent } from '@folionote/ui/collapsible'
 import { AiBrain01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { memo, useMemo } from 'react'
+import { Fragment, memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+	ChainOfThought,
+	ChainOfThoughtContent,
+	ChainOfThoughtHeader,
+	ChainOfThoughtStep,
+} from '@/components/ai-elements/chain-of-thoughts'
 import {
 	Conversation,
 	ConversationContent,
 	ConversationEmptyState,
 	ConversationScrollButton,
 } from '@/components/ai-elements/conversation'
-import { Message, MessageContent } from '@/components/chat-message'
+import {
+	Reasoning,
+	ReasoningContent,
+	ReasoningTrigger,
+} from '@/components/ai-elements/reasoning'
+import { Shimmer } from '@/components/ai-elements/shimmer'
+import { Message } from '@/components/chat-message'
+import { cn } from '@/lib/utils'
 import type { ChatMessage } from '../types'
 import { MessageBubble } from './message-bubble'
 
@@ -17,19 +30,201 @@ import { MessageBubble } from './message-bubble'
 // Waiting Indicator
 // ============================================================================
 
+const WAITING_SHIMMER_DURATION = 1
+
 const WaitingIndicator = memo(function WaitingIndicator() {
 	const { t } = useTranslation()
 
 	return (
 		<Message from="assistant">
-			<MessageContent>
-				<div className="flex items-center gap-2">
-					<Spinner className="size-4" />
-					<span className="text-muted-foreground text-sm">
-						{t('knowledge.waiting')}
-					</span>
-				</div>
-			</MessageContent>
+			<Reasoning className="mb-0" defaultOpen={false} isStreaming>
+				<ReasoningTrigger
+					getThinkingMessage={() => (
+						<Shimmer duration={WAITING_SHIMMER_DURATION}>
+							{t('knowledge.thinkingInProgress')}
+						</Shimmer>
+					)}
+				/>
+			</Reasoning>
+		</Message>
+	)
+})
+
+// ============================================================================
+// Message Process Components
+// ============================================================================
+
+type ToolMessagePart = NonNullable<ChatMessage['parts']>[number]
+
+const TOOL_TYPE_LABELS: Record<string, string> = {
+	'tool-displayWeather': 'Weather',
+	'tool-getStockPrice': 'Stock Price',
+	'tool-getStockTrend': 'Stock Trend',
+}
+
+const TOOL_INPUT_PAIR_SEPARATOR = ': '
+const TOOL_INPUT_SEPARATOR = ', '
+const TOOL_CALLS_LABEL = 'Tool Calls'
+const TOOL_LABEL_FALLBACK = 'Tool'
+const TOOL_CALLS_FALLBACK_STATE = 'tool'
+
+const REASONING_TOOL_CALLS_CLASSNAME = [
+	'mt-3 space-y-3 text-sm outline-none',
+	'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2',
+	'data-[state=open]:slide-in-from-top-2 data-[state=closed]:animate-out',
+	'data-[state=open]:animate-in',
+].join(' ')
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isToolInvocationPart(
+	part: ToolMessagePart
+): part is ToolMessagePart & { type: string } {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		typeof part.type === 'string' &&
+		part.type.startsWith('tool-')
+	)
+}
+
+function getToolLabel(part: ToolMessagePart): string {
+	if ('toolName' in part && typeof part.toolName === 'string') {
+		return part.toolName
+	}
+	if ('type' in part && typeof part.type === 'string') {
+		return TOOL_TYPE_LABELS[part.type] ?? part.type
+	}
+	return TOOL_LABEL_FALLBACK
+}
+
+function getToolStatus(
+	part: ToolMessagePart,
+	isStreaming: boolean
+): 'complete' | 'active' | 'pending' {
+	const state = 'state' in part && typeof part.state === 'string' ? part.state : null
+	if (state === 'output-available' || state === 'output-error') {
+		return 'complete'
+	}
+	if (state === 'input-available') {
+		return 'active'
+	}
+	return isStreaming ? 'active' : 'pending'
+}
+
+function getToolInputSummary(part: ToolMessagePart): string | undefined {
+	if (!('input' in part)) return undefined
+	const input = part.input
+	if (!isRecord(input)) return undefined
+	const fragments: string[] = []
+	for (const [key, value] of Object.entries(input)) {
+		if (
+			typeof value === 'string' ||
+			typeof value === 'number' ||
+			typeof value === 'boolean'
+		) {
+			fragments.push(`${key}${TOOL_INPUT_PAIR_SEPARATOR}${value}`)
+		}
+	}
+	return fragments.length > 0 ? fragments.join(TOOL_INPUT_SEPARATOR) : undefined
+}
+
+function getToolKey(messageId: string, part: ToolMessagePart): string {
+	const toolState =
+		'state' in part && typeof part.state === 'string'
+			? part.state
+			: TOOL_CALLS_FALLBACK_STATE
+	if ('toolCallId' in part && typeof part.toolCallId === 'string') {
+		return part.toolCallId
+	}
+	return `${messageId}-${part.type}-${toolState}`
+}
+
+type ToolCallStepsProps = {
+	messageId: string
+	isStreaming: boolean
+	toolInvocations: ToolMessagePart[]
+	className?: string
+}
+
+const ToolCallSteps = memo(function ToolCallSteps({
+	messageId,
+	isStreaming,
+	toolInvocations,
+	className,
+}: ToolCallStepsProps) {
+	return (
+		<ChainOfThought className={cn(className)}>
+			<ChainOfThoughtHeader>{TOOL_CALLS_LABEL}</ChainOfThoughtHeader>
+			<ChainOfThoughtContent>
+				{toolInvocations.map((tool) => (
+					<ChainOfThoughtStep
+						description={getToolInputSummary(tool)}
+						key={getToolKey(messageId, tool)}
+						label={getToolLabel(tool)}
+						status={getToolStatus(tool, isStreaming)}
+					/>
+				))}
+			</ChainOfThoughtContent>
+		</ChainOfThought>
+	)
+})
+
+type MessageProcessProps = {
+	message: ChatMessage
+	thinkingEnabled: boolean
+}
+
+const MessageProcess = memo(function MessageProcess({
+	message,
+	thinkingEnabled,
+}: MessageProcessProps) {
+	if (message.role !== 'assistant') return null
+
+	const toolInvocations = (message.parts ?? []).filter(isToolInvocationPart)
+	const hasToolInvocations = toolInvocations.length > 0
+	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
+	const shouldShowReasoning = thinkingEnabled && hasThinking
+	const shouldRenderProcess = shouldShowReasoning || hasToolInvocations
+
+	if (!shouldRenderProcess) {
+		return null
+	}
+
+	const isMessageStreaming = Boolean(message.isStreaming)
+
+	if (shouldShowReasoning) {
+		return (
+			<Message from="assistant">
+				<Reasoning className="mb-0" isStreaming={isMessageStreaming}>
+					<ReasoningTrigger />
+					{hasThinking ? (
+						<ReasoningContent>{message.thinking ?? ''}</ReasoningContent>
+					) : null}
+					{hasToolInvocations ? (
+						<CollapsibleContent className={REASONING_TOOL_CALLS_CLASSNAME}>
+							<ToolCallSteps
+								isStreaming={isMessageStreaming}
+								messageId={message.id}
+								toolInvocations={toolInvocations}
+							/>
+						</CollapsibleContent>
+					) : null}
+				</Reasoning>
+			</Message>
+		)
+	}
+
+	return (
+		<Message from="assistant">
+			<ToolCallSteps
+				isStreaming={isMessageStreaming}
+				messageId={message.id}
+				toolInvocations={toolInvocations}
+			/>
 		</Message>
 	)
 })
@@ -55,12 +250,7 @@ export function MessageList({
 	const showWaiting = useMemo(() => {
 		if (!isPending) return false
 		const hasToolParts = (message: ChatMessage) =>
-			(message.parts ?? []).some(
-				(part) =>
-					'type' in part &&
-					typeof part.type === 'string' &&
-					part.type.startsWith('tool-')
-			)
+			(message.parts ?? []).some(isToolInvocationPart)
 		return !messages.some(
 			(m) =>
 				m.isStreaming &&
@@ -76,11 +266,13 @@ export function MessageList({
 				{hasMessages ? (
 					<>
 						{messages.map((message) => (
-							<MessageBubble
-								key={message.id}
-								message={message}
-								thinkingEnabled={thinkingEnabled}
-							/>
+							<Fragment key={message.id}>
+								<MessageProcess
+									message={message}
+									thinkingEnabled={thinkingEnabled}
+								/>
+								<MessageBubble message={message} />
+							</Fragment>
 						))}
 						{showWaiting ? <WaitingIndicator /> : null}
 					</>

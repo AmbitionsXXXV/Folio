@@ -1,12 +1,4 @@
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@folionote/ui/collapsible'
-import { AiBrain01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { memo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { memo } from 'react'
 import {
 	InlineCitation,
 	InlineCitationCard,
@@ -35,81 +27,6 @@ import {
 	StockTrendToolCard,
 	WeatherToolCard,
 } from './tool-cards'
-
-// ============================================================================
-// Thinking Collapse Component
-// ============================================================================
-
-type ThinkingCollapseProps = {
-	thinking: string
-	isStreaming: boolean
-	isThinkingOnly: boolean
-	reasoningTokens: string | null
-}
-
-const ThinkingCollapse = memo(function ThinkingCollapse({
-	thinking,
-	isStreaming,
-	isThinkingOnly,
-	reasoningTokens,
-}: ThinkingCollapseProps) {
-	const { t } = useTranslation()
-	const [isOpen, setIsOpen] = useState(false)
-
-	const label =
-		isStreaming && isThinkingOnly
-			? t('knowledge.thinkingInProgress')
-			: t('knowledge.viewThinking')
-
-	return (
-		<Collapsible onOpenChange={setIsOpen} open={isOpen}>
-			<CollapsibleTrigger
-				className={cn(
-					'mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5',
-					'bg-muted/50 text-muted-foreground text-xs',
-					'transition-colors hover:bg-muted',
-					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-				)}
-			>
-				<HugeiconsIcon className="size-3.5" icon={AiBrain01Icon} />
-				<span className="flex-1 text-left">{label}</span>
-				{reasoningTokens && !isStreaming ? (
-					<span className="font-[tabular-nums] text-[10px] opacity-60">
-						{reasoningTokens} tokens
-					</span>
-				) : null}
-				<svg
-					aria-hidden="true"
-					className={cn('size-3 transition-transform', isOpen && 'rotate-180')}
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						d="M19 9l-7 7-7-7"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={2}
-					/>
-				</svg>
-			</CollapsibleTrigger>
-			<CollapsibleContent>
-				<div
-					className={cn(
-						'mb-2 rounded-lg bg-muted/30 p-3',
-						'prose prose-sm dark:prose-invert max-w-none text-xs',
-						'border-primary/30 border-l-2',
-						isStreaming && isThinkingOnly && 'streaming-cursor'
-					)}
-				>
-					<MessageResponse isAnimating={isStreaming && isThinkingOnly}>
-						{thinking}
-					</MessageResponse>
-				</div>
-			</CollapsibleContent>
-		</Collapsible>
-	)
-})
 
 // ============================================================================
 // Message Footer Component
@@ -249,27 +166,33 @@ const AssistantMessageContent = memo(
 
 type MessageBubbleProps = {
 	message: ChatMessage
-	thinkingEnabled: boolean
 }
 
 export const MessageBubble = memo(function MessageBubble({
 	message,
-	thinkingEnabled,
 }: MessageBubbleProps) {
 	const isUser = message.role === 'user'
-	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
-	const isThinkingOnly = hasThinking && !message.content
+	const isMessageStreaming = Boolean(message.isStreaming)
+	const hasAssistantContent = message.content.length > 0
+	const messageParts = message.parts ?? []
+	const hasToolCards =
+		!isUser &&
+		messageParts.some(
+			(part) =>
+				isDisplayWeatherPart(part) ||
+				isStockPricePart(part) ||
+				isStockTrendPart(part)
+		)
+	const shouldRenderBubble = isUser || hasAssistantContent || hasToolCards
 
-	// Don't render completely empty streaming messages
-	if (message.isStreaming && !message.content && !message.thinking) {
+	if (!shouldRenderBubble) {
 		return null
 	}
 
 	// Pre-compute derived values
 	const outputTokens = formatTokenCount(message.usage?.outputTokens)
-	const reasoningTokens = formatTokenCount(message.usage?.reasoningTokens)
 	const costDisplay = formatCost(message.usage?.costUSD)
-	const showFooter = !message.isStreaming
+	const showFooter = !isMessageStreaming
 
 	return (
 		<Message from={message.role}>
@@ -281,34 +204,25 @@ export const MessageBubble = memo(function MessageBubble({
 						: 'border bg-card text-card-foreground shadow-sm'
 				)}
 			>
-				{/* Thinking content for assistant messages */}
-				{!isUser && hasThinking && thinkingEnabled ? (
-					<ThinkingCollapse
-						isStreaming={message.isStreaming ?? false}
-						isThinkingOnly={isThinkingOnly}
-						reasoningTokens={reasoningTokens}
-						thinking={message.thinking ?? ''}
-					/>
-				) : null}
-
 				{/* Main content */}
 				{isUser ? (
 					<UserMessageContent
 						content={message.content}
 						mentionTitles={message.mentionTitles}
 					/>
-				) : (
+				) : null}
+				{!isUser && hasAssistantContent ? (
 					<AssistantMessageContent
 						citations={message.citations}
 						content={message.content}
-						isStreaming={message.isStreaming && !isThinkingOnly}
+						isStreaming={isMessageStreaming}
 					/>
-				)}
+				) : null}
 
 				{/* Tool UI cards for assistant messages */}
-				{!isUser && message.parts?.length ? (
+				{!isUser && hasToolCards ? (
 					<div className="mt-2 grid gap-2">
-						{message.parts.map((part) => {
+						{messageParts.map((part) => {
 							const fallbackState =
 								'state' in part && typeof part.state === 'string'
 									? part.state

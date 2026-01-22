@@ -7,7 +7,7 @@ import { cn } from '@folionote/ui/lib/utils'
 import { ArrowDown01Icon, BrainIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { ComponentProps, ReactNode } from 'react'
-import { createContext, memo, useContext, useEffect, useState } from 'react'
+import { createContext, memo, use, useEffect, useState } from 'react'
 import { Streamdown } from 'streamdown'
 import { useUncontrolled } from '@/hooks/use-uncontrolled'
 import { Shimmer } from './shimmer'
@@ -22,7 +22,7 @@ type ReasoningContextValue = {
 const ReasoningContext = createContext<ReasoningContextValue | null>(null)
 
 export const useReasoning = () => {
-	const context = useContext(ReasoningContext)
+	const context = use(ReasoningContext)
 	if (!context) {
 		throw new Error('Reasoning components must be used within Reasoning')
 	}
@@ -94,9 +94,7 @@ export const Reasoning = memo(
 		}
 
 		return (
-			<ReasoningContext.Provider
-				value={{ isStreaming, isOpen, setIsOpen, duration }}
-			>
+			<ReasoningContext value={{ isStreaming, isOpen, setIsOpen, duration }}>
 				<Collapsible
 					className={cn('not-prose mb-4', className)}
 					onOpenChange={handleOpenChange}
@@ -105,7 +103,7 @@ export const Reasoning = memo(
 				>
 					{children}
 				</Collapsible>
-			</ReasoningContext.Provider>
+			</ReasoningContext>
 		)
 	}
 )

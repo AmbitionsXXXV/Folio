@@ -27,7 +27,9 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 
 1. Preserve `UIMessage.parts` in `apps/web/src/hooks/use-knowledge-chat.ts`.
 2. Render tool parts (`tool-displayWeather`, `tool-getStockPrice`, `tool-getStockTrend`) in `apps/web/src/features/knowledge/components/tool-cards.tsx`.
-3. Display tool cards in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
+3. Render reasoning and tool call process rows in `apps/web/src/features/knowledge/components/message-list.tsx` with `Reasoning` and `ChainOfThought` (tool calls are nested under Reasoning when thinking is available).
+4. Display tool cards and main message content in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
+5. Use `Reasoning` for the waiting state in `apps/web/src/features/knowledge/components/message-list.tsx`.
 
 ## Tool Card 组件
 
