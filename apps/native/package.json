@@ -1,6 +1,6 @@
 {
   "name": "native",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --tunnel",

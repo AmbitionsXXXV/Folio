@@ -1,5 +1,17 @@
 # native
 
+## 0.2.14
+
+### Patch Changes
+
+- feat: ✨ integrate Reasoning and ChainOfThought components into Knowledge Chat
+- Updated dependencies
+  - @folionote/locales@0.2.14
+  - @folionote/api@0.2.14
+  - @folionote/constants@0.2.14
+  - @folionote/editor-core@0.2.14
+  - @folionote/utils@0.2.14
+
 ## 0.2.13
 
 ### Patch Changes

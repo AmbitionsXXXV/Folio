@@ -1,5 +1,20 @@
 # @folionote/api
 
+## 0.2.14
+
+### Patch Changes
+
+- feat: ✨ integrate Reasoning and ChainOfThought components into Knowledge Chat
+- Updated dependencies
+  - @folionote/locales@0.2.14
+  - @folionote/ai@0.2.14
+  - @folionote/auth@0.2.14
+  - @folionote/db@0.2.14
+  - @folionote/log@0.1.8
+  - @folionote/model-list@0.1.7
+  - @folionote/storage@0.2.14
+  - @folionote/utils@0.2.14
+
 ## 0.2.13
 
 ### Patch Changes

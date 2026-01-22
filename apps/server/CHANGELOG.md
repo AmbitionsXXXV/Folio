@@ -1,5 +1,21 @@
 # server
 
+## 0.2.14
+
+### Patch Changes
+
+- feat: ✨ integrate Reasoning and ChainOfThought components into Knowledge Chat
+- Updated dependencies
+  - @folionote/weather-tool@0.1.1
+  - @folionote/stock-tool@0.1.1
+  - @folionote/locales@0.2.14
+  - @folionote/ai@0.2.14
+  - @folionote/api@0.2.14
+  - @folionote/auth@0.2.14
+  - @folionote/db@0.2.14
+  - @folionote/log@0.1.8
+  - @folionote/storage@0.2.14
+
 ## 0.2.13
 
 ### Patch Changes

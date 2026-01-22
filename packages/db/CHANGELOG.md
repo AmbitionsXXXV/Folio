@@ -1,5 +1,11 @@
 # @folionote/db
 
+## 0.2.14
+
+### Patch Changes
+
+- feat: ✨ integrate Reasoning and ChainOfThought components into Knowledge Chat
+
 ## 0.2.13
 
 ### Patch Changes
