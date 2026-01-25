@@ -93,6 +93,15 @@ Done:
 更新 `ProviderConfig` 以记录 AI SDK 两种接入方式，并为 Gemini/Qwen 增加可选 baseUrl 选项。
 重构模型工厂与 Web 端模型选择器，覆盖 Gemini native 与 OpenAI compatible 场景（含 embedding 的限制说明）。
 
+### 1.10 DevTools 根目录脚本代理（在 `apps/server` 目录启动）
+
+- [x] 在根目录 `package.json` 增加 `dev:ai-devtools`，在 `apps/server` 目录执行 viewer
+- [x] 保持 `apps/server` 的 `dev:ai-devtools` 作为真实入口，确保 DevTools 捕获目录一致
+
+Done:
+根目录新增 `pnpm dev:ai-devtools`，通过 `pnpm -C apps/server dev:ai-devtools` 在 server 目录启动 viewer。
+避免每次手动 `cd apps/server`，并保持 DevTools 捕获与文档约定一致。
+
 ---
 
 ## Phase 2: BYOK 基础设施（后续实现）
