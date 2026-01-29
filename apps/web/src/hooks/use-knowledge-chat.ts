@@ -232,6 +232,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		error,
 		setMessages: setUIMessages,
 		stop,
+		addToolApprovalResponse,
 	} = useChat({
 		id: chatId,
 		messages: uiInitialMessages,
@@ -354,5 +355,8 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		loadMessages,
 		switchChat,
 		stop,
+
+		// Tool approval
+		addToolApprovalResponse,
 	}
 }

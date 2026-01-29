@@ -101,3 +101,97 @@ vi.mock('@folionote/db', () => ({
 	entries: mockEntries,
 }))
 ```
+
+## Tool Approval（工具确认机制）
+
+AI SDK 6 支持 `needsApproval` 选项，用于标记敏感操作（如删除）需要用户确认后才执行。
+
+### 服务端配置
+
+在工具定义中添加 `needsApproval: true`：
+
+```typescript
+export const deleteNote = tool({
+	description: 'Soft delete a note by ID',
+	strict: true,
+	inputSchema: DeleteNoteInputSchema,
+	needsApproval: true, // 需要用户确认
+	execute: async ({ id }, { experimental_context }) => {
+		// 执行删除逻辑
+	},
+})
+```
+
+当模型调用带有 `needsApproval` 的工具时，流会产生 `tool-approval-request` 事件而非直接执行，工具状态变为 `approval-requested`。
+
+### 客户端处理
+
+1. **暴露 `addToolApprovalResponse`**：从 `useChat` hook 中解构该函数。
+
+```typescript
+const { addToolApprovalResponse } = useChat({ ... })
+```
+
+2. **检测 approval-requested 状态**：在渲染 tool parts 时检查 `part.state === 'approval-requested'`。
+
+```typescript
+function isApprovalRequested(part: ToolMessagePart): boolean {
+	return (
+		'state' in part &&
+		part.state === 'approval-requested' &&
+		'approval' in part &&
+		typeof part.approval === 'object' &&
+		part.approval !== null &&
+		'id' in part.approval
+	)
+}
+```
+
+3. **渲染确认按钮**：为用户提供 Approve / Reject 按钮。
+
+```tsx
+<ToolApprovalButtons
+	approvalId={approval.id}
+	toolName={toolName}
+	input={input}
+	onApprovalResponse={addToolApprovalResponse}
+/>
+```
+
+4. **处理用户响应**：点击按钮时调用 `addToolApprovalResponse`。
+
+```typescript
+// 批准
+await addToolApprovalResponse({ id: approvalId, approved: true })
+
+// 拒绝
+await addToolApprovalResponse({
+	id: approvalId,
+	approved: false,
+	reason: 'User rejected',
+})
+```
+
+### 流程总结
+
+```
+模型请求调用 deleteNote
+    ↓
+服务端检测 needsApproval: true
+    ↓
+发送 tool-approval-request 事件
+    ↓
+客户端渲染确认按钮
+    ↓
+用户点击 Approve / Reject
+    ↓
+调用 addToolApprovalResponse
+    ↓
+服务端执行或取消工具
+```
+
+### 注意事项
+
+- `ToolApprovalHandler` 类型应兼容 AI SDK 的 `ChatAddToolApproveResponseFunction`，返回 `void | PromiseLike<void>`。
+- 破坏性操作（如删除）应在 UI 上额外警示用户。
+- `approval.id` 是服务端生成的唯一标识，必须原样传回。

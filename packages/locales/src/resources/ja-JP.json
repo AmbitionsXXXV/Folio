@@ -882,7 +882,14 @@
     "deleteChatConfirmDescription": "「{{title}}」とメッセージが完全に削除されます。この操作は取り消せません。",
     "deleteChat": "チャットを削除",
     "deleteChatFailed": "チャットの削除に失敗しました",
-    "loadChatFailed": "チャットの読み込みに失敗しました"
+    "loadChatFailed": "チャットの読み込みに失敗しました",
+    "toolApproval": {
+      "title": "{{tool}} は承認が必要です",
+      "description": "このアクションを続行するには許可が必要です。",
+      "destructiveWarning": "これは破壊的なアクションで、元に戻すことはできません。",
+      "approve": "承認",
+      "reject": "拒否"
+    }
   },
   "aiProvider": {
     "title": "AIプロバイダー設定",

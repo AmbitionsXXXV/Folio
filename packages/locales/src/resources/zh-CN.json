@@ -882,7 +882,14 @@
     "deleteChatConfirmDescription": "将永久删除 “{{title}}” 及其消息，删除后将无法恢复。",
     "deleteChat": "删除对话",
     "deleteChatFailed": "删除对话失败",
-    "loadChatFailed": "加载对话失败"
+    "loadChatFailed": "加载对话失败",
+    "toolApproval": {
+      "title": "{{tool}} 需要确认",
+      "description": "此操作需要您的授权才能继续。",
+      "destructiveWarning": "这是一个危险操作，无法撤销。",
+      "approve": "批准",
+      "reject": "拒绝"
+    }
   },
   "aiProvider": {
     "title": "AI 提供商设置",

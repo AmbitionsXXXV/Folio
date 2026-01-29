@@ -116,6 +116,7 @@ function KnowledgePage() {
 		sendMessage,
 		resetChat,
 		switchChat,
+		addToolApprovalResponse,
 	} = useKnowledgeChat({
 		chatId,
 		provider: mapProviderIdToApi(selectedProvider),
@@ -601,6 +602,7 @@ function KnowledgePage() {
 							<MessageList
 								isPending={isPending}
 								messages={messages}
+								onToolApprovalResponse={addToolApprovalResponse}
 								thinkingEnabled={thinkingEnabled}
 							/>
 						)}

@@ -15,6 +15,7 @@ export const deleteNote = tool({
 	description: 'Soft delete a note by ID',
 	strict: true,
 	inputSchema: DeleteNoteInputSchema,
+	needsApproval: true,
 	execute: async (
 		{ id },
 		{ experimental_context, abortSignal }
