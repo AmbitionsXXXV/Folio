@@ -80,3 +80,24 @@ await db.insert(entries).values({
 2. 在 `apps/server/src/services/ai-tools.ts` 合并工具集合。
 3. 在 `apps/server/src/routes/ai-stream.ts` 注入 `experimental_context`。
 4. 在 `packages/ai/src/prompts/knowledge-chat.ts` 补充工具使用提示。
+
+## 单测建议
+
+为 Note Tools 编写单测时，优先使用模块 mock，避免引入真实数据库连接。
+
+- Mock `@folionote/db` 的 `db` 与 `entries`，只保留必要字段。
+- Mock `drizzle-orm` 的 `eq`、`and`、`isNull`、`desc`、`sql`，避免依赖内部实现。
+- 校验 `contentJson` 与 `contentText` 生成逻辑，确保与存储策略一致。
+
+```typescript
+const mockDb = {
+	insert: vi.fn(),
+	update: vi.fn(),
+	select: vi.fn(),
+}
+
+vi.mock('@folionote/db', () => ({
+	db: mockDb,
+	entries: mockEntries,
+}))
+```
