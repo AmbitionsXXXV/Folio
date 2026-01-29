@@ -21,6 +21,7 @@
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
+    "@folionote/note-tool": "workspace:*",
     "@folionote/stock-tool": "workspace:*",
     "@folionote/storage": "workspace:*",
     "@folionote/weather-tool": "workspace:*",

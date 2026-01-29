@@ -476,7 +476,7 @@ function KnowledgePage() {
 	const isPending = isStreaming || isLoading
 
 	return (
-		<div className="flex h-[calc(100dvh-4rem)]">
+		<div className="flex h-svh">
 			{/* Sidebar - Chat History */}
 			<div
 				className={cn(

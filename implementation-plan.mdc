@@ -327,6 +327,18 @@ Done:
 集成 `Reasoning` 到 Knowledge Chat 的 thinking 展示，替换原 `ThinkingCollapse`。
 新增 `ChainOfThought` 工具步骤展示，并补充 Generative UI 文档说明。
 
+### 2.15 Knowledge Chat Note Tools
+
+- [x] 新增 `packages/note-tool` 包，提供 create/update/get/delete/search 工具
+- [x] 更新 `apps/server/src/services/ai-tools.ts` 合并 note tools
+- [x] 更新 `apps/server/src/routes/ai-stream.ts` 传递 experimental_context
+- [x] 更新 `packages/ai/src/prompts/knowledge-chat.ts` 补充工具说明
+- [x] 新增 `docs/ai-tools-development.md` 学习文档
+
+Done:
+新增 note tools 与 AI SDK 6 experimental_context 接入，覆盖创建、更新、删除、查询、搜索。
+补充系统提示与开发文档，形成可复用的工具接入路径。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）
