@@ -811,6 +811,8 @@
     "waiting": "等待中…",
     "requestFailed": "AI 请求失败",
     "send": "发送",
+    "addAttachments": "添加附件…",
+    "attachmentFallback": "已发送附件",
     "notConfigured": "未配置",
     "noApiKeyWarning": "该提供商尚未配置 API 密钥。",
     "goToSettings": "前往设置",
@@ -826,6 +828,9 @@
     "thinkingBuiltIn": "内置深度思考（始终开启）",
     "viewThinking": "查看思考过程",
     "thinkingInProgress": "思考中…",
+    "sourcesUsed_one": "使用了 {{count}} 个来源",
+    "sourcesUsed_other": "使用了 {{count}} 个来源",
+    "toolCalls": "工具调用",
     "scrollToBottom": "滚动到底部",
     "contextUsage": "上下文",
     "contextUsageTooltip": "Token 使用量：{{used}} / {{total}} ({{percent}}%)",
@@ -836,6 +841,35 @@
     "estimatedTokens": "约 {{count}} tokens",
     "image": "图片",
     "attachment": "附件",
+    "messageActions": {
+      "retry": "重试",
+      "copy": "复制"
+    },
+    "attachments": {
+      "errorMaxFiles": "最多可添加 {{count}} 个文件",
+      "errorMaxFileSize": "文件大小超过 {{size}}",
+      "errorInvalidType": "不支持的文件类型"
+    },
+    "tool": {
+      "parameters": "参数",
+      "result": "结果",
+      "error": "错误"
+    },
+    "toolStatus": {
+      "pending": "等待中",
+      "running": "运行中",
+      "awaitingApproval": "等待批准",
+      "responded": "已回应",
+      "completed": "已完成",
+      "error": "错误",
+      "denied": "已拒绝"
+    },
+    "reasoning": {
+      "thinking": "思考中…",
+      "thoughtFewSeconds": "思考了几秒",
+      "thoughtSeconds_one": "思考了 {{count}} 秒",
+      "thoughtSeconds_other": "思考了 {{count}} 秒"
+    },
     "contextUsageComponent": {
       "modelContextUsage": "模型上下文使用",
       "totalCost": "总成本",

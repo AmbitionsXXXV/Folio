@@ -1,4 +1,7 @@
-import { memo } from 'react'
+import { Copy01Icon, RefreshIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { memo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
 	InlineCitation,
 	InlineCitationCard,
@@ -15,7 +18,19 @@ import {
 	InlineCitationSource,
 } from '@/components/ai-elements/inline-citation'
 import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
-import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
+import {
+	Source,
+	Sources,
+	SourcesContent,
+	SourcesTrigger,
+} from '@/components/ai-elements/sources'
+import {
+	Message,
+	MessageAction,
+	MessageActions,
+	MessageContent,
+	MessageResponse,
+} from '@/components/chat-message'
 import { cn } from '@/lib/utils'
 import type { ChatMessage, CitationSource } from '../types'
 import { formatCost, formatTokenCount } from '../utils'
@@ -166,15 +181,20 @@ const AssistantMessageContent = memo(
 
 type MessageBubbleProps = {
 	message: ChatMessage
+	onRegenerate?: () => void
 }
 
 export const MessageBubble = memo(function MessageBubble({
 	message,
+	onRegenerate,
 }: MessageBubbleProps) {
+	const { t } = useTranslation()
 	const isUser = message.role === 'user'
 	const isMessageStreaming = Boolean(message.isStreaming)
 	const hasAssistantContent = message.content.length > 0
 	const messageParts = message.parts ?? []
+	const sources = messageParts.filter(isSourceUrlPart)
+	const hasSources = sources.length > 0
 	const hasToolCards =
 		!isUser &&
 		messageParts.some(
@@ -185,14 +205,25 @@ export const MessageBubble = memo(function MessageBubble({
 		)
 	const shouldRenderBubble = isUser || hasAssistantContent || hasToolCards
 
-	if (!shouldRenderBubble) {
-		return null
-	}
-
 	// Pre-compute derived values
 	const outputTokens = formatTokenCount(message.usage?.outputTokens)
 	const costDisplay = formatCost(message.usage?.costUSD)
 	const showFooter = !isMessageStreaming
+	const showActions = !isUser && hasAssistantContent
+
+	const handleCopy = useCallback(() => {
+		if (!hasAssistantContent) return
+		if (!navigator.clipboard?.writeText) return
+		navigator.clipboard.writeText(message.content)
+	}, [hasAssistantContent, message.content])
+
+	const handleRegenerate = useCallback(() => {
+		onRegenerate?.()
+	}, [onRegenerate])
+
+	if (!shouldRenderBubble) {
+		return null
+	}
 
 	return (
 		<Message from={message.role}>
@@ -204,6 +235,22 @@ export const MessageBubble = memo(function MessageBubble({
 						: 'border bg-card text-card-foreground shadow-sm'
 				)}
 			>
+				{/* Sources */}
+				{!isUser && hasSources ? (
+					<Sources>
+						<SourcesTrigger count={sources.length} />
+						<SourcesContent>
+							{sources.map((source, index) => (
+								<Source
+									href={source.url}
+									key={getSourceKey(message.id, source, index)}
+									title={source.title ?? source.url}
+								/>
+							))}
+						</SourcesContent>
+					</Sources>
+				) : null}
+
 				{/* Main content */}
 				{isUser ? (
 					<UserMessageContent
@@ -256,7 +303,58 @@ export const MessageBubble = memo(function MessageBubble({
 						timestamp={message.timestamp}
 					/>
 				) : null}
+
+				{/* Message actions */}
+				{showActions ? (
+					<MessageActions className="mt-2 justify-end">
+						<MessageAction
+							disabled={!onRegenerate || isMessageStreaming}
+							label={t('knowledge.messageActions.retry')}
+							onClick={handleRegenerate}
+							tooltip={t('knowledge.messageActions.retry')}
+						>
+							<HugeiconsIcon icon={RefreshIcon} size={14} />
+						</MessageAction>
+						<MessageAction
+							disabled={isMessageStreaming}
+							label={t('knowledge.messageActions.copy')}
+							onClick={handleCopy}
+							tooltip={t('knowledge.messageActions.copy')}
+						>
+							<HugeiconsIcon icon={Copy01Icon} size={14} />
+						</MessageAction>
+					</MessageActions>
+				) : null}
 			</MessageContent>
 		</Message>
 	)
 })
+
+type MessagePart = NonNullable<ChatMessage['parts']>[number]
+
+type SourceUrlPart = MessagePart & {
+	type: 'source-url'
+	url: string
+	title?: string
+}
+
+const SOURCE_URL_PART_TYPE = 'source-url'
+
+function isSourceUrlPart(part: MessagePart): part is SourceUrlPart {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		part.type === SOURCE_URL_PART_TYPE &&
+		'url' in part &&
+		typeof part.url === 'string'
+	)
+}
+
+function getSourceKey(
+	messageId: string,
+	source: SourceUrlPart,
+	index: number
+): string {
+	return `${messageId}-source-${source.url}-${index}`
+}

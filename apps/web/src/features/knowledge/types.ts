@@ -1,3 +1,5 @@
+import type { UIMessage } from 'ai'
+
 /** Citation source for AI-generated content */
 export type CitationSource = {
 	/** Unique identifier for the citation */
@@ -12,16 +14,10 @@ export type CitationSource = {
 	quote?: string
 }
 
-import type { UIMessage } from 'ai'
-
 /** Chat message type for the knowledge page */
-export type ChatMessage = {
-	id: string
-	role: 'user' | 'assistant'
+export type ChatMessage = UIMessage & {
 	content: string
 	timestamp: Date
-	/** Raw UIMessage parts for rendering tool UI */
-	parts?: UIMessage['parts']
 	/** Whether this message is currently being streamed */
 	isStreaming?: boolean
 	/** Thinking/reasoning content (for models that support extended thinking) */

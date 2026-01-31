@@ -448,6 +448,9 @@ export function registerAiStreamRoute(app: App) {
 					prefix: 'msg',
 					size: 16,
 				}),
+				// Include sources and reasoning parts for UI rendering
+				sendSources: true,
+				sendReasoning: true,
 				// Attach usage data to message metadata for client consumption
 				messageMetadata: ({ part }) => {
 					// Send usage when generation finishes

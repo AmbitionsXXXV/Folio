@@ -15,7 +15,7 @@
  */
 
 import { type UIMessage, useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { DefaultChatTransport, type FileUIPart } from 'ai'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { getServerUrl } from '@/utils/api-environment'
 
@@ -23,13 +23,9 @@ import { getServerUrl } from '@/utils/api-environment'
 // Types
 // =============================================================================
 
-export type KnowledgeChatMessage = {
-	id: string
-	role: 'user' | 'assistant'
+export type KnowledgeChatMessage = UIMessage & {
 	content: string
 	timestamp: Date
-	/** Raw UIMessage parts for tool rendering */
-	parts?: UIMessage['parts']
 	/** Whether this message is currently being streamed */
 	isStreaming?: boolean
 	/** Thinking/reasoning content (for models that support extended thinking) */
@@ -50,7 +46,7 @@ export type KnowledgeChatConfig = {
 	/** Chat session ID */
 	chatId: string
 	/** Initial messages to load */
-	initialMessages?: KnowledgeChatMessage[]
+	initialMessages?: UIMessage[]
 	/** Provider ID (e.g., 'openai', 'claude') */
 	provider: string
 	/** API key for BYOK */
@@ -68,6 +64,8 @@ export type KnowledgeChatConfig = {
 export type SendMessageOptions = {
 	/** The message text to send */
 	text: string
+	/** Optional file attachments */
+	files?: FileUIPart[]
 	/** Mention titles for display */
 	mentionTitles?: string[]
 	/** Note IDs to attach */
@@ -89,48 +87,24 @@ type MessageMetadata = {
 /**
  * Convert UIMessage to KnowledgeChatMessage for UI rendering
  */
-function uiMessageToKnowledgeMessage(msg: UIMessage): KnowledgeChatMessage {
-	const parts = msg.parts ?? []
-
-	// Extract text content from parts
-	const textPart = parts.find((p) => p.type === 'text')
-	const content = textPart && 'text' in textPart ? textPart.text : ''
-
-	// Extract reasoning/thinking content if present
-	const reasoningPart = msg.parts?.find((p) => p.type === 'reasoning')
-	const thinking =
-		reasoningPart && 'reasoning' in reasoningPart
-			? (reasoningPart as { type: 'reasoning'; reasoning: string }).reasoning
-			: undefined
+function uiMessageToKnowledgeMessage(
+	msg: UIMessage,
+	isStreaming: boolean
+): KnowledgeChatMessage {
+	const content = getTextFromParts(msg.parts)
+	const thinking = getReasoningFromParts(msg.parts)
 
 	// Extract usage from metadata (sent via messageMetadata on server)
 	const metadata = msg.metadata as MessageMetadata | undefined
 	const usage = metadata?.usage
 
 	return {
-		id: msg.id,
-		role: msg.role as 'user' | 'assistant',
+		...msg,
 		content,
 		timestamp: new Date(),
-		parts,
+		isStreaming,
 		thinking,
 		usage,
-	}
-}
-
-/**
- * Convert KnowledgeChatMessage to UIMessage for the API
- */
-function knowledgeMessageToUIMessage(msg: KnowledgeChatMessage): UIMessage {
-	const fallbackParts: UIMessage['parts'] = [
-		{ type: 'text' as const, text: msg.content },
-	]
-	const parts = msg.parts && msg.parts.length > 0 ? msg.parts : fallbackParts
-
-	return {
-		id: msg.id,
-		role: msg.role,
-		parts,
 	}
 }
 
@@ -168,12 +142,6 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 	// State for last chatId returned from server
 	const [serverChatId, setServerChatId] = useState<string>(chatId)
-
-	// Convert initial messages to UIMessage format
-	const uiInitialMessages = useMemo(
-		() => initialMessages.map(knowledgeMessageToUIMessage),
-		[initialMessages]
-	)
 
 	// Create transport with stable reference
 	const transport = useMemo(
@@ -232,17 +200,24 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		error,
 		setMessages: setUIMessages,
 		stop,
+		regenerate,
 		addToolApprovalResponse,
 	} = useChat({
 		id: chatId,
-		messages: uiInitialMessages,
+		messages: initialMessages ?? [],
 		transport,
 	})
 
 	// Convert UIMessages to KnowledgeChatMessages for UI
 	const messages = useMemo<KnowledgeChatMessage[]>(() => {
+		const lastAssistantMessageId = getLastAssistantMessageId(uiMessages)
+
 		return uiMessages.map((msg) => {
-			const base = uiMessageToKnowledgeMessage(msg)
+			const isMessageStreaming =
+				status === 'streaming' &&
+				msg.role === 'assistant' &&
+				msg.id === lastAssistantMessageId
+			const base = uiMessageToKnowledgeMessage(msg, isMessageStreaming)
 
 			// For user messages, look up mentionTitles by content
 			if (msg.role === 'user') {
@@ -254,7 +229,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 			return base
 		})
-	}, [uiMessages])
+	}, [uiMessages, status])
 
 	// Derived states
 	const isStreaming = status === 'streaming'
@@ -263,7 +238,11 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	// Send a message with optional note attachments
 	const sendMessage = useCallback(
 		(options: SendMessageOptions) => {
-			const { text, mentionTitles, noteEntryIds = [] } = options
+			const { text, files = [], mentionTitles, noteEntryIds = [] } = options
+
+			if (!text.trim() && files.length === 0) {
+				return
+			}
 
 			// Store mention titles by message text for later lookup
 			if (mentionTitles && mentionTitles.length > 0) {
@@ -275,7 +254,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 				noteEntryIds.length > 0 ? noteEntryIds : defaultNoteEntryIds
 
 			// Send via useChat
-			aiSendMessage({ text })
+			aiSendMessage({ text, files })
 		},
 		[aiSendMessage, defaultNoteEntryIds]
 	)
@@ -358,5 +337,74 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 		// Tool approval
 		addToolApprovalResponse,
+
+		// Regenerate
+		regenerate,
 	}
+}
+
+type MessagePart = NonNullable<UIMessage['parts']>[number]
+
+type TextPart = MessagePart & { type: 'text'; text: string }
+
+type ReasoningPart = MessagePart & {
+	type: 'reasoning'
+	text?: string
+	reasoning?: string
+}
+
+function getLastAssistantMessageId(messages: UIMessage[]): string | undefined {
+	for (let index = messages.length - 1; index >= 0; index -= 1) {
+		const message = messages[index]
+		if (message?.role === 'assistant') {
+			return message.id
+		}
+	}
+	return undefined
+}
+
+function getTextFromParts(parts: UIMessage['parts']): string {
+	if (!parts) return ''
+	const fragments: string[] = []
+	for (const part of parts) {
+		if (isTextPart(part)) {
+			fragments.push(part.text)
+		}
+	}
+	return fragments.join('')
+}
+
+function getReasoningFromParts(parts: UIMessage['parts']): string | undefined {
+	if (!parts) return undefined
+	for (const part of parts) {
+		if (isReasoningPart(part)) {
+			if (typeof part.text === 'string') {
+				return part.text
+			}
+			if (typeof part.reasoning === 'string') {
+				return part.reasoning
+			}
+		}
+	}
+	return undefined
+}
+
+function isTextPart(part: MessagePart): part is TextPart {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		part.type === 'text' &&
+		'text' in part &&
+		typeof part.text === 'string'
+	)
+}
+
+function isReasoningPart(part: MessagePart): part is ReasoningPart {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		part.type === 'reasoning'
+	)
 }

@@ -1,6 +1,12 @@
+import { Badge } from '@folionote/ui/badge'
 import { Button } from '@folionote/ui/button'
 import { cn } from '@folionote/ui/lib/utils'
-import { Cancel01Icon, Delete02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import {
+	Alert02Icon,
+	Cancel01Icon,
+	Delete02Icon,
+	Tick02Icon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { ComponentProps } from 'react'
 import { memo, useCallback } from 'react'
@@ -123,6 +129,10 @@ export const ToolApprovalButtons = memo(function ToolApprovalButtons({
 					{inputSummary ? (
 						<p className="text-muted-foreground text-xs">{inputSummary}</p>
 					) : null}
+					<Badge className="mt-1 w-fit gap-1 text-xs" variant="secondary">
+						<HugeiconsIcon icon={Alert02Icon} size={12} />
+						{t('knowledge.toolStatus.awaitingApproval')}
+					</Badge>
 					<p className="text-muted-foreground text-xs">
 						{isDestructive
 							? t('knowledge.toolApproval.destructiveWarning')

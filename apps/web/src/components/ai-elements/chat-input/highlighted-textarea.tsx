@@ -1,11 +1,17 @@
 import { cn } from '@folionote/ui/lib/utils'
-import type { KeyboardEvent, ReactNode, RefObject } from 'react'
+import type {
+	ClipboardEventHandler,
+	KeyboardEvent,
+	ReactNode,
+	RefObject,
+} from 'react'
 import { useRef } from 'react'
 
 export type HighlightedTextareaProps = {
 	value: string
 	onChange: (value: string) => void
 	onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void
+	onPaste?: ClipboardEventHandler<HTMLTextAreaElement>
 	disabled?: boolean
 	placeholder?: string
 	name?: string
@@ -19,6 +25,7 @@ export function HighlightedTextarea({
 	value,
 	onChange,
 	onKeyDown,
+	onPaste,
 	disabled,
 	placeholder,
 	name,
@@ -55,6 +62,7 @@ export function HighlightedTextarea({
 				name={name}
 				onChange={(e) => onChange(e.target.value)}
 				onKeyDown={onKeyDown}
+				onPaste={onPaste}
 				onScroll={handleScroll}
 				placeholder={placeholder}
 				ref={textareaRef}

@@ -8,6 +8,7 @@ import { ArrowDown01Icon, BrainIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { ComponentProps, ReactNode } from 'react'
 import { createContext, memo, use, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Streamdown } from 'streamdown'
 import { useUncontrolled } from '@/hooks/use-uncontrolled'
 import { Shimmer } from './shimmer'
@@ -76,9 +77,19 @@ export const Reasoning = memo(
 			}
 		}, [isStreaming, startTime, setDuration])
 
+		// Auto-open when streaming starts
+		useEffect(() => {
+			if (isStreaming) {
+				setHasAutoClosed(false)
+				if (!isOpen) {
+					setIsOpen(true)
+				}
+			}
+		}, [isStreaming, isOpen, setIsOpen])
+
 		// Auto-open when streaming starts, auto-close when streaming ends (once only)
 		useEffect(() => {
-			if (defaultOpen && !isStreaming && isOpen && !hasAutoClosed) {
+			if (!isStreaming && isOpen && !hasAutoClosed) {
 				// Add a small delay before closing to allow user to see the content
 				const timer = setTimeout(() => {
 					setIsOpen(false)
@@ -112,24 +123,14 @@ export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger> & 
 	getThinkingMessage?: (isStreaming: boolean, duration?: number) => ReactNode
 }
 
-const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
-	if (isStreaming || duration === 0) {
-		return <Shimmer duration={1}>Thinking...</Shimmer>
-	}
-	if (duration === undefined) {
-		return <p>Thought for a few seconds</p>
-	}
-	return <p>Thought for {duration} seconds</p>
-}
-
 export const ReasoningTrigger = memo(
-	({
-		className,
-		children,
-		getThinkingMessage = defaultGetThinkingMessage,
-		...props
-	}: ReasoningTriggerProps) => {
+	({ className, children, getThinkingMessage, ...props }: ReasoningTriggerProps) => {
+		const { t } = useTranslation()
 		const { isStreaming, isOpen, duration } = useReasoning()
+		const fallbackMessage =
+			getThinkingMessage ??
+			((streaming: boolean, reasoningDuration?: number) =>
+				defaultGetThinkingMessage(t, streaming, reasoningDuration))
 
 		return (
 			<CollapsibleTrigger
@@ -142,7 +143,7 @@ export const ReasoningTrigger = memo(
 				{children ?? (
 					<>
 						<HugeiconsIcon className="size-4" icon={BrainIcon} />
-						{getThinkingMessage(isStreaming, duration)}
+						{fallbackMessage(isStreaming, duration)}
 						<HugeiconsIcon
 							className={cn(
 								'size-4 transition-transform',
@@ -179,3 +180,23 @@ export const ReasoningContent = memo(
 Reasoning.displayName = 'Reasoning'
 ReasoningTrigger.displayName = 'ReasoningTrigger'
 ReasoningContent.displayName = 'ReasoningContent'
+
+function defaultGetThinkingMessage(
+	t: (key: string, options?: Record<string, number>) => string,
+	isStreaming: boolean,
+	duration?: number
+): ReactNode {
+	if (isStreaming || duration === 0) {
+		return <Shimmer duration={1}>{t('knowledge.reasoning.thinking')}</Shimmer>
+	}
+	if (duration === undefined) {
+		return <p>{t('knowledge.reasoning.thoughtFewSeconds')}</p>
+	}
+	return (
+		<p>
+			{t('knowledge.reasoning.thoughtSeconds', {
+				count: duration,
+			})}
+		</p>
+	)
+}

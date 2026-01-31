@@ -811,6 +811,8 @@
     "waiting": "待機中…",
     "requestFailed": "AIリクエストが失敗しました",
     "send": "送信",
+    "addAttachments": "添付を追加…",
+    "attachmentFallback": "添付ファイルを送信しました",
     "notConfigured": "未設定",
     "noApiKeyWarning": "このプロバイダーにはAPIキーが設定されていません。",
     "goToSettings": "設定へ移動",
@@ -826,6 +828,9 @@
     "thinkingBuiltIn": "拡張思考が内蔵（常時オン）",
     "viewThinking": "思考プロセスを表示",
     "thinkingInProgress": "考え中…",
+    "sourcesUsed_one": "参照元 {{count}} 件",
+    "sourcesUsed_other": "参照元 {{count}} 件",
+    "toolCalls": "ツール呼び出し",
     "scrollToBottom": "最下部へスクロール",
     "contextUsage": "コンテキスト",
     "contextUsageTooltip": "トークン使用量：{{used}} / {{total}} ({{percent}}%)",
@@ -836,6 +841,35 @@
     "estimatedTokens": "約 {{count}} トークン",
     "image": "画像",
     "attachment": "添付ファイル",
+    "messageActions": {
+      "retry": "再試行",
+      "copy": "コピー"
+    },
+    "attachments": {
+      "errorMaxFiles": "最大 {{count}} 件まで添付できます",
+      "errorMaxFileSize": "{{size}} を超えるファイルは添付できません",
+      "errorInvalidType": "未対応のファイル形式です"
+    },
+    "tool": {
+      "parameters": "パラメータ",
+      "result": "結果",
+      "error": "エラー"
+    },
+    "toolStatus": {
+      "pending": "待機中",
+      "running": "実行中",
+      "awaitingApproval": "承認待ち",
+      "responded": "応答済み",
+      "completed": "完了",
+      "error": "エラー",
+      "denied": "拒否"
+    },
+    "reasoning": {
+      "thinking": "思考中…",
+      "thoughtFewSeconds": "数秒間考えました",
+      "thoughtSeconds_one": "{{count}} 秒考えました",
+      "thoughtSeconds_other": "{{count}} 秒考えました"
+    },
     "contextUsageComponent": {
       "modelContextUsage": "モデルのコンテキスト使用",
       "totalCost": "総コスト",

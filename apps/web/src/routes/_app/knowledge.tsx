@@ -28,6 +28,7 @@ import {
 	ChatInput,
 	type SessionUsage,
 } from '@/components/ai-elements/chat-input'
+import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
 import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import {
 	ChatHistoryPanel,
@@ -116,6 +117,7 @@ function KnowledgePage() {
 		sendMessage,
 		resetChat,
 		switchChat,
+		regenerate,
 		addToolApprovalResponse,
 	} = useKnowledgeChat({
 		chatId,
@@ -127,21 +129,7 @@ function KnowledgePage() {
 	})
 
 	// Convert KnowledgeChatMessage to ChatMessage for existing UI components
-	const messages = useMemo<ChatMessage[]>(
-		() =>
-			chatMessages.map((msg) => ({
-				id: msg.id,
-				role: msg.role,
-				content: msg.content,
-				timestamp: msg.timestamp,
-				parts: msg.parts,
-				isStreaming: msg.isStreaming,
-				thinking: msg.thinking,
-				usage: msg.usage,
-				mentionTitles: msg.mentionTitles,
-			})),
-		[chatMessages]
-	)
+	const messages = useMemo<ChatMessage[]>(() => chatMessages, [chatMessages])
 
 	// Update local chatId when server returns one
 	useEffect(() => {
@@ -358,52 +346,61 @@ function KnowledgePage() {
 	// State for context exceeded dialog
 	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
 
-	const handleSendMessage = useCallback(() => {
-		const trimmedInput = inputValue.trim()
-		if (!trimmedInput || isStreaming) return
+	const handleSendMessage = useCallback(
+		(message: PromptInputMessage) => {
+			const trimmedInput = message.text.trim()
+			const hasFiles = message.files.length > 0
+			const hasContent = trimmedInput.length > 0 || hasFiles
+			if (!hasContent || isStreaming) return
 
-		if (!isApiSupportedProvider(selectedProvider)) {
-			toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
-			return
-		}
+			if (!isApiSupportedProvider(selectedProvider)) {
+				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
+				return
+			}
 
-		// Check if context would be exceeded with new message
-		const newMessageTokens = estimateTokenCount(trimmedInput)
-		const projectedUsage = contextUsage.used + newMessageTokens
-		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-		const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
+			const fallbackText = t('knowledge.attachmentFallback')
+			const promptText = trimmedInput || fallbackText
 
-		if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
-			setShowContextExceededDialog(true)
-			return
-		}
+			// Check if context would be exceeded with new message
+			const newMessageTokens = estimateTokenCount(promptText)
+			const projectedUsage = contextUsage.used + newMessageTokens
+			const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+			const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
 
-		// Capture note IDs and mention titles before clearing
-		const noteEntryIds = attachedNotes.map((n) => n.id)
-		const mentionTitles =
-			attachedNotes.length > 0
-				? attachedNotes.map((n) => n.title).filter(Boolean)
-				: undefined
+			if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
+				setShowContextExceededDialog(true)
+				return
+			}
 
-		// Clear input and attachments
-		setInputValue('')
-		setAttachedNotes([])
+			// Capture note IDs and mention titles before clearing
+			const noteEntryIds = attachedNotes.map((n) => n.id)
+			const mentionTitles =
+				attachedNotes.length > 0
+					? attachedNotes.map((n) => n.title).filter(Boolean)
+					: undefined
 
-		// Send message via AI SDK useChat
-		sendMessage({
-			text: trimmedInput,
-			mentionTitles,
-			noteEntryIds,
-		})
-	}, [
-		inputValue,
-		isStreaming,
-		selectedProvider,
-		attachedNotes,
-		contextUsage,
-		selectedModelInfo,
-		sendMessage,
-	])
+			// Clear input and attachments
+			setInputValue('')
+			setAttachedNotes([])
+
+			// Send message via AI SDK useChat
+			sendMessage({
+				text: promptText,
+				files: message.files,
+				mentionTitles,
+				noteEntryIds,
+			})
+		},
+		[
+			isStreaming,
+			selectedProvider,
+			attachedNotes,
+			contextUsage,
+			selectedModelInfo,
+			sendMessage,
+			t,
+		]
+	)
 
 	const handleNewChat = useCallback(async () => {
 		// If current session is already empty, don't create a new one
@@ -602,6 +599,7 @@ function KnowledgePage() {
 							<MessageList
 								isPending={isPending}
 								messages={messages}
+								onRegenerate={regenerate}
 								onToolApprovalResponse={addToolApprovalResponse}
 								thinkingEnabled={thinkingEnabled}
 							/>
