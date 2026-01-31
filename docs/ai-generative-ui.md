@@ -36,6 +36,14 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 8. Add message actions (retry, copy) in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
 9. Use `Loader` in `apps/web/src/components/ai-elements/loader.tsx` for streaming feedback in `message-list.tsx`.
 
+## UI 交互与可访问性
+
+- 消息气泡进入时使用 `animate-in` 相关类，并同步添加 `motion-reduce:animate-none`，确保减少动态效果时不触发动画。
+- 流式回复容器设置 `aria-live="polite"` 与 `aria-busy`，避免无状态更新导致的朗读噪音。
+- 等待态 shimmer 通过 `duration` 与 `spread` 控制节奏，避免过快闪烁。
+- 空状态图标使用 `animate-float`（定义在 `apps/web/src/styles/animate.css`），并加上 `motion-reduce:animate-none`。
+- 输入区容器通过 `focus-within:ring-2 focus-within:ring-primary/20` 提示焦点状态。
+
 ## Attachments
 
 1. 文件附件由 `apps/web/src/components/ai-elements/prompt-input.tsx` 处理，`ChatInput` 通过 `PromptInputActionAddAttachments` 添加文件。

@@ -135,7 +135,7 @@ export const ReasoningTrigger = memo(
 		return (
 			<CollapsibleTrigger
 				className={cn(
-					'flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground',
+					'flex w-full items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground motion-reduce:transition-none',
 					className
 				)}
 				{...props}
@@ -146,7 +146,7 @@ export const ReasoningTrigger = memo(
 						{fallbackMessage(isStreaming, duration)}
 						<HugeiconsIcon
 							className={cn(
-								'size-4 transition-transform',
+								'size-4 transition-transform motion-reduce:transition-none',
 								isOpen ? 'rotate-180' : 'rotate-0'
 							)}
 							icon={ArrowDown01Icon}
@@ -168,6 +168,7 @@ export const ReasoningContent = memo(
 			className={cn(
 				'mt-4 text-sm',
 				'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in',
+				'motion-reduce:animate-none motion-reduce:transition-none',
 				className
 			)}
 			{...props}

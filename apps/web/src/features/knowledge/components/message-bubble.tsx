@@ -64,7 +64,7 @@ const MessageFooter = memo(function MessageFooter({
 		<div
 			className={cn(
 				'mt-1 flex items-center gap-2 font-[tabular-nums] text-[10px]',
-				isUser ? 'text-primary' : 'text-foreground'
+				isUser ? 'text-primary-foreground/80' : 'text-muted-foreground'
 			)}
 		>
 			<span>{timestamp.toLocaleTimeString()}</span>
@@ -159,8 +159,10 @@ const AssistantMessageContent = memo(
 
 		return (
 			<div
+				aria-busy={isStreaming}
+				aria-live={isStreaming ? 'polite' : 'off'}
 				className={cn(
-					'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm',
+					'streamdown-content prose prose-sm dark:prose-invert max-w-none text-sm motion-reduce:animate-none',
 					isStreaming && 'streaming-cursor'
 				)}
 			>
@@ -229,10 +231,12 @@ export const MessageBubble = memo(function MessageBubble({
 		<Message from={message.role}>
 			<MessageContent
 				className={cn(
-					'max-w-[85%] rounded-2xl px-4 py-2',
+					'max-w-[85%] rounded-2xl px-4 py-2 shadow-sm',
+					'fade-in-0 slide-in-from-bottom-2 animate-in duration-200 ease-out',
+					'motion-reduce:animate-none motion-reduce:transition-none',
 					isUser
-						? 'bg-primary text-primary-foreground'
-						: 'border bg-card text-card-foreground shadow-sm'
+						? 'bg-primary/90 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+						: 'border border-border/60 bg-card/80 text-card-foreground backdrop-blur-sm'
 				)}
 			>
 				{/* Sources */}
@@ -308,6 +312,7 @@ export const MessageBubble = memo(function MessageBubble({
 				{showActions ? (
 					<MessageActions className="mt-2 justify-end">
 						<MessageAction
+							className="transition-colors duration-200 hover:bg-accent/80 motion-reduce:transition-none"
 							disabled={!onRegenerate || isMessageStreaming}
 							label={t('knowledge.messageActions.retry')}
 							onClick={handleRegenerate}
@@ -316,6 +321,7 @@ export const MessageBubble = memo(function MessageBubble({
 							<HugeiconsIcon icon={RefreshIcon} size={14} />
 						</MessageAction>
 						<MessageAction
+							className="transition-colors duration-200 hover:bg-accent/80 motion-reduce:transition-none"
 							disabled={isMessageStreaming}
 							label={t('knowledge.messageActions.copy')}
 							onClick={handleCopy}

@@ -47,7 +47,8 @@ import {
 // Waiting Indicator
 // ============================================================================
 
-const WAITING_SHIMMER_DURATION = 1
+const WAITING_SHIMMER_DURATION = 1.4
+const WAITING_SHIMMER_SPREAD = 3
 const WAITING_LOADER_SIZE = 14
 
 const WaitingIndicator = memo(function WaitingIndicator() {
@@ -55,12 +56,19 @@ const WaitingIndicator = memo(function WaitingIndicator() {
 
 	return (
 		<Message from="assistant">
-			<Reasoning className="mb-0" defaultOpen={false} isStreaming>
+			<Reasoning
+				className="fade-in-0 slide-in-from-bottom-2 mb-0 animate-in duration-200 motion-reduce:animate-none"
+				defaultOpen={false}
+				isStreaming
+			>
 				<ReasoningTrigger
 					getThinkingMessage={() => (
 						<span className="flex items-center gap-2">
 							<Loader size={WAITING_LOADER_SIZE} />
-							<Shimmer duration={WAITING_SHIMMER_DURATION}>
+							<Shimmer
+								duration={WAITING_SHIMMER_DURATION}
+								spread={WAITING_SHIMMER_SPREAD}
+							>
 								{t('knowledge.thinkingInProgress')}
 							</Shimmer>
 						</span>
@@ -97,7 +105,8 @@ const REASONING_TOOL_CALLS_CLASSNAME = [
 	'mt-3 space-y-3 text-sm outline-none',
 	'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2',
 	'data-[state=open]:slide-in-from-top-2 data-[state=closed]:animate-out',
-	'data-[state=open]:animate-in',
+	'data-[state=open]:animate-in duration-200 ease-out',
+	'motion-reduce:transition-none motion-reduce:animate-none',
 ].join(' ')
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -430,6 +439,7 @@ const MessageProcess = memo(function MessageProcess({
 	return (
 		<Message from="assistant">
 			<ToolCallSteps
+				className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
 				isStreaming={isMessageStreaming}
 				messageId={message.id}
 				onToolApprovalResponse={onToolApprovalResponse}

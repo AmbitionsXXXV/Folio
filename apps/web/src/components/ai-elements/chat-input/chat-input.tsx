@@ -185,10 +185,15 @@ function ChatInputSubmit({
 	const hasAttachments = attachments.files.length > 0
 	const hasMessage = Boolean(value.trim())
 	const canSend = !disabled && hasApiKey && (hasMessage || hasAttachments)
+	const submitClassName = cn(
+		'transition-colors duration-200 motion-reduce:transition-none',
+		isPending ? 'animate-pulse motion-reduce:animate-none' : 'hover:bg-primary/90'
+	)
 
 	return (
 		<PromptInputSubmit
 			aria-label={t('knowledge.send')}
+			className={submitClassName}
 			disabled={!canSend}
 			status={isPending ? 'submitted' : 'ready'}
 		/>
@@ -302,7 +307,10 @@ export function ChatInput({
 	return (
 		<PromptInput
 			accept={FILE_ATTACHMENT_ACCEPT}
-			className={className}
+			className={cn(
+				'rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none',
+				className
+			)}
 			globalDrop
 			maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
 			maxFiles={FILE_ATTACHMENT_MAX_FILES}
@@ -353,7 +361,7 @@ export function ChatInput({
 					<AiModelSelector
 						catalogModels={catalogModels}
 						catalogProviders={catalogProviders}
-						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none hover:bg-accent"
+						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
 						disabled={isDisabled || !hasApiKey}
 						onValueChange={onModelChange}
 						placeholder={t('knowledge.selectModel')}
@@ -370,7 +378,9 @@ export function ChatInput({
 									'relative inline-flex size-8 items-center justify-center rounded-lg',
 									'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
 									'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-									(hasToggleableReasoning ? thinkingEnabled : true) && 'text-primary'
+									'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
+									(hasToggleableReasoning ? thinkingEnabled : true) &&
+										'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
 								)}
 								disabled={!hasToggleableReasoning}
 								onClick={() =>

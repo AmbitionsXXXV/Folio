@@ -76,7 +76,7 @@ export const ChainOfThoughtHeader = memo(
 			<Collapsible onOpenChange={setIsOpen} open={isOpen}>
 				<CollapsibleTrigger
 					className={cn(
-						'flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground',
+						'flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground motion-reduce:transition-none',
 						className
 					)}
 					{...props}
@@ -85,7 +85,7 @@ export const ChainOfThoughtHeader = memo(
 					<span className="flex-1 text-left">{children ?? 'Chain of Thought'}</span>
 					<HugeiconsIcon
 						className={cn(
-							'size-4 transition-transform',
+							'size-4 transition-transform motion-reduce:transition-none',
 							isOpen ? 'rotate-180' : 'rotate-0'
 						)}
 						icon={ArrowDown01Icon}
@@ -124,7 +124,7 @@ export const ChainOfThoughtStep = memo(
 				className={cn(
 					'flex gap-2 text-sm',
 					statusStyles[status],
-					'fade-in-0 slide-in-from-top-2 animate-in',
+					'fade-in-0 slide-in-from-top-2 animate-in motion-reduce:animate-none motion-reduce:transition-none',
 					className
 				)}
 				{...props}
@@ -179,6 +179,7 @@ export const ChainOfThoughtContent = memo(
 					className={cn(
 						'mt-2 space-y-3',
 						'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in',
+						'motion-reduce:animate-none motion-reduce:transition-none',
 						className
 					)}
 					{...props}
