@@ -1,6 +1,6 @@
 {
   "name": "@folionote/log",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Cross-platform logging utility with color support for server environments",
   "type": "module",
   "exports": {

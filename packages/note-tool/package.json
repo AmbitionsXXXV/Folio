@@ -1,6 +1,6 @@
 {
   "name": "@folionote/note-tool",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Note CRUD and search tools for FolioNote AI",
   "type": "module",
   "exports": {

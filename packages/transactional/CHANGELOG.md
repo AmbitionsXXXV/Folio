@@ -1,5 +1,11 @@
 # @folionote/transactional
 
+## 0.2.15
+
+### Patch Changes
+
+- feat: ✨ implement ChatInputEditor with mention support
+
 ## 0.2.14
 
 ### Patch Changes
