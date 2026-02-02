@@ -101,11 +101,11 @@ const ChatItem = memo(function ChatItem({
 		<div
 			aria-selected={isSelected}
 			className={cn(
-				'group relative flex cursor-pointer flex-col gap-1 rounded-lg px-3 py-2',
-				'transition-colors duration-150',
+				'group relative flex cursor-pointer flex-col gap-1 rounded-lg border-transparent border-l-2 px-3 py-2',
+				'transition-colors duration-200 motion-reduce:transition-none',
 				'hover:bg-muted/60',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-				isSelected && 'bg-muted'
+				isSelected && 'border-primary bg-muted'
 			)}
 			onClick={onSelect}
 			onKeyDown={handleKeyDown}
@@ -130,17 +130,19 @@ const ChatItem = memo(function ChatItem({
 				</span>
 
 				{/* Delete button (visible on hover) */}
-				{(isHovered || isSelected) && (
-					<Button
-						aria-label={t('knowledge.deleteChat')}
-						className="size-5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-						onClick={handleDelete}
-						size="icon"
-						variant="ghost"
-					>
-						<HugeiconsIcon className="size-3.5" icon={Delete02Icon} />
-					</Button>
-				)}
+				<Button
+					aria-label={t('knowledge.deleteChat')}
+					className={cn(
+						'size-5 shrink-0 transition-opacity duration-200 motion-reduce:transition-none',
+						isHovered || isSelected ? 'opacity-100' : 'pointer-events-none opacity-0'
+					)}
+					onClick={handleDelete}
+					size="icon"
+					tabIndex={isHovered || isSelected ? 0 : -1}
+					variant="ghost"
+				>
+					<HugeiconsIcon className="size-3.5" icon={Delete02Icon} />
+				</Button>
 			</div>
 
 			{/* Preview row */}
@@ -191,7 +193,7 @@ function EmptyState({ onNewChat }: { onNewChat: () => void }) {
 	const { t } = useTranslation()
 
 	return (
-		<div className="flex flex-col items-center justify-center gap-3 p-6 text-center">
+		<div className="fade-in-0 flex animate-in flex-col items-center justify-center gap-3 rounded-xl border border-muted-foreground/20 border-dashed bg-muted/10 p-6 text-center duration-200 motion-reduce:animate-none">
 			<HugeiconsIcon
 				className="size-10 text-muted-foreground/40"
 				icon={MessageMultiple01Icon}
@@ -285,7 +287,7 @@ export const ChatHistoryPanel = memo(function ChatHistoryPanel({
 	return (
 		<div className={cn('flex h-full flex-col border-r bg-background', className)}>
 			{/* Header */}
-			<div className="flex items-center justify-between border-b px-4 py-3">
+			<div className="flex items-center justify-between border-b bg-background/80 px-4 py-3 backdrop-blur-sm">
 				<h2 className="font-semibold text-sm">{t('knowledge.chatHistory')}</h2>
 				<Button
 					aria-label={t('knowledge.newChat')}

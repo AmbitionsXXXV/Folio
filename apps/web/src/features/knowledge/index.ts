@@ -1,5 +1,6 @@
 // Types
 
+export type { ToolApprovalHandler } from './components'
 // Components
 export {
 	ChatHistoryPanel,

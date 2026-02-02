@@ -19,7 +19,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { nanoid } from 'nanoid'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -28,7 +28,7 @@ import {
 	ChatInput,
 	type SessionUsage,
 } from '@/components/ai-elements/chat-input'
-import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
+import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
 import {
 	ChatHistoryPanel,
 	type ChatMessage,
@@ -47,7 +47,6 @@ import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { cn } from '@/lib/utils'
-import type { Entry } from '@/types'
 
 export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
@@ -91,14 +90,12 @@ function KnowledgePage() {
 
 	// Input state
 	const [inputValue, setInputValue] = useState('')
-	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
 	// Thinking/reasoning toggle state
 	const [thinkingEnabled, setThinkingEnabled] = useState(false)
 
 	// Attached notes state
 	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
-	const entryPickerRef = useRef<EntryPickerRef>(null)
 
 	// Provider config for API key
 	const providerConfig = useMemo(
@@ -116,6 +113,8 @@ function KnowledgePage() {
 		sendMessage,
 		resetChat,
 		switchChat,
+		regenerate,
+		addToolApprovalResponse,
 	} = useKnowledgeChat({
 		chatId,
 		provider: mapProviderIdToApi(selectedProvider),
@@ -126,21 +125,7 @@ function KnowledgePage() {
 	})
 
 	// Convert KnowledgeChatMessage to ChatMessage for existing UI components
-	const messages = useMemo<ChatMessage[]>(
-		() =>
-			chatMessages.map((msg) => ({
-				id: msg.id,
-				role: msg.role,
-				content: msg.content,
-				timestamp: msg.timestamp,
-				parts: msg.parts,
-				isStreaming: msg.isStreaming,
-				thinking: msg.thinking,
-				usage: msg.usage,
-				mentionTitles: msg.mentionTitles,
-			})),
-		[chatMessages]
-	)
+	const messages = useMemo<ChatMessage[]>(() => chatMessages, [chatMessages])
 
 	// Update local chatId when server returns one
 	useEffect(() => {
@@ -250,48 +235,19 @@ function KnowledgePage() {
 		}
 	}, [chatError, t])
 
-	// Attachment handlers
-	const handleAtTrigger = useCallback(() => {
-		entryPickerRef.current?.open()
-	}, [])
-
-	const handleEntrySelect = useCallback(
-		(entry: Entry) => {
+	const handleAddNoteAttachment = useCallback(
+		(note: AttachedNote) => {
+			const trimmedTitle = note.title.trim()
+			const normalizedTitle =
+				trimmedTitle.length > 0 ? trimmedTitle : t('entryPicker.untitled')
 			setAttachedNotes((prev) => {
-				if (prev.some((n) => n.id === entry.id)) {
+				if (prev.some((item) => item.id === note.id)) {
 					return prev
 				}
-				return [
-					...prev,
-					{
-						id: entry.id,
-						title: entry.title || '',
-					},
-				]
+				return [...prev, { id: note.id, title: normalizedTitle }]
 			})
-
-			if (textareaRef.current) {
-				const textarea = textareaRef.current
-				const start = textarea.selectionStart
-				const end = textarea.selectionEnd
-				const text = inputValue
-				const noteTitle = entry.title || t('entryPicker.untitled')
-				const insertText = `@${noteTitle} `
-
-				const isAtTrigger = start > 0 && text[start - 1] === '@'
-				const replaceStart = isAtTrigger ? start - 1 : start
-
-				const newValue = text.slice(0, replaceStart) + insertText + text.slice(end)
-				setInputValue(newValue)
-
-				setTimeout(() => {
-					const newPosition = replaceStart + insertText.length
-					textarea.setSelectionRange(newPosition, newPosition)
-					textarea.focus()
-				}, 0)
-			}
 		},
-		[inputValue, t]
+		[t]
 	)
 
 	const handleRemoveAttachment = useCallback((noteId: string) => {
@@ -357,52 +313,61 @@ function KnowledgePage() {
 	// State for context exceeded dialog
 	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
 
-	const handleSendMessage = useCallback(() => {
-		const trimmedInput = inputValue.trim()
-		if (!trimmedInput || isStreaming) return
+	const handleSendMessage = useCallback(
+		(message: PromptInputMessage) => {
+			const trimmedInput = message.text.trim()
+			const hasFiles = message.files.length > 0
+			const hasContent = trimmedInput.length > 0 || hasFiles
+			if (!hasContent || isStreaming) return
 
-		if (!isApiSupportedProvider(selectedProvider)) {
-			toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
-			return
-		}
+			if (!isApiSupportedProvider(selectedProvider)) {
+				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
+				return
+			}
 
-		// Check if context would be exceeded with new message
-		const newMessageTokens = estimateTokenCount(trimmedInput)
-		const projectedUsage = contextUsage.used + newMessageTokens
-		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-		const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
+			const fallbackText = t('knowledge.attachmentFallback')
+			const promptText = trimmedInput || fallbackText
 
-		if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
-			setShowContextExceededDialog(true)
-			return
-		}
+			// Check if context would be exceeded with new message
+			const newMessageTokens = estimateTokenCount(promptText)
+			const projectedUsage = contextUsage.used + newMessageTokens
+			const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
+			const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
 
-		// Capture note IDs and mention titles before clearing
-		const noteEntryIds = attachedNotes.map((n) => n.id)
-		const mentionTitles =
-			attachedNotes.length > 0
-				? attachedNotes.map((n) => n.title).filter(Boolean)
-				: undefined
+			if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
+				setShowContextExceededDialog(true)
+				return
+			}
 
-		// Clear input and attachments
-		setInputValue('')
-		setAttachedNotes([])
+			// Capture note IDs and mention titles before clearing
+			const noteEntryIds = attachedNotes.map((n) => n.id)
+			const mentionTitles =
+				attachedNotes.length > 0
+					? attachedNotes.map((n) => n.title).filter(Boolean)
+					: undefined
 
-		// Send message via AI SDK useChat
-		sendMessage({
-			text: trimmedInput,
-			mentionTitles,
-			noteEntryIds,
-		})
-	}, [
-		inputValue,
-		isStreaming,
-		selectedProvider,
-		attachedNotes,
-		contextUsage,
-		selectedModelInfo,
-		sendMessage,
-	])
+			// Clear input and attachments
+			setInputValue('')
+			setAttachedNotes([])
+
+			// Send message via AI SDK useChat
+			sendMessage({
+				text: promptText,
+				files: message.files,
+				mentionTitles,
+				noteEntryIds,
+			})
+		},
+		[
+			isStreaming,
+			selectedProvider,
+			attachedNotes,
+			contextUsage,
+			selectedModelInfo,
+			sendMessage,
+			t,
+		]
+	)
 
 	const handleNewChat = useCallback(async () => {
 		// If current session is already empty, don't create a new one
@@ -476,7 +441,7 @@ function KnowledgePage() {
 	const isPending = isStreaming || isLoading
 
 	return (
-		<div className="flex h-[calc(100dvh-4rem)]">
+		<div className="flex h-svh">
 			{/* Sidebar - Chat History */}
 			<div
 				className={cn(
@@ -601,6 +566,8 @@ function KnowledgePage() {
 							<MessageList
 								isPending={isPending}
 								messages={messages}
+								onRegenerate={regenerate}
+								onToolApprovalResponse={addToolApprovalResponse}
 								thinkingEnabled={thinkingEnabled}
 							/>
 						)}
@@ -615,7 +582,7 @@ function KnowledgePage() {
 							contextUsage={chatContextUsage}
 							hasApiKey={hasApiKey}
 							isPending={isPending}
-							onAtTrigger={handleAtTrigger}
+							onAddNoteAttachment={handleAddNoteAttachment}
 							onChange={setInputValue}
 							onModelChange={handleModelChange}
 							onRemoveNoteAttachment={handleRemoveAttachment}
@@ -623,20 +590,10 @@ function KnowledgePage() {
 							onThinkingToggle={setThinkingEnabled}
 							selectedModel={selectedModel}
 							selectedProvider={selectedProvider}
-							textareaRef={textareaRef}
 							thinkingEnabled={thinkingEnabled}
 							value={inputValue}
 						/>
 					</div>
-
-					{/* Entry Picker for @ mentions */}
-					<EntryPicker
-						excludeIds={attachedNotes.map((n) => n.id)}
-						libraryOnly
-						onSelect={handleEntrySelect}
-						ref={entryPickerRef}
-						title={t('knowledge.selectNoteToAttach')}
-					/>
 				</div>
 			</div>
 		</div>

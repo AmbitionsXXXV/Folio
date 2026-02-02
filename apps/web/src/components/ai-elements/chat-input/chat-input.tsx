@@ -2,8 +2,9 @@ import { cn } from '@folionote/ui/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import { AiBrain01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { type KeyboardEvent, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import {
 	Context,
 	ContextCacheUsage,
@@ -16,21 +17,130 @@ import {
 	ContextReasoningUsage,
 	ContextTrigger,
 } from '@/components/ai-elements/context-usage'
-import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
 import { AiModelSelector } from '@/components/ai-elements/model-selector'
 import {
 	PromptInput,
+	PromptInputActionAddAttachments,
+	PromptInputActionMenu,
+	PromptInputActionMenuContent,
+	PromptInputActionMenuTrigger,
+	PromptInputAttachments,
 	PromptInputBody,
 	PromptInputFooter,
 	PromptInputHeader,
 	type PromptInputMessage,
 	PromptInputSubmit,
 	PromptInputTools,
+	usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input'
+import { ChatInputEditor } from './chat-input-editor'
 import { FileAttachment } from './file-attachment'
-import { HighlightedTextarea } from './highlighted-textarea'
 import { NoteAttachment } from './note-attachment'
 import type { ChatInputProps } from './types'
+
+const FILE_ATTACHMENT_ACCEPT = 'image/*,application/pdf'
+const FILE_ATTACHMENT_MAX_FILES = 5
+const FILE_ATTACHMENT_MAX_BYTES = 5_242_880
+const FILE_SIZE_KB = 1024
+const FILE_SIZE_MB = FILE_SIZE_KB * 1024
+type AttachmentError = {
+	code: 'max_files' | 'max_file_size' | 'accept'
+	message: string
+}
+
+type ChatInputAttachmentsHeaderProps = {
+	attachedNotes: NonNullable<ChatInputProps['attachedNotes']>
+	onRemoveNoteAttachment?: ChatInputProps['onRemoveNoteAttachment']
+}
+
+function ChatInputAttachmentsHeader({
+	attachedNotes,
+	onRemoveNoteAttachment,
+}: ChatInputAttachmentsHeaderProps) {
+	const attachments = usePromptInputAttachments()
+	const hasFileAttachments = attachments.files.length > 0
+	const hasNoteAttachments = attachedNotes.length > 0
+	const hasAttachments = hasFileAttachments || hasNoteAttachments
+
+	if (!hasAttachments) {
+		return null
+	}
+
+	return (
+		<PromptInputHeader className="gap-2 px-3 pt-2">
+			{attachedNotes.map((note) => (
+				<NoteAttachment
+					key={`note-${note.id}`}
+					note={note}
+					onRemove={onRemoveNoteAttachment}
+				/>
+			))}
+			<PromptInputAttachments>
+				{(file) => <FileAttachment file={file} onRemove={attachments.remove} />}
+			</PromptInputAttachments>
+		</PromptInputHeader>
+	)
+}
+
+type ChatInputSubmitProps = {
+	disabled: boolean
+	hasApiKey: boolean
+	isPending: boolean
+	value: string
+}
+
+function ChatInputSubmit({
+	disabled,
+	hasApiKey,
+	isPending,
+	value,
+}: ChatInputSubmitProps) {
+	const { t } = useTranslation()
+	const attachments = usePromptInputAttachments()
+	const hasAttachments = attachments.files.length > 0
+	const hasMessage = Boolean(value.trim())
+	const canSend = !disabled && hasApiKey && (hasMessage || hasAttachments)
+	const submitClassName = cn(
+		'transition-colors duration-200 motion-reduce:transition-none',
+		isPending ? 'animate-pulse motion-reduce:animate-none' : 'hover:bg-primary/90'
+	)
+
+	return (
+		<PromptInputSubmit
+			aria-label={t('knowledge.send')}
+			className={submitClassName}
+			disabled={!canSend}
+			status={isPending ? 'submitted' : 'ready'}
+		/>
+	)
+}
+
+function formatFileSize(bytes: number): string {
+	if (bytes >= FILE_SIZE_MB) {
+		return `${Math.round(bytes / FILE_SIZE_MB)}\u00a0MB`
+	}
+	if (bytes >= FILE_SIZE_KB) {
+		return `${Math.round(bytes / FILE_SIZE_KB)}\u00a0KB`
+	}
+	return `${bytes}\u00a0B`
+}
+
+function getAttachmentErrorMessage(
+	t: ReturnType<typeof useTranslation>['t'],
+	error: AttachmentError
+): string {
+	if (error.code === 'max_files') {
+		return t('knowledge.attachments.errorMaxFiles', {
+			count: FILE_ATTACHMENT_MAX_FILES,
+		})
+	}
+	if (error.code === 'max_file_size') {
+		return t('knowledge.attachments.errorMaxFileSize', {
+			size: formatFileSize(FILE_ATTACHMENT_MAX_BYTES),
+		})
+	}
+	return t('knowledge.attachments.errorInvalidType')
+}
 
 export function ChatInput({
 	value,
@@ -49,11 +159,8 @@ export function ChatInput({
 	thinkingEnabled = false,
 	onThinkingToggle,
 	attachedNotes = [],
+	onAddNoteAttachment,
 	onRemoveNoteAttachment,
-	onAtTrigger,
-	attachedFiles = [],
-	onRemoveFileAttachment,
-	textareaRef,
 	contextUsage,
 }: ChatInputProps) {
 	const { t } = useTranslation()
@@ -94,93 +201,75 @@ export function ChatInput({
 			: t('knowledge.enableThinking')
 	}
 
-	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-		// Handle @ trigger
-		if (e.key === '@' && onAtTrigger) {
-			setTimeout(() => {
-				onAtTrigger()
-			}, 0)
-		}
-
-		// Handle Enter to submit (without Shift)
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault()
-			if (canSend) {
-				e.currentTarget.form?.requestSubmit()
-			}
-		}
-	}
-
 	const isDisabled = disabled || isPending
-	const hasMessage = Boolean(value.trim())
-	const canSend = !isDisabled && hasApiKey && hasMessage
-	const hasNoteAttachments = attachedNotes.length > 0
-	const hasFileAttachments = attachedFiles.length > 0
-	const hasAttachments = hasNoteAttachments || hasFileAttachments
-
-	// Get known mention titles from attached notes
-	const knownMentions = useMemo(
-		() => attachedNotes.map((note) => note.title).filter(Boolean),
-		[attachedNotes]
-	)
-
-	// Render highlighted content with mentions
-	const highlightedContent = useMemo(() => {
-		return renderTextWithMentions(value, 'default', knownMentions)
-	}, [value, knownMentions])
 
 	const handlePromptSubmit = (message: PromptInputMessage) => {
 		if (isDisabled || !hasApiKey) return
-		if (!message.text.trim()) return
-		onSubmit()
+		const hasText = Boolean(message.text.trim())
+		const hasFiles = message.files.length > 0
+		const hasContent = hasText || hasFiles
+		if (!hasContent) return
+		onSubmit(message)
 	}
 
 	return (
-		<PromptInput className={className} onSubmit={handlePromptSubmit}>
-			{/* Attachments (Notes + Files) */}
-			{hasAttachments && (
-				<PromptInputHeader className="gap-2 px-3 pt-2">
-					{attachedNotes.map((note) => (
-						<NoteAttachment
-							key={`note-${note.id}`}
-							note={note}
-							onRemove={onRemoveNoteAttachment}
-						/>
-					))}
-					{attachedFiles.map((file) => (
-						<FileAttachment
-							file={file}
-							key={`file-${file.id}`}
-							onRemove={onRemoveFileAttachment}
-						/>
-					))}
-				</PromptInputHeader>
+		<PromptInput
+			accept={FILE_ATTACHMENT_ACCEPT}
+			className={cn(
+				'rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none',
+				className
 			)}
+			globalDrop
+			maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
+			maxFiles={FILE_ATTACHMENT_MAX_FILES}
+			multiple
+			onError={(error) => {
+				toast.error(getAttachmentErrorMessage(t, error))
+			}}
+			onSubmit={handlePromptSubmit}
+		>
+			{/* Attachments (Notes + Files) */}
+			<ChatInputAttachmentsHeader
+				attachedNotes={attachedNotes}
+				onRemoveNoteAttachment={onRemoveNoteAttachment}
+			/>
 
 			<PromptInputBody>
-				<HighlightedTextarea
-					disabled={isDisabled || !hasApiKey}
-					highlightedContent={highlightedContent}
-					name="message"
+				<input name="message" type="hidden" value={value} />
+				<ChatInputEditor
+					attachedNotes={attachedNotes}
+					disabled={isDisabled}
+					hasApiKey={hasApiKey}
+					onAddNoteAttachment={onAddNoteAttachment}
 					onChange={onChange}
-					onKeyDown={handleKeyDown}
 					placeholder={
 						hasApiKey
 							? placeholder || t('knowledge.inputPlaceholder')
 							: t('knowledge.configureApiKeyFirst')
 					}
-					textareaRef={textareaRef}
 					value={value}
 				/>
 			</PromptInputBody>
 
 			<PromptInputFooter className="px-3">
 				<PromptInputTools>
+					<PromptInputActionMenu>
+						<PromptInputActionMenuTrigger
+							aria-label={t('knowledge.addAttachments')}
+							disabled={isDisabled || !hasApiKey}
+						/>
+						<PromptInputActionMenuContent>
+							<PromptInputActionAddAttachments
+								label={t('knowledge.addAttachments')}
+							/>
+						</PromptInputActionMenuContent>
+					</PromptInputActionMenu>
+
 					{/* Model Selector */}
 					<AiModelSelector
 						catalogModels={catalogModels}
 						catalogProviders={catalogProviders}
-						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none hover:bg-accent"
+						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
 						disabled={isDisabled || !hasApiKey}
 						onValueChange={onModelChange}
 						placeholder={t('knowledge.selectModel')}
@@ -197,7 +286,9 @@ export function ChatInput({
 									'relative inline-flex size-8 items-center justify-center rounded-lg',
 									'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
 									'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-									(hasToggleableReasoning ? thinkingEnabled : true) && 'text-primary'
+									'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
+									(hasToggleableReasoning ? thinkingEnabled : true) &&
+										'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
 								)}
 								disabled={!hasToggleableReasoning}
 								onClick={() =>
@@ -243,10 +334,11 @@ export function ChatInput({
 						</Context>
 					)}
 
-					<PromptInputSubmit
-						aria-label={t('knowledge.send')}
-						disabled={!canSend}
-						status={isPending ? 'submitted' : 'ready'}
+					<ChatInputSubmit
+						disabled={isDisabled}
+						hasApiKey={hasApiKey}
+						isPending={isPending}
+						value={value}
 					/>
 				</div>
 			</PromptInputFooter>

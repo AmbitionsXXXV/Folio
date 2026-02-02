@@ -10,6 +10,7 @@ import {
 import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
 import { createContext } from '@folionote/api/context'
 import { createLogger } from '@folionote/log'
+import type { NoteToolContext } from '@folionote/note-tool/types'
 import {
 	streamText as aiStreamText,
 	convertToModelMessages,
@@ -424,6 +425,9 @@ export function registerAiStreamRoute(app: App) {
 				system: systemPrompt,
 				messages: modelMessages,
 				tools: shouldEnableTools ? aiTools : undefined,
+				experimental_context: {
+					userId,
+				} satisfies NoteToolContext,
 				// Provider options are typed per-provider; cast to satisfy SDK's strict union type
 				providerOptions: providerOptions as Parameters<
 					typeof aiStreamText
@@ -444,6 +448,9 @@ export function registerAiStreamRoute(app: App) {
 					prefix: 'msg',
 					size: 16,
 				}),
+				// Include sources and reasoning parts for UI rendering
+				sendSources: true,
+				sendReasoning: true,
 				// Attach usage data to message metadata for client consumption
 				messageMetadata: ({ part }) => {
 					// Send usage when generation finishes

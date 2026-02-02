@@ -84,9 +84,8 @@ export const MessageAction = ({
 	...props
 }: MessageActionProps) => {
 	const button = (
-		<Button size={size} variant={variant} {...props}>
+		<Button aria-label={label || tooltip} size={size} variant={variant} {...props}>
 			{children}
-			<span className="sr-only">{label || tooltip}</span>
 		</Button>
 	)
 
@@ -94,7 +93,19 @@ export const MessageAction = ({
 		return (
 			<TooltipProvider>
 				<Tooltip>
-					<TooltipTrigger>{button}</TooltipTrigger>
+					<TooltipTrigger
+						render={(triggerProps) => (
+							<Button
+								{...triggerProps}
+								aria-label={label || tooltip}
+								size={size}
+								variant={variant}
+								{...props}
+							>
+								{children}
+							</Button>
+						)}
+					/>
 					<TooltipContent>
 						<p>{tooltip}</p>
 					</TooltipContent>

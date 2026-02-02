@@ -1,6 +1,6 @@
 {
   "name": "@folionote/editor-core",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "FolioNote headless editor core - platform-agnostic editor logic",
   "type": "module",
   "exports": {

@@ -820,6 +820,8 @@
     "waiting": "Waiting…",
     "requestFailed": "AI request failed",
     "send": "Send",
+    "addAttachments": "Add attachments…",
+    "attachmentFallback": "Sent with attachments",
     "notConfigured": "not configured",
     "noApiKeyWarning": "No API key configured for this provider.",
     "goToSettings": "Go to Settings",
@@ -835,6 +837,9 @@
     "thinkingBuiltIn": "Extended thinking built-in (always on)",
     "viewThinking": "View thinking process",
     "thinkingInProgress": "Thinking…",
+    "sourcesUsed_one": "Used {{count}} source",
+    "sourcesUsed_other": "Used {{count}} sources",
+    "toolCalls": "Tool Calls",
     "scrollToBottom": "Scroll to bottom",
     "contextUsage": "Context",
     "contextUsageTooltip": "Token usage: {{used}} / {{total}} ({{percent}}%)",
@@ -845,6 +850,35 @@
     "estimatedTokens": "~{{count}} tokens",
     "image": "Image",
     "attachment": "Attachment",
+    "messageActions": {
+      "retry": "Retry",
+      "copy": "Copy"
+    },
+    "attachments": {
+      "errorMaxFiles": "You can attach up to {{count}} files",
+      "errorMaxFileSize": "File exceeds {{size}}",
+      "errorInvalidType": "Unsupported file type"
+    },
+    "tool": {
+      "parameters": "Parameters",
+      "result": "Result",
+      "error": "Error"
+    },
+    "toolStatus": {
+      "pending": "Pending",
+      "running": "Running",
+      "awaitingApproval": "Awaiting approval",
+      "responded": "Responded",
+      "completed": "Completed",
+      "error": "Error",
+      "denied": "Denied"
+    },
+    "reasoning": {
+      "thinking": "Thinking…",
+      "thoughtFewSeconds": "Thought for a few seconds",
+      "thoughtSeconds_one": "Thought for {{count}} second",
+      "thoughtSeconds_other": "Thought for {{count}} seconds"
+    },
     "contextUsageComponent": {
       "modelContextUsage": "Model context usage",
       "totalCost": "Total cost",
@@ -891,7 +925,14 @@
     "deleteChatConfirmDescription": "This will permanently delete \"{{title}}\" and its messages. This action cannot be undone.",
     "deleteChat": "Delete chat",
     "deleteChatFailed": "Failed to delete chat",
-    "loadChatFailed": "Failed to load chat"
+    "loadChatFailed": "Failed to load chat",
+    "toolApproval": {
+      "title": "{{tool}} requires approval",
+      "description": "This action needs your permission before proceeding.",
+      "destructiveWarning": "This is a destructive action and cannot be undone.",
+      "approve": "Approve",
+      "reject": "Reject"
+    }
   },
   "aiProvider": {
     "title": "AI Provider Settings",

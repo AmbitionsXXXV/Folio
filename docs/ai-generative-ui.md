@@ -12,6 +12,7 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 2. Inject tools in `apps/server/src/routes/ai-stream.ts` when the provider supports `function_calling`.
 3. Add tool usage guidance in `packages/ai/src/prompts/knowledge-chat.ts`.
 4. Prompt 需要覆盖相对时间表达（比如 最近一周/过去一周/近 7 天），以及公司名称到 ticker 的明确映射（Apple -> AAPL）。
+5. 在 `apps/server/src/routes/ai-stream.ts` 为 `toUIMessageStreamResponse` 启用 `sendSources` 与 `sendReasoning`，用于前端渲染来源与思考过程。
 
 ## 实时数据源
 
@@ -30,6 +31,24 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 3. Render reasoning and tool call process rows in `apps/web/src/features/knowledge/components/message-list.tsx` with `Reasoning` and `ChainOfThought` (tool calls are nested under Reasoning when thinking is available).
 4. Display tool cards and main message content in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
 5. Use `Reasoning` for the waiting state in `apps/web/src/features/knowledge/components/message-list.tsx`.
+6. Use `Sources` in `apps/web/src/components/ai-elements/sources.tsx` and render `source-url` parts in `message-bubble.tsx`.
+7. Use `Tool` in `apps/web/src/components/ai-elements/tool.tsx` to render tool input/output details and status badges.
+8. Add message actions (retry, copy) in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
+9. Use `Loader` in `apps/web/src/components/ai-elements/loader.tsx` for streaming feedback in `message-list.tsx`.
+
+## UI 交互与可访问性
+
+- 消息气泡进入时使用 `animate-in` 相关类，并同步添加 `motion-reduce:animate-none`，确保减少动态效果时不触发动画。
+- 流式回复容器设置 `aria-live="polite"` 与 `aria-busy`，避免无状态更新导致的朗读噪音。
+- 等待态 shimmer 通过 `duration` 与 `spread` 控制节奏，避免过快闪烁。
+- 空状态图标使用 `animate-float`（定义在 `apps/web/src/styles/animate.css`），并加上 `motion-reduce:animate-none`。
+- 输入区容器通过 `focus-within:ring-2 focus-within:ring-primary/20` 提示焦点状态。
+
+## Attachments
+
+1. 文件附件由 `apps/web/src/components/ai-elements/prompt-input.tsx` 处理，`ChatInput` 通过 `PromptInputActionAddAttachments` 添加文件。
+2. 校验规则在 `ChatInput` 中配置：`accept="image/*,application/pdf"`、`maxFiles=5`、`maxFileSize=5 MB`。
+3. 粘贴文件和拖拽文件会进入相同的校验与预览流程，失败时通过 toast 提示错误原因。
 
 ## Tool Card 组件
 

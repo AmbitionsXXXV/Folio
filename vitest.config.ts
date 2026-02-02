@@ -29,22 +29,10 @@ export default defineConfig({
 			},
 		},
 		projects: [
-			{
-				test: {
-					name: 'server',
-					root: './apps/server',
-					environment: 'node',
-					include: ['**/__tests__/**/*.test.ts', '**/*.spec.ts'],
-				},
-			},
-			{
-				test: {
-					name: 'web',
-					root: './apps/web',
-					environment: 'jsdom',
-					include: ['**/__tests__/**/*.test.tsx', '**/*.spec.tsx'],
-				},
-			},
+			// server uses its own vitest.config.ts
+			'./apps/server/vitest.config.ts',
+			// web uses its own vitest.config.ts
+			'./apps/web/vitest.config.ts',
 			{
 				test: {
 					name: 'native',

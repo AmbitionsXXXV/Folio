@@ -1,5 +1,20 @@
 # @folionote/api
 
+## 0.2.15
+
+### Patch Changes
+
+- feat: ✨ implement ChatInputEditor with mention support
+- Updated dependencies
+  - @folionote/locales@0.2.15
+  - @folionote/ai@0.2.15
+  - @folionote/auth@0.2.15
+  - @folionote/db@0.2.15
+  - @folionote/log@0.1.9
+  - @folionote/model-list@0.1.8
+  - @folionote/storage@0.2.15
+  - @folionote/utils@0.2.15
+
 ## 0.2.14
 
 ### Patch Changes

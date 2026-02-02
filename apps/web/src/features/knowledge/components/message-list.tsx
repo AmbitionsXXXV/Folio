@@ -15,34 +15,63 @@ import {
 	ConversationEmptyState,
 	ConversationScrollButton,
 } from '@/components/ai-elements/conversation'
+import { Loader } from '@/components/ai-elements/loader'
 import {
 	Reasoning,
 	ReasoningContent,
 	ReasoningTrigger,
 } from '@/components/ai-elements/reasoning'
 import { Shimmer } from '@/components/ai-elements/shimmer'
+import {
+	Tool,
+	ToolContent,
+	ToolHeader,
+	ToolInput,
+	ToolOutput,
+} from '@/components/ai-elements/tool'
+import {
+	ToolApprovalButtons,
+	type ToolApprovalHandler,
+} from '@/components/ai-elements/tool-approval'
 import { Message } from '@/components/chat-message'
 import { cn } from '@/lib/utils'
 import type { ChatMessage } from '../types'
 import { MessageBubble } from './message-bubble'
+import {
+	isDisplayWeatherPart,
+	isStockPricePart,
+	isStockTrendPart,
+} from './tool-cards'
 
 // ============================================================================
 // Waiting Indicator
 // ============================================================================
 
-const WAITING_SHIMMER_DURATION = 1
+const WAITING_SHIMMER_DURATION = 1.4
+const WAITING_SHIMMER_SPREAD = 3
+const WAITING_LOADER_SIZE = 14
 
 const WaitingIndicator = memo(function WaitingIndicator() {
 	const { t } = useTranslation()
 
 	return (
 		<Message from="assistant">
-			<Reasoning className="mb-0" defaultOpen={false} isStreaming>
+			<Reasoning
+				className="fade-in-0 slide-in-from-bottom-2 mb-0 animate-in duration-200 motion-reduce:animate-none"
+				defaultOpen={false}
+				isStreaming
+			>
 				<ReasoningTrigger
 					getThinkingMessage={() => (
-						<Shimmer duration={WAITING_SHIMMER_DURATION}>
-							{t('knowledge.thinkingInProgress')}
-						</Shimmer>
+						<span className="flex items-center gap-2">
+							<Loader size={WAITING_LOADER_SIZE} />
+							<Shimmer
+								duration={WAITING_SHIMMER_DURATION}
+								spread={WAITING_SHIMMER_SPREAD}
+							>
+								{t('knowledge.thinkingInProgress')}
+							</Shimmer>
+						</span>
 					)}
 				/>
 			</Reasoning>
@@ -64,15 +93,20 @@ const TOOL_TYPE_LABELS: Record<string, string> = {
 
 const TOOL_INPUT_PAIR_SEPARATOR = ': '
 const TOOL_INPUT_SEPARATOR = ', '
-const TOOL_CALLS_LABEL = 'Tool Calls'
 const TOOL_LABEL_FALLBACK = 'Tool'
 const TOOL_CALLS_FALLBACK_STATE = 'tool'
+const TOOL_DETAILS_OPEN_STATES = new Set([
+	'approval-requested',
+	'output-error',
+	'output-denied',
+])
 
 const REASONING_TOOL_CALLS_CLASSNAME = [
 	'mt-3 space-y-3 text-sm outline-none',
 	'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2',
 	'data-[state=open]:slide-in-from-top-2 data-[state=closed]:animate-out',
-	'data-[state=open]:animate-in',
+	'data-[state=open]:animate-in duration-200 ease-out',
+	'motion-reduce:transition-none motion-reduce:animate-none',
 ].join(' ')
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -115,6 +149,37 @@ function getToolStatus(
 	return isStreaming ? 'active' : 'pending'
 }
 
+function isApprovalRequested(part: ToolMessagePart): boolean {
+	return (
+		'state' in part &&
+		part.state === 'approval-requested' &&
+		'approval' in part &&
+		typeof part.approval === 'object' &&
+		part.approval !== null &&
+		'id' in part.approval
+	)
+}
+
+type ApprovalInfo = {
+	id: string
+	toolName: string
+	input: unknown
+}
+
+function getApprovalInfo(part: ToolMessagePart): ApprovalInfo | null {
+	if (!isApprovalRequested(part)) return null
+
+	const approval = (part as { approval: { id: string } }).approval
+	const toolName = getToolLabel(part)
+	const input = 'input' in part ? part.input : undefined
+
+	return {
+		id: approval.id,
+		toolName,
+		input,
+	}
+}
+
 function getToolInputSummary(part: ToolMessagePart): string | undefined {
 	if (!('input' in part)) return undefined
 	const input = part.input
@@ -143,11 +208,29 @@ function getToolKey(messageId: string, part: ToolMessagePart): string {
 	return `${messageId}-${part.type}-${toolState}`
 }
 
+function isToolCardPart(part: ToolMessagePart): boolean {
+	return (
+		isDisplayWeatherPart(part) || isStockPricePart(part) || isStockTrendPart(part)
+	)
+}
+
+function getToolPartState(part: ToolMessagePart, isStreaming: boolean): string {
+	if ('state' in part && typeof part.state === 'string') {
+		return part.state
+	}
+	return isStreaming ? 'input-streaming' : 'input-available'
+}
+
+function shouldOpenToolDetails(state: string): boolean {
+	return TOOL_DETAILS_OPEN_STATES.has(state)
+}
+
 type ToolCallStepsProps = {
 	messageId: string
 	isStreaming: boolean
 	toolInvocations: ToolMessagePart[]
 	className?: string
+	onToolApprovalResponse?: ToolApprovalHandler
 }
 
 const ToolCallSteps = memo(function ToolCallSteps({
@@ -155,32 +238,166 @@ const ToolCallSteps = memo(function ToolCallSteps({
 	isStreaming,
 	toolInvocations,
 	className,
+	onToolApprovalResponse,
 }: ToolCallStepsProps) {
+	const { t } = useTranslation()
+	const regularTools = toolInvocations.filter((t) => !isApprovalRequested(t))
+
 	return (
-		<ChainOfThought className={cn(className)}>
-			<ChainOfThoughtHeader>{TOOL_CALLS_LABEL}</ChainOfThoughtHeader>
-			<ChainOfThoughtContent>
-				{toolInvocations.map((tool) => (
-					<ChainOfThoughtStep
-						description={getToolInputSummary(tool)}
-						key={getToolKey(messageId, tool)}
-						label={getToolLabel(tool)}
-						status={getToolStatus(tool, isStreaming)}
-					/>
-				))}
-			</ChainOfThoughtContent>
-		</ChainOfThought>
+		<div className={cn('space-y-3', className)}>
+			{/* Regular tool calls in chain-of-thought format */}
+			{regularTools.length > 0 ? (
+				<ChainOfThought>
+					<ChainOfThoughtHeader>{t('knowledge.toolCalls')}</ChainOfThoughtHeader>
+					<ChainOfThoughtContent>
+						{regularTools.map((tool) => (
+							<ChainOfThoughtStep
+								description={getToolInputSummary(tool)}
+								key={getToolKey(messageId, tool)}
+								label={getToolLabel(tool)}
+								status={getToolStatus(tool, isStreaming)}
+							/>
+						))}
+					</ChainOfThoughtContent>
+				</ChainOfThought>
+			) : null}
+
+			{/* Tool details */}
+			<ToolDetailsList
+				isStreaming={isStreaming}
+				messageId={messageId}
+				onToolApprovalResponse={onToolApprovalResponse}
+				toolInvocations={toolInvocations}
+			/>
+		</div>
 	)
 })
+
+type ToolDetailsListProps = {
+	messageId: string
+	isStreaming: boolean
+	toolInvocations: ToolMessagePart[]
+	onToolApprovalResponse?: ToolApprovalHandler
+}
+
+const ToolDetailsList = memo(function ToolDetailsList({
+	messageId,
+	isStreaming,
+	toolInvocations,
+	onToolApprovalResponse,
+}: ToolDetailsListProps) {
+	const detailedTools = toolInvocations.filter((tool) => !isToolCardPart(tool))
+
+	if (detailedTools.length === 0) {
+		return null
+	}
+
+	return (
+		<div className="space-y-2">
+			{detailedTools.map((tool) => {
+				const detail = getToolDetailData(
+					messageId,
+					tool,
+					isStreaming,
+					onToolApprovalResponse
+				)
+
+				return (
+					<Tool defaultOpen={detail.defaultOpen} key={`detail-${detail.key}`}>
+						<ToolHeader label={detail.label} state={detail.state} />
+						<ToolContent>
+							{detail.input !== undefined ? (
+								<ToolInput input={detail.input} />
+							) : null}
+							{detail.output !== undefined || detail.errorText ? (
+								<ToolOutput errorText={detail.errorText} output={detail.output} />
+							) : null}
+							{detail.approvalInfo ? (
+								<ToolApprovalButtons
+									approvalId={detail.approvalInfo.id}
+									input={detail.approvalInfo.input}
+									onApprovalResponse={detail.approvalInfo.onResponse}
+									toolName={detail.approvalInfo.toolName}
+								/>
+							) : null}
+						</ToolContent>
+					</Tool>
+				)
+			})}
+		</div>
+	)
+})
+
+type ToolDetailApprovalInfo = ApprovalInfo & {
+	onResponse: ToolApprovalHandler
+}
+
+type ToolDetailData = {
+	key: string
+	state: string
+	label: string
+	input: unknown
+	output: unknown
+	errorText?: string
+	defaultOpen: boolean
+	approvalInfo?: ToolDetailApprovalInfo
+}
+
+function getToolDetailData(
+	messageId: string,
+	tool: ToolMessagePart,
+	isStreaming: boolean,
+	onToolApprovalResponse?: ToolApprovalHandler
+): ToolDetailData {
+	const key = getToolKey(messageId, tool)
+	const state = getToolPartState(tool, isStreaming)
+	const label = getToolLabel(tool)
+	const input = 'input' in tool ? tool.input : undefined
+	const output = 'output' in tool ? tool.output : undefined
+	const errorText =
+		'errorText' in tool && typeof tool.errorText === 'string'
+			? tool.errorText
+			: undefined
+	const approvalInfo = getApprovalInfo(tool)
+	const defaultOpen = shouldOpenToolDetails(state)
+
+	if (approvalInfo && onToolApprovalResponse) {
+		return {
+			key,
+			state,
+			label,
+			input,
+			output,
+			errorText,
+			defaultOpen,
+			approvalInfo: {
+				...approvalInfo,
+				onResponse: onToolApprovalResponse,
+			},
+		}
+	}
+
+	return {
+		key,
+		state,
+		label,
+		input,
+		output,
+		errorText,
+		defaultOpen,
+	}
+}
 
 type MessageProcessProps = {
 	message: ChatMessage
 	thinkingEnabled: boolean
+	onToolApprovalResponse?: ToolApprovalHandler
 }
 
 const MessageProcess = memo(function MessageProcess({
 	message,
 	thinkingEnabled,
+	onToolApprovalResponse,
 }: MessageProcessProps) {
 	if (message.role !== 'assistant') return null
 
@@ -209,6 +426,7 @@ const MessageProcess = memo(function MessageProcess({
 							<ToolCallSteps
 								isStreaming={isMessageStreaming}
 								messageId={message.id}
+								onToolApprovalResponse={onToolApprovalResponse}
 								toolInvocations={toolInvocations}
 							/>
 						</CollapsibleContent>
@@ -221,8 +439,10 @@ const MessageProcess = memo(function MessageProcess({
 	return (
 		<Message from="assistant">
 			<ToolCallSteps
+				className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
 				isStreaming={isMessageStreaming}
 				messageId={message.id}
+				onToolApprovalResponse={onToolApprovalResponse}
 				toolInvocations={toolInvocations}
 			/>
 		</Message>
@@ -237,12 +457,16 @@ type MessageListProps = {
 	messages: ChatMessage[]
 	isPending: boolean
 	thinkingEnabled: boolean
+	onToolApprovalResponse?: ToolApprovalHandler
+	onRegenerate?: () => void
 }
 
 export function MessageList({
 	messages,
 	isPending,
 	thinkingEnabled,
+	onToolApprovalResponse,
+	onRegenerate,
 }: MessageListProps) {
 	const { t } = useTranslation()
 
@@ -269,9 +493,10 @@ export function MessageList({
 							<Fragment key={message.id}>
 								<MessageProcess
 									message={message}
+									onToolApprovalResponse={onToolApprovalResponse}
 									thinkingEnabled={thinkingEnabled}
 								/>
-								<MessageBubble message={message} />
+								<MessageBubble message={message} onRegenerate={onRegenerate} />
 							</Fragment>
 						))}
 						{showWaiting ? <WaitingIndicator /> : null}

@@ -1,5 +1,13 @@
 # @folionote/stock-tool
 
+## 0.1.2
+
+### Patch Changes
+
+- feat: ✨ implement ChatInputEditor with mention support
+- Updated dependencies
+  - @folionote/ui@0.2.15
+
 ## 0.1.1
 
 ### Patch Changes

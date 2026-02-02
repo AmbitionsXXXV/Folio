@@ -1,3 +1,4 @@
+export type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
 export { ChatHistoryPanel } from './chat-history-panel'
 export { ContextUsageIndicator } from './context-usage-indicator'
 export { EmptyState } from './empty-state'

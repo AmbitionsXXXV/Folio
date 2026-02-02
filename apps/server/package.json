@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -8,19 +8,22 @@
     "check-types": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
+    "dev:ai-devtools": "npx @ai-sdk/devtools",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ai-sdk/devtools": "^0.0.8",
     "@folionote/ai": "workspace:*",
     "@folionote/api": "workspace:*",
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
-    "@folionote/storage": "workspace:*",
+    "@folionote/note-tool": "workspace:*",
     "@folionote/stock-tool": "workspace:*",
+    "@folionote/storage": "workspace:*",
     "@folionote/weather-tool": "workspace:*",
     "@hono/node-server": "^1.19.8",
     "@orpc/openapi": "catalog:",

@@ -1,0 +1,38 @@
+{
+  "name": "@folionote/note-tool",
+  "version": "0.1.1",
+  "description": "Note CRUD and search tools for FolioNote AI",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./tools": {
+      "types": "./src/tools/index.ts",
+      "default": "./src/tools/index.ts"
+    },
+    "./schemas": {
+      "types": "./src/schemas.ts",
+      "default": "./src/schemas.ts"
+    },
+    "./types": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@folionote/db": "workspace:*",
+    "ai": "catalog:",
+    "drizzle-orm": "catalog:",
+    "nanoid": "^5.1.6",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

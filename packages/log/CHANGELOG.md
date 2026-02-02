@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.9
+
+### Patch Changes
+
+- feat: ✨ implement ChatInputEditor with mention support
+
 ## 0.1.8
 
 ### Patch Changes

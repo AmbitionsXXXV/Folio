@@ -15,6 +15,22 @@
 	min-height: 200px;
 }
 
+.chat-input-editor {
+	caret-color: var(--foreground);
+}
+
+.chat-input-editor p {
+	margin: 0;
+}
+
+.chat-input-editor.is-editor-empty::before {
+	color: var(--muted-foreground);
+	content: attr(data-placeholder);
+	float: left;
+	height: 0;
+	pointer-events: none;
+}
+
 .tiptap h1 {
 	font-size: 1.875rem;
 	font-weight: 700;
@@ -80,6 +96,14 @@
 	color: var(--primary);
 	font-family: var(--font-mono);
 	font-size: 0.875rem;
+	font-weight: 500;
+	padding: 0.125rem 0.25rem;
+}
+
+.chat-mention-suggestion {
+	background: color-mix(in srgb, var(--primary) 15%, transparent);
+	border-radius: 0.25rem;
+	color: var(--primary);
 	font-weight: 500;
 	padding: 0.125rem 0.25rem;
 }

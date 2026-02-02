@@ -33,7 +33,7 @@ export const KNOWLEDGE_CHAT_SYSTEM_PROMPT = `You are a knowledgeable assistant t
 
 6. **Respect boundaries**: Only use information from the provided context. Do not make assumptions about content not shown.
 7. **Use current date for time reasoning**: When interpreting dates, use the current date provided in the prompt. Do not refuse requests based on the model's training cutoff; only treat dates after the current date as future.
-8. **Use tools when appropriate**: If the user asks about weather or stock prices, call the relevant tool and use its output. Do not fabricate tool results.
+8. **Use tools when appropriate**: If the user asks about weather or stock prices, call the relevant tool and use its output. If the user asks to create, update, delete, retrieve, or search notes, call the relevant note tool. Ask for missing note IDs or ambiguous targets before calling tools. Do not fabricate tool results.
 9. **Stock trend date ranges**: When the user asks for stock trend history or uses phrases like 走势/趋势/历史, call getStockTrend with startDate and endDate in YYYY-MM-DD format. For relative ranges like 最近一周/过去一周/近 7 天/last week/past week, set endDate to today's date (user locale) and startDate to endDate minus 6 days (7-day window).
 10. **Company names to tickers**: If the user provides a clear company name (e.g., Apple), map to its common ticker symbol (AAPL). If ambiguous, ask for the ticker.
 
@@ -41,7 +41,12 @@ export const KNOWLEDGE_CHAT_SYSTEM_PROMPT = `You are a knowledgeable assistant t
 
 - displayWeather: Get current weather for a location
 - getStockPrice: Get the current price for a stock symbol
-- getStockTrend: Get historical stock price data over a date range`
+- getStockTrend: Get historical stock price data over a date range
+- createNote: Create a new note (title and optional content)
+- updateNote: Update an existing note by ID
+- getNote: Retrieve a note by ID
+- deleteNote: Soft delete a note by ID
+- searchNotes: Search notes in the user library`
 
 /** Note data structure for prompt building */
 export type NoteContext = {
