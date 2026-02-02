@@ -19,7 +19,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { nanoid } from 'nanoid'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -29,7 +29,6 @@ import {
 	type SessionUsage,
 } from '@/components/ai-elements/chat-input'
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
-import { EntryPicker, type EntryPickerRef } from '@/components/entry-picker'
 import {
 	ChatHistoryPanel,
 	type ChatMessage,
@@ -48,7 +47,6 @@ import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { cn } from '@/lib/utils'
-import type { Entry } from '@/types'
 
 export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
@@ -92,14 +90,12 @@ function KnowledgePage() {
 
 	// Input state
 	const [inputValue, setInputValue] = useState('')
-	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
 	// Thinking/reasoning toggle state
 	const [thinkingEnabled, setThinkingEnabled] = useState(false)
 
 	// Attached notes state
 	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
-	const entryPickerRef = useRef<EntryPickerRef>(null)
 
 	// Provider config for API key
 	const providerConfig = useMemo(
@@ -239,48 +235,19 @@ function KnowledgePage() {
 		}
 	}, [chatError, t])
 
-	// Attachment handlers
-	const handleAtTrigger = useCallback(() => {
-		entryPickerRef.current?.open()
-	}, [])
-
-	const handleEntrySelect = useCallback(
-		(entry: Entry) => {
+	const handleAddNoteAttachment = useCallback(
+		(note: AttachedNote) => {
+			const trimmedTitle = note.title.trim()
+			const normalizedTitle =
+				trimmedTitle.length > 0 ? trimmedTitle : t('entryPicker.untitled')
 			setAttachedNotes((prev) => {
-				if (prev.some((n) => n.id === entry.id)) {
+				if (prev.some((item) => item.id === note.id)) {
 					return prev
 				}
-				return [
-					...prev,
-					{
-						id: entry.id,
-						title: entry.title || '',
-					},
-				]
+				return [...prev, { id: note.id, title: normalizedTitle }]
 			})
-
-			if (textareaRef.current) {
-				const textarea = textareaRef.current
-				const start = textarea.selectionStart
-				const end = textarea.selectionEnd
-				const text = inputValue
-				const noteTitle = entry.title || t('entryPicker.untitled')
-				const insertText = `@${noteTitle} `
-
-				const isAtTrigger = start > 0 && text[start - 1] === '@'
-				const replaceStart = isAtTrigger ? start - 1 : start
-
-				const newValue = text.slice(0, replaceStart) + insertText + text.slice(end)
-				setInputValue(newValue)
-
-				setTimeout(() => {
-					const newPosition = replaceStart + insertText.length
-					textarea.setSelectionRange(newPosition, newPosition)
-					textarea.focus()
-				}, 0)
-			}
 		},
-		[inputValue, t]
+		[t]
 	)
 
 	const handleRemoveAttachment = useCallback((noteId: string) => {
@@ -615,7 +582,7 @@ function KnowledgePage() {
 							contextUsage={chatContextUsage}
 							hasApiKey={hasApiKey}
 							isPending={isPending}
-							onAtTrigger={handleAtTrigger}
+							onAddNoteAttachment={handleAddNoteAttachment}
 							onChange={setInputValue}
 							onModelChange={handleModelChange}
 							onRemoveNoteAttachment={handleRemoveAttachment}
@@ -623,20 +590,10 @@ function KnowledgePage() {
 							onThinkingToggle={setThinkingEnabled}
 							selectedModel={selectedModel}
 							selectedProvider={selectedProvider}
-							textareaRef={textareaRef}
 							thinkingEnabled={thinkingEnabled}
 							value={inputValue}
 						/>
 					</div>
-
-					{/* Entry Picker for @ mentions */}
-					<EntryPicker
-						excludeIds={attachedNotes.map((n) => n.id)}
-						libraryOnly
-						onSelect={handleEntrySelect}
-						ref={entryPickerRef}
-						title={t('knowledge.selectNoteToAttach')}
-					/>
 				</div>
 			</div>
 		</div>

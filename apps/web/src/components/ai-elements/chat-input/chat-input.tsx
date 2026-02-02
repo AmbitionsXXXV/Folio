@@ -2,12 +2,7 @@ import { cn } from '@folionote/ui/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import { AiBrain01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {
-	type ClipboardEventHandler,
-	type KeyboardEvent,
-	useCallback,
-	useMemo,
-} from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -22,7 +17,6 @@ import {
 	ContextReasoningUsage,
 	ContextTrigger,
 } from '@/components/ai-elements/context-usage'
-import { renderTextWithMentions } from '@/components/ai-elements/mention-badge'
 import { AiModelSelector } from '@/components/ai-elements/model-selector'
 import {
 	PromptInput,
@@ -39,8 +33,8 @@ import {
 	PromptInputTools,
 	usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input'
+import { ChatInputEditor } from './chat-input-editor'
 import { FileAttachment } from './file-attachment'
-import { HighlightedTextarea } from './highlighted-textarea'
 import { NoteAttachment } from './note-attachment'
 import type { ChatInputProps } from './types'
 
@@ -49,8 +43,6 @@ const FILE_ATTACHMENT_MAX_FILES = 5
 const FILE_ATTACHMENT_MAX_BYTES = 5_242_880
 const FILE_SIZE_KB = 1024
 const FILE_SIZE_MB = FILE_SIZE_KB * 1024
-const MENTION_TRIGGER_DELAY_MS = 0
-
 type AttachmentError = {
 	code: 'max_files' | 'max_file_size' | 'accept'
 	message: string
@@ -87,83 +79,6 @@ function ChatInputAttachmentsHeader({
 				{(file) => <FileAttachment file={file} onRemove={attachments.remove} />}
 			</PromptInputAttachments>
 		</PromptInputHeader>
-	)
-}
-
-type ChatInputTextareaProps = {
-	disabled: boolean
-	hasApiKey: boolean
-	knownMentions: string[]
-	onAtTrigger?: () => void
-	onChange: (value: string) => void
-	placeholder?: string
-	textareaRef?: ChatInputProps['textareaRef']
-	value: string
-}
-
-function ChatInputTextarea({
-	disabled,
-	hasApiKey,
-	knownMentions,
-	onAtTrigger,
-	onChange,
-	placeholder,
-	textareaRef,
-	value,
-}: ChatInputTextareaProps) {
-	const attachments = usePromptInputAttachments()
-	const hasAttachments = attachments.files.length > 0
-	const hasText = Boolean(value.trim())
-	const canSend = !disabled && hasApiKey && (hasText || hasAttachments)
-
-	const highlightedContent = useMemo(() => {
-		return renderTextWithMentions(value, 'default', knownMentions)
-	}, [value, knownMentions])
-
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent<HTMLTextAreaElement>) => {
-			// Handle @ trigger
-			if (e.key === '@' && onAtTrigger) {
-				setTimeout(() => {
-					onAtTrigger()
-				}, MENTION_TRIGGER_DELAY_MS)
-			}
-
-			// Handle Enter to submit (without Shift)
-			if (e.key === 'Enter' && !e.shiftKey) {
-				e.preventDefault()
-				if (canSend) {
-					e.currentTarget.form?.requestSubmit()
-				}
-			}
-		},
-		[canSend, onAtTrigger]
-	)
-
-	const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = useCallback(
-		(event) => {
-			const clipboardFiles = event.clipboardData?.files
-			if (!clipboardFiles || clipboardFiles.length === 0) {
-				return
-			}
-			event.preventDefault()
-			attachments.add(clipboardFiles)
-		},
-		[attachments]
-	)
-
-	return (
-		<HighlightedTextarea
-			disabled={disabled || !hasApiKey}
-			highlightedContent={highlightedContent}
-			name="message"
-			onChange={onChange}
-			onKeyDown={handleKeyDown}
-			onPaste={handlePaste}
-			placeholder={placeholder}
-			textareaRef={textareaRef}
-			value={value}
-		/>
 	)
 }
 
@@ -244,9 +159,8 @@ export function ChatInput({
 	thinkingEnabled = false,
 	onThinkingToggle,
 	attachedNotes = [],
+	onAddNoteAttachment,
 	onRemoveNoteAttachment,
-	onAtTrigger,
-	textareaRef,
 	contextUsage,
 }: ChatInputProps) {
 	const { t } = useTranslation()
@@ -289,12 +203,6 @@ export function ChatInput({
 
 	const isDisabled = disabled || isPending
 
-	// Get known mention titles from attached notes
-	const knownMentions = useMemo(
-		() => attachedNotes.map((note) => note.title).filter(Boolean),
-		[attachedNotes]
-	)
-
 	const handlePromptSubmit = (message: PromptInputMessage) => {
 		if (isDisabled || !hasApiKey) return
 		const hasText = Boolean(message.text.trim())
@@ -327,18 +235,18 @@ export function ChatInput({
 			/>
 
 			<PromptInputBody>
-				<ChatInputTextarea
+				<input name="message" type="hidden" value={value} />
+				<ChatInputEditor
+					attachedNotes={attachedNotes}
 					disabled={isDisabled}
 					hasApiKey={hasApiKey}
-					knownMentions={knownMentions}
-					onAtTrigger={onAtTrigger}
+					onAddNoteAttachment={onAddNoteAttachment}
 					onChange={onChange}
 					placeholder={
 						hasApiKey
 							? placeholder || t('knowledge.inputPlaceholder')
 							: t('knowledge.configureApiKeyFirst')
 					}
-					textareaRef={textareaRef}
 					value={value}
 				/>
 			</PromptInputBody>

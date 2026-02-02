@@ -1,5 +1,4 @@
 import type { FileUIPart } from 'ai'
-import type { RefObject } from 'react'
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
 import type { CatalogModel, CatalogProvider } from '@/hooks/use-ai-model-catalog'
 
@@ -54,10 +53,8 @@ export type ChatInputProps = {
 	onThinkingToggle?: (enabled: boolean) => void
 	// Note attachment props (controlled)
 	attachedNotes?: AttachedNote[]
+	onAddNoteAttachment?: (note: AttachedNote) => void
 	onRemoveNoteAttachment?: (noteId: string) => void
-	onAtTrigger?: () => void
-	/** External ref for the textarea */
-	textareaRef?: RefObject<HTMLTextAreaElement | null>
 	/** Context usage for the current session */
 	contextUsage?: ChatContextUsage
 }
