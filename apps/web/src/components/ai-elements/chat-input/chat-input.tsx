@@ -2,7 +2,8 @@ import { cn } from '@folionote/ui/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import { AiBrain01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { type ChangeEvent, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -30,11 +31,15 @@ import {
 	PromptInputHeader,
 	type PromptInputMessage,
 	PromptInputSubmit,
+	PromptInputTextarea,
 	PromptInputTools,
 	usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input'
-import { ChatInputEditor } from './chat-input-editor'
+import type { Entry } from '@/types'
+import { orpc } from '@/utils/orpc'
 import { FileAttachment } from './file-attachment'
+import type { MentionItem } from './mention-popover'
+import { findAtIndex, MentionPopover, useMentionPopover } from './mention-popover'
 import { NoteAttachment } from './note-attachment'
 import type { ChatInputProps } from './types'
 
@@ -43,10 +48,16 @@ const FILE_ATTACHMENT_MAX_FILES = 5
 const FILE_ATTACHMENT_MAX_BYTES = 5_242_880
 const FILE_SIZE_KB = 1024
 const FILE_SIZE_MB = FILE_SIZE_KB * 1024
+const MENTION_QUERY_LIMIT = 100
+
 type AttachmentError = {
 	code: 'max_files' | 'max_file_size' | 'accept'
 	message: string
 }
+
+// ============================================================================
+// Internal sub-components
+// ============================================================================
 
 type ChatInputAttachmentsHeaderProps = {
 	attachedNotes: NonNullable<ChatInputProps['attachedNotes']>
@@ -58,9 +69,7 @@ function ChatInputAttachmentsHeader({
 	onRemoveNoteAttachment,
 }: ChatInputAttachmentsHeaderProps) {
 	const attachments = usePromptInputAttachments()
-	const hasFileAttachments = attachments.files.length > 0
-	const hasNoteAttachments = attachedNotes.length > 0
-	const hasAttachments = hasFileAttachments || hasNoteAttachments
+	const hasAttachments = attachments.files.length > 0 || attachedNotes.length > 0
 
 	if (!hasAttachments) {
 		return null
@@ -82,33 +91,33 @@ function ChatInputAttachmentsHeader({
 	)
 }
 
-type ChatInputSubmitProps = {
+type ChatInputSubmitButtonProps = {
 	disabled: boolean
 	hasApiKey: boolean
 	isPending: boolean
 	value: string
 }
 
-function ChatInputSubmit({
+function ChatInputSubmitButton({
 	disabled,
 	hasApiKey,
 	isPending,
 	value,
-}: ChatInputSubmitProps) {
+}: ChatInputSubmitButtonProps) {
 	const { t } = useTranslation()
 	const attachments = usePromptInputAttachments()
-	const hasAttachments = attachments.files.length > 0
-	const hasMessage = Boolean(value.trim())
-	const canSend = !disabled && hasApiKey && (hasMessage || hasAttachments)
-	const submitClassName = cn(
-		'transition-colors duration-200 motion-reduce:transition-none',
-		isPending ? 'animate-pulse motion-reduce:animate-none' : 'hover:bg-primary/90'
-	)
+	const canSend =
+		!disabled && hasApiKey && (Boolean(value.trim()) || attachments.files.length > 0)
 
 	return (
 		<PromptInputSubmit
 			aria-label={t('knowledge.send')}
-			className={submitClassName}
+			className={cn(
+				'transition-colors duration-200 motion-reduce:transition-none',
+				isPending
+					? 'animate-pulse motion-reduce:animate-none'
+					: 'hover:bg-primary/90'
+			)}
 			disabled={!canSend}
 			status={isPending ? 'submitted' : 'ready'}
 		/>
@@ -142,6 +151,10 @@ function getAttachmentErrorMessage(
 	return t('knowledge.attachments.errorInvalidType')
 }
 
+// ============================================================================
+// Main component
+// ============================================================================
+
 export function ChatInput({
 	value,
 	onChange,
@@ -164,8 +177,10 @@ export function ChatInput({
 	contextUsage,
 }: ChatInputProps) {
 	const { t } = useTranslation()
+	const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
-	// Get enabled chat models for the selected provider from catalog
+	// ---- Model info ----
+
 	const providerModels = useMemo(() => {
 		return catalogModels.filter(
 			(model) =>
@@ -175,23 +190,15 @@ export function ChatInput({
 		)
 	}, [catalogModels, selectedProvider])
 
-	// Find selected model info
 	const selectedModelInfo = useMemo(() => {
 		return providerModels.find((m) => m.id === selectedModel)
 	}, [providerModels, selectedModel])
 
-	// Check if the selected model supports thinking/reasoning
-	const supportsThinking = useMemo(() => {
-		if (!selectedModelInfo) return false
-		return Boolean(selectedModelInfo.reasoning)
-	}, [selectedModelInfo])
+	const supportsThinking = Boolean(selectedModelInfo?.reasoning)
+	const hasToggleableReasoning =
+		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
+	const thinkingActive = hasToggleableReasoning ? thinkingEnabled : true
 
-	// Check if the model supports toggle-able reasoning
-	const hasToggleableReasoning = useMemo(() => {
-		return selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
-	}, [selectedModelInfo])
-
-	// Get the appropriate tooltip text for the thinking toggle button
 	const getThinkingTooltip = () => {
 		if (!hasToggleableReasoning) {
 			return t('knowledge.thinkingBuiltIn')
@@ -203,14 +210,128 @@ export function ChatInput({
 
 	const isDisabled = disabled || isPending
 
-	const handlePromptSubmit = (message: PromptInputMessage) => {
-		if (isDisabled || !hasApiKey) return
-		const hasText = Boolean(message.text.trim())
-		const hasFiles = message.files.length > 0
-		const hasContent = hasText || hasFiles
-		if (!hasContent) return
-		onSubmit(message)
-	}
+	// ---- Mention system ----
+
+	const attachedNoteIds = useMemo(
+		() => new Set(attachedNotes.map((note) => note.id)),
+		[attachedNotes]
+	)
+
+	const { data: entriesData } = useQuery({
+		queryKey: ['entries', 'library', 'mention'],
+		queryFn: () =>
+			orpc.entries.list.call({
+				filter: 'all',
+				limit: MENTION_QUERY_LIMIT,
+			}),
+	})
+
+	const mentionCandidates = useMemo<MentionItem[]>(() => {
+		const entries = (entriesData?.items ?? []) as Entry[]
+		const items: MentionItem[] = []
+
+		for (const entry of entries) {
+			if (entry.isInbox) continue
+			if (attachedNoteIds.has(entry.id)) continue
+
+			const rawTitle = entry.title?.trim() ?? ''
+			const title = rawTitle.length > 0 ? rawTitle : t('entryPicker.untitled')
+			items.push({ id: entry.id, title })
+		}
+
+		return items
+	}, [entriesData, attachedNoteIds, t])
+
+	// Stable refs for the mention select callback to avoid stale closures
+	const callbackRefs = useRef({ value, onChange, onAddNoteAttachment })
+	callbackRefs.current = { value, onChange, onAddNoteAttachment }
+
+	const handleMentionSelect = useCallback((item: MentionItem) => {
+		callbackRefs.current.onAddNoteAttachment?.({ id: item.id, title: item.title })
+
+		const textarea = textareaRef.current
+		if (!textarea) return
+
+		const cursorPos = textarea.selectionStart
+		const currentValue = callbackRefs.current.value
+		const atIndex = findAtIndex(currentValue, cursorPos)
+
+		if (atIndex >= 0) {
+			const before = currentValue.slice(0, atIndex)
+			const after = currentValue.slice(cursorPos)
+			const inserted = `@${item.title} `
+			const newValue = before + inserted + after
+			callbackRefs.current.onChange(newValue)
+
+			const newCursorPos = before.length + inserted.length
+			requestAnimationFrame(() => {
+				textarea.setSelectionRange(newCursorPos, newCursorPos)
+				textarea.focus()
+			})
+		}
+	}, [])
+
+	const mentionEmptyText =
+		mentionCandidates.length === 0
+			? t('entryPicker.noEntriesAvailable')
+			: t('entryPicker.noMatchingEntries')
+
+	const mention = useMentionPopover({
+		items: mentionCandidates,
+		onSelect: handleMentionSelect,
+		emptyText: mentionEmptyText,
+		anchorRef: textareaRef,
+	})
+
+	// Wire handleKey to a ref so the native keydown listener reads the latest
+	const handleKeyRef = useRef(mention.handleKey)
+	handleKeyRef.current = mention.handleKey
+
+	// Attach a native keydown listener in capture phase to intercept mention
+	// navigation keys BEFORE PromptInputTextarea's internal Enter/Backspace handler
+	useEffect(() => {
+		const node = textareaRef.current
+		if (!node) return
+
+		const handler = (e: KeyboardEvent) => {
+			if (handleKeyRef.current(e.key)) {
+				e.preventDefault()
+				e.stopPropagation()
+			}
+		}
+
+		node.addEventListener('keydown', handler, { capture: true })
+		return () => node.removeEventListener('keydown', handler, { capture: true })
+	})
+
+	// ---- Textarea change handler ----
+
+	const handleTextareaChange = useCallback(
+		(e: ChangeEvent<HTMLTextAreaElement>) => {
+			const newValue = e.currentTarget.value
+			const cursorPos = e.currentTarget.selectionStart
+			onChange(newValue)
+			mention.detectMention(newValue, cursorPos)
+		},
+		[onChange, mention.detectMention]
+	)
+
+	// ---- Form submission ----
+
+	const handlePromptSubmit = useCallback(
+		(message: PromptInputMessage) => {
+			if (isDisabled || !hasApiKey) return
+			const hasContent = Boolean(message.text.trim()) || message.files.length > 0
+			if (!hasContent) return
+			mention.close()
+			onSubmit(message)
+		},
+		[isDisabled, hasApiKey, mention.close, onSubmit]
+	)
+
+	const resolvedPlaceholder = hasApiKey
+		? placeholder || t('knowledge.inputPlaceholder')
+		: t('knowledge.configureApiKeyFirst')
 
 	return (
 		<PromptInput
@@ -235,20 +356,18 @@ export function ChatInput({
 			/>
 
 			<PromptInputBody>
-				<input name="message" type="hidden" value={value} />
-				<ChatInputEditor
-					attachedNotes={attachedNotes}
-					disabled={isDisabled}
-					hasApiKey={hasApiKey}
-					onAddNoteAttachment={onAddNoteAttachment}
-					onChange={onChange}
-					placeholder={
-						hasApiKey
-							? placeholder || t('knowledge.inputPlaceholder')
-							: t('knowledge.configureApiKeyFirst')
-					}
-					value={value}
-				/>
+				<div className="relative w-full">
+					<MentionPopover {...mention.popoverProps} />
+
+					<PromptInputTextarea
+						className="px-3 py-3"
+						disabled={isDisabled || !hasApiKey}
+						onChange={handleTextareaChange}
+						placeholder={resolvedPlaceholder}
+						ref={textareaRef}
+						value={value}
+					/>
+				</div>
 			</PromptInputBody>
 
 			<PromptInputFooter className="px-3">
@@ -276,18 +395,18 @@ export function ChatInput({
 						value={selectedModel}
 					/>
 
-					{/* Thinking Toggle Button */}
+					{/* Thinking Toggle */}
 					{supportsThinking && onThinkingToggle && (
 						<Tooltip>
 							<TooltipTrigger
 								aria-label={t('knowledge.toggleThinking')}
-								aria-pressed={hasToggleableReasoning ? thinkingEnabled : true}
+								aria-pressed={thinkingActive}
 								className={cn(
 									'relative inline-flex size-8 items-center justify-center rounded-lg',
 									'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
 									'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 									'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
-									(hasToggleableReasoning ? thinkingEnabled : true) &&
+									thinkingActive &&
 										'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
 								)}
 								disabled={!hasToggleableReasoning}
@@ -297,7 +416,7 @@ export function ChatInput({
 								type="button"
 							>
 								<HugeiconsIcon className="size-4" icon={AiBrain01Icon} />
-								{(hasToggleableReasoning ? thinkingEnabled : true) && (
+								{thinkingActive && (
 									<span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
 								)}
 							</TooltipTrigger>
@@ -309,7 +428,7 @@ export function ChatInput({
 				</PromptInputTools>
 
 				<div className="flex items-center gap-1">
-					{/* Context Usage Indicator */}
+					{/* Context Usage */}
 					{contextUsage && contextUsage.usedTokens > 0 && (
 						<Context
 							maxTokens={contextUsage.maxTokens}
@@ -334,7 +453,7 @@ export function ChatInput({
 						</Context>
 					)}
 
-					<ChatInputSubmit
+					<ChatInputSubmitButton
 						disabled={isDisabled}
 						hasApiKey={hasApiKey}
 						isPending={isPending}

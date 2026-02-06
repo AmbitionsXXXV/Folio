@@ -4,12 +4,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Fragment, memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-	ChainOfThought,
-	ChainOfThoughtContent,
-	ChainOfThoughtHeader,
-	ChainOfThoughtStep,
-} from '@/components/ai-elements/chain-of-thoughts'
-import {
 	Conversation,
 	ConversationContent,
 	ConversationEmptyState,
@@ -91,8 +85,6 @@ const TOOL_TYPE_LABELS: Record<string, string> = {
 	'tool-getStockTrend': 'Stock Trend',
 }
 
-const TOOL_INPUT_PAIR_SEPARATOR = ': '
-const TOOL_INPUT_SEPARATOR = ', '
 const TOOL_LABEL_FALLBACK = 'Tool'
 const TOOL_CALLS_FALLBACK_STATE = 'tool'
 const TOOL_DETAILS_OPEN_STATES = new Set([
@@ -108,10 +100,6 @@ const REASONING_TOOL_CALLS_CLASSNAME = [
 	'data-[state=open]:animate-in duration-200 ease-out',
 	'motion-reduce:transition-none motion-reduce:animate-none',
 ].join(' ')
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
 
 function isToolInvocationPart(
 	part: ToolMessagePart
@@ -133,20 +121,6 @@ function getToolLabel(part: ToolMessagePart): string {
 		return TOOL_TYPE_LABELS[part.type] ?? part.type
 	}
 	return TOOL_LABEL_FALLBACK
-}
-
-function getToolStatus(
-	part: ToolMessagePart,
-	isStreaming: boolean
-): 'complete' | 'active' | 'pending' {
-	const state = 'state' in part && typeof part.state === 'string' ? part.state : null
-	if (state === 'output-available' || state === 'output-error') {
-		return 'complete'
-	}
-	if (state === 'input-available') {
-		return 'active'
-	}
-	return isStreaming ? 'active' : 'pending'
 }
 
 function isApprovalRequested(part: ToolMessagePart): boolean {
@@ -178,23 +152,6 @@ function getApprovalInfo(part: ToolMessagePart): ApprovalInfo | null {
 		toolName,
 		input,
 	}
-}
-
-function getToolInputSummary(part: ToolMessagePart): string | undefined {
-	if (!('input' in part)) return undefined
-	const input = part.input
-	if (!isRecord(input)) return undefined
-	const fragments: string[] = []
-	for (const [key, value] of Object.entries(input)) {
-		if (
-			typeof value === 'string' ||
-			typeof value === 'number' ||
-			typeof value === 'boolean'
-		) {
-			fragments.push(`${key}${TOOL_INPUT_PAIR_SEPARATOR}${value}`)
-		}
-	}
-	return fragments.length > 0 ? fragments.join(TOOL_INPUT_SEPARATOR) : undefined
 }
 
 function getToolKey(messageId: string, part: ToolMessagePart): string {
@@ -240,52 +197,6 @@ const ToolCallSteps = memo(function ToolCallSteps({
 	className,
 	onToolApprovalResponse,
 }: ToolCallStepsProps) {
-	const { t } = useTranslation()
-	const regularTools = toolInvocations.filter((t) => !isApprovalRequested(t))
-
-	return (
-		<div className={cn('space-y-3', className)}>
-			{/* Regular tool calls in chain-of-thought format */}
-			{regularTools.length > 0 ? (
-				<ChainOfThought>
-					<ChainOfThoughtHeader>{t('knowledge.toolCalls')}</ChainOfThoughtHeader>
-					<ChainOfThoughtContent>
-						{regularTools.map((tool) => (
-							<ChainOfThoughtStep
-								description={getToolInputSummary(tool)}
-								key={getToolKey(messageId, tool)}
-								label={getToolLabel(tool)}
-								status={getToolStatus(tool, isStreaming)}
-							/>
-						))}
-					</ChainOfThoughtContent>
-				</ChainOfThought>
-			) : null}
-
-			{/* Tool details */}
-			<ToolDetailsList
-				isStreaming={isStreaming}
-				messageId={messageId}
-				onToolApprovalResponse={onToolApprovalResponse}
-				toolInvocations={toolInvocations}
-			/>
-		</div>
-	)
-})
-
-type ToolDetailsListProps = {
-	messageId: string
-	isStreaming: boolean
-	toolInvocations: ToolMessagePart[]
-	onToolApprovalResponse?: ToolApprovalHandler
-}
-
-const ToolDetailsList = memo(function ToolDetailsList({
-	messageId,
-	isStreaming,
-	toolInvocations,
-	onToolApprovalResponse,
-}: ToolDetailsListProps) {
 	const detailedTools = toolInvocations.filter((tool) => !isToolCardPart(tool))
 
 	if (detailedTools.length === 0) {
@@ -293,7 +204,7 @@ const ToolDetailsList = memo(function ToolDetailsList({
 	}
 
 	return (
-		<div className="space-y-2">
+		<div className={cn('space-y-2', className)}>
 			{detailedTools.map((tool) => {
 				const detail = getToolDetailData(
 					messageId,

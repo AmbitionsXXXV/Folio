@@ -42,6 +42,7 @@ import {
 	setLastChatId,
 } from '@/features/knowledge'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
+import { useAiProviderConfig } from '@/hooks/use-ai-provider-config'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
 import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
@@ -54,7 +55,15 @@ export const Route = createFileRoute('/_app/knowledge')({
 
 function KnowledgePage() {
 	const { t } = useTranslation()
-	const { config, isLoaded, getProviderConfig } = useModelProviderConfig()
+	const {
+		config,
+		isLoaded: isModelConfigLoaded,
+		getProviderConfig: getModelProviderConfig,
+	} = useModelProviderConfig()
+	const {
+		isLoaded: isAiProviderConfigLoaded,
+		getProviderConfig: getAiProviderConfig,
+	} = useAiProviderConfig()
 
 	// Model catalog for enabled models
 	const {
@@ -98,10 +107,26 @@ function KnowledgePage() {
 	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
 
 	// Provider config for API key
-	const providerConfig = useMemo(
-		() => getProviderConfig(selectedProvider),
-		[getProviderConfig, selectedProvider]
+	const apiProviderId = useMemo(
+		() => mapProviderIdToApi(selectedProvider),
+		[selectedProvider]
 	)
+	const providerConfig = useMemo(
+		() => getModelProviderConfig(selectedProvider),
+		[getModelProviderConfig, selectedProvider]
+	)
+	const apiProviderConfig = useMemo(
+		() => getAiProviderConfig(apiProviderId),
+		[getAiProviderConfig, apiProviderId]
+	)
+	const resolvedApiKey = providerConfig?.apiKey?.trim() ?? ''
+	const resolvedBaseUrl = providerConfig?.baseUrl?.trim() || undefined
+	const fallbackApiKey = apiProviderConfig?.apiKey?.trim() ?? ''
+	const fallbackBaseUrl = apiProviderConfig?.baseUrl?.trim() || undefined
+	const activeApiKey = resolvedApiKey || fallbackApiKey
+	const activeBaseUrl = resolvedBaseUrl || fallbackBaseUrl
+	const hasApiKey =
+		(isModelConfigLoaded || isAiProviderConfigLoaded) && Boolean(activeApiKey)
 
 	// Knowledge chat hook (AI SDK v6 based)
 	const {
@@ -117,9 +142,9 @@ function KnowledgePage() {
 		addToolApprovalResponse,
 	} = useKnowledgeChat({
 		chatId,
-		provider: mapProviderIdToApi(selectedProvider),
-		apiKey: providerConfig?.apiKey ?? '',
-		baseUrl: providerConfig?.baseUrl?.trim() || undefined,
+		provider: apiProviderId,
+		apiKey: activeApiKey,
+		baseUrl: activeBaseUrl,
 		model: selectedModel.trim() || '',
 		enableReasoning: thinkingEnabled,
 	})
@@ -191,7 +216,7 @@ function KnowledgePage() {
 
 	// Sync with loaded config and validate against enabled models
 	useEffect(() => {
-		if (!(isLoaded && isCatalogLoaded)) return
+		if (!(isModelConfigLoaded && isCatalogLoaded)) return
 
 		const preferredProvider = lastUsedProvider || config.defaultProvider
 		const preferredModel = lastUsedModel || config.defaultModel || ''
@@ -203,7 +228,7 @@ function KnowledgePage() {
 		setSelectedProvider(provider)
 		setSelectedModel(model)
 	}, [
-		isLoaded,
+		isModelConfigLoaded,
 		isCatalogLoaded,
 		config.defaultProvider,
 		config.defaultModel,
@@ -225,8 +250,6 @@ function KnowledgePage() {
 		},
 		[catalogModels, selectedProvider, saveLastUsed]
 	)
-
-	const hasApiKey = Boolean(providerConfig?.apiKey?.trim())
 
 	// Handle chat error
 	useEffect(() => {
@@ -260,6 +283,23 @@ function KnowledgePage() {
 			(m) => m.providerId === selectedProvider && m.id === selectedModel
 		)
 	}, [catalogModels, selectedProvider, selectedModel])
+
+	const supportsThinking = Boolean(selectedModelInfo?.reasoning)
+	const hasToggleableReasoning = Boolean(
+		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
+	)
+
+	useEffect(() => {
+		if (!supportsThinking) {
+			setThinkingEnabled(false)
+			return
+		}
+
+		if (hasToggleableReasoning) {
+			return
+		}
+		setThinkingEnabled(true)
+	}, [supportsThinking, hasToggleableReasoning])
 
 	// Calculate context usage
 	const contextUsage = useMemo(() => {
