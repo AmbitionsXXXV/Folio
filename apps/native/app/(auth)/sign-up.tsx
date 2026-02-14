@@ -1,7 +1,7 @@
 import { useHeaderHeight } from '@react-navigation/elements'
 import { useForm } from '@tanstack/react-form'
 import { router } from 'expo-router'
-import { Button, TextField } from 'heroui-native'
+import { Button, FieldError, Input, Label, TextField } from 'heroui-native'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -147,16 +147,16 @@ export default function SignUpScreen() {
 												field.state.meta.errors.length > 0
 											}
 										>
-											<TextField.Label>{t('auth.name')}</TextField.Label>
-											<TextField.Input
-												autoCapitalize="words"
-												autoComplete="name"
-												onBlur={field.handleBlur}
-												onChangeText={field.handleChange}
-												placeholder={t('auth.namePlaceholder')}
-												value={field.state.value}
-											/>
-											<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+										<Label>{t('auth.name')}</Label>
+										<Input
+											autoCapitalize="words"
+											autoComplete="name"
+											onBlur={field.handleBlur}
+											onChangeText={field.handleChange}
+											placeholder={t('auth.namePlaceholder')}
+											value={field.state.value}
+										/>
+										<FieldError>{displayError}</FieldError>
 										</TextField>
 									)
 								}}
@@ -184,17 +184,17 @@ export default function SignUpScreen() {
 												field.state.meta.errors.length > 0
 											}
 										>
-											<TextField.Label>{t('auth.email')}</TextField.Label>
-											<TextField.Input
-												autoCapitalize="none"
-												autoComplete="email"
-												keyboardType="email-address"
-												onBlur={field.handleBlur}
-												onChangeText={field.handleChange}
-												placeholder={t('auth.emailPlaceholder')}
-												value={field.state.value}
-											/>
-											<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+										<Label>{t('auth.email')}</Label>
+										<Input
+											autoCapitalize="none"
+											autoComplete="email"
+											keyboardType="email-address"
+											onBlur={field.handleBlur}
+											onChangeText={field.handleChange}
+											placeholder={t('auth.emailPlaceholder')}
+											value={field.state.value}
+										/>
+										<FieldError>{displayError}</FieldError>
 										</TextField>
 									)
 								}}
@@ -225,19 +225,19 @@ export default function SignUpScreen() {
 												field.state.meta.errors.length > 0
 											}
 										>
-											<TextField.Label>{t('auth.password')}</TextField.Label>
-											<TextField.Input
-												autoCapitalize="none"
-												autoComplete="password-new"
-												onBlur={field.handleBlur}
-												onChangeText={field.handleChange}
-												onSubmitEditing={() => form.handleSubmit()}
-												placeholder={t('auth.passwordPlaceholder')}
-												returnKeyType="done"
-												secureTextEntry
-												value={field.state.value}
-											/>
-											<TextField.ErrorMessage>{displayError}</TextField.ErrorMessage>
+										<Label>{t('auth.password')}</Label>
+										<Input
+											autoCapitalize="none"
+											autoComplete="password-new"
+											onBlur={field.handleBlur}
+											onChangeText={field.handleChange}
+											onSubmitEditing={() => form.handleSubmit()}
+											placeholder={t('auth.passwordPlaceholder')}
+											returnKeyType="done"
+											secureTextEntry
+											value={field.state.value}
+										/>
+										<FieldError>{displayError}</FieldError>
 										</TextField>
 									)
 								}}

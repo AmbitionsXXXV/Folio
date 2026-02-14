@@ -6,6 +6,7 @@ import {
 	BottomSheet,
 	Button,
 	Card,
+	Input,
 	PressableFeedback,
 	TextField,
 	useThemeColor,
@@ -167,7 +168,7 @@ export default function ProfileScreen() {
 
 						<View className="mb-6">
 							<TextField>
-								<TextField.Input
+								<Input
 									autoCapitalize="words"
 									autoCorrect={false}
 									autoFocus
