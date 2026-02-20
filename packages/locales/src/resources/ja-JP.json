@@ -845,6 +845,16 @@
       "retry": "再試行",
       "copy": "コピー"
     },
+    "compactMessage": {
+      "title": "古いメッセージ {{count}} 件を圧縮しました",
+      "meta": "最新 {{kept}} 件を保持 · {{time}}",
+      "summaryLabel": "圧縮サマリー",
+      "justNow": "たった今",
+      "banner": "コンテキストが上限に近づいています（{{percent}}%）。約 {{tokens}} トークンを圧縮します。",
+      "compacting": "圧縮中…",
+      "compactNow": "今すぐ圧縮",
+      "success": "コンテキストを圧縮し、古い {{count}} 件を統合しました"
+    },
     "attachments": {
       "errorMaxFiles": "最大 {{count}} 件まで添付できます",
       "errorMaxFileSize": "{{size}} を超えるファイルは添付できません",
@@ -876,7 +886,22 @@
       "input": "入力",
       "output": "出力",
       "reasoning": "推論",
-      "cache": "キャッシュ"
+      "cache": "キャッシュ",
+      "details": {
+        "remaining": "残り",
+        "model": "モデル",
+        "status": "状態",
+        "source": "集計元",
+        "statusValue": {
+          "ok": "正常",
+          "warn": "上限間近",
+          "compact": "圧縮が必要"
+        },
+        "sourceValue": {
+          "server": "サーバー集計",
+          "estimated": "推定値"
+        }
+      }
     },
     "toolCards": {
       "weather": {

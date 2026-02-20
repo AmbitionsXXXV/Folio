@@ -14,6 +14,15 @@ export type CitationSource = {
 	quote?: string
 }
 
+/** Metadata for a context compaction event */
+export type CompactInfo = {
+	compactedAt: string
+	originalMessageCount: number
+	compactedMessageCount: number
+	keptMessageCount: number
+	summaryTokens: number
+}
+
 /** Chat message type for the knowledge page */
 export type ChatMessage = UIMessage & {
 	content: string
@@ -30,10 +39,13 @@ export type ChatMessage = UIMessage & {
 		outputTokens?: number
 		totalTokens?: number
 		reasoningTokens?: number
+		cachedInputTokens?: number
 		costUSD?: number
 	}
 	/** Mention titles for rendering @mentions in user messages */
 	mentionTitles?: string[]
+	/** Context compaction metadata for summary messages */
+	compactInfo?: CompactInfo
 }
 
 /** Context usage information */

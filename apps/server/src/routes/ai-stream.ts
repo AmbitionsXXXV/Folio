@@ -12,6 +12,7 @@ import { createContext } from '@folionote/api/context'
 import { createLogger } from '@folionote/log'
 import type { NoteToolContext } from '@folionote/note-tool/types'
 import {
+	generateText as aiGenerateText,
 	streamText as aiStreamText,
 	convertToModelMessages,
 	createIdGenerator,
@@ -35,6 +36,7 @@ import {
 	searchNotesForRag,
 } from '../services/notes'
 import type { App } from '../types'
+import { calculateCostFromUsage } from '../utils/cost'
 import { convertToSupportedLanguage } from '../utils/language'
 
 const log = createLogger({ prefix: 'ai-stream' })
@@ -78,6 +80,17 @@ type AiStreamRequestBody = {
 	ragTopK?: number
 	/** Optional: Enable extended thinking/reasoning */
 	enableReasoning?: boolean
+}
+
+type AiCompactRequestBody = {
+	chatId: string
+	provider: string
+	apiKey: string
+	baseUrl?: string
+	model?: string
+	messages?: UIMessage[]
+	keepRecentCount?: number
+	tokensToCompact?: number
 }
 
 // =============================================================================
@@ -156,6 +169,275 @@ function buildProviderOptions(provider: AiProvider, enableReasoning: boolean) {
 			}
 		default:
 			return undefined
+	}
+}
+
+const DEFAULT_KEEP_RECENT_COUNT = 4
+const MIN_KEEP_RECENT_COUNT = 2
+const MAX_KEEP_RECENT_COUNT = 12
+const ESTIMATED_CHARS_PER_TOKEN = 4
+const COMPACT_SUMMARY_FALLBACK = 'Conversation context compacted.'
+
+const COMPACT_SUMMARY_SYSTEM_PROMPT = [
+	'You are compacting a long conversation for future turns.',
+	'Summarize key user goals, constraints, facts, decisions, open questions, and pending tasks.',
+	'Preserve concrete values (numbers, dates, names, code identifiers, URLs).',
+	'Do not invent details and do not include unnecessary prose.',
+	'Return concise markdown bullet points.',
+].join('\n')
+
+type UsageMetadata = {
+	inputTokens?: number
+	outputTokens?: number
+	totalTokens?: number
+	reasoningTokens?: number
+	cachedInputTokens?: number
+	costUSD?: number
+}
+
+type CompactInfo = {
+	compactedAt: string
+	originalMessageCount: number
+	compactedMessageCount: number
+	keptMessageCount: number
+	summaryTokens: number
+}
+
+function sanitizeKeepRecentCount(value: number | undefined): number {
+	if (typeof value !== 'number' || Number.isNaN(value)) {
+		return DEFAULT_KEEP_RECENT_COUNT
+	}
+	return Math.min(
+		MAX_KEEP_RECENT_COUNT,
+		Math.max(MIN_KEEP_RECENT_COUNT, Math.floor(value))
+	)
+}
+
+function extractMessageText(message: UIMessage): string {
+	const parts = message.parts ?? []
+	const fragments: string[] = []
+	for (const part of parts) {
+		if (part.type === 'text' && typeof part.text === 'string') {
+			fragments.push(part.text)
+		}
+		if (
+			part.type === 'reasoning' &&
+			'text' in part &&
+			typeof part.text === 'string'
+		) {
+			fragments.push(`[Reasoning] ${part.text}`)
+		}
+	}
+	return fragments.join('\n').trim()
+}
+
+function estimateMessageTokens(message: UIMessage): number {
+	return Math.ceil(extractMessageText(message).length / ESTIMATED_CHARS_PER_TOKEN)
+}
+
+function resolveCompactionSplitIndex(
+	messages: UIMessage[],
+	keepRecentCount: number,
+	tokensToCompact: number | undefined
+): number {
+	const minimumSplitIndex = Math.max(0, messages.length - keepRecentCount)
+	if (!(tokensToCompact && tokensToCompact > 0)) {
+		return minimumSplitIndex
+	}
+
+	let compactedTokens = 0
+	let splitIndex = 0
+	while (splitIndex < minimumSplitIndex && compactedTokens < tokensToCompact) {
+		compactedTokens += estimateMessageTokens(messages[splitIndex] as UIMessage)
+		splitIndex += 1
+	}
+
+	return Math.max(splitIndex, Math.min(1, minimumSplitIndex))
+}
+
+function buildCompactTranscript(messages: UIMessage[]): string {
+	return messages
+		.map((message, index) => {
+			const text = extractMessageText(message)
+			if (!text) return null
+			return `#${index + 1} [${message.role}]\n${text}`
+		})
+		.filter((item): item is string => Boolean(item))
+		.join('\n\n')
+}
+
+function normalizeUsageMetadata(value: unknown): UsageMetadata | undefined {
+	if (!value || typeof value !== 'object') return undefined
+	const usageRecord = value as Record<string, unknown>
+	const inputTokens =
+		typeof usageRecord.inputTokens === 'number' ? usageRecord.inputTokens : undefined
+	const outputTokens =
+		typeof usageRecord.outputTokens === 'number'
+			? usageRecord.outputTokens
+			: undefined
+	const totalTokens =
+		typeof usageRecord.totalTokens === 'number' ? usageRecord.totalTokens : undefined
+	const reasoningTokens =
+		typeof usageRecord.reasoningTokens === 'number'
+			? usageRecord.reasoningTokens
+			: undefined
+	const cachedInputTokens =
+		typeof usageRecord.cachedInputTokens === 'number'
+			? usageRecord.cachedInputTokens
+			: undefined
+
+	if (
+		[
+			inputTokens,
+			outputTokens,
+			totalTokens,
+			reasoningTokens,
+			cachedInputTokens,
+		].every((item) => item === undefined)
+	) {
+		return undefined
+	}
+
+	return {
+		inputTokens,
+		outputTokens,
+		totalTokens,
+		reasoningTokens,
+		cachedInputTokens,
+	}
+}
+
+type CompactRouteResponse = {
+	chatId: string
+	messages: UIMessage[]
+	summary: string
+	compactedCount: number
+	keptCount: number
+	compactInfo?: CompactInfo
+}
+
+function createNoCompactResponse(
+	chatId: string,
+	messages: UIMessage[]
+): CompactRouteResponse {
+	return {
+		chatId,
+		messages,
+		summary: '',
+		compactedCount: 0,
+		keptCount: messages.length,
+	}
+}
+
+type CompactExecutionInput = {
+	userId: string
+	chatId: string
+	provider: AiProvider
+	model?: string
+	credential: DecryptedCredential
+	providedMessages?: UIMessage[]
+	keepRecentCount?: number
+	tokensToCompact?: number
+}
+
+async function executeContextCompaction(
+	input: CompactExecutionInput
+): Promise<CompactRouteResponse> {
+	const {
+		userId,
+		chatId,
+		provider,
+		model,
+		credential,
+		providedMessages,
+		keepRecentCount,
+		tokensToCompact,
+	} = input
+
+	const currentMessages =
+		providedMessages && providedMessages.length > 0
+			? providedMessages
+			: await loadChatMessages(userId, chatId)
+	const effectiveKeepRecentCount = sanitizeKeepRecentCount(keepRecentCount)
+	if (currentMessages.length <= effectiveKeepRecentCount) {
+		return createNoCompactResponse(chatId, currentMessages)
+	}
+
+	const splitIndex = resolveCompactionSplitIndex(
+		currentMessages,
+		effectiveKeepRecentCount,
+		tokensToCompact
+	)
+	if (splitIndex <= 0 || splitIndex >= currentMessages.length) {
+		return createNoCompactResponse(chatId, currentMessages)
+	}
+
+	const oldMessages = currentMessages.slice(0, splitIndex)
+	const recentMessages = currentMessages.slice(splitIndex)
+	const transcript = buildCompactTranscript(oldMessages)
+	if (!transcript) {
+		return createNoCompactResponse(chatId, currentMessages)
+	}
+
+	const compactModel = createVercelAiChatModel(credential, { model })
+	const compactResult = await aiGenerateText({
+		model: compactModel,
+		system: COMPACT_SUMMARY_SYSTEM_PROMPT,
+		prompt: [
+			'Conversation transcript (older turns to compact):',
+			transcript,
+			'',
+			'Return only the compact summary.',
+		].join('\n'),
+	})
+
+	const summaryText = compactResult.text.trim() || COMPACT_SUMMARY_FALLBACK
+	const compactInfo: CompactInfo = {
+		compactedAt: new Date().toISOString(),
+		originalMessageCount: currentMessages.length,
+		compactedMessageCount: oldMessages.length,
+		keptMessageCount: recentMessages.length,
+		summaryTokens: Math.ceil(summaryText.length / ESTIMATED_CHARS_PER_TOKEN),
+	}
+	const summaryUsage = normalizeUsageMetadata(compactResult.usage)
+	const summaryUsageWithCost =
+		summaryUsage && compactModel.modelId
+			? {
+					...summaryUsage,
+					costUSD:
+						summaryUsage.costUSD ??
+						calculateCostFromUsage(provider, compactModel.modelId, summaryUsage),
+				}
+			: summaryUsage
+
+	const generateSummaryMessageId = createIdGenerator({
+		prefix: 'msg',
+		size: 16,
+	})
+	const summaryMessage: UIMessage = {
+		id: generateSummaryMessageId(),
+		role: 'assistant',
+		parts: [{ type: 'text', text: summaryText }],
+		metadata: {
+			compactInfo,
+			usage: summaryUsageWithCost,
+		},
+	}
+	const compactedMessages = [summaryMessage, ...recentMessages]
+
+	await saveChat({
+		userId,
+		chatId,
+		messages: compactedMessages,
+	})
+
+	return {
+		chatId,
+		messages: compactedMessages,
+		summary: summaryText,
+		compactedCount: oldMessages.length,
+		keptCount: recentMessages.length,
+		compactInfo,
 	}
 }
 
@@ -323,6 +605,56 @@ export function registerAiStreamRoute(app: App) {
 		return c.json({ success: true, deleted })
 	})
 
+	// POST /api/ai/compact - Compact long conversation context
+	app.post('/api/ai/compact', async (c) => {
+		const detectedLanguage = c.get('language')
+		const locale = convertToSupportedLanguage(detectedLanguage)
+		const context = await createContext({ context: c, locale })
+
+		if (!context.session?.user) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const body = await c.req.json<AiCompactRequestBody>()
+		const { chatId, provider, apiKey, baseUrl, model, messages, keepRecentCount } =
+			body
+
+		if (!(chatId && provider && apiKey)) {
+			return c.json({ error: 'Missing required fields' }, 400)
+		}
+
+		if (!AI_PROVIDERS.includes(provider as (typeof AI_PROVIDERS)[number])) {
+			return c.json({ error: `Unsupported provider: ${provider}` }, 400)
+		}
+
+		const userId = context.session.user.id
+		const providerConfig = PROVIDER_CONFIGS[provider as AiProvider]
+		const credential: DecryptedCredential = {
+			provider: provider as AiProvider,
+			apiKey,
+			baseUrl: baseUrl?.trim() || providerConfig.defaultBaseUrl,
+			model,
+		}
+
+		try {
+			const compactedResult = await executeContextCompaction({
+				userId,
+				chatId,
+				provider: provider as AiProvider,
+				model,
+				credential,
+				providedMessages: messages,
+				keepRecentCount,
+				tokensToCompact: body.tokensToCompact,
+			})
+			return c.json(compactedResult)
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+			log.error('Compact error:', error)
+			return c.json({ error: errorMessage }, 500)
+		}
+	})
+
 	// POST /api/ai/stream - Stream AI response (AI SDK v6 aligned)
 	app.post('/api/ai/stream', async (c) => {
 		const detectedLanguage = c.get('language')
@@ -455,12 +787,18 @@ export function registerAiStreamRoute(app: App) {
 				messageMetadata: ({ part }) => {
 					// Send usage when generation finishes
 					if (part.type === 'finish') {
+						const usage: UsageMetadata = {
+							inputTokens: part.totalUsage.inputTokens,
+							outputTokens: part.totalUsage.outputTokens,
+							totalTokens: part.totalUsage.totalTokens,
+							reasoningTokens: part.totalUsage.outputTokenDetails?.reasoningTokens,
+						}
+						const costUSD = calculateCostFromUsage(provider, aiModel.modelId, usage)
+
 						return {
 							usage: {
-								inputTokens: part.totalUsage.inputTokens,
-								outputTokens: part.totalUsage.outputTokens,
-								totalTokens: part.totalUsage.totalTokens,
-								reasoningTokens: part.totalUsage.outputTokenDetails?.reasoningTokens,
+								...usage,
+								costUSD,
 							},
 						}
 					}

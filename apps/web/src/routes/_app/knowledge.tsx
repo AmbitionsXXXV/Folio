@@ -1,16 +1,29 @@
+import { Button } from '@folionote/ui/button'
 import { CollapsibleContent } from '@folionote/ui/collapsible'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@folionote/ui/sheet'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import {
 	AiBrain01Icon,
 	Cancel01Icon,
+	MessageAdd01Icon,
 	Setting06Icon,
+	SidebarLeftIcon,
 	Tick02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import type { FileUIPart } from 'ai'
-import { nanoid } from 'nanoid'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+	Fragment,
+	lazy,
+	memo,
+	Suspense,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -22,6 +35,18 @@ import {
 	ConfirmationRequest,
 	ConfirmationTitle,
 } from '@/components/ai-elements/confirmation'
+import {
+	Context,
+	ContextCacheUsage,
+	ContextContent,
+	ContextContentBody,
+	ContextContentFooter,
+	ContextContentHeader,
+	ContextInputUsage,
+	ContextOutputUsage,
+	ContextReasoningUsage,
+	ContextTrigger,
+} from '@/components/ai-elements/context-usage'
 import {
 	Conversation,
 	ConversationContent,
@@ -64,6 +89,7 @@ import {
 import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
 import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
 import { isApiSupportedProvider, mapProviderIdToApi } from '@/features/knowledge'
+import { CompactMessage } from '@/features/knowledge/components/compact-message'
 import {
 	isDisplayWeatherPart,
 	isStockPricePart,
@@ -74,12 +100,17 @@ import {
 } from '@/features/knowledge/components/tool-cards'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useAiProviderConfig } from '@/hooks/use-ai-provider-config'
+import { useChatSessions } from '@/hooks/use-chat-sessions'
 import {
 	type KnowledgeChatMessage,
 	useKnowledgeChat,
 } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
+import {
+	type SessionContextUsage,
+	useSessionContextUsage,
+} from '@/hooks/use-session-context-usage'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/knowledge')({
@@ -93,6 +124,18 @@ export const Route = createFileRoute('/_app/knowledge')({
 const FILE_ATTACHMENT_ACCEPT = 'image/*,application/pdf'
 const FILE_ATTACHMENT_MAX_FILES = 5
 const FILE_ATTACHMENT_MAX_BYTES = 5_242_880
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'folionote:knowledge:sidebarCollapsed'
+
+const LazyChatHistoryPanel = lazy(async () => {
+	const module = await import('@/features/knowledge/components/chat-history-panel')
+	return { default: module.ChatHistoryPanel }
+})
+
+function preloadChatHistoryPanel(): void {
+	import('@/features/knowledge/components/chat-history-panel').catch(() => {
+		// Ignore preload failures; the regular lazy load will still run.
+	})
+}
 
 const SUGGESTIONS = [
 	'What are the latest trends in AI?',
@@ -510,6 +553,178 @@ type ThinkingToggleProps = {
 	onToggle: (enabled: boolean) => void
 }
 
+type ContextCompactBannerProps = {
+	contextUsage: SessionContextUsage
+	isCompacting: boolean
+	onCompact: () => void
+}
+
+type ContextDetailRowProps = {
+	label: string
+	value: string
+}
+
+type ContextPopoverDetails = {
+	maxTokens: number
+	remainingTokens: number
+	modelId: string
+	status: SessionContextUsage['status']
+	source: SessionContextUsage['source']
+}
+
+function formatCompactTokenCount(tokenCount: number): string {
+	return new Intl.NumberFormat('en-US', {
+		notation: 'compact',
+	}).format(tokenCount)
+}
+
+function ContextDetailRow({ label, value }: ContextDetailRowProps) {
+	return (
+		<div className="flex items-center justify-between gap-3 text-xs">
+			<span className="text-muted-foreground">{label}</span>
+			<span className="max-w-52 truncate text-right font-mono">{value}</span>
+		</div>
+	)
+}
+
+function buildContextPopoverDetails(
+	contextUsage: SessionContextUsage | null,
+	selectedModel: string
+): ContextPopoverDetails | null {
+	if (!contextUsage) {
+		return null
+	}
+
+	const remainingTokens =
+		typeof contextUsage.remaining === 'number'
+			? Math.max(0, contextUsage.remaining)
+			: Math.max(0, contextUsage.maxTokens - contextUsage.usedTokens)
+
+	return {
+		maxTokens: contextUsage.maxTokens,
+		remainingTokens,
+		modelId: contextUsage.tokenlensModelId ?? selectedModel,
+		status: contextUsage.status,
+		source: contextUsage.source,
+	}
+}
+
+type ContextPopoverDetailRowsProps = {
+	contextPopoverDetails: ContextPopoverDetails | null
+}
+
+function ContextPopoverDetailRows({
+	contextPopoverDetails,
+}: ContextPopoverDetailRowsProps) {
+	const { t } = useTranslation()
+
+	if (!contextPopoverDetails) {
+		return null
+	}
+
+	return (
+		<div className="space-y-1.5 pb-1.5">
+			<ContextDetailRow
+				label={t('knowledge.contextUsageComponent.details.remaining')}
+				value={`${formatCompactTokenCount(contextPopoverDetails.remainingTokens)} / ${formatCompactTokenCount(contextPopoverDetails.maxTokens)}`}
+			/>
+			<ContextDetailRow
+				label={t('knowledge.contextUsageComponent.details.model')}
+				value={`${contextPopoverDetails.modelId} (${formatCompactTokenCount(contextPopoverDetails.maxTokens)})`}
+			/>
+			<ContextDetailRow
+				label={t('knowledge.contextUsageComponent.details.status')}
+				value={t(
+					`knowledge.contextUsageComponent.details.statusValue.${contextPopoverDetails.status}`
+				)}
+			/>
+			<ContextDetailRow
+				label={t('knowledge.contextUsageComponent.details.source')}
+				value={t(
+					`knowledge.contextUsageComponent.details.sourceValue.${contextPopoverDetails.source}`
+				)}
+			/>
+		</div>
+	)
+}
+
+type ContextUsagePopoverProps = {
+	sessionContextUsage: SessionContextUsage | null
+	selectedModel: string
+	contextPopoverDetails: ContextPopoverDetails | null
+}
+
+function ContextUsagePopover({
+	sessionContextUsage,
+	selectedModel,
+	contextPopoverDetails,
+}: ContextUsagePopoverProps) {
+	if (!sessionContextUsage || sessionContextUsage.usedTokens <= 0) {
+		return null
+	}
+
+	return (
+		<Context
+			maxTokens={sessionContextUsage.maxTokens}
+			modelId={sessionContextUsage.tokenlensModelId ?? selectedModel}
+			usage={sessionContextUsage.sessionUsage}
+			usedTokens={sessionContextUsage.usedTokens}
+		>
+			<ContextTrigger className="h-8 gap-1.5 rounded-lg px-2 text-xs" size="sm" />
+			<ContextContent align="start" side="top">
+				<ContextContentHeader />
+				<ContextContentBody className="space-y-1.5">
+					<ContextPopoverDetailRows contextPopoverDetails={contextPopoverDetails} />
+					<ContextInputUsage />
+					<ContextOutputUsage />
+					<ContextReasoningUsage />
+					<ContextCacheUsage />
+				</ContextContentBody>
+				<ContextContentFooter />
+			</ContextContent>
+		</Context>
+	)
+}
+
+function ContextCompactBanner({
+	contextUsage,
+	isCompacting,
+	onCompact,
+}: ContextCompactBannerProps) {
+	const { t } = useTranslation()
+
+	if (!contextUsage.shouldCompact) return null
+
+	return (
+		<div
+			className={cn(
+				'mb-2 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs',
+				contextUsage.status === 'compact'
+					? 'border-destructive/60 bg-destructive/5 text-destructive'
+					: 'border-yellow-500/50 bg-yellow-500/5 text-yellow-700 dark:text-yellow-400'
+			)}
+		>
+			<p className="font-medium">
+				{t('knowledge.compactMessage.banner', {
+					percent: contextUsage.percent,
+					tokens: contextUsage.tokensToCompact,
+				})}
+			</p>
+			<Button
+				className="h-7 px-2 text-xs"
+				disabled={isCompacting}
+				onClick={onCompact}
+				size="sm"
+				variant={contextUsage.status === 'compact' ? 'destructive' : 'outline'}
+			>
+				{isCompacting
+					? t('knowledge.compactMessage.compacting')
+					: t('knowledge.compactMessage.compactNow')}
+			</Button>
+		</div>
+	)
+}
+
 function ThinkingToggle({
 	thinkingActive,
 	thinkingEnabled,
@@ -620,8 +835,29 @@ function KnowledgePage() {
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 	const [thinkingEnabled, setThinkingEnabled] = useState(false)
 	const [inputValue, setInputValue] = useState('')
+	const [isHistoryCollapsed, setIsHistoryCollapsed] = useState<boolean>(() => {
+		if (typeof window === 'undefined') return false
+		return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
+	})
+	const [isMobileHistoryOpen, setMobileHistoryOpen] = useState(false)
+	const loadedChatIdRef = useRef<string | null>(null)
+	const autoCompactKeyRef = useRef<string | null>(null)
 
-	const [chatId] = useState<string>(() => nanoid(16))
+	const {
+		sessions,
+		selectedChatId,
+		isLoading: isSessionsLoading,
+		error: sessionsError,
+		refreshSessions,
+		selectChat,
+		createChat,
+		deleteChat,
+		deleteEmptyChat,
+		isSessionEmpty,
+	} = useChatSessions({
+		autoLoad: true,
+		autoCreateIfEmpty: true,
+	})
 
 	// ---- Resolve API key ----
 	const {
@@ -632,24 +868,41 @@ function KnowledgePage() {
 		isModelConfigLoaded,
 	} = useProviderApiKey(selectedProvider)
 
+	const handleMessageComplete = useCallback(async () => {
+		await refreshSessions()
+	}, [refreshSessions])
+
 	// ---- Chat hook ----
 	const {
 		messages,
 		isStreaming,
 		isLoading,
+		isCompacting,
 		error: chatError,
 		sendMessage,
+		compactContext,
 		addToolApprovalResponse,
+		clearMessages,
+		loadMessages,
+		resetChat,
 	} = useKnowledgeChat({
-		chatId,
+		chatId: selectedChatId ?? '',
 		provider: apiProviderId,
 		apiKey: activeApiKey,
 		baseUrl: activeBaseUrl,
 		model: selectedModel.trim() || '',
 		enableReasoning: thinkingEnabled,
+		onMessageComplete: handleMessageComplete,
 	})
 
-	const isPending = isStreaming || isLoading
+	const isPending = isStreaming || isLoading || isCompacting
+	const firstSessionId = sessions[0]?.chatId
+
+	const getErrorMessage = useCallback(
+		(error: unknown): string =>
+			error instanceof Error ? error.message : t('knowledge.requestFailed'),
+		[t]
+	)
 
 	// ---- Model selection helpers ----
 	const getEnabledChatModels = useCallback(
@@ -715,6 +968,12 @@ function KnowledgePage() {
 		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
 	)
 	const thinkingActive = hasToggleableReasoning ? thinkingEnabled : true
+	const sessionContextUsage = useSessionContextUsage({
+		messages,
+		providerId: selectedProvider,
+		modelId: selectedModel,
+		modelContextWindowTokens: selectedModelInfo?.contextWindowTokens,
+	})
 
 	useEffect(() => {
 		if (!supportsThinking) {
@@ -731,6 +990,105 @@ function KnowledgePage() {
 		}
 	}, [chatError, t])
 
+	useEffect(() => {
+		if (sessionsError) {
+			toast.error(sessionsError.message || t('knowledge.requestFailed'))
+		}
+	}, [sessionsError, t])
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+		localStorage.setItem(
+			SIDEBAR_COLLAPSED_STORAGE_KEY,
+			isHistoryCollapsed ? 'true' : 'false'
+		)
+	}, [isHistoryCollapsed])
+
+	useEffect(() => {
+		if (!selectedChatId) {
+			loadedChatIdRef.current = null
+			autoCompactKeyRef.current = null
+			clearMessages()
+			return
+		}
+
+		if (loadedChatIdRef.current === selectedChatId) return
+
+		loadedChatIdRef.current = selectedChatId
+		loadMessages(selectedChatId).catch((error: unknown) => {
+			loadedChatIdRef.current = null
+			toast.error(getErrorMessage(error))
+		})
+	}, [selectedChatId, clearMessages, loadMessages, getErrorMessage])
+
+	useEffect(() => {
+		autoCompactKeyRef.current = null
+	}, [selectedChatId])
+
+	useEffect(() => {
+		if (!selectedChatId) return
+		if (!sessionContextUsage?.shouldCompact) return
+		if (isPending || isCompacting) return
+
+		const autoCompactKey = [
+			selectedChatId,
+			messages.length,
+			sessionContextUsage.tokensToCompact,
+		].join(':')
+		if (autoCompactKeyRef.current === autoCompactKey) return
+		autoCompactKeyRef.current = autoCompactKey
+
+		compactContext({
+			tokensToCompact: sessionContextUsage.tokensToCompact,
+		})
+			.then((result) => {
+				if (!result) return
+				toast.success(
+					t('knowledge.compactMessage.success', {
+						count: result.compactedCount,
+					})
+				)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [
+		compactContext,
+		getErrorMessage,
+		isCompacting,
+		isPending,
+		messages.length,
+		selectedChatId,
+		sessionContextUsage,
+		t,
+	])
+
+	useEffect(() => {
+		if (isSessionsLoading || selectedChatId) return
+
+		if (firstSessionId) {
+			selectChat(firstSessionId)
+			return
+		}
+
+		createChat()
+			.then((newChatId) => {
+				loadedChatIdRef.current = newChatId
+				resetChat(newChatId)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [
+		isSessionsLoading,
+		selectedChatId,
+		firstSessionId,
+		selectChat,
+		createChat,
+		resetChat,
+		getErrorMessage,
+	])
+
 	// ---- Handlers ----
 	const handleModelChange = useCallback(
 		(modelId: string, providerId?: string) => {
@@ -745,11 +1103,112 @@ function KnowledgePage() {
 		[catalogModels, selectedProvider, saveLastUsed]
 	)
 
+	const handleSelectChat = useCallback(
+		(chatSessionId: string) => {
+			if (isPending || chatSessionId === selectedChatId) {
+				setMobileHistoryOpen(false)
+				return
+			}
+
+			selectChat(chatSessionId)
+			setMobileHistoryOpen(false)
+		},
+		[isPending, selectedChatId, selectChat]
+	)
+
+	const handleNewChat = useCallback(async () => {
+		if (isPending) return
+
+		try {
+			if (selectedChatId && isSessionEmpty(selectedChatId)) {
+				await deleteEmptyChat(selectedChatId)
+			}
+
+			const newChatId = await createChat()
+			loadedChatIdRef.current = newChatId
+			resetChat(newChatId)
+			setInputValue('')
+			setMobileHistoryOpen(false)
+		} catch (error: unknown) {
+			toast.error(getErrorMessage(error))
+		}
+	}, [
+		isPending,
+		selectedChatId,
+		isSessionEmpty,
+		deleteEmptyChat,
+		createChat,
+		resetChat,
+		getErrorMessage,
+	])
+
+	const handleDeleteChat = useCallback(
+		async (chatSessionId: string) => {
+			if (isPending) return
+
+			try {
+				const wasDeleted = await deleteChat(chatSessionId)
+				if (!wasDeleted) return
+
+				if (chatSessionId === selectedChatId) {
+					loadedChatIdRef.current = null
+					clearMessages()
+				}
+
+				setMobileHistoryOpen(false)
+				await refreshSessions()
+			} catch (error: unknown) {
+				toast.error(getErrorMessage(error))
+			}
+		},
+		[
+			isPending,
+			deleteChat,
+			selectedChatId,
+			clearMessages,
+			refreshSessions,
+			getErrorMessage,
+		]
+	)
+
+	const handleDesktopHistoryToggle = useCallback(() => {
+		setIsHistoryCollapsed((isCollapsed) => !isCollapsed)
+	}, [])
+
+	const handleOpenMobileHistory = useCallback(() => {
+		setMobileHistoryOpen(true)
+	}, [])
+
+	const handleCompactNow = useCallback(() => {
+		if (!sessionContextUsage || isPending || isCompacting) return
+		compactContext({
+			tokensToCompact: sessionContextUsage.tokensToCompact,
+		})
+			.then((result) => {
+				if (!result) return
+				toast.success(
+					t('knowledge.compactMessage.success', {
+						count: result.compactedCount,
+					})
+				)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [
+		compactContext,
+		getErrorMessage,
+		isCompacting,
+		isPending,
+		sessionContextUsage,
+		t,
+	])
+
 	const handleSubmit = useCallback(
 		(message: PromptInputMessage) => {
 			const trimmedText = message.text.trim()
 			const hasFiles = message.files.length > 0
-			if (!(trimmedText || hasFiles) || isPending) return
+			if (!(trimmedText || hasFiles) || isPending || !selectedChatId) return
 
 			if (!isApiSupportedProvider(selectedProvider)) {
 				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
@@ -760,12 +1219,12 @@ function KnowledgePage() {
 			setInputValue('')
 			sendMessage({ text: promptText, files: message.files })
 		},
-		[isPending, selectedProvider, sendMessage, t]
+		[isPending, selectedChatId, selectedProvider, sendMessage, t]
 	)
 
 	const handleSuggestionClick = useCallback(
 		(suggestion: string) => {
-			if (isPending) return
+			if (isPending || !selectedChatId) return
 			if (!isApiSupportedProvider(selectedProvider)) {
 				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
 				return
@@ -773,7 +1232,7 @@ function KnowledgePage() {
 			setInputValue('')
 			sendMessage({ text: suggestion })
 		},
-		[isPending, selectedProvider, sendMessage]
+		[isPending, selectedChatId, selectedProvider, sendMessage]
 	)
 
 	const handleTextChange = useCallback(
@@ -795,137 +1254,258 @@ function KnowledgePage() {
 		)
 	}, [isPending, messages])
 
-	const isInputDisabled = isPending || !hasApiKey
+	const isInputDisabled = isPending || !hasApiKey || !selectedChatId
+	const contextPopoverDetails = useMemo(
+		() => buildContextPopoverDetails(sessionContextUsage, selectedModel),
+		[sessionContextUsage, selectedModel]
+	)
 
 	return (
-		<div className="relative flex h-svh flex-col divide-y overflow-hidden">
-			{/* Conversation area */}
-			<Conversation>
-				<ConversationContent className="gap-4 p-4">
-					{messages.length > 0 ? (
-						<>
-							{messages.map((message) => (
-								<ChatMessageItem
-									key={message.id}
-									message={message}
-									onToolApprovalResponse={addToolApprovalResponse}
-									thinkingEnabled={thinkingEnabled}
-								/>
-							))}
-							{showWaiting ? <WaitingIndicator /> : null}
-						</>
-					) : (
-						<ConversationEmptyState
-							description={t('knowledge.emptyState.description')}
-							icon={
-								<HugeiconsIcon
-									className="size-12 text-muted-foreground/50"
-									icon={AiBrain01Icon}
-								/>
-							}
-							title={t('knowledge.emptyState.title')}
-						/>
-					)}
-				</ConversationContent>
-				<ConversationScrollButton />
-			</Conversation>
-
-			{/* Bottom: suggestions + input */}
-			<div className="grid shrink-0 gap-4 pt-4">
-				{messages.length === 0 ? (
-					<Suggestions className="px-4">
-						{SUGGESTIONS.map((suggestion) => (
-							<Suggestion
-								key={suggestion}
-								onClick={handleSuggestionClick}
-								suggestion={suggestion}
-							/>
-						))}
-					</Suggestions>
-				) : null}
-
-				<div className="w-full px-4 pb-4">
-					<PromptInput
-						accept={FILE_ATTACHMENT_ACCEPT}
-						className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
-						globalDrop
-						maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
-						maxFiles={FILE_ATTACHMENT_MAX_FILES}
-						multiple
-						onError={(error) => {
-							toast.error(error.message)
-						}}
-						onSubmit={handleSubmit}
+		<div className="relative flex h-svh overflow-hidden">
+			<Sheet onOpenChange={setMobileHistoryOpen} open={isMobileHistoryOpen}>
+				<SheetContent
+					className="w-[85vw] max-w-[320px] p-0 sm:w-[320px]"
+					side="left"
+				>
+					<SheetHeader className="sr-only">
+						<SheetTitle>{t('knowledge.chatHistory')}</SheetTitle>
+					</SheetHeader>
+					<Suspense
+						fallback={
+							<div className="h-full space-y-2 border-r bg-background p-3">
+								<div className="h-10 rounded-lg bg-muted/60" />
+								<div className="h-18 rounded-lg bg-muted/40" />
+								<div className="h-18 rounded-lg bg-muted/40" />
+							</div>
+						}
 					>
-						<AttachmentDisplay />
-						<PromptInputBody>
-							<PromptInputTextarea
-								disabled={isInputDisabled}
-								onChange={handleTextChange}
-								placeholder={
-									hasApiKey
-										? t('knowledge.inputPlaceholder')
-										: t('knowledge.configureApiKeyFirst')
-								}
-								value={inputValue}
-							/>
-						</PromptInputBody>
-						<PromptInputFooter className="px-3">
-							<PromptInputTools>
-								<PromptInputActionMenu>
-									<PromptInputActionMenuTrigger
-										aria-label={t('knowledge.addAttachments')}
-										disabled={isInputDisabled}
-									/>
-									<PromptInputActionMenuContent>
-										<PromptInputActionAddAttachments
-											label={t('knowledge.addAttachments')}
+						<LazyChatHistoryPanel
+							className="h-full border-r-0"
+							isLoading={isSessionsLoading}
+							onDeleteChat={handleDeleteChat}
+							onNewChat={handleNewChat}
+							onSelectChat={handleSelectChat}
+							selectedChatId={selectedChatId}
+							sessions={sessions}
+						/>
+					</Suspense>
+				</SheetContent>
+			</Sheet>
+
+			{isHistoryCollapsed ? null : (
+				<div className="hidden h-full w-[280px] shrink-0 md:block">
+					<Suspense
+						fallback={
+							<div className="h-full space-y-2 border-r bg-background p-3">
+								<div className="h-10 rounded-lg bg-muted/60" />
+								<div className="h-18 rounded-lg bg-muted/40" />
+								<div className="h-18 rounded-lg bg-muted/40" />
+							</div>
+						}
+					>
+						<LazyChatHistoryPanel
+							className="h-full"
+							isLoading={isSessionsLoading}
+							onDeleteChat={handleDeleteChat}
+							onNewChat={handleNewChat}
+							onSelectChat={handleSelectChat}
+							selectedChatId={selectedChatId}
+							sessions={sessions}
+						/>
+					</Suspense>
+				</div>
+			)}
+
+			<div className="flex min-w-0 flex-1 flex-col divide-y overflow-hidden">
+				<div className="flex items-center justify-between gap-2 px-4 py-2">
+					<Button
+						className="inline-flex gap-2 md:hidden"
+						onClick={handleOpenMobileHistory}
+						onFocus={preloadChatHistoryPanel}
+						onMouseEnter={preloadChatHistoryPanel}
+						size="sm"
+						variant="outline"
+					>
+						<HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
+						<span>{t('knowledge.chatHistory')}</span>
+					</Button>
+					<Button
+						className="hidden gap-2 md:inline-flex"
+						onClick={handleDesktopHistoryToggle}
+						onFocus={preloadChatHistoryPanel}
+						onMouseEnter={preloadChatHistoryPanel}
+						size="sm"
+						variant="outline"
+					>
+						<HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
+						<span>{t('knowledge.chatHistory')}</span>
+					</Button>
+
+					<Button
+						className="inline-flex gap-2"
+						disabled={isPending}
+						onClick={handleNewChat}
+						size="sm"
+						variant="ghost"
+					>
+						<HugeiconsIcon className="size-4" icon={MessageAdd01Icon} />
+						<span>{t('knowledge.newChat')}</span>
+					</Button>
+				</div>
+
+				<div className="flex min-h-0 flex-1 flex-col divide-y overflow-hidden">
+					{/* Conversation area */}
+					<Conversation>
+						<ConversationContent className="gap-4 p-4">
+							{messages.length > 0 ? (
+								<>
+									{sessionContextUsage ? (
+										<ContextCompactBanner
+											contextUsage={sessionContextUsage}
+											isCompacting={isCompacting}
+											onCompact={handleCompactNow}
 										/>
-									</PromptInputActionMenuContent>
-								</PromptInputActionMenu>
-
-								<AiModelSelector
-									catalogModels={catalogModels}
-									catalogProviders={catalogProviders}
-									className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
-									disabled={isInputDisabled}
-									onValueChange={handleModelChange}
-									placeholder={t('knowledge.selectModel')}
-									value={selectedModel}
+									) : null}
+									{messages.map((message) => (
+										<Fragment key={message.id}>
+											{message.compactInfo ? (
+												<CompactMessage
+													compactInfo={message.compactInfo}
+													summary={message.content}
+												/>
+											) : (
+												<ChatMessageItem
+													message={message}
+													onToolApprovalResponse={addToolApprovalResponse}
+													thinkingEnabled={thinkingEnabled}
+												/>
+											)}
+										</Fragment>
+									))}
+									{showWaiting ? <WaitingIndicator /> : null}
+								</>
+							) : (
+								<ConversationEmptyState
+									description={t('knowledge.emptyState.description')}
+									icon={
+										<HugeiconsIcon
+											className="size-12 text-muted-foreground/50"
+											icon={AiBrain01Icon}
+										/>
+									}
+									title={t('knowledge.emptyState.title')}
 								/>
+							)}
+						</ConversationContent>
+						<ConversationScrollButton />
+					</Conversation>
 
-								{supportsThinking ? (
-									<ThinkingToggle
-										hasToggleableReasoning={hasToggleableReasoning}
-										onToggle={setThinkingEnabled}
-										thinkingActive={thinkingActive}
-										thinkingEnabled={thinkingEnabled}
+					{/* Bottom: suggestions + input */}
+					<div className="grid shrink-0 gap-4 pt-4">
+						{messages.length === 0 ? (
+							<Suggestions className="px-4">
+								{SUGGESTIONS.map((suggestion) => (
+									<Suggestion
+										key={suggestion}
+										onClick={handleSuggestionClick}
+										suggestion={suggestion}
 									/>
-								) : null}
+								))}
+							</Suggestions>
+						) : null}
 
-								<Link className="contents" to="/settings/models">
-									<PromptInputButton
-										aria-label={t('knowledge.configuration')}
-										variant="ghost"
-									>
-										<HugeiconsIcon className="size-4" icon={Setting06Icon} />
-									</PromptInputButton>
-								</Link>
-							</PromptInputTools>
+						<div className="w-full px-4 pb-4">
+							<PromptInput
+								accept={FILE_ATTACHMENT_ACCEPT}
+								className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
+								globalDrop
+								maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
+								maxFiles={FILE_ATTACHMENT_MAX_FILES}
+								multiple
+								onError={(error) => {
+									toast.error(error.message)
+								}}
+								onSubmit={handleSubmit}
+							>
+								<AttachmentDisplay />
+								<PromptInputBody>
+									<PromptInputTextarea
+										disabled={isInputDisabled}
+										onChange={handleTextChange}
+										placeholder={
+											hasApiKey
+												? t('knowledge.inputPlaceholder')
+												: t('knowledge.configureApiKeyFirst')
+										}
+										value={inputValue}
+									/>
+								</PromptInputBody>
+								<PromptInputFooter className="px-3">
+									<PromptInputTools>
+										<PromptInputActionMenu>
+											<PromptInputActionMenuTrigger
+												aria-label={t('knowledge.addAttachments')}
+												disabled={isInputDisabled}
+											/>
+											<PromptInputActionMenuContent>
+												<PromptInputActionAddAttachments
+													label={t('knowledge.addAttachments')}
+												/>
+											</PromptInputActionMenuContent>
+										</PromptInputActionMenu>
 
-							<PromptInputSubmit
-								aria-label={t('knowledge.send')}
-								className={cn(
-									'transition-colors duration-200 motion-reduce:transition-none',
-									isPending
-										? 'animate-pulse motion-reduce:animate-none'
-										: 'hover:bg-primary/90'
-								)}
-								disabled={!hasApiKey || isPending}
-								status={isPending ? 'submitted' : 'ready'}
-							/>
-						</PromptInputFooter>
-					</PromptInput>
+										<AiModelSelector
+											catalogModels={catalogModels}
+											catalogProviders={catalogProviders}
+											className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+											disabled={isInputDisabled}
+											onValueChange={handleModelChange}
+											placeholder={t('knowledge.selectModel')}
+											value={selectedModel}
+										/>
+
+										{supportsThinking ? (
+											<ThinkingToggle
+												hasToggleableReasoning={hasToggleableReasoning}
+												onToggle={setThinkingEnabled}
+												thinkingActive={thinkingActive}
+												thinkingEnabled={thinkingEnabled}
+											/>
+										) : null}
+
+										<Link className="contents" to="/settings/models">
+											<PromptInputButton
+												aria-label={t('knowledge.configuration')}
+												variant="ghost"
+											>
+												<HugeiconsIcon className="size-4" icon={Setting06Icon} />
+											</PromptInputButton>
+										</Link>
+									</PromptInputTools>
+
+									<div className="flex items-center gap-1">
+										<ContextUsagePopover
+											contextPopoverDetails={contextPopoverDetails}
+											selectedModel={selectedModel}
+											sessionContextUsage={sessionContextUsage}
+										/>
+
+										<PromptInputSubmit
+											aria-label={t('knowledge.send')}
+											className={cn(
+												'transition-colors duration-200 motion-reduce:transition-none',
+												isPending
+													? 'animate-pulse motion-reduce:animate-none'
+													: 'hover:bg-primary/90'
+											)}
+											disabled={isInputDisabled}
+											status={isPending ? 'submitted' : 'ready'}
+										/>
+									</div>
+								</PromptInputFooter>
+							</PromptInput>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

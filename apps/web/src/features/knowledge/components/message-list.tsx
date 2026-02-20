@@ -36,6 +36,7 @@ import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval
 import { Message } from '@/components/chat-message'
 import { cn } from '@/lib/utils'
 import type { ChatMessage } from '../types'
+import { CompactMessage } from './compact-message'
 import { MessageBubble } from './message-bubble'
 import {
 	isDisplayWeatherPart,
@@ -392,12 +393,21 @@ export function MessageList({
 					<>
 						{messages.map((message) => (
 							<Fragment key={message.id}>
-								<MessageProcess
-									message={message}
-									onToolApprovalResponse={onToolApprovalResponse}
-									thinkingEnabled={thinkingEnabled}
-								/>
-								<MessageBubble message={message} onRegenerate={onRegenerate} />
+								{message.compactInfo ? (
+									<CompactMessage
+										compactInfo={message.compactInfo}
+										summary={message.content}
+									/>
+								) : (
+									<>
+										<MessageProcess
+											message={message}
+											onToolApprovalResponse={onToolApprovalResponse}
+											thinkingEnabled={thinkingEnabled}
+										/>
+										<MessageBubble message={message} onRegenerate={onRegenerate} />
+									</>
+								)}
 							</Fragment>
 						))}
 						{showWaiting ? <WaitingIndicator /> : null}

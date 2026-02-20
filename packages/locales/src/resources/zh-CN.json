@@ -845,6 +845,16 @@
       "retry": "重试",
       "copy": "复制"
     },
+    "compactMessage": {
+      "title": "已压缩 {{count}} 条历史消息",
+      "meta": "保留最近 {{kept}} 条消息 · {{time}}",
+      "summaryLabel": "压缩摘要",
+      "justNow": "刚刚",
+      "banner": "上下文已接近上限（{{percent}}%），建议压缩约 {{tokens}} tokens",
+      "compacting": "压缩中…",
+      "compactNow": "立即压缩",
+      "success": "上下文已压缩，合并 {{count}} 条历史消息"
+    },
     "attachments": {
       "errorMaxFiles": "最多可添加 {{count}} 个文件",
       "errorMaxFileSize": "文件大小超过 {{size}}",
@@ -876,7 +886,22 @@
       "input": "输入",
       "output": "输出",
       "reasoning": "推理",
-      "cache": "缓存"
+      "cache": "缓存",
+      "details": {
+        "remaining": "剩余",
+        "model": "模型",
+        "status": "状态",
+        "source": "来源",
+        "statusValue": {
+          "ok": "正常",
+          "warn": "接近上限",
+          "compact": "需要压缩"
+        },
+        "sourceValue": {
+          "server": "服务端统计",
+          "estimated": "估算统计"
+        }
+      }
     },
     "toolCards": {
       "weather": {

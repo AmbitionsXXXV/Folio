@@ -339,6 +339,30 @@ Done:
 新增 note tools 与 AI SDK 6 experimental_context 接入，覆盖创建、更新、删除、查询、搜索。
 补充系统提示与开发文档，形成可复用的工具接入路径。
 
+### 2.16 Knowledge Chat Session 前端集成与首屏性能优化
+
+- [x] 更新 `apps/web/src/hooks/use-chat-sessions.ts`：去除 `refreshSessions` 的闭包依赖，补充空会话首次自动创建逻辑
+- [x] 更新 `apps/web/src/hooks/use-knowledge-chat.ts`：支持动态 `chatId` 同步与 `onMessageComplete` 回调
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx`：集成会话侧栏、会话 CRUD、桌面折叠与移动端抽屉
+- [x] 更新 `apps/web/src/features/knowledge/components/chat-history-panel.tsx`：增加 `content-visibility` 长列表渲染优化
+- [x] 新增 `docs/knowledge-chat-session-frontend.md` 记录本次前端集成细节
+- [x] 运行 `pnpm run check-types` 与 `ReadLints`，确保类型与 lint 全通过
+
+Done:
+完成 Knowledge Chat 的会话前端闭环：创建、切换、删除、历史展示全部打通，并支持刷新恢复最近会话。
+按 Vercel React Best Practices 落地动态加载、预加载、按需拉取与列表渲染优化，兼顾首屏性能与移动端体验。
+
+### 2.17 Knowledge Context Popover 详情增强
+
+- [x] 更新 `apps/web/src/routes/_app/knowledge.tsx`：在 Context 悬浮卡片新增 remaining / model / status / source 详情行
+- [x] 更新 `packages/locales/src/resources/en-US.json`、`packages/locales/src/resources/zh-CN.json`、`packages/locales/src/resources/ja-JP.json`：补齐详情字段的 i18n key
+- [x] 更新 `docs/knowledge-context-auto-compact.md`：补充弹层详情字段说明
+- [x] 运行 `pnpm run check-types` 与 `ReadLints`：验证类型与 lint 状态
+
+Done:
+增强 Knowledge 输入区 Context 悬浮卡片信息密度，新增 remaining、model、status、source 四项详情，保留既有 token 分项与总成本展示。
+补齐三语种文案并更新上下文压缩文档，确保 UI 文案与行为说明一致可追溯。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

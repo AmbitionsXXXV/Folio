@@ -102,6 +102,7 @@ const ChatItem = memo(function ChatItem({
 			aria-selected={isSelected}
 			className={cn(
 				'group relative flex cursor-pointer flex-col gap-1 rounded-lg border-transparent border-l-2 px-3 py-2',
+				'[contain-intrinsic-size:96px] [content-visibility:auto]',
 				'transition-colors duration-200 motion-reduce:transition-none',
 				'hover:bg-muted/60',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

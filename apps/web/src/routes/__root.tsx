@@ -109,6 +109,7 @@ function RootDocument() {
 						</ThemeProvider>
 					</RootProvider>
 					<TanStackDevtools
+						config={{ hideUntilHover: true }}
 						plugins={[
 							{
 								name: 'TanStack Query',
