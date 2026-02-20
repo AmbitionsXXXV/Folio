@@ -368,17 +368,6 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		[clearMessages, setUIMessages]
 	)
 
-	// Switch to a different chat
-	const switchChat = useCallback(
-		async (newChatId: string) => {
-			if (newChatId === serverChatId) return
-
-			setServerChatId(newChatId)
-			await loadMessages(newChatId)
-		},
-		[serverChatId, loadMessages]
-	)
-
 	const compactContext = useCallback(
 		async (
 			options: CompactContextOptions = {}
@@ -441,7 +430,6 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		clearMessages,
 		resetChat,
 		loadMessages,
-		switchChat,
 		compactContext,
 		stop,
 
@@ -465,68 +453,22 @@ function isCompactInfo(value: unknown): value is CompactInfo {
 	)
 }
 
-type MessagePart = NonNullable<UIMessage['parts']>[number]
-
-type TextPart = MessagePart & { type: 'text'; text: string }
-
-type ReasoningPart = MessagePart & {
-	type: 'reasoning'
-	text?: string
-	reasoning?: string
-}
-
 function getLastAssistantMessageId(messages: UIMessage[]): string | undefined {
-	for (let index = messages.length - 1; index >= 0; index -= 1) {
-		const message = messages[index]
-		if (message?.role === 'assistant') {
-			return message.id
-		}
-	}
-	return undefined
+	return messages.findLast((m) => m.role === 'assistant')?.id
 }
 
 function getTextFromParts(parts: UIMessage['parts']): string {
-	if (!parts) return ''
-	const fragments: string[] = []
-	for (const part of parts) {
-		if (isTextPart(part)) {
-			fragments.push(part.text)
-		}
-	}
-	return fragments.join('')
+	return (parts ?? [])
+		.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+		.map((p) => p.text)
+		.join('')
 }
 
 function getReasoningFromParts(parts: UIMessage['parts']): string | undefined {
-	if (!parts) return undefined
-	for (const part of parts) {
-		if (isReasoningPart(part)) {
-			if (typeof part.text === 'string') {
-				return part.text
-			}
-			if (typeof part.reasoning === 'string') {
-				return part.reasoning
-			}
-		}
-	}
+	const part = (parts ?? []).find((p) => p.type === 'reasoning')
+	if (!part) return undefined
+	if ('text' in part && typeof part.text === 'string') return part.text
+	if ('reasoning' in part && typeof part.reasoning === 'string')
+		return part.reasoning
 	return undefined
-}
-
-function isTextPart(part: MessagePart): part is TextPart {
-	return (
-		Boolean(part) &&
-		typeof part === 'object' &&
-		'type' in part &&
-		part.type === 'text' &&
-		'text' in part &&
-		typeof part.text === 'string'
-	)
-}
-
-function isReasoningPart(part: MessagePart): part is ReasoningPart {
-	return (
-		Boolean(part) &&
-		typeof part === 'object' &&
-		'type' in part &&
-		part.type === 'reasoning'
-	)
 }

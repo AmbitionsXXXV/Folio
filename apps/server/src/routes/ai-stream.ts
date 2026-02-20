@@ -18,6 +18,7 @@ import {
 	createIdGenerator,
 	type UIMessage,
 } from 'ai'
+import type { Context as HonoContext } from 'hono'
 import {
 	createChat,
 	deleteChat,
@@ -35,7 +36,7 @@ import {
 	MAX_ATTACHED_NOTES,
 	searchNotesForRag,
 } from '../services/notes'
-import type { App } from '../types'
+import type { App, AppVariables } from '../types'
 import { calculateCostFromUsage } from '../utils/cost'
 import { convertToSupportedLanguage } from '../utils/language'
 
@@ -97,18 +98,41 @@ type AiCompactRequestBody = {
 // Helper Functions
 // =============================================================================
 
-const DATE_PART_PAD_LENGTH = 2
-const MONTH_INDEX_OFFSET = 1
+type AuthenticatedUser = { userId: string; locale: string }
 
-function padDatePart(value: number): string {
-	return String(value).padStart(DATE_PART_PAD_LENGTH, '0')
+async function getAuthenticatedUser(
+	c: HonoContext<{ Variables: AppVariables }>
+): Promise<AuthenticatedUser | null> {
+	const locale = convertToSupportedLanguage(c.get('language'))
+	const ctx = await createContext({ context: c, locale })
+	if (!ctx.session?.user) return null
+	return { userId: ctx.session.user.id, locale }
+}
+
+function isValidProvider(provider: string): provider is AiProvider {
+	return AI_PROVIDERS.includes(provider as (typeof AI_PROVIDERS)[number])
+}
+
+function buildCredential(
+	provider: AiProvider,
+	apiKey: string,
+	baseUrl?: string,
+	model?: string
+): DecryptedCredential {
+	const providerConfig = PROVIDER_CONFIGS[provider]
+	return {
+		provider,
+		apiKey,
+		baseUrl: baseUrl?.trim() || providerConfig.defaultBaseUrl,
+		model,
+	}
 }
 
 function getLocalDateString(date: Date): string {
-	const year = date.getFullYear()
-	const month = padDatePart(date.getMonth() + MONTH_INDEX_OFFSET)
-	const day = padDatePart(date.getDate())
-	return `${year}-${month}-${day}`
+	const y = date.getFullYear()
+	const m = String(date.getMonth() + 1).padStart(2, '0')
+	const d = String(date.getDate()).padStart(2, '0')
+	return `${y}-${m}-${d}`
 }
 
 /**
@@ -266,45 +290,26 @@ function buildCompactTranscript(messages: UIMessage[]): string {
 		.join('\n\n')
 }
 
+const USAGE_KEYS = [
+	'inputTokens',
+	'outputTokens',
+	'totalTokens',
+	'reasoningTokens',
+	'cachedInputTokens',
+] as const
+
 function normalizeUsageMetadata(value: unknown): UsageMetadata | undefined {
 	if (!value || typeof value !== 'object') return undefined
-	const usageRecord = value as Record<string, unknown>
-	const inputTokens =
-		typeof usageRecord.inputTokens === 'number' ? usageRecord.inputTokens : undefined
-	const outputTokens =
-		typeof usageRecord.outputTokens === 'number'
-			? usageRecord.outputTokens
-			: undefined
-	const totalTokens =
-		typeof usageRecord.totalTokens === 'number' ? usageRecord.totalTokens : undefined
-	const reasoningTokens =
-		typeof usageRecord.reasoningTokens === 'number'
-			? usageRecord.reasoningTokens
-			: undefined
-	const cachedInputTokens =
-		typeof usageRecord.cachedInputTokens === 'number'
-			? usageRecord.cachedInputTokens
-			: undefined
-
-	if (
-		[
-			inputTokens,
-			outputTokens,
-			totalTokens,
-			reasoningTokens,
-			cachedInputTokens,
-		].every((item) => item === undefined)
-	) {
-		return undefined
+	const raw = value as Record<string, unknown>
+	const result: Record<string, number> = {}
+	let hasValue = false
+	for (const key of USAGE_KEYS) {
+		if (typeof raw[key] === 'number') {
+			result[key] = raw[key]
+			hasValue = true
+		}
 	}
-
-	return {
-		inputTokens,
-		outputTokens,
-		totalTokens,
-		reasoningTokens,
-		cachedInputTokens,
-	}
+	return hasValue ? (result as UsageMetadata) : undefined
 }
 
 type CompactRouteResponse = {
@@ -455,48 +460,23 @@ async function executeContextCompaction(
  * - toUIMessageStreamResponse for proper UIMessage format
  */
 export function registerAiStreamRoute(app: App) {
-	// GET /api/ai/chats - List all chat sessions for the user
 	app.get('/api/ai/chats', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
-
-		const userId = context.session.user.id
-		const chats = await listUserChats(userId)
-
-		return c.json({
-			chats,
-		})
+		const chats = await listUserChats(auth.userId)
+		return c.json({ chats })
 	})
 
-	// GET /api/ai/chat/:chatId - Retrieve persisted chat messages
-	// Also updates lastOpenedAt to track most recently opened chat
 	app.get('/api/ai/chat/:chatId', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
-
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
 		const chatId = c.req.param('chatId')
-		if (!chatId) {
-			return c.json({ error: 'Missing chatId' }, 400)
-		}
+		if (!chatId) return c.json({ error: 'Missing chatId' }, 400)
 
-		const userId = context.session.user.id
-
-		// Load chat and update lastOpenedAt
-		const session = await loadChat(userId, chatId, true)
-
-		if (!session) {
-			return c.json({ error: 'Chat not found' }, 404)
-		}
+		const session = await loadChat(auth.userId, chatId, true)
+		if (!session) return c.json({ error: 'Chat not found' }, 404)
 
 		return c.json({
 			chatId: session.chatId,
@@ -509,23 +489,16 @@ export function registerAiStreamRoute(app: App) {
 		})
 	})
 
-	// POST /api/ai/chat - Create a new chat session
 	app.post('/api/ai/chat', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
-
-		const userId = context.session.user.id
 		const body = await c.req
 			.json<{ title?: string }>()
 			.catch(() => ({ title: undefined }))
 
 		const session = await createChat({
-			userId,
+			userId: auth.userId,
 			title: body.title,
 		})
 
@@ -536,84 +509,45 @@ export function registerAiStreamRoute(app: App) {
 		})
 	})
 
-	// DELETE /api/ai/chat/:chatId - Delete a chat session
 	app.delete('/api/ai/chat/:chatId', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
-
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
 		const chatId = c.req.param('chatId')
-		if (!chatId) {
-			return c.json({ error: 'Missing chatId' }, 400)
-		}
+		if (!chatId) return c.json({ error: 'Missing chatId' }, 400)
 
-		const userId = context.session.user.id
-		const deleted = await deleteChat(userId, chatId)
-
-		if (!deleted) {
-			return c.json({ error: 'Chat not found' }, 404)
-		}
+		const deleted = await deleteChat(auth.userId, chatId)
+		if (!deleted) return c.json({ error: 'Chat not found' }, 404)
 
 		return c.json({ success: true })
 	})
 
-	// POST /api/ai/chat/:chatId/touch - Update lastOpenedAt without loading messages
 	app.post('/api/ai/chat/:chatId/touch', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
-
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
 		const chatId = c.req.param('chatId')
-		if (!chatId) {
-			return c.json({ error: 'Missing chatId' }, 400)
-		}
+		if (!chatId) return c.json({ error: 'Missing chatId' }, 400)
 
-		const userId = context.session.user.id
-		await touchChat(userId, chatId)
-
+		await touchChat(auth.userId, chatId)
 		return c.json({ success: true })
 	})
 
-	// DELETE /api/ai/chat/:chatId/empty - Delete an empty chat session (for cleanup on switch)
 	app.delete('/api/ai/chat/:chatId/empty', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
-
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
 		const chatId = c.req.param('chatId')
-		if (!chatId) {
-			return c.json({ error: 'Missing chatId' }, 400)
-		}
+		if (!chatId) return c.json({ error: 'Missing chatId' }, 400)
 
-		const userId = context.session.user.id
-		const deleted = await deleteEmptyChat(userId, chatId)
-
-		// Return success even if not deleted (session was not empty or not found)
-		// This is a best-effort cleanup operation
+		// Best-effort cleanup: returns success even if not deleted
+		const deleted = await deleteEmptyChat(auth.userId, chatId)
 		return c.json({ success: true, deleted })
 	})
 
-	// POST /api/ai/compact - Compact long conversation context
 	app.post('/api/ai/compact', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-		const context = await createContext({ context: c, locale })
-
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
 		const body = await c.req.json<AiCompactRequestBody>()
 		const { chatId, provider, apiKey, baseUrl, model, messages, keepRecentCount } =
@@ -622,25 +556,17 @@ export function registerAiStreamRoute(app: App) {
 		if (!(chatId && provider && apiKey)) {
 			return c.json({ error: 'Missing required fields' }, 400)
 		}
-
-		if (!AI_PROVIDERS.includes(provider as (typeof AI_PROVIDERS)[number])) {
+		if (!isValidProvider(provider)) {
 			return c.json({ error: `Unsupported provider: ${provider}` }, 400)
 		}
 
-		const userId = context.session.user.id
-		const providerConfig = PROVIDER_CONFIGS[provider as AiProvider]
-		const credential: DecryptedCredential = {
-			provider: provider as AiProvider,
-			apiKey,
-			baseUrl: baseUrl?.trim() || providerConfig.defaultBaseUrl,
-			model,
-		}
+		const credential = buildCredential(provider, apiKey, baseUrl, model)
 
 		try {
 			const compactedResult = await executeContextCompaction({
-				userId,
+				userId: auth.userId,
 				chatId,
-				provider: provider as AiProvider,
+				provider,
 				model,
 				credential,
 				providedMessages: messages,
@@ -655,19 +581,11 @@ export function registerAiStreamRoute(app: App) {
 		}
 	})
 
-	// POST /api/ai/stream - Stream AI response (AI SDK v6 aligned)
 	app.post('/api/ai/stream', async (c) => {
-		const detectedLanguage = c.get('language')
-		const locale = convertToSupportedLanguage(detectedLanguage)
-
-		const context = await createContext({ context: c, locale })
-
-		if (!context.session?.user) {
-			return c.json({ error: 'Unauthorized' }, 401)
-		}
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
 
 		const body = await c.req.json<AiStreamRequestBody>()
-
 		const {
 			chatId: requestChatId,
 			provider,
@@ -684,33 +602,20 @@ export function registerAiStreamRoute(app: App) {
 		if (!(provider && apiKey && prompt)) {
 			return c.json({ error: 'Missing required fields' }, 400)
 		}
-
-		if (!AI_PROVIDERS.includes(provider as (typeof AI_PROVIDERS)[number])) {
+		if (!isValidProvider(provider)) {
 			return c.json({ error: `Unsupported provider: ${provider}` }, 400)
 		}
 
-		const providerConfig = PROVIDER_CONFIGS[provider as AiProvider]
-		const credential: DecryptedCredential = {
-			provider: provider as AiProvider,
-			apiKey,
-			baseUrl: baseUrl?.trim() || providerConfig.defaultBaseUrl,
-			model,
-		}
+		const credential = buildCredential(provider, apiKey, baseUrl, model)
 
 		try {
-			const userId = context.session.user.id
-
-			// Determine or generate chatId
 			const chatId = requestChatId || generateChatId()
 
-			// Load existing messages if chatId provided but no messages sent
-			// (optimization: client sends only last message)
 			let messages: UIMessage[]
 			if (requestMessages && requestMessages.length > 0) {
 				messages = requestMessages
 			} else {
-				// Load from storage and append user message
-				const storedMessages = await loadChatMessages(userId, chatId)
+				const storedMessages = await loadChatMessages(auth.userId, chatId)
 				const userMessage: UIMessage = {
 					id: `user-${Date.now()}`,
 					role: 'user',
@@ -719,9 +624,8 @@ export function registerAiStreamRoute(app: App) {
 				messages = [...storedMessages, userMessage]
 			}
 
-			// Prepare RAG context
 			const { attachedNotes, retrievedNotes } = await prepareNoteContext(
-				userId,
+				auth.userId,
 				prompt,
 				noteEntryIds,
 				ragTopK
@@ -734,58 +638,35 @@ export function registerAiStreamRoute(app: App) {
 				currentDate,
 			})
 
-			// Create the AI model
 			const aiModel = createVercelAiChatModel(credential, { model })
-
-			// Convert UIMessages to model messages
 			const modelMessages = await convertToModelMessages(messages)
-
-			// Build provider options for reasoning
 			const providerOptions = buildProviderOptions(
-				provider as AiProvider,
+				provider,
 				enableReasoning ?? false
 			)
+			const shouldEnableTools = providerSupports(provider, 'function_calling')
 
-			const shouldEnableTools = providerSupports(
-				provider as AiProvider,
-				'function_calling'
-			)
-
-			// Stream text using AI SDK
 			const result = aiStreamText({
 				model: aiModel,
 				system: systemPrompt,
 				messages: modelMessages,
 				tools: shouldEnableTools ? aiTools : undefined,
 				experimental_context: {
-					userId,
+					userId: auth.userId,
 				} satisfies NoteToolContext,
-				// Provider options are typed per-provider; cast to satisfy SDK's strict union type
 				providerOptions: providerOptions as Parameters<
 					typeof aiStreamText
 				>[0]['providerOptions'],
 			})
 
-			// Consume stream to ensure completion even on disconnect
-			// This ensures onFinish is called and messages are saved
 			result.consumeStream()
 
-			// Return AI SDK UI message stream response
-			// This handles proper UIMessage formatting automatically
 			return result.toUIMessageStreamResponse({
-				// Pass original messages to prevent duplication
 				originalMessages: messages,
-				// Server-generated message IDs for persistence consistency
-				generateMessageId: createIdGenerator({
-					prefix: 'msg',
-					size: 16,
-				}),
-				// Include sources and reasoning parts for UI rendering
+				generateMessageId: createIdGenerator({ prefix: 'msg', size: 16 }),
 				sendSources: true,
 				sendReasoning: true,
-				// Attach usage data to message metadata for client consumption
 				messageMetadata: ({ part }) => {
-					// Send usage when generation finishes
 					if (part.type === 'finish') {
 						const usage: UsageMetadata = {
 							inputTokens: part.totalUsage.inputTokens,
@@ -794,32 +675,19 @@ export function registerAiStreamRoute(app: App) {
 							reasoningTokens: part.totalUsage.outputTokenDetails?.reasoningTokens,
 						}
 						const costUSD = calculateCostFromUsage(provider, aiModel.modelId, usage)
-
-						return {
-							usage: {
-								...usage,
-								costUSD,
-							},
-						}
+						return { usage: { ...usage, costUSD } }
 					}
 					return undefined
 				},
-				// Unified save point: called when stream completes
 				onFinish: ({ messages: finalMessages }) => {
-					// Save complete conversation to storage
 					saveChat({
-						userId,
+						userId: auth.userId,
 						chatId,
 						messages: finalMessages,
 					})
-
-					// Log completion (usage is available via result.usage promise if needed)
 					log.debug(`Chat ${chatId} completed: ${finalMessages.length} messages`)
 				},
-				// Send chatId in response headers for client to track
-				headers: {
-					'X-Chat-Id': chatId,
-				},
+				headers: { 'X-Chat-Id': chatId },
 			})
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
