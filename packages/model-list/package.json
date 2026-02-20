@@ -1,6 +1,6 @@
 {
   "name": "@folionote/model-list",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "AI Model definitions and provider configurations for FolioNote",
   "type": "module",
   "exports": {

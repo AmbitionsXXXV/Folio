@@ -1,5 +1,22 @@
 # server
 
+## 0.2.16
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+- Updated dependencies
+  - @folionote/locales@0.2.16
+  - @folionote/ai@0.2.16
+  - @folionote/api@0.2.16
+  - @folionote/auth@0.2.16
+  - @folionote/db@0.2.16
+  - @folionote/log@0.1.10
+  - @folionote/note-tool@0.1.2
+  - @folionote/stock-tool@0.1.3
+  - @folionote/storage@0.2.16
+  - @folionote/weather-tool@0.1.3
+
 ## 0.2.15
 
 ### Patch Changes

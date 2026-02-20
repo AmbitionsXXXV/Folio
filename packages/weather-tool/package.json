@@ -1,6 +1,6 @@
 {
   "name": "@folionote/weather-tool",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Weather tool with UI components for FolioNote AI",
   "type": "module",
   "exports": {

@@ -1,14 +1,17 @@
 import { CollapsibleContent } from '@folionote/ui/collapsible'
-import { AiBrain01Icon } from '@hugeicons/core-free-icons'
+import { AiBrain01Icon, Cancel01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Fragment, memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-	ChainOfThought,
-	ChainOfThoughtContent,
-	ChainOfThoughtHeader,
-	ChainOfThoughtStep,
-} from '@/components/ai-elements/chain-of-thoughts'
+	Confirmation,
+	ConfirmationAccepted,
+	ConfirmationAction,
+	ConfirmationActions,
+	ConfirmationRejected,
+	ConfirmationRequest,
+	ConfirmationTitle,
+} from '@/components/ai-elements/confirmation'
 import {
 	Conversation,
 	ConversationContent,
@@ -29,13 +32,11 @@ import {
 	ToolInput,
 	ToolOutput,
 } from '@/components/ai-elements/tool'
-import {
-	ToolApprovalButtons,
-	type ToolApprovalHandler,
-} from '@/components/ai-elements/tool-approval'
+import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
 import { Message } from '@/components/chat-message'
 import { cn } from '@/lib/utils'
 import type { ChatMessage } from '../types'
+import { CompactMessage } from './compact-message'
 import { MessageBubble } from './message-bubble'
 import {
 	isDisplayWeatherPart,
@@ -91,8 +92,6 @@ const TOOL_TYPE_LABELS: Record<string, string> = {
 	'tool-getStockTrend': 'Stock Trend',
 }
 
-const TOOL_INPUT_PAIR_SEPARATOR = ': '
-const TOOL_INPUT_SEPARATOR = ', '
 const TOOL_LABEL_FALLBACK = 'Tool'
 const TOOL_CALLS_FALLBACK_STATE = 'tool'
 const TOOL_DETAILS_OPEN_STATES = new Set([
@@ -108,10 +107,6 @@ const REASONING_TOOL_CALLS_CLASSNAME = [
 	'data-[state=open]:animate-in duration-200 ease-out',
 	'motion-reduce:transition-none motion-reduce:animate-none',
 ].join(' ')
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
 
 function isToolInvocationPart(
 	part: ToolMessagePart
@@ -135,66 +130,29 @@ function getToolLabel(part: ToolMessagePart): string {
 	return TOOL_LABEL_FALLBACK
 }
 
-function getToolStatus(
-	part: ToolMessagePart,
-	isStreaming: boolean
-): 'complete' | 'active' | 'pending' {
-	const state = 'state' in part && typeof part.state === 'string' ? part.state : null
-	if (state === 'output-available' || state === 'output-error') {
-		return 'complete'
+type ToolApprovalData =
+	| { id: string; approved?: never; reason?: never }
+	| { id: string; approved: boolean; reason?: string }
+
+function getToolApproval(part: ToolMessagePart): ToolApprovalData | undefined {
+	if (
+		!('approval' in part) ||
+		typeof part.approval !== 'object' ||
+		part.approval === null ||
+		!('id' in part.approval)
+	) {
+		return undefined
 	}
-	if (state === 'input-available') {
-		return 'active'
-	}
-	return isStreaming ? 'active' : 'pending'
-}
-
-function isApprovalRequested(part: ToolMessagePart): boolean {
-	return (
-		'state' in part &&
-		part.state === 'approval-requested' &&
-		'approval' in part &&
-		typeof part.approval === 'object' &&
-		part.approval !== null &&
-		'id' in part.approval
-	)
-}
-
-type ApprovalInfo = {
-	id: string
-	toolName: string
-	input: unknown
-}
-
-function getApprovalInfo(part: ToolMessagePart): ApprovalInfo | null {
-	if (!isApprovalRequested(part)) return null
-
-	const approval = (part as { approval: { id: string } }).approval
-	const toolName = getToolLabel(part)
-	const input = 'input' in part ? part.input : undefined
-
-	return {
-		id: approval.id,
-		toolName,
-		input,
-	}
-}
-
-function getToolInputSummary(part: ToolMessagePart): string | undefined {
-	if (!('input' in part)) return undefined
-	const input = part.input
-	if (!isRecord(input)) return undefined
-	const fragments: string[] = []
-	for (const [key, value] of Object.entries(input)) {
-		if (
-			typeof value === 'string' ||
-			typeof value === 'number' ||
-			typeof value === 'boolean'
-		) {
-			fragments.push(`${key}${TOOL_INPUT_PAIR_SEPARATOR}${value}`)
+	const raw = part.approval as Record<string, unknown>
+	const id = raw.id as string
+	if (typeof raw.approved === 'boolean') {
+		return {
+			id,
+			approved: raw.approved,
+			reason: typeof raw.reason === 'string' ? raw.reason : undefined,
 		}
 	}
-	return fragments.length > 0 ? fragments.join(TOOL_INPUT_SEPARATOR) : undefined
+	return { id }
 }
 
 function getToolKey(messageId: string, part: ToolMessagePart): string {
@@ -241,51 +199,6 @@ const ToolCallSteps = memo(function ToolCallSteps({
 	onToolApprovalResponse,
 }: ToolCallStepsProps) {
 	const { t } = useTranslation()
-	const regularTools = toolInvocations.filter((t) => !isApprovalRequested(t))
-
-	return (
-		<div className={cn('space-y-3', className)}>
-			{/* Regular tool calls in chain-of-thought format */}
-			{regularTools.length > 0 ? (
-				<ChainOfThought>
-					<ChainOfThoughtHeader>{t('knowledge.toolCalls')}</ChainOfThoughtHeader>
-					<ChainOfThoughtContent>
-						{regularTools.map((tool) => (
-							<ChainOfThoughtStep
-								description={getToolInputSummary(tool)}
-								key={getToolKey(messageId, tool)}
-								label={getToolLabel(tool)}
-								status={getToolStatus(tool, isStreaming)}
-							/>
-						))}
-					</ChainOfThoughtContent>
-				</ChainOfThought>
-			) : null}
-
-			{/* Tool details */}
-			<ToolDetailsList
-				isStreaming={isStreaming}
-				messageId={messageId}
-				onToolApprovalResponse={onToolApprovalResponse}
-				toolInvocations={toolInvocations}
-			/>
-		</div>
-	)
-})
-
-type ToolDetailsListProps = {
-	messageId: string
-	isStreaming: boolean
-	toolInvocations: ToolMessagePart[]
-	onToolApprovalResponse?: ToolApprovalHandler
-}
-
-const ToolDetailsList = memo(function ToolDetailsList({
-	messageId,
-	isStreaming,
-	toolInvocations,
-	onToolApprovalResponse,
-}: ToolDetailsListProps) {
 	const detailedTools = toolInvocations.filter((tool) => !isToolCardPart(tool))
 
 	if (detailedTools.length === 0) {
@@ -293,32 +206,81 @@ const ToolDetailsList = memo(function ToolDetailsList({
 	}
 
 	return (
-		<div className="space-y-2">
+		<div className={cn('space-y-2', className)}>
 			{detailedTools.map((tool) => {
-				const detail = getToolDetailData(
-					messageId,
-					tool,
-					isStreaming,
-					onToolApprovalResponse
-				)
+				const key = getToolKey(messageId, tool)
+				const state = getToolPartState(tool, isStreaming)
+				const label = getToolLabel(tool)
+				const input = 'input' in tool ? tool.input : undefined
+				const output = 'output' in tool ? tool.output : undefined
+				const errorText =
+					'errorText' in tool && typeof tool.errorText === 'string'
+						? tool.errorText
+						: undefined
+				const defaultOpen = shouldOpenToolDetails(state)
+				const approval = getToolApproval(tool)
 
 				return (
-					<Tool defaultOpen={detail.defaultOpen} key={`detail-${detail.key}`}>
-						<ToolHeader label={detail.label} state={detail.state} />
+					<Tool defaultOpen={defaultOpen} key={`detail-${key}`}>
+						<ToolHeader label={label} state={state} />
 						<ToolContent>
-							{detail.input !== undefined ? (
-								<ToolInput input={detail.input} />
-							) : null}
-							{detail.output !== undefined || detail.errorText ? (
-								<ToolOutput errorText={detail.errorText} output={detail.output} />
-							) : null}
-							{detail.approvalInfo ? (
-								<ToolApprovalButtons
-									approvalId={detail.approvalInfo.id}
-									input={detail.approvalInfo.input}
-									onApprovalResponse={detail.approvalInfo.onResponse}
-									toolName={detail.approvalInfo.toolName}
-								/>
+							{input !== undefined ? <ToolInput input={input} /> : null}
+							<Confirmation
+								approval={approval}
+								state={state as Parameters<typeof Confirmation>[0]['state']}
+							>
+								<ConfirmationTitle>
+									<ConfirmationRequest>
+										{t('knowledge.toolApproval.description')}
+									</ConfirmationRequest>
+									<ConfirmationAccepted>
+										<span className="flex items-center gap-1.5">
+											<HugeiconsIcon
+												className="size-4 text-emerald-600"
+												icon={Tick02Icon}
+											/>
+											<span>{t('knowledge.toolApproval.accepted')}</span>
+										</span>
+									</ConfirmationAccepted>
+									<ConfirmationRejected>
+										<span className="flex items-center gap-1.5">
+											<HugeiconsIcon
+												className="size-4 text-destructive"
+												icon={Cancel01Icon}
+											/>
+											<span>{t('knowledge.toolApproval.rejected')}</span>
+										</span>
+									</ConfirmationRejected>
+								</ConfirmationTitle>
+								{onToolApprovalResponse && approval ? (
+									<ConfirmationActions>
+										<ConfirmationAction
+											onClick={() =>
+												onToolApprovalResponse({
+													id: approval.id,
+													approved: false,
+													reason: 'User rejected',
+												})
+											}
+											variant="outline"
+										>
+											{t('knowledge.toolApproval.reject')}
+										</ConfirmationAction>
+										<ConfirmationAction
+											onClick={() =>
+												onToolApprovalResponse({
+													id: approval.id,
+													approved: true,
+												})
+											}
+										>
+											{t('knowledge.toolApproval.approve')}
+										</ConfirmationAction>
+									</ConfirmationActions>
+								) : null}
+							</Confirmation>
+							{output !== undefined || errorText ? (
+								<ToolOutput errorText={errorText} output={output} />
 							) : null}
 						</ToolContent>
 					</Tool>
@@ -327,66 +289,6 @@ const ToolDetailsList = memo(function ToolDetailsList({
 		</div>
 	)
 })
-
-type ToolDetailApprovalInfo = ApprovalInfo & {
-	onResponse: ToolApprovalHandler
-}
-
-type ToolDetailData = {
-	key: string
-	state: string
-	label: string
-	input: unknown
-	output: unknown
-	errorText?: string
-	defaultOpen: boolean
-	approvalInfo?: ToolDetailApprovalInfo
-}
-
-function getToolDetailData(
-	messageId: string,
-	tool: ToolMessagePart,
-	isStreaming: boolean,
-	onToolApprovalResponse?: ToolApprovalHandler
-): ToolDetailData {
-	const key = getToolKey(messageId, tool)
-	const state = getToolPartState(tool, isStreaming)
-	const label = getToolLabel(tool)
-	const input = 'input' in tool ? tool.input : undefined
-	const output = 'output' in tool ? tool.output : undefined
-	const errorText =
-		'errorText' in tool && typeof tool.errorText === 'string'
-			? tool.errorText
-			: undefined
-	const approvalInfo = getApprovalInfo(tool)
-	const defaultOpen = shouldOpenToolDetails(state)
-
-	if (approvalInfo && onToolApprovalResponse) {
-		return {
-			key,
-			state,
-			label,
-			input,
-			output,
-			errorText,
-			defaultOpen,
-			approvalInfo: {
-				...approvalInfo,
-				onResponse: onToolApprovalResponse,
-			},
-		}
-	}
-
-	return {
-		key,
-		state,
-		label,
-		input,
-		output,
-		errorText,
-		defaultOpen,
-	}
-}
 
 type MessageProcessProps = {
 	message: ChatMessage
@@ -491,12 +393,21 @@ export function MessageList({
 					<>
 						{messages.map((message) => (
 							<Fragment key={message.id}>
-								<MessageProcess
-									message={message}
-									onToolApprovalResponse={onToolApprovalResponse}
-									thinkingEnabled={thinkingEnabled}
-								/>
-								<MessageBubble message={message} onRegenerate={onRegenerate} />
+								{message.compactInfo ? (
+									<CompactMessage
+										compactInfo={message.compactInfo}
+										summary={message.content}
+									/>
+								) : (
+									<>
+										<MessageProcess
+											message={message}
+											onToolApprovalResponse={onToolApprovalResponse}
+											thinkingEnabled={thinkingEnabled}
+										/>
+										<MessageBubble message={message} onRegenerate={onRegenerate} />
+									</>
+								)}
 							</Fragment>
 						))}
 						{showWaiting ? <WaitingIndicator /> : null}

@@ -4,6 +4,7 @@ export type { ToolApprovalHandler } from './components'
 // Components
 export {
 	ChatHistoryPanel,
+	CompactMessage,
 	ContextUsageIndicator,
 	EmptyState,
 	MessageBubble,
@@ -15,6 +16,7 @@ export type {
 	ChatSessionFull,
 	ChatSessionSummary,
 	CitationSource,
+	CompactInfo,
 	ContextUsage,
 } from './types'
 export type { ContentPart } from './utils'
@@ -33,6 +35,7 @@ export {
 	getCitationByIndex,
 	getLastChatId,
 	getOrCreateChatId,
+	getTokenlensModelIdCandidates,
 	isApiSupportedProvider,
 	loadChatMessages,
 	mapProviderIdToApi,

@@ -16,7 +16,7 @@
 
 import { type UIMessage, useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type FileUIPart } from 'ai'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getServerUrl } from '@/utils/api-environment'
 
 // =============================================================================
@@ -36,10 +36,21 @@ export type KnowledgeChatMessage = UIMessage & {
 		outputTokens?: number
 		totalTokens?: number
 		reasoningTokens?: number
+		cachedInputTokens?: number
 		costUSD?: number
 	}
 	/** Mention titles for rendering @mentions in user messages */
 	mentionTitles?: string[]
+	/** Context compaction metadata for summary messages */
+	compactInfo?: CompactInfo
+}
+
+type CompactInfo = {
+	compactedAt: string
+	originalMessageCount: number
+	compactedMessageCount: number
+	keptMessageCount: number
+	summaryTokens: number
 }
 
 export type KnowledgeChatConfig = {
@@ -59,6 +70,8 @@ export type KnowledgeChatConfig = {
 	noteEntryIds?: string[]
 	/** Enable extended thinking/reasoning */
 	enableReasoning?: boolean
+	/** Called after one full stream finishes successfully */
+	onMessageComplete?: (chatId: string) => void | Promise<void>
 }
 
 export type SendMessageOptions = {
@@ -72,6 +85,20 @@ export type SendMessageOptions = {
 	noteEntryIds?: string[]
 }
 
+export type CompactContextOptions = {
+	keepRecentCount?: number
+	tokensToCompact?: number
+}
+
+export type CompactContextResult = {
+	chatId: string
+	messages: UIMessage[]
+	summary: string
+	compactedCount: number
+	keptCount: number
+	compactInfo?: CompactInfo
+}
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -82,6 +109,7 @@ export type SendMessageOptions = {
  */
 type MessageMetadata = {
 	usage?: KnowledgeChatMessage['usage']
+	compactInfo?: CompactInfo
 }
 
 /**
@@ -97,6 +125,9 @@ function uiMessageToKnowledgeMessage(
 	// Extract usage from metadata (sent via messageMetadata on server)
 	const metadata = msg.metadata as MessageMetadata | undefined
 	const usage = metadata?.usage
+	const compactInfo = isCompactInfo(metadata?.compactInfo)
+		? metadata.compactInfo
+		: undefined
 
 	return {
 		...msg,
@@ -105,6 +136,7 @@ function uiMessageToKnowledgeMessage(
 		isStreaming,
 		thinking,
 		usage,
+		compactInfo,
 	}
 }
 
@@ -122,6 +154,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		model,
 		noteEntryIds: defaultNoteEntryIds = [],
 		enableReasoning = false,
+		onMessageComplete,
 	} = config
 
 	// Use refs for values that change but shouldn't trigger transport recreation
@@ -142,6 +175,10 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 	// State for last chatId returned from server
 	const [serverChatId, setServerChatId] = useState<string>(chatId)
+	const [isCompacting, setIsCompacting] = useState(false)
+	const previousStatusRef = useRef<'submitted' | 'streaming' | 'ready' | 'error'>(
+		'ready'
+	)
 
 	// Create transport with stable reference
 	const transport = useMemo(
@@ -203,7 +240,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		regenerate,
 		addToolApprovalResponse,
 	} = useChat({
-		id: chatId,
+		id: serverChatId,
 		messages: initialMessages ?? [],
 		transport,
 	})
@@ -235,10 +272,34 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	const isStreaming = status === 'streaming'
 	const isLoading = status === 'submitted' || status === 'streaming'
 
+	useEffect(() => {
+		if (chatId && chatId !== serverChatId) {
+			setServerChatId(chatId)
+		}
+	}, [chatId, serverChatId])
+
+	useEffect(() => {
+		const previousStatus = previousStatusRef.current
+		const hadActiveStream =
+			previousStatus === 'submitted' || previousStatus === 'streaming'
+
+		if (status === 'ready' && hadActiveStream && onMessageComplete && serverChatId) {
+			Promise.resolve(onMessageComplete(serverChatId)).catch(() => {
+				// Ignore callback errors to avoid breaking the chat flow.
+			})
+		}
+
+		previousStatusRef.current = status
+	}, [status, onMessageComplete, serverChatId])
+
 	// Send a message with optional note attachments
 	const sendMessage = useCallback(
 		(options: SendMessageOptions) => {
 			const { text, files = [], mentionTitles, noteEntryIds = [] } = options
+
+			if (!serverChatId.trim()) {
+				return
+			}
 
 			if (!text.trim() && files.length === 0) {
 				return
@@ -277,46 +338,82 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	// Load messages from server for a given chat
 	const loadMessages = useCallback(
 		async (targetChatId: string) => {
-			try {
-				const response = await fetch(
-					`${getServerUrl()}/api/ai/chat/${targetChatId}`,
-					{ credentials: 'include' }
-				)
-
-				if (!response.ok) {
-					if (response.status === 404) {
-						// Chat not found, clear messages
-						clearMessages()
-						return
-					}
-					throw new Error(`Failed to load chat: ${response.status}`)
-				}
-
-				const data = (await response.json()) as {
-					chatId: string
-					messages: UIMessage[]
-				}
-
-				// Update messages
-				setUIMessages(data.messages)
-				setServerChatId(data.chatId)
-			} catch (err) {
-				console.error('Failed to load chat messages:', err)
-				throw err
+			if (!targetChatId.trim()) {
+				clearMessages()
+				return
 			}
+
+			const response = await fetch(`${getServerUrl()}/api/ai/chat/${targetChatId}`, {
+				credentials: 'include',
+			})
+
+			if (!response.ok) {
+				if (response.status === 404) {
+					// Chat not found, clear messages
+					clearMessages()
+					return
+				}
+				throw new Error(`Failed to load chat: ${response.status}`)
+			}
+
+			const data = (await response.json()) as {
+				chatId: string
+				messages: UIMessage[]
+			}
+
+			// Update messages
+			setUIMessages(data.messages)
+			setServerChatId(data.chatId)
 		},
 		[clearMessages, setUIMessages]
 	)
 
-	// Switch to a different chat
-	const switchChat = useCallback(
-		async (newChatId: string) => {
-			if (newChatId === serverChatId) return
+	const compactContext = useCallback(
+		async (
+			options: CompactContextOptions = {}
+		): Promise<CompactContextResult | null> => {
+			const currentConfig = configRef.current
+			if (!serverChatId.trim()) return null
+			if (status === 'submitted' || status === 'streaming') return null
 
-			setServerChatId(newChatId)
-			await loadMessages(newChatId)
+			setIsCompacting(true)
+			try {
+				const response = await fetch(`${getServerUrl()}/api/ai/compact`, {
+					method: 'POST',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						chatId: serverChatId,
+						provider: currentConfig.provider,
+						apiKey: currentConfig.apiKey,
+						baseUrl: currentConfig.baseUrl?.trim() || undefined,
+						model: currentConfig.model.trim() || undefined,
+						messages: uiMessages,
+						keepRecentCount: options.keepRecentCount,
+						tokensToCompact: options.tokensToCompact,
+					}),
+				})
+
+				if (!response.ok) {
+					throw new Error(`Failed to compact context: ${response.status}`)
+				}
+
+				const data = (await response.json()) as CompactContextResult
+				setUIMessages(data.messages)
+				setServerChatId(data.chatId)
+
+				if (onMessageComplete && data.chatId) {
+					await Promise.resolve(onMessageComplete(data.chatId))
+				}
+
+				return data
+			} finally {
+				setIsCompacting(false)
+			}
 		},
-		[serverChatId, loadMessages]
+		[onMessageComplete, serverChatId, setUIMessages, status, uiMessages]
 	)
 
 	return {
@@ -326,13 +423,14 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		isLoading,
 		error,
 		chatId: serverChatId,
+		isCompacting,
 
 		// Actions
 		sendMessage,
 		clearMessages,
 		resetChat,
 		loadMessages,
-		switchChat,
+		compactContext,
 		stop,
 
 		// Tool approval
@@ -343,68 +441,34 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	}
 }
 
-type MessagePart = NonNullable<UIMessage['parts']>[number]
-
-type TextPart = MessagePart & { type: 'text'; text: string }
-
-type ReasoningPart = MessagePart & {
-	type: 'reasoning'
-	text?: string
-	reasoning?: string
+function isCompactInfo(value: unknown): value is CompactInfo {
+	if (!value || typeof value !== 'object') return false
+	const info = value as Record<string, unknown>
+	return (
+		typeof info.compactedAt === 'string' &&
+		typeof info.originalMessageCount === 'number' &&
+		typeof info.compactedMessageCount === 'number' &&
+		typeof info.keptMessageCount === 'number' &&
+		typeof info.summaryTokens === 'number'
+	)
 }
 
 function getLastAssistantMessageId(messages: UIMessage[]): string | undefined {
-	for (let index = messages.length - 1; index >= 0; index -= 1) {
-		const message = messages[index]
-		if (message?.role === 'assistant') {
-			return message.id
-		}
-	}
-	return undefined
+	return messages.findLast((m) => m.role === 'assistant')?.id
 }
 
 function getTextFromParts(parts: UIMessage['parts']): string {
-	if (!parts) return ''
-	const fragments: string[] = []
-	for (const part of parts) {
-		if (isTextPart(part)) {
-			fragments.push(part.text)
-		}
-	}
-	return fragments.join('')
+	return (parts ?? [])
+		.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+		.map((p) => p.text)
+		.join('')
 }
 
 function getReasoningFromParts(parts: UIMessage['parts']): string | undefined {
-	if (!parts) return undefined
-	for (const part of parts) {
-		if (isReasoningPart(part)) {
-			if (typeof part.text === 'string') {
-				return part.text
-			}
-			if (typeof part.reasoning === 'string') {
-				return part.reasoning
-			}
-		}
-	}
+	const part = (parts ?? []).find((p) => p.type === 'reasoning')
+	if (!part) return undefined
+	if ('text' in part && typeof part.text === 'string') return part.text
+	if ('reasoning' in part && typeof part.reasoning === 'string')
+		return part.reasoning
 	return undefined
-}
-
-function isTextPart(part: MessagePart): part is TextPart {
-	return (
-		Boolean(part) &&
-		typeof part === 'object' &&
-		'type' in part &&
-		part.type === 'text' &&
-		'text' in part &&
-		typeof part.text === 'string'
-	)
-}
-
-function isReasoningPart(part: MessagePart): part is ReasoningPart {
-	return (
-		Boolean(part) &&
-		typeof part === 'object' &&
-		'type' in part &&
-		part.type === 'reasoning'
-	)
 }

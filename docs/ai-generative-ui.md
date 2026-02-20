@@ -28,13 +28,14 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 
 1. Preserve `UIMessage.parts` in `apps/web/src/hooks/use-knowledge-chat.ts`.
 2. Render tool parts (`tool-displayWeather`, `tool-getStockPrice`, `tool-getStockTrend`) in `apps/web/src/features/knowledge/components/tool-cards.tsx`.
-3. Render reasoning and tool call process rows in `apps/web/src/features/knowledge/components/message-list.tsx` with `Reasoning` and `ChainOfThought` (tool calls are nested under Reasoning when thinking is available).
+3. Render reasoning and tool call process rows in `apps/web/src/features/knowledge/components/message-list.tsx` with `Reasoning` and `Tool` (tool calls are nested under `Reasoning` when thinking is available).
 4. Display tool cards and main message content in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
 5. Use `Reasoning` for the waiting state in `apps/web/src/features/knowledge/components/message-list.tsx`.
 6. Use `Sources` in `apps/web/src/components/ai-elements/sources.tsx` and render `source-url` parts in `message-bubble.tsx`.
 7. Use `Tool` in `apps/web/src/components/ai-elements/tool.tsx` to render tool input/output details and status badges.
 8. Add message actions (retry, copy) in `apps/web/src/features/knowledge/components/message-bubble.tsx`.
 9. Use `Loader` in `apps/web/src/components/ai-elements/loader.tsx` for streaming feedback in `message-list.tsx`.
+10. 当模型标记为 reasoning 且不支持开关（`enableReasoning` 不在 `extendParams`）时，Knowledge 页面会自动开启 thinking 展示，确保 reasoning 先于 tool calls 显示。
 
 ## UI 交互与可访问性
 
@@ -43,6 +44,7 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 - 等待态 shimmer 通过 `duration` 与 `spread` 控制节奏，避免过快闪烁。
 - 空状态图标使用 `animate-float`（定义在 `apps/web/src/styles/animate.css`），并加上 `motion-reduce:animate-none`。
 - 输入区容器通过 `focus-within:ring-2 focus-within:ring-primary/20` 提示焦点状态。
+- 输入区富文本编辑器保持 `w-full`，避免在 flex 容器中出现水平居中。
 
 ## Attachments
 

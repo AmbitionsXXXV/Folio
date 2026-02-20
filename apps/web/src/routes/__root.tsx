@@ -1,14 +1,14 @@
-import { useIsMobile } from '@folionote/ui/hooks/use-mobile'
 import { Toaster } from '@folionote/ui/sonner'
+import { TanStackDevtools } from '@tanstack/react-devtools'
 import type { QueryClient } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
 	Scripts,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { RootProvider } from 'fumadocs-ui/provider/tanstack'
 import { ThemeProvider } from 'next-themes'
 import { I18nextProvider, useTranslation } from 'react-i18next'
@@ -71,7 +71,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 })
 
 function RootDocument() {
-	const isMobile = useIsMobile()
 	const { i18n: i18nInstance } = useTranslation()
 	const currentLang = i18nInstance.language
 
@@ -109,10 +108,21 @@ function RootDocument() {
 							<Toaster richColors />
 						</ThemeProvider>
 					</RootProvider>
-					<TanStackRouterDevtools
-						position={isMobile ? 'bottom-left' : 'top-right'}
+					<TanStackDevtools
+						config={{ hideUntilHover: true }}
+						plugins={[
+							{
+								name: 'TanStack Query',
+								render: <ReactQueryDevtoolsPanel />,
+								defaultOpen: true,
+							},
+							{
+								name: 'TanStack Router',
+								render: <TanStackRouterDevtoolsPanel />,
+								defaultOpen: false,
+							},
+						]}
 					/>
-					<ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
 					<Scripts />
 				</body>
 			</html>

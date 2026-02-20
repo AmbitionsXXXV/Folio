@@ -20,6 +20,8 @@ import { getServerUrl } from '@/utils/api-environment'
 export type UseChatSessionsConfig = {
 	/** Whether to auto-load sessions on mount */
 	autoLoad?: boolean
+	/** Auto-create first chat when session list is empty */
+	autoCreateIfEmpty?: boolean
 }
 
 export type UseChatSessionsReturn = {
@@ -63,7 +65,7 @@ function isEmptySession(session: ChatSessionSummary): boolean {
 export function useChatSessions(
 	config: UseChatSessionsConfig = {}
 ): UseChatSessionsReturn {
-	const { autoLoad = true } = config
+	const { autoLoad = true, autoCreateIfEmpty = false } = config
 
 	const [sessions, setSessions] = useState<ChatSessionSummary[]>([])
 	const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
@@ -72,6 +74,62 @@ export function useChatSessions(
 
 	// Track previous chat ID for cleanup on switch
 	const previousChatIdRef = useRef<string | null>(null)
+	const selectedChatIdRef = useRef<string | null>(null)
+	const hasAutoCreatedInitialChatRef = useRef(false)
+
+	const fetchChatSessions = useCallback(async (): Promise<ChatSessionSummary[]> => {
+		const response = await fetch(`${getServerUrl()}/api/ai/chats`, {
+			credentials: 'include',
+		})
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch chat sessions: ${response.status}`)
+		}
+
+		const data = (await response.json()) as { chats: ChatSessionSummary[] }
+		return data.chats
+	}, [])
+
+	const selectInitialChatIfNeeded = useCallback(
+		(chatList: ChatSessionSummary[], currentSelectedChatId: string | null) => {
+			if (currentSelectedChatId || chatList.length === 0) return
+
+			const lastChatId = getLastChatId()
+			const restoredChat = lastChatId
+				? chatList.find((chat) => chat.chatId === lastChatId)
+				: null
+			const targetChat = restoredChat ?? chatList[0]
+
+			if (!targetChat) return
+
+			setSelectedChatId(targetChat.chatId)
+			setLastChatId(targetChat.chatId)
+		},
+		[]
+	)
+
+	const createInitialChatAndRefresh = useCallback(async () => {
+		const createResponse = await fetch(`${getServerUrl()}/api/ai/chat`, {
+			method: 'POST',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({}),
+		})
+
+		if (!createResponse.ok) {
+			throw new Error(`Failed to create initial chat: ${createResponse.status}`)
+		}
+
+		const createdChat = (await createResponse.json()) as { chatId: string }
+		setSelectedChatId(createdChat.chatId)
+		setLastChatId(createdChat.chatId)
+		previousChatIdRef.current = createdChat.chatId
+
+		const refreshedChats = await fetchChatSessions()
+		setSessions(refreshedChats)
+	}, [fetchChatSessions])
 
 	// Fetch chat sessions from server
 	const refreshSessions = useCallback(async () => {
@@ -79,42 +137,32 @@ export function useChatSessions(
 		setError(null)
 
 		try {
-			const response = await fetch(`${getServerUrl()}/api/ai/chats`, {
-				credentials: 'include',
-			})
+			const chatList = await fetchChatSessions()
+			setSessions(chatList)
+			const currentSelectedChatId = selectedChatIdRef.current
+			selectInitialChatIfNeeded(chatList, currentSelectedChatId)
 
-			if (!response.ok) {
-				throw new Error(`Failed to fetch chat sessions: ${response.status}`)
-			}
+			const shouldCreateInitialChat =
+				autoCreateIfEmpty &&
+				chatList.length === 0 &&
+				!hasAutoCreatedInitialChatRef.current &&
+				!currentSelectedChatId
 
-			const data = (await response.json()) as { chats: ChatSessionSummary[] }
-			setSessions(data.chats)
-
-			// Auto-select chat if none selected
-			if (!selectedChatId && data.chats.length > 0) {
-				// Try to use last opened chat from localStorage
-				const lastChatId = getLastChatId()
-				const lastChat = lastChatId
-					? data.chats.find((c) => c.chatId === lastChatId)
-					: null
-
-				if (lastChat) {
-					setSelectedChatId(lastChat.chatId)
-				} else {
-					// Use the most recently opened chat (first in list, sorted by lastOpenedAt)
-					const firstChat = data.chats[0]
-					if (firstChat) {
-						setSelectedChatId(firstChat.chatId)
-						setLastChatId(firstChat.chatId)
-					}
-				}
+			if (shouldCreateInitialChat) {
+				hasAutoCreatedInitialChatRef.current = true
+				await createInitialChatAndRefresh()
 			}
 		} catch (err) {
 			setError(err instanceof Error ? err : new Error('Unknown error'))
 		} finally {
 			setIsLoading(false)
 		}
-	}, [selectedChatId])
+	}, [
+		autoCreateIfEmpty,
+		fetchChatSessions,
+		selectInitialChatIfNeeded,
+		createInitialChatAndRefresh,
+	])
 
 	// Check if a session is empty by chatId
 	const isSessionEmpty = useCallback(
@@ -259,6 +307,7 @@ export function useChatSessions(
 		if (selectedChatId) {
 			previousChatIdRef.current = selectedChatId
 		}
+		selectedChatIdRef.current = selectedChatId
 	}, [selectedChatId])
 
 	return {

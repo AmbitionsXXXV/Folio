@@ -1,5 +1,13 @@
 # @folionote/stock-tool
 
+## 0.1.3
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+- Updated dependencies
+  - @folionote/ui@0.2.16
+
 ## 0.1.2
 
 ### Patch Changes

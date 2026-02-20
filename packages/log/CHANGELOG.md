@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.10
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+
 ## 0.1.9
 
 ### Patch Changes

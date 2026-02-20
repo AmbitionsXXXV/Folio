@@ -1,201 +1,254 @@
-import { CONTEXT_CRITICAL_THRESHOLD } from '@folionote/constants'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@folionote/ui/alert-dialog'
 import { Button } from '@folionote/ui/button'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@folionote/ui/sheet'
 import {
 	AiBrain01Icon,
-	Alert02Icon,
-	Menu01Icon,
 	MessageAdd01Icon,
 	Setting06Icon,
+	SidebarLeftIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { nanoid } from 'nanoid'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+	Fragment,
+	lazy,
+	memo,
+	Suspense,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
-	type AttachedNote,
-	type ChatContextUsage,
-	ChatInput,
-	type SessionUsage,
-} from '@/components/ai-elements/chat-input'
-import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
+	Conversation,
+	ConversationContent,
+	ConversationEmptyState,
+	ConversationScrollButton,
+} from '@/components/ai-elements/conversation'
+import { AiModelSelector } from '@/components/ai-elements/model-selector'
 import {
-	ChatHistoryPanel,
-	type ChatMessage,
-	ContextUsageIndicator,
-	calculateTotalTokens,
-	EmptyState,
-	estimateTokenCount,
+	PromptInput,
+	PromptInputActionAddAttachments,
+	PromptInputActionMenu,
+	PromptInputActionMenuContent,
+	PromptInputActionMenuTrigger,
+	PromptInputBody,
+	PromptInputButton,
+	PromptInputFooter,
+	type PromptInputMessage,
+	PromptInputSubmit,
+	PromptInputTextarea,
+	PromptInputTools,
+} from '@/components/ai-elements/prompt-input'
+import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
+import {
+	type ChatSessionSummary,
 	isApiSupportedProvider,
-	MessageList,
-	mapProviderIdToApi,
-	setLastChatId,
 } from '@/features/knowledge'
+import { AttachmentDisplay } from '@/features/knowledge/components/attachment-display'
+import {
+	ChatMessageItem,
+	WaitingIndicator,
+} from '@/features/knowledge/components/chat-message-item'
+import { CompactMessage } from '@/features/knowledge/components/compact-message'
+import {
+	buildContextPopoverDetails,
+	ContextCompactBanner,
+	ContextUsagePopover,
+} from '@/features/knowledge/components/context-usage-section'
+import { ThinkingToggle } from '@/features/knowledge/components/thinking-toggle'
+import { isToolInvocationPart } from '@/features/knowledge/components/tool-calls'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
 import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
+import { useProviderApiKey } from '@/hooks/use-provider-api-key'
+import { useSessionContextUsage } from '@/hooks/use-session-context-usage'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
 })
 
+const FILE_ATTACHMENT_ACCEPT = 'image/*,application/pdf'
+const FILE_ATTACHMENT_MAX_FILES = 5
+const FILE_ATTACHMENT_MAX_BYTES = 5_242_880
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'folionote:knowledge:sidebarCollapsed'
+
+const LazyChatHistoryPanel = lazy(async () => {
+	const module = await import('@/features/knowledge/components/chat-history-panel')
+	return { default: module.ChatHistoryPanel }
+})
+
+function preloadChatHistoryPanel(): void {
+	import('@/features/knowledge/components/chat-history-panel').catch(() => {
+		// Preload failures are non-fatal; the lazy load will still run.
+	})
+}
+
+const SUGGESTIONS = [
+	'What are the latest trends in AI?',
+	'How does machine learning work?',
+	'Explain quantum computing',
+	'Best practices for React development',
+	'Tell me about TypeScript benefits',
+	'How to optimize database queries?',
+]
+
+function getErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : 'Request failed'
+}
+
+type ChatHistorySidebarProps = {
+	className?: string
+	isLoading: boolean
+	sessions: ChatSessionSummary[]
+	selectedChatId: string | null
+	onSelectChat: (id: string) => void
+	onNewChat: () => void
+	onDeleteChat: (id: string) => void
+}
+
+const ChatHistorySidebar = memo(function ChatHistorySidebar(
+	props: ChatHistorySidebarProps
+) {
+	return (
+		<Suspense
+			fallback={
+				<div className="h-full space-y-2 border-r bg-background p-3">
+					<div className="h-10 rounded-lg bg-muted/60" />
+					<div className="h-18 rounded-lg bg-muted/40" />
+					<div className="h-18 rounded-lg bg-muted/40" />
+				</div>
+			}
+		>
+			<LazyChatHistoryPanel
+				className={props.className}
+				isLoading={props.isLoading}
+				onDeleteChat={props.onDeleteChat}
+				onNewChat={props.onNewChat}
+				onSelectChat={props.onSelectChat}
+				selectedChatId={props.selectedChatId}
+				sessions={props.sessions}
+			/>
+		</Suspense>
+	)
+})
+
 function KnowledgePage() {
 	const { t } = useTranslation()
-	const { config, isLoaded, getProviderConfig } = useModelProviderConfig()
 
-	// Model catalog for enabled models
+	const { config } = useModelProviderConfig()
 	const {
 		providers: catalogProviders,
 		models: catalogModels,
 		isLoaded: isCatalogLoaded,
 	} = useAiModelCatalog()
-
-	// Last used model from localStorage
 	const { lastUsedProvider, lastUsedModel, saveLastUsed } = useLastUsedModel()
 
-	// Selected provider & model for this session
 	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
+	const [thinkingEnabled, setThinkingEnabled] = useState(false)
+	const [inputValue, setInputValue] = useState('')
+	const [isHistoryCollapsed, setIsHistoryCollapsed] = useState<boolean>(() => {
+		if (typeof window === 'undefined') return false
+		return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
+	})
+	const [isMobileHistoryOpen, setMobileHistoryOpen] = useState(false)
+	const loadedChatIdRef = useRef<string | null>(null)
+	const autoCompactKeyRef = useRef<string | null>(null)
 
-	// Chat sessions management
 	const {
 		sessions,
 		selectedChatId,
 		isLoading: isSessionsLoading,
-		selectChat,
-		createChat: createNewChatSession,
-		deleteChat: deleteChatSession,
+		error: sessionsError,
 		refreshSessions,
+		selectChat,
+		createChat,
+		deleteChat,
+		deleteEmptyChat,
 		isSessionEmpty,
-	} = useChatSessions()
-
-	// Chat ID for persistence
-	const [chatId, setChatIdState] = useState<string>(() => nanoid(16))
-
-	// Sidebar visibility (mobile)
-	const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-
-	// Input state
-	const [inputValue, setInputValue] = useState('')
-
-	// Thinking/reasoning toggle state
-	const [thinkingEnabled, setThinkingEnabled] = useState(false)
-
-	// Attached notes state
-	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
-
-	// Provider config for API key
-	const providerConfig = useMemo(
-		() => getProviderConfig(selectedProvider),
-		[getProviderConfig, selectedProvider]
-	)
-
-	// Knowledge chat hook (AI SDK v6 based)
-	const {
-		messages: chatMessages,
-		isStreaming,
-		isLoading,
-		error: chatError,
-		chatId: serverChatId,
-		sendMessage,
-		resetChat,
-		switchChat,
-		regenerate,
-		addToolApprovalResponse,
-	} = useKnowledgeChat({
-		chatId,
-		provider: mapProviderIdToApi(selectedProvider),
-		apiKey: providerConfig?.apiKey ?? '',
-		baseUrl: providerConfig?.baseUrl?.trim() || undefined,
-		model: selectedModel.trim() || '',
-		enableReasoning: thinkingEnabled,
+	} = useChatSessions({
+		autoLoad: true,
+		autoCreateIfEmpty: true,
 	})
 
-	// Convert KnowledgeChatMessage to ChatMessage for existing UI components
-	const messages = useMemo<ChatMessage[]>(() => chatMessages, [chatMessages])
+	const {
+		apiProviderId,
+		activeApiKey,
+		activeBaseUrl,
+		hasApiKey,
+		isModelConfigLoaded,
+	} = useProviderApiKey(selectedProvider)
 
-	// Update local chatId when server returns one
-	useEffect(() => {
-		if (serverChatId && serverChatId !== chatId) {
-			setChatIdState(serverChatId)
-		}
-	}, [serverChatId, chatId])
+	const handleMessageComplete = useCallback(async () => {
+		await refreshSessions()
+	}, [refreshSessions])
 
-	// Sync chatId with selected session
-	useEffect(() => {
-		if (selectedChatId && selectedChatId !== chatId) {
-			setChatIdState(selectedChatId)
-			switchChat(selectedChatId).catch((err) => {
-				console.error('Failed to switch chat:', err)
-				toast.error(t('knowledge.loadChatFailed'))
-			})
-		}
-	}, [selectedChatId, chatId, switchChat, t])
+	const {
+		messages,
+		isStreaming,
+		isLoading,
+		isCompacting,
+		error: chatError,
+		sendMessage,
+		compactContext,
+		addToolApprovalResponse,
+		clearMessages,
+		loadMessages,
+		resetChat,
+	} = useKnowledgeChat({
+		chatId: selectedChatId ?? '',
+		provider: apiProviderId,
+		apiKey: activeApiKey,
+		baseUrl: activeBaseUrl,
+		model: selectedModel.trim() || '',
+		enableReasoning: thinkingEnabled,
+		onMessageComplete: handleMessageComplete,
+	})
 
-	// Get enabled chat models for a provider
+	const isPending = isStreaming || isLoading || isCompacting
+	const firstSessionId = sessions[0]?.chatId
+
+	// Model selection helpers
 	const getEnabledChatModels = useCallback(
-		(providerId: string) => {
-			return catalogModels.filter(
+		(providerId: string) =>
+			catalogModels.filter(
 				(m) => m.providerId === providerId && m.type === 'chat' && m.enabled
-			)
-		},
+			),
 		[catalogModels]
 	)
 
-	// Find fallback provider and model when current selection is invalid
 	const findValidProviderAndModel = useCallback(
 		(
 			currentProvider: string,
 			currentModel: string
 		): { provider: string; model: string } => {
 			const enabledModels = getEnabledChatModels(currentProvider)
-
-			// Current provider has enabled models
 			if (enabledModels.length > 0) {
-				const modelStillEnabled = enabledModels.some((m) => m.id === currentModel)
-				if (modelStillEnabled) {
+				if (enabledModels.some((m) => m.id === currentModel)) {
 					return { provider: currentProvider, model: currentModel }
 				}
-				return {
-					provider: currentProvider,
-					model: enabledModels[0]?.id ?? '',
-				}
+				return { provider: currentProvider, model: enabledModels[0]?.id ?? '' }
 			}
-
-			// Find first provider with enabled models
 			for (const provider of catalogProviders) {
 				const models = getEnabledChatModels(provider.id)
-				const firstModel = models[0]
-				if (firstModel) {
-					return { provider: provider.id, model: firstModel.id }
-				}
+				const first = models[0]
+				if (first) return { provider: provider.id, model: first.id }
 			}
-
 			return { provider: currentProvider, model: '' }
 		},
 		[getEnabledChatModels, catalogProviders]
 	)
 
-	// Sync with loaded config and validate against enabled models
 	useEffect(() => {
-		if (!(isLoaded && isCatalogLoaded)) return
-
+		if (!(isModelConfigLoaded && isCatalogLoaded)) return
 		const preferredProvider = lastUsedProvider || config.defaultProvider
 		const preferredModel = lastUsedModel || config.defaultModel || ''
-
 		const { provider, model } = findValidProviderAndModel(
 			preferredProvider,
 			preferredModel
@@ -203,7 +256,7 @@ function KnowledgePage() {
 		setSelectedProvider(provider)
 		setSelectedModel(model)
 	}, [
-		isLoaded,
+		isModelConfigLoaded,
 		isCatalogLoaded,
 		config.defaultProvider,
 		config.defaultModel,
@@ -212,12 +265,140 @@ function KnowledgePage() {
 		findValidProviderAndModel,
 	])
 
-	// When model changes, save to localStorage
+	// Model info for thinking
+	const selectedModelInfo = useMemo(
+		() =>
+			catalogModels.find(
+				(m) => m.providerId === selectedProvider && m.id === selectedModel
+			),
+		[catalogModels, selectedProvider, selectedModel]
+	)
+	const supportsThinking = Boolean(selectedModelInfo?.reasoning)
+	const hasToggleableReasoning = Boolean(
+		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
+	)
+	const thinkingActive = hasToggleableReasoning ? thinkingEnabled : true
+	const sessionContextUsage = useSessionContextUsage({
+		messages,
+		providerId: selectedProvider,
+		modelId: selectedModel,
+		modelContextWindowTokens: selectedModelInfo?.contextWindowTokens,
+	})
+
+	useEffect(() => {
+		if (!supportsThinking) {
+			setThinkingEnabled(false)
+			return
+		}
+		if (hasToggleableReasoning) return
+		setThinkingEnabled(true)
+	}, [supportsThinking, hasToggleableReasoning])
+
+	// Combined error toast for both chat and session errors
+	useEffect(() => {
+		const error = chatError || sessionsError
+		if (error) {
+			toast.error(error.message || t('knowledge.requestFailed'))
+		}
+	}, [chatError, sessionsError, t])
+
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+		localStorage.setItem(
+			SIDEBAR_COLLAPSED_STORAGE_KEY,
+			isHistoryCollapsed ? 'true' : 'false'
+		)
+	}, [isHistoryCollapsed])
+
+	useEffect(() => {
+		if (!selectedChatId) {
+			loadedChatIdRef.current = null
+			autoCompactKeyRef.current = null
+			clearMessages()
+			return
+		}
+
+		if (loadedChatIdRef.current === selectedChatId) return
+
+		loadedChatIdRef.current = selectedChatId
+		loadMessages(selectedChatId).catch((error: unknown) => {
+			loadedChatIdRef.current = null
+			toast.error(getErrorMessage(error))
+		})
+	}, [selectedChatId, clearMessages, loadMessages])
+
+	useEffect(() => {
+		autoCompactKeyRef.current = null
+	}, [selectedChatId])
+
+	useEffect(() => {
+		if (!selectedChatId) return
+		if (!sessionContextUsage?.shouldCompact) return
+		if (isPending || isCompacting) return
+
+		const autoCompactKey = [
+			selectedChatId,
+			messages.length,
+			sessionContextUsage.tokensToCompact,
+		].join(':')
+		if (autoCompactKeyRef.current === autoCompactKey) return
+		autoCompactKeyRef.current = autoCompactKey
+
+		compactContext({
+			tokensToCompact: sessionContextUsage.tokensToCompact,
+		})
+			.then((result) => {
+				if (!result) return
+				toast.success(
+					t('knowledge.compactMessage.success', {
+						count: result.compactedCount,
+					})
+				)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [
+		compactContext,
+		isCompacting,
+		isPending,
+		messages.length,
+		selectedChatId,
+		sessionContextUsage,
+		t,
+	])
+
+	useEffect(() => {
+		if (isSessionsLoading || selectedChatId) return
+
+		if (firstSessionId) {
+			selectChat(firstSessionId)
+			return
+		}
+
+		createChat()
+			.then((newChatId) => {
+				loadedChatIdRef.current = newChatId
+				resetChat(newChatId)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [
+		isSessionsLoading,
+		selectedChatId,
+		firstSessionId,
+		selectChat,
+		createChat,
+		resetChat,
+	])
+
+	// Handlers
 	const handleModelChange = useCallback(
 		(modelId: string, providerId?: string) => {
 			const matchedProviderId =
 				providerId ??
-				catalogModels.find((model) => model.id === modelId)?.providerId ??
+				catalogModels.find((m) => m.id === modelId)?.providerId ??
 				selectedProvider
 			setSelectedProvider(matchedProviderId)
 			setSelectedModel(modelId)
@@ -226,373 +407,354 @@ function KnowledgePage() {
 		[catalogModels, selectedProvider, saveLastUsed]
 	)
 
-	const hasApiKey = Boolean(providerConfig?.apiKey?.trim())
-
-	// Handle chat error
-	useEffect(() => {
-		if (chatError) {
-			toast.error(chatError.message || t('knowledge.requestFailed'))
-		}
-	}, [chatError, t])
-
-	const handleAddNoteAttachment = useCallback(
-		(note: AttachedNote) => {
-			const trimmedTitle = note.title.trim()
-			const normalizedTitle =
-				trimmedTitle.length > 0 ? trimmedTitle : t('entryPicker.untitled')
-			setAttachedNotes((prev) => {
-				if (prev.some((item) => item.id === note.id)) {
-					return prev
-				}
-				return [...prev, { id: note.id, title: normalizedTitle }]
-			})
+	const handleSelectChat = useCallback(
+		(chatSessionId: string) => {
+			if (isPending || chatSessionId === selectedChatId) {
+				setMobileHistoryOpen(false)
+				return
+			}
+			selectChat(chatSessionId)
+			setMobileHistoryOpen(false)
 		},
-		[t]
+		[isPending, selectedChatId, selectChat]
 	)
 
-	const handleRemoveAttachment = useCallback((noteId: string) => {
-		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
-	}, [])
+	const handleNewChat = useCallback(async () => {
+		if (isPending) return
 
-	// Get selected model info for context window
-	const selectedModelInfo = useMemo(() => {
-		return catalogModels.find(
-			(m) => m.providerId === selectedProvider && m.id === selectedModel
-		)
-	}, [catalogModels, selectedProvider, selectedModel])
-
-	// Calculate context usage
-	const contextUsage = useMemo(() => {
-		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-		const usedTokens = calculateTotalTokens(messages)
-		const percent = Math.min(100, Math.round((usedTokens / contextWindow) * 100))
-		return {
-			used: usedTokens,
-			total: contextWindow,
-			percent,
-			isWarning: percent >= 80,
-			isExceeded: percent >= CONTEXT_CRITICAL_THRESHOLD,
-		}
-	}, [messages, selectedModelInfo])
-
-	// Calculate accumulated session usage for ChatInput context display
-	const chatContextUsage = useMemo<ChatContextUsage | undefined>(() => {
-		if (messages.length === 0) return undefined
-
-		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-		const usedTokens = calculateTotalTokens(messages)
-
-		// Accumulate usage from all messages
-		const sessionUsage = messages.reduce<SessionUsage>(
-			(acc, msg) => {
-				if (!msg.usage) return acc
-				return {
-					inputTokens: (acc.inputTokens ?? 0) + (msg.usage.inputTokens ?? 0),
-					outputTokens: (acc.outputTokens ?? 0) + (msg.usage.outputTokens ?? 0),
-					totalTokens: (acc.totalTokens ?? 0) + (msg.usage.totalTokens ?? 0),
-					reasoningTokens:
-						(acc.reasoningTokens ?? 0) + (msg.usage.reasoningTokens ?? 0),
-				}
-			},
-			{
-				inputTokens: 0,
-				outputTokens: 0,
-				totalTokens: 0,
-				reasoningTokens: 0,
+		try {
+			if (selectedChatId && isSessionEmpty(selectedChatId)) {
+				await deleteEmptyChat(selectedChatId)
 			}
-		)
-
-		return {
-			usedTokens,
-			maxTokens: contextWindow,
-			sessionUsage,
-			modelId: selectedModel,
+			const newChatId = await createChat()
+			loadedChatIdRef.current = newChatId
+			resetChat(newChatId)
+			setInputValue('')
+			setMobileHistoryOpen(false)
+		} catch (error: unknown) {
+			toast.error(getErrorMessage(error))
 		}
-	}, [messages, selectedModelInfo, selectedModel])
+	}, [
+		isPending,
+		selectedChatId,
+		isSessionEmpty,
+		deleteEmptyChat,
+		createChat,
+		resetChat,
+	])
 
-	// State for context exceeded dialog
-	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
+	const handleDeleteChat = useCallback(
+		async (chatSessionId: string) => {
+			if (isPending) return
 
-	const handleSendMessage = useCallback(
+			try {
+				const wasDeleted = await deleteChat(chatSessionId)
+				if (!wasDeleted) return
+
+				if (chatSessionId === selectedChatId) {
+					loadedChatIdRef.current = null
+					clearMessages()
+				}
+
+				setMobileHistoryOpen(false)
+				await refreshSessions()
+			} catch (error: unknown) {
+				toast.error(getErrorMessage(error))
+			}
+		},
+		[isPending, deleteChat, selectedChatId, clearMessages, refreshSessions]
+	)
+
+	const handleCompactNow = useCallback(() => {
+		if (!sessionContextUsage || isPending || isCompacting) return
+		compactContext({
+			tokensToCompact: sessionContextUsage.tokensToCompact,
+		})
+			.then((result) => {
+				if (!result) return
+				toast.success(
+					t('knowledge.compactMessage.success', {
+						count: result.compactedCount,
+					})
+				)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [compactContext, isCompacting, isPending, sessionContextUsage, t])
+
+	const handleSubmit = useCallback(
 		(message: PromptInputMessage) => {
-			const trimmedInput = message.text.trim()
+			const trimmedText = message.text.trim()
 			const hasFiles = message.files.length > 0
-			const hasContent = trimmedInput.length > 0 || hasFiles
-			if (!hasContent || isStreaming) return
+			if (!(trimmedText || hasFiles) || isPending || !selectedChatId) return
 
 			if (!isApiSupportedProvider(selectedProvider)) {
 				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
 				return
 			}
 
-			const fallbackText = t('knowledge.attachmentFallback')
-			const promptText = trimmedInput || fallbackText
+			const promptText = trimmedText || t('knowledge.attachmentFallback')
+			setInputValue('')
+			sendMessage({ text: promptText, files: message.files })
+		},
+		[isPending, selectedChatId, selectedProvider, sendMessage, t]
+	)
 
-			// Check if context would be exceeded with new message
-			const newMessageTokens = estimateTokenCount(promptText)
-			const projectedUsage = contextUsage.used + newMessageTokens
-			const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-			const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
-
-			if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
-				setShowContextExceededDialog(true)
+	const handleSuggestionClick = useCallback(
+		(suggestion: string) => {
+			if (isPending || !selectedChatId) return
+			if (!isApiSupportedProvider(selectedProvider)) {
+				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
 				return
 			}
-
-			// Capture note IDs and mention titles before clearing
-			const noteEntryIds = attachedNotes.map((n) => n.id)
-			const mentionTitles =
-				attachedNotes.length > 0
-					? attachedNotes.map((n) => n.title).filter(Boolean)
-					: undefined
-
-			// Clear input and attachments
 			setInputValue('')
-			setAttachedNotes([])
-
-			// Send message via AI SDK useChat
-			sendMessage({
-				text: promptText,
-				files: message.files,
-				mentionTitles,
-				noteEntryIds,
-			})
+			sendMessage({ text: suggestion })
 		},
-		[
-			isStreaming,
-			selectedProvider,
-			attachedNotes,
-			contextUsage,
-			selectedModelInfo,
-			sendMessage,
-			t,
-		]
+		[isPending, selectedChatId, selectedProvider, sendMessage]
 	)
 
-	const handleNewChat = useCallback(async () => {
-		// If current session is already empty, don't create a new one
-		// Just focus on the input (the server will reuse the empty session anyway)
-		if (selectedChatId && isSessionEmpty(selectedChatId) && messages.length === 0) {
-			// Already on an empty session, just reset UI state
-			setInputValue('')
-			setAttachedNotes([])
-			setIsSidebarOpen(false)
-			return
-		}
+	// Waiting state
+	const showWaiting = useMemo(() => {
+		if (!isPending) return false
+		return !messages.some(
+			(m) =>
+				m.isStreaming &&
+				(m.content.length > 0 ||
+					(m.thinking?.length ?? 0) > 0 ||
+					(m.parts ?? []).some(isToolInvocationPart))
+		)
+	}, [isPending, messages])
 
-		try {
-			// Create a new chat session on the server
-			// Server will reuse existing empty session or create new one
-			const newChatId = await createNewChatSession()
-			setChatIdState(newChatId)
-			resetChat(newChatId)
-			setLastChatId(newChatId)
-
-			setInputValue('')
-			setAttachedNotes([])
-
-			// Close sidebar on mobile
-			setIsSidebarOpen(false)
-		} catch (err) {
-			console.error('Failed to create new chat:', err)
-			// Fallback to local-only chat ID
-			const newChatId = nanoid(16)
-			setChatIdState(newChatId)
-			resetChat(newChatId)
-			setLastChatId(newChatId)
-
-			setInputValue('')
-			setAttachedNotes([])
-		}
-	}, [
-		createNewChatSession,
-		resetChat,
-		selectedChatId,
-		isSessionEmpty,
-		messages.length,
-	])
-
-	const handleSelectChat = useCallback(
-		(chatIdToSelect: string) => {
-			selectChat(chatIdToSelect)
-			// Close sidebar on mobile
-			setIsSidebarOpen(false)
-		},
-		[selectChat]
+	const isInputDisabled = isPending || !hasApiKey || !selectedChatId
+	const contextPopoverDetails = useMemo(
+		() => buildContextPopoverDetails(sessionContextUsage, selectedModel),
+		[sessionContextUsage, selectedModel]
 	)
-
-	const handleDeleteChat = useCallback(
-		async (chatIdToDelete: string) => {
-			try {
-				await deleteChatSession(chatIdToDelete)
-				// If we deleted the current chat, the hook will auto-select another
-				if (chatIdToDelete === chatId) {
-					// Refresh will trigger auto-select
-					await refreshSessions()
-				}
-			} catch (err) {
-				console.error('Failed to delete chat:', err)
-				toast.error(t('knowledge.deleteChatFailed'))
-			}
-		},
-		[deleteChatSession, chatId, refreshSessions, t]
-	)
-
-	const isPending = isStreaming || isLoading
 
 	return (
-		<div className="flex h-svh">
-			{/* Sidebar - Chat History */}
-			<div
-				className={cn(
-					'absolute inset-y-0 left-0 z-40 w-72 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0',
-					isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-				)}
-			>
-				<ChatHistoryPanel
-					className="h-full"
-					isLoading={isSessionsLoading}
-					onDeleteChat={handleDeleteChat}
-					onNewChat={handleNewChat}
-					onSelectChat={handleSelectChat}
-					selectedChatId={selectedChatId}
-					sessions={sessions}
-				/>
-			</div>
+		<div className="relative flex h-svh overflow-hidden">
+			<Sheet onOpenChange={setMobileHistoryOpen} open={isMobileHistoryOpen}>
+				<SheetContent
+					className="w-[85vw] max-w-[320px] p-0 sm:w-[320px]"
+					side="left"
+				>
+					<SheetHeader className="sr-only">
+						<SheetTitle>{t('knowledge.chatHistory')}</SheetTitle>
+					</SheetHeader>
+					<ChatHistorySidebar
+						className="h-full border-r-0"
+						isLoading={isSessionsLoading}
+						onDeleteChat={handleDeleteChat}
+						onNewChat={handleNewChat}
+						onSelectChat={handleSelectChat}
+						selectedChatId={selectedChatId}
+						sessions={sessions}
+					/>
+				</SheetContent>
+			</Sheet>
 
-			{/* Overlay for mobile */}
-			{isSidebarOpen && (
-				<button
-					aria-label="Close sidebar"
-					className="fixed inset-0 z-30 bg-black/50 md:hidden"
-					onClick={() => setIsSidebarOpen(false)}
-					type="button"
-				/>
+			{isHistoryCollapsed ? null : (
+				<div className="hidden h-full w-[280px] shrink-0 md:block">
+					<ChatHistorySidebar
+						className="h-full"
+						isLoading={isSessionsLoading}
+						onDeleteChat={handleDeleteChat}
+						onNewChat={handleNewChat}
+						onSelectChat={handleSelectChat}
+						selectedChatId={selectedChatId}
+						sessions={sessions}
+					/>
+				</div>
 			)}
 
-			{/* Main Content */}
-			<div className="flex flex-1 flex-col overflow-hidden">
-				<div className="container mx-auto flex h-full max-w-4xl flex-col px-4 py-4">
-					{/* Header */}
-					<div className="mb-4 flex items-center justify-between">
-						<div className="flex items-center gap-3">
-							{/* Mobile menu button */}
-							<Button
-								className="md:hidden"
-								onClick={() => setIsSidebarOpen(true)}
-								size="icon"
-								variant="ghost"
-							>
-								<HugeiconsIcon className="size-5" icon={Menu01Icon} />
-							</Button>
-							<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-								<HugeiconsIcon
-									className="size-6 text-primary"
-									icon={AiBrain01Icon}
-								/>
-							</div>
-							<div>
-								<h1 className="text-balance font-semibold text-lg">
-									{t('knowledge.title')}
-								</h1>
-								<p className="text-pretty text-muted-foreground text-sm">
-									{t('knowledge.subtitle')}
-								</p>
-							</div>
-						</div>
-						<div className="flex items-center gap-2">
-							{messages.length > 0 && (
-								<ContextUsageIndicator
-									contextUsage={contextUsage}
-									onNewChat={handleNewChat}
+			<div className="flex min-w-0 flex-1 flex-col divide-y overflow-hidden">
+				<div className="flex items-center justify-between gap-2 px-4 py-2">
+					<Button
+						className="inline-flex gap-2 md:hidden"
+						onClick={() => setMobileHistoryOpen(true)}
+						onFocus={preloadChatHistoryPanel}
+						onMouseEnter={preloadChatHistoryPanel}
+						size="sm"
+						variant="outline"
+					>
+						<HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
+						<span>{t('knowledge.chatHistory')}</span>
+					</Button>
+					<Button
+						className="hidden gap-2 md:inline-flex"
+						onClick={() => setIsHistoryCollapsed((v) => !v)}
+						onFocus={preloadChatHistoryPanel}
+						onMouseEnter={preloadChatHistoryPanel}
+						size="sm"
+						variant="outline"
+					>
+						<HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
+						<span>{t('knowledge.chatHistory')}</span>
+					</Button>
+
+					<Button
+						className="inline-flex gap-2"
+						disabled={isPending}
+						onClick={handleNewChat}
+						size="sm"
+						variant="ghost"
+					>
+						<HugeiconsIcon className="size-4" icon={MessageAdd01Icon} />
+						<span>{t('knowledge.newChat')}</span>
+					</Button>
+				</div>
+
+				<div className="flex min-h-0 flex-1 flex-col divide-y overflow-hidden">
+					<Conversation>
+						<ConversationContent className="gap-4 p-4">
+							{messages.length > 0 ? (
+								<>
+									{sessionContextUsage ? (
+										<ContextCompactBanner
+											contextUsage={sessionContextUsage}
+											isCompacting={isCompacting}
+											onCompact={handleCompactNow}
+										/>
+									) : null}
+									{messages.map((message) => (
+										<Fragment key={message.id}>
+											{message.compactInfo ? (
+												<CompactMessage
+													compactInfo={message.compactInfo}
+													summary={message.content}
+												/>
+											) : (
+												<ChatMessageItem
+													message={message}
+													onToolApprovalResponse={addToolApprovalResponse}
+													thinkingEnabled={thinkingEnabled}
+												/>
+											)}
+										</Fragment>
+									))}
+									{showWaiting ? <WaitingIndicator /> : null}
+								</>
+							) : (
+								<ConversationEmptyState
+									description={t('knowledge.emptyState.description')}
+									icon={
+										<HugeiconsIcon
+											className="size-12 text-muted-foreground/50"
+											icon={AiBrain01Icon}
+										/>
+									}
+									title={t('knowledge.emptyState.title')}
 								/>
 							)}
-							<Link to="/settings/models">
-								<Button size="sm" variant="ghost">
-									<HugeiconsIcon className="size-4" icon={Setting06Icon} />
-								</Button>
-							</Link>
-							<Button
-								className="rounded-lg"
-								onClick={handleNewChat}
-								size="sm"
-								variant="outline"
-							>
-								<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
-								{t('knowledge.newChat')}
-							</Button>
-						</div>
-					</div>
+						</ConversationContent>
+						<ConversationScrollButton />
+					</Conversation>
 
-					{/* Context Exceeded Dialog */}
-					<AlertDialog
-						onOpenChange={setShowContextExceededDialog}
-						open={showContextExceededDialog}
-					>
-						<AlertDialogContent>
-							<AlertDialogHeader>
-								<AlertDialogTitle className="flex items-center gap-2">
-									<HugeiconsIcon
-										className="size-5 text-destructive"
-										icon={Alert02Icon}
-									/>
-									{t('knowledge.contextExceeded')}
-								</AlertDialogTitle>
-								<AlertDialogDescription>
-									{t('knowledge.contextExceededDescription')}
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter>
-								<AlertDialogAction
-									onClick={() => {
-										setShowContextExceededDialog(false)
-										handleNewChat()
-									}}
-								>
-									<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
-									{t('knowledge.startNewChat')}
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
-
-					{/* Chat Messages */}
-					<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
+					<div className="grid shrink-0 gap-4 pt-4">
 						{messages.length === 0 ? (
-							<div className="flex h-full items-center justify-center p-4">
-								<EmptyState hasApiKey={hasApiKey} />
-							</div>
-						) : (
-							<MessageList
-								isPending={isPending}
-								messages={messages}
-								onRegenerate={regenerate}
-								onToolApprovalResponse={addToolApprovalResponse}
-								thinkingEnabled={thinkingEnabled}
-							/>
-						)}
-					</div>
+							<Suggestions className="px-4">
+								{SUGGESTIONS.map((suggestion) => (
+									<Suggestion
+										key={suggestion}
+										onClick={handleSuggestionClick}
+										suggestion={suggestion}
+									/>
+								))}
+							</Suggestions>
+						) : null}
 
-					{/* Input Area with integrated model selector */}
-					<div className="mt-4">
-						<ChatInput
-							attachedNotes={attachedNotes}
-							catalogModels={catalogModels}
-							catalogProviders={catalogProviders}
-							contextUsage={chatContextUsage}
-							hasApiKey={hasApiKey}
-							isPending={isPending}
-							onAddNoteAttachment={handleAddNoteAttachment}
-							onChange={setInputValue}
-							onModelChange={handleModelChange}
-							onRemoveNoteAttachment={handleRemoveAttachment}
-							onSubmit={handleSendMessage}
-							onThinkingToggle={setThinkingEnabled}
-							selectedModel={selectedModel}
-							selectedProvider={selectedProvider}
-							thinkingEnabled={thinkingEnabled}
-							value={inputValue}
-						/>
+						<div className="w-full px-4 pb-4">
+							<PromptInput
+								accept={FILE_ATTACHMENT_ACCEPT}
+								className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
+								globalDrop
+								maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
+								maxFiles={FILE_ATTACHMENT_MAX_FILES}
+								multiple
+								onError={(error) => {
+									toast.error(error.message)
+								}}
+								onSubmit={handleSubmit}
+							>
+								<AttachmentDisplay />
+								<PromptInputBody>
+									<PromptInputTextarea
+										disabled={isInputDisabled}
+										onChange={(e) => setInputValue(e.target.value)}
+										placeholder={
+											hasApiKey
+												? t('knowledge.inputPlaceholder')
+												: t('knowledge.configureApiKeyFirst')
+										}
+										value={inputValue}
+									/>
+								</PromptInputBody>
+								<PromptInputFooter className="px-3">
+									<PromptInputTools>
+										<PromptInputActionMenu>
+											<PromptInputActionMenuTrigger
+												aria-label={t('knowledge.addAttachments')}
+												disabled={isInputDisabled}
+											/>
+											<PromptInputActionMenuContent>
+												<PromptInputActionAddAttachments
+													label={t('knowledge.addAttachments')}
+												/>
+											</PromptInputActionMenuContent>
+										</PromptInputActionMenu>
+
+										<AiModelSelector
+											catalogModels={catalogModels}
+											catalogProviders={catalogProviders}
+											className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+											disabled={isInputDisabled}
+											onValueChange={handleModelChange}
+											placeholder={t('knowledge.selectModel')}
+											value={selectedModel}
+										/>
+
+										{supportsThinking ? (
+											<ThinkingToggle
+												hasToggleableReasoning={hasToggleableReasoning}
+												onToggle={setThinkingEnabled}
+												thinkingActive={thinkingActive}
+												thinkingEnabled={thinkingEnabled}
+											/>
+										) : null}
+
+										<Link className="contents" to="/settings/models">
+											<PromptInputButton
+												aria-label={t('knowledge.configuration')}
+												variant="ghost"
+											>
+												<HugeiconsIcon className="size-4" icon={Setting06Icon} />
+											</PromptInputButton>
+										</Link>
+									</PromptInputTools>
+
+									<div className="flex items-center gap-1">
+										<ContextUsagePopover
+											contextPopoverDetails={contextPopoverDetails}
+											selectedModel={selectedModel}
+											sessionContextUsage={sessionContextUsage}
+										/>
+
+										<PromptInputSubmit
+											aria-label={t('knowledge.send')}
+											className={cn(
+												'transition-colors duration-200 motion-reduce:transition-none',
+												isPending
+													? 'animate-pulse motion-reduce:animate-none'
+													: 'hover:bg-primary/90'
+											)}
+											disabled={isInputDisabled}
+											status={isPending ? 'submitted' : 'ready'}
+										/>
+									</div>
+								</PromptInputFooter>
+							</PromptInput>
+						</div>
 					</div>
 				</div>
 			</div>

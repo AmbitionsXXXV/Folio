@@ -1,6 +1,6 @@
 {
   "name": "@folionote/auth",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "exports": {
     ".": {
       "default": "./src/index.ts"

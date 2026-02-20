@@ -3,6 +3,7 @@ import { Input } from '@folionote/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import { ArrowLeft01Icon, Loading02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { useHotkey } from '@tanstack/react-hotkeys'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -99,19 +100,12 @@ function NewEntryPage() {
 	}, [navigate])
 
 	// Keyboard shortcut: ⌘/Ctrl + S to save
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-				e.preventDefault()
-				if (title.trim() || content.trim()) {
-					handleSave()
-				}
-			}
+	useHotkey('Mod+S', (event) => {
+		event.preventDefault()
+		if (title.trim() || content.trim()) {
+			handleSave()
 		}
-
-		document.addEventListener('keydown', handleKeyDown)
-		return () => document.removeEventListener('keydown', handleKeyDown)
-	}, [handleSave, title, content])
+	})
 
 	// Parse TOC items from debounced content
 	const tocItems = useMemo(

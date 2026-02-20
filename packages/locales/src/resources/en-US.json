@@ -854,6 +854,16 @@
       "retry": "Retry",
       "copy": "Copy"
     },
+    "compactMessage": {
+      "title": "Compacted {{count}} older messages",
+      "meta": "Kept last {{kept}} messages · {{time}}",
+      "summaryLabel": "Compaction summary",
+      "justNow": "just now",
+      "banner": "Context is near limit ({{percent}}%). Compact about {{tokens}} tokens.",
+      "compacting": "Compacting…",
+      "compactNow": "Compact now",
+      "success": "Context compacted, merged {{count}} older messages"
+    },
     "attachments": {
       "errorMaxFiles": "You can attach up to {{count}} files",
       "errorMaxFileSize": "File exceeds {{size}}",
@@ -885,7 +895,22 @@
       "input": "Input",
       "output": "Output",
       "reasoning": "Reasoning",
-      "cache": "Cache"
+      "cache": "Cache",
+      "details": {
+        "remaining": "Remaining",
+        "model": "Model",
+        "status": "Status",
+        "source": "Source",
+        "statusValue": {
+          "ok": "Healthy",
+          "warn": "Near limit",
+          "compact": "Need compaction"
+        },
+        "sourceValue": {
+          "server": "Server usage",
+          "estimated": "Estimated usage"
+        }
+      }
     },
     "toolCards": {
       "weather": {
@@ -931,7 +956,9 @@
       "description": "This action needs your permission before proceeding.",
       "destructiveWarning": "This is a destructive action and cannot be undone.",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
     }
   },
   "aiProvider": {

@@ -1084,6 +1084,7 @@ Knowledge Chat 功能允许用户与 AI 进行基于个人知识库的对话。�
 1. **内置系统 Prompt**：定义知识库助手行为规则，优先使用用户笔记作为上下文
 2. **@ 笔记附件**：用户可通过 `@` 显式引用 Library 中的笔记作为对话上下文
 3. **FTS 检索增强**：自动基于用户输入进行全文搜索（FTS/ILIKE fallback），检索相关笔记作为补充上下文
+4. **Key 来源兜底**：ChatInput 判定可输入时，优先使用 model provider 配置的 API Key，若为空则回退到 AI provider 配置（API provider id）
 
 ### 24.2 数据流与安全边界
 

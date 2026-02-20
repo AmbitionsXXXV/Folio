@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,9 +22,9 @@
     "@folionote/editor-react": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/model-list": "workspace:*",
+    "@folionote/stock-tool": "workspace:*",
     "@folionote/ui": "workspace:*",
     "@folionote/utils": "workspace:*",
-    "@folionote/stock-tool": "workspace:*",
     "@folionote/weather-tool": "workspace:*",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
@@ -37,6 +37,7 @@
     "@streamdown/mermaid": "^1.0.1",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-form": "catalog:",
+    "@tanstack/react-hotkeys": "^0.1.0",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "^1.150.0",
     "@tanstack/react-router-with-query": "^1.130.17",
@@ -89,8 +90,10 @@
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",
+    "@tanstack/devtools-vite": "^0.5.1",
+    "@tanstack/react-devtools": "^0.9.5",
     "@tanstack/react-query-devtools": "^5.91.1",
-    "@tanstack/react-router-devtools": "^1.142.8",
+    "@tanstack/react-router-devtools": "^1.150.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.1",
     "@types/react": "19.2.7",

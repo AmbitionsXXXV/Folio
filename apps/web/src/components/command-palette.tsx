@@ -17,6 +17,7 @@ import {
 	Search01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { useHotkey } from '@tanstack/react-hotkeys'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
@@ -27,7 +28,7 @@ import { orpc } from '@/utils/orpc'
 
 export function CommandPalette() {
 	const { t } = useTranslation()
-	const { open, setOpen } = useCommandPalette()
+	const { open, setOpen, toggle } = useCommandPalette()
 	const [search, setSearch] = useState('')
 	const navigate = useNavigate()
 
@@ -35,17 +36,10 @@ export function CommandPalette() {
 	const debouncedSearch = useDebounce(search, 300)
 
 	// Global keyboard shortcut
-	useEffect(() => {
-		const down = (e: KeyboardEvent) => {
-			if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-				e.preventDefault()
-				setOpen(!open)
-			}
-		}
-
-		document.addEventListener('keydown', down)
-		return () => document.removeEventListener('keydown', down)
-	}, [open, setOpen])
+	useHotkey('Mod+K', (event) => {
+		event.preventDefault()
+		toggle()
+	})
 
 	// Clear search when dialog closes
 	useEffect(() => {

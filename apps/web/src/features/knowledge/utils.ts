@@ -25,6 +25,13 @@ const PROVIDER_ID_MAPPING: Record<string, ApiProviderId> = {
 	moonshot: 'moonshot',
 }
 
+/** Map API/model-list provider IDs to tokenlens provider IDs */
+const TOKENLENS_PROVIDER_ALIASES: Record<string, string> = {
+	claude: 'anthropic',
+	gemini: 'google',
+	moonshot: 'moonshotai',
+}
+
 export function isApiSupportedProvider(id: string): id is ApiProviderId {
 	const mappedId = PROVIDER_ID_MAPPING[id] || id
 	return API_SUPPORTED_PROVIDERS.includes(mappedId as ApiProviderId)
@@ -36,6 +43,27 @@ export function mapProviderIdToApi(id: string): ApiProviderId {
 		throw new Error(`Provider "${id}" is not supported by the API`)
 	}
 	return mappedId as ApiProviderId
+}
+
+/**
+ * Build possible tokenlens model IDs from provider + model.
+ * tokenlens expects `{provider}/{modelId}` and provider aliases vary by ecosystem.
+ */
+export function getTokenlensModelIdCandidates(
+	providerId: string,
+	modelId: string
+): string[] {
+	const normalizedProvider = providerId.trim().toLowerCase()
+	const aliasProvider = TOKENLENS_PROVIDER_ALIASES[normalizedProvider]
+	const candidates = [
+		`${normalizedProvider}/${modelId}`,
+		aliasProvider ? `${aliasProvider}/${modelId}` : null,
+	]
+	return [
+		...new Set(
+			candidates.filter((candidate): candidate is string => Boolean(candidate))
+		),
+	]
 }
 
 // ============================================================================

@@ -2,7 +2,7 @@ import { Add01Icon, MailOpen01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { FlashList } from '@shopify/flash-list'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, cn, TextField, useThemeColor } from 'heroui-native'
+import { Button, Card, cn, Input, TextField, useThemeColor } from 'heroui-native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, RefreshControl, Text, View } from 'react-native'
@@ -32,13 +32,13 @@ function QuickCapture({ onCapture, isPending }: QuickCaptureProps) {
 		<Card className="p-4" variant="secondary">
 			<View className="flex-row items-center">
 				<TextField className="mr-3 flex-1">
-					<TextField.Input
-						onChangeText={setInputValue}
-						onSubmitEditing={handleSubmit}
-						placeholder={t('entry.quickCapture')}
-						returnKeyType="done"
-						value={inputValue}
-					/>
+				<Input
+					onChangeText={setInputValue}
+					onSubmitEditing={handleSubmit}
+					placeholder={t('entry.quickCapture')}
+					returnKeyType="done"
+					value={inputValue}
+				/>
 				</TextField>
 				<Button
 					className={cn(
