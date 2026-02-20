@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.9
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+
 ## 0.1.8
 
 ### Patch Changes

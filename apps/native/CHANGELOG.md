@@ -1,5 +1,17 @@
 # native
 
+## 0.2.16
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+- Updated dependencies
+  - @folionote/locales@0.2.16
+  - @folionote/api@0.2.16
+  - @folionote/constants@0.2.16
+  - @folionote/editor-core@0.2.16
+  - @folionote/utils@0.2.16
+
 ## 0.2.15
 
 ### Patch Changes

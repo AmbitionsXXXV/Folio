@@ -1,5 +1,11 @@
 # @folionote/config
 
+## 0.2.16
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+
 ## 0.2.15
 
 ### Patch Changes

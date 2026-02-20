@@ -1,5 +1,13 @@
 # @folionote/ai
 
+## 0.2.16
+
+### Patch Changes
+
+- feat: ✨ enhance AI stream route and improve context handling
+- Updated dependencies
+  - @folionote/constants@0.2.16
+
 ## 0.2.15
 
 ### Patch Changes
