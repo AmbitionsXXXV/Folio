@@ -1,50 +1,83 @@
-import { CONTEXT_CRITICAL_THRESHOLD } from '@folionote/constants'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@folionote/ui/alert-dialog'
-import { Button } from '@folionote/ui/button'
+import { CollapsibleContent } from '@folionote/ui/collapsible'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
 import {
 	AiBrain01Icon,
-	Alert02Icon,
-	Menu01Icon,
-	MessageAdd01Icon,
+	Cancel01Icon,
 	Setting06Icon,
+	Tick02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import type { FileUIPart } from 'ai'
 import { nanoid } from 'nanoid'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
-	type AttachedNote,
-	type ChatContextUsage,
-	ChatInput,
-	type SessionUsage,
-} from '@/components/ai-elements/chat-input'
-import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
+	Confirmation,
+	ConfirmationAccepted,
+	ConfirmationAction,
+	ConfirmationActions,
+	ConfirmationRejected,
+	ConfirmationRequest,
+	ConfirmationTitle,
+} from '@/components/ai-elements/confirmation'
 import {
-	ChatHistoryPanel,
-	type ChatMessage,
-	ContextUsageIndicator,
-	calculateTotalTokens,
-	EmptyState,
-	estimateTokenCount,
-	isApiSupportedProvider,
-	MessageList,
-	mapProviderIdToApi,
-	setLastChatId,
-} from '@/features/knowledge'
+	Conversation,
+	ConversationContent,
+	ConversationEmptyState,
+	ConversationScrollButton,
+} from '@/components/ai-elements/conversation'
+import { Loader } from '@/components/ai-elements/loader'
+import { AiModelSelector } from '@/components/ai-elements/model-selector'
+import {
+	PromptInput,
+	PromptInputActionAddAttachments,
+	PromptInputActionMenu,
+	PromptInputActionMenuContent,
+	PromptInputActionMenuTrigger,
+	PromptInputAttachments,
+	PromptInputBody,
+	PromptInputButton,
+	PromptInputFooter,
+	PromptInputHeader,
+	type PromptInputMessage,
+	PromptInputSubmit,
+	PromptInputTextarea,
+	PromptInputTools,
+	usePromptInputAttachments,
+} from '@/components/ai-elements/prompt-input'
+import {
+	Reasoning,
+	ReasoningContent,
+	ReasoningTrigger,
+} from '@/components/ai-elements/reasoning'
+import { Shimmer } from '@/components/ai-elements/shimmer'
+import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
+import {
+	Tool,
+	ToolContent,
+	ToolHeader,
+	ToolInput,
+	ToolOutput,
+} from '@/components/ai-elements/tool'
+import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
+import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
+import { isApiSupportedProvider, mapProviderIdToApi } from '@/features/knowledge'
+import {
+	isDisplayWeatherPart,
+	isStockPricePart,
+	isStockTrendPart,
+	StockToolCard,
+	StockTrendToolCard,
+	WeatherToolCard,
+} from '@/features/knowledge/components/tool-cards'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useAiProviderConfig } from '@/hooks/use-ai-provider-config'
-import { useChatSessions } from '@/hooks/use-chat-sessions'
-import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
+import {
+	type KnowledgeChatMessage,
+	useKnowledgeChat,
+} from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { cn } from '@/lib/utils'
@@ -53,10 +86,482 @@ export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
 })
 
-function KnowledgePage() {
+// ============================================================================
+// Constants
+// ============================================================================
+
+const FILE_ATTACHMENT_ACCEPT = 'image/*,application/pdf'
+const FILE_ATTACHMENT_MAX_FILES = 5
+const FILE_ATTACHMENT_MAX_BYTES = 5_242_880
+
+const SUGGESTIONS = [
+	'What are the latest trends in AI?',
+	'How does machine learning work?',
+	'Explain quantum computing',
+	'Best practices for React development',
+	'Tell me about TypeScript benefits',
+	'How to optimize database queries?',
+]
+
+// ============================================================================
+// WaitingIndicator
+// ============================================================================
+
+const WAITING_SHIMMER_DURATION = 1.4
+const WAITING_SHIMMER_SPREAD = 3
+const WAITING_LOADER_SIZE = 14
+
+const WaitingIndicator = memo(function WaitingIndicator() {
 	const { t } = useTranslation()
+
+	return (
+		<Message from="assistant">
+			<Reasoning
+				className="fade-in-0 slide-in-from-bottom-2 mb-0 animate-in duration-200 motion-reduce:animate-none"
+				defaultOpen={false}
+				isStreaming
+			>
+				<ReasoningTrigger
+					getThinkingMessage={() => (
+						<span className="flex items-center gap-2">
+							<Loader size={WAITING_LOADER_SIZE} />
+							<Shimmer
+								duration={WAITING_SHIMMER_DURATION}
+								spread={WAITING_SHIMMER_SPREAD}
+							>
+								{t('knowledge.thinkingInProgress')}
+							</Shimmer>
+						</span>
+					)}
+				/>
+			</Reasoning>
+		</Message>
+	)
+})
+
+// ============================================================================
+// Tool rendering helpers
+// ============================================================================
+
+type ToolMessagePart = NonNullable<KnowledgeChatMessage['parts']>[number]
+
+const TOOL_DETAILS_OPEN_STATES = new Set([
+	'approval-requested',
+	'output-error',
+	'output-denied',
+])
+
+function isToolInvocationPart(
+	part: ToolMessagePart
+): part is ToolMessagePart & { type: string } {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		typeof part.type === 'string' &&
+		part.type.startsWith('tool-')
+	)
+}
+
+function getToolLabel(part: ToolMessagePart): string {
+	if ('toolName' in part && typeof part.toolName === 'string') {
+		return part.toolName
+	}
+	if ('type' in part && typeof part.type === 'string') {
+		return part.type
+	}
+	return 'Tool'
+}
+
+function getToolPartState(part: ToolMessagePart, isStreaming: boolean): string {
+	if ('state' in part && typeof part.state === 'string') {
+		return part.state
+	}
+	return isStreaming ? 'input-streaming' : 'input-available'
+}
+
+function getToolKey(messageId: string, part: ToolMessagePart): string {
+	if ('toolCallId' in part && typeof part.toolCallId === 'string') {
+		return part.toolCallId
+	}
+	const state =
+		'state' in part && typeof part.state === 'string' ? part.state : 'tool'
+	return `${messageId}-${part.type}-${state}`
+}
+
+type ToolApprovalInfo =
+	| { id: string; approved?: never; reason?: never }
+	| { id: string; approved: boolean; reason?: string }
+
+function getToolApproval(part: ToolMessagePart): ToolApprovalInfo | undefined {
+	if (
+		!('approval' in part) ||
+		typeof part.approval !== 'object' ||
+		part.approval === null ||
+		!('id' in part.approval)
+	) {
+		return undefined
+	}
+	const raw = part.approval as Record<string, unknown>
+	const id = raw.id as string
+	if (typeof raw.approved === 'boolean') {
+		return {
+			id,
+			approved: raw.approved,
+			reason: typeof raw.reason === 'string' ? raw.reason : undefined,
+		}
+	}
+	return { id }
+}
+
+function isToolCardPart(part: ToolMessagePart): boolean {
+	return (
+		isDisplayWeatherPart(part) || isStockPricePart(part) || isStockTrendPart(part)
+	)
+}
+
+// ============================================================================
+// Inline tool calls
+// ============================================================================
+
+type ToolCallsProps = {
+	messageId: string
+	isStreaming: boolean
+	tools: ToolMessagePart[]
+	className?: string
+	onToolApprovalResponse?: ToolApprovalHandler
+}
+
+const ToolCalls = memo(function ToolCalls({
+	messageId,
+	isStreaming,
+	tools,
+	className,
+	onToolApprovalResponse,
+}: ToolCallsProps) {
+	const { t } = useTranslation()
+	const detailedTools = tools.filter((tool) => !isToolCardPart(tool))
+
+	if (detailedTools.length === 0) return null
+
+	return (
+		<div className={cn('space-y-2', className)}>
+			{detailedTools.map((tool) => {
+				const key = getToolKey(messageId, tool)
+				const state = getToolPartState(tool, isStreaming)
+				const label = getToolLabel(tool)
+				const input = 'input' in tool ? tool.input : undefined
+				const output = 'output' in tool ? tool.output : undefined
+				const errorText =
+					'errorText' in tool && typeof tool.errorText === 'string'
+						? tool.errorText
+						: undefined
+				const defaultOpen = TOOL_DETAILS_OPEN_STATES.has(state)
+				const approval = getToolApproval(tool)
+
+				return (
+					<Tool defaultOpen={defaultOpen} key={`detail-${key}`}>
+						<ToolHeader label={label} state={state} />
+						<ToolContent>
+							{input !== undefined ? <ToolInput input={input} /> : null}
+							<Confirmation
+								approval={approval}
+								state={state as Parameters<typeof Confirmation>[0]['state']}
+							>
+								<ConfirmationTitle>
+									<ConfirmationRequest>
+										{t('knowledge.toolApproval.description')}
+									</ConfirmationRequest>
+									<ConfirmationAccepted>
+										<span className="flex items-center gap-1.5">
+											<HugeiconsIcon
+												className="size-4 text-emerald-600"
+												icon={Tick02Icon}
+											/>
+											<span>{t('knowledge.toolApproval.accepted')}</span>
+										</span>
+									</ConfirmationAccepted>
+									<ConfirmationRejected>
+										<span className="flex items-center gap-1.5">
+											<HugeiconsIcon
+												className="size-4 text-destructive"
+												icon={Cancel01Icon}
+											/>
+											<span>{t('knowledge.toolApproval.rejected')}</span>
+										</span>
+									</ConfirmationRejected>
+								</ConfirmationTitle>
+								{onToolApprovalResponse && approval ? (
+									<ConfirmationActions>
+										<ConfirmationAction
+											onClick={() =>
+												onToolApprovalResponse({
+													id: approval.id,
+													approved: false,
+													reason: 'User rejected',
+												})
+											}
+											variant="outline"
+										>
+											{t('knowledge.toolApproval.reject')}
+										</ConfirmationAction>
+										<ConfirmationAction
+											onClick={() =>
+												onToolApprovalResponse({
+													id: approval.id,
+													approved: true,
+												})
+											}
+										>
+											{t('knowledge.toolApproval.approve')}
+										</ConfirmationAction>
+									</ConfirmationActions>
+								) : null}
+							</Confirmation>
+							{output !== undefined || errorText ? (
+								<ToolOutput errorText={errorText} output={output} />
+							) : null}
+						</ToolContent>
+					</Tool>
+				)
+			})}
+		</div>
+	)
+})
+
+// ============================================================================
+// Chat message rendering
+// ============================================================================
+
+const REASONING_TOOL_CLASSNAME = [
+	'mt-3 space-y-3 text-sm outline-none',
+	'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2',
+	'data-[state=open]:slide-in-from-top-2 data-[state=closed]:animate-out',
+	'data-[state=open]:animate-in duration-200 ease-out',
+	'motion-reduce:transition-none motion-reduce:animate-none',
+].join(' ')
+
+type ChatMessageItemProps = {
+	message: KnowledgeChatMessage
+	thinkingEnabled: boolean
+	onToolApprovalResponse?: ToolApprovalHandler
+}
+
+const ChatMessageItem = memo(function ChatMessageItem({
+	message,
+	thinkingEnabled,
+	onToolApprovalResponse,
+}: ChatMessageItemProps) {
+	const toolInvocations = useMemo(
+		() => (message.parts ?? []).filter(isToolInvocationPart),
+		[message.parts]
+	)
+	const toolCardParts = useMemo(
+		() => (message.parts ?? []).filter(isToolCardPart),
+		[message.parts]
+	)
+	const hasToolInvocations = toolInvocations.length > 0
+	const hasToolCards = message.role === 'assistant' && toolCardParts.length > 0
+	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
+	const shouldShowReasoning =
+		message.role === 'assistant' && thinkingEnabled && hasThinking
+	const isMessageStreaming = Boolean(message.isStreaming)
+
+	return (
+		<>
+			{/* Reasoning + tool calls (assistant only) */}
+			{message.role === 'assistant' &&
+			(shouldShowReasoning || hasToolInvocations) ? (
+				<Message from="assistant">
+					{shouldShowReasoning ? (
+						<Reasoning className="mb-0" isStreaming={isMessageStreaming}>
+							<ReasoningTrigger />
+							{hasThinking ? (
+								<ReasoningContent>{message.thinking ?? ''}</ReasoningContent>
+							) : null}
+							{hasToolInvocations ? (
+								<CollapsibleContent className={REASONING_TOOL_CLASSNAME}>
+									<ToolCalls
+										isStreaming={isMessageStreaming}
+										messageId={message.id}
+										onToolApprovalResponse={onToolApprovalResponse}
+										tools={toolInvocations}
+									/>
+								</CollapsibleContent>
+							) : null}
+						</Reasoning>
+					) : (
+						<ToolCalls
+							className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
+							isStreaming={isMessageStreaming}
+							messageId={message.id}
+							onToolApprovalResponse={onToolApprovalResponse}
+							tools={toolInvocations}
+						/>
+					)}
+				</Message>
+			) : null}
+
+			{/* Main message content */}
+			{message.content ? (
+				<Message from={message.role}>
+					<MessageContent>
+						<MessageResponse>{message.content}</MessageResponse>
+					</MessageContent>
+				</Message>
+			) : null}
+
+			{/* Tool card UIs (weather, stock, stock trend) */}
+			{hasToolCards ? (
+				<Message from="assistant">
+					<MessageContent>
+						<div className="grid gap-2">
+							{toolCardParts.map((part) => {
+								const fallbackState =
+									'state' in part && typeof part.state === 'string'
+										? part.state
+										: 'tool'
+								const toolKey =
+									'toolCallId' in part && typeof part.toolCallId === 'string'
+										? part.toolCallId
+										: `${message.id}-${part.type}-${fallbackState}`
+								if (isDisplayWeatherPart(part)) {
+									return <WeatherToolCard key={`weather-${toolKey}`} part={part} />
+								}
+								if (isStockPricePart(part)) {
+									return <StockToolCard key={`stock-${toolKey}`} part={part} />
+								}
+								if (isStockTrendPart(part)) {
+									return (
+										<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
+									)
+								}
+								return null
+							})}
+						</div>
+					</MessageContent>
+				</Message>
+			) : null}
+		</>
+	)
+})
+
+// ============================================================================
+// Attachment display in PromptInput header
+// ============================================================================
+
+function AttachmentDisplay() {
+	const attachments = usePromptInputAttachments()
+
+	if (attachments.files.length === 0) return null
+
+	return (
+		<PromptInputHeader className="gap-2 px-3 pt-2">
+			<PromptInputAttachments>
+				{(file) => <FileAttachmentChip file={file} onRemove={attachments.remove} />}
+			</PromptInputAttachments>
+		</PromptInputHeader>
+	)
+}
+
+type FileAttachmentChipProps = {
+	file: FileUIPart & { id: string }
+	onRemove: (id: string) => void
+}
+
+function FileAttachmentChip({ file, onRemove }: FileAttachmentChipProps) {
+	const handleRemove = useCallback(() => {
+		onRemove(file.id)
+	}, [onRemove, file.id])
+
+	const isImage = file.mediaType?.startsWith('image/') && file.url
+	const label = file.filename || (isImage ? 'Image' : 'Attachment')
+
+	return (
+		<PromptInputButton
+			className="gap-1.5 rounded-lg px-2 text-xs"
+			onClick={handleRemove}
+			size="sm"
+			variant="outline"
+		>
+			{isImage ? (
+				<img
+					alt={label}
+					className="size-4 rounded-sm object-cover"
+					height={16}
+					src={file.url}
+					width={16}
+				/>
+			) : null}
+			<span className="max-w-24 truncate">{label}</span>
+			<span className="text-muted-foreground">&times;</span>
+		</PromptInputButton>
+	)
+}
+
+// ============================================================================
+// Thinking toggle
+// ============================================================================
+
+type ThinkingToggleProps = {
+	thinkingActive: boolean
+	thinkingEnabled: boolean
+	hasToggleableReasoning: boolean
+	onToggle: (enabled: boolean) => void
+}
+
+function ThinkingToggle({
+	thinkingActive,
+	thinkingEnabled,
+	hasToggleableReasoning,
+	onToggle,
+}: ThinkingToggleProps) {
+	const { t } = useTranslation()
+
+	const getTooltip = () => {
+		if (hasToggleableReasoning) {
+			return thinkingEnabled
+				? t('knowledge.thinkingEnabled')
+				: t('knowledge.enableThinking')
+		}
+		return t('knowledge.thinkingBuiltIn')
+	}
+
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				aria-label={t('knowledge.toggleThinking')}
+				aria-pressed={thinkingActive}
+				className={cn(
+					'relative inline-flex size-8 items-center justify-center rounded-lg',
+					'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+					'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
+					thinkingActive &&
+						'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+				)}
+				disabled={!hasToggleableReasoning}
+				onClick={() => hasToggleableReasoning && onToggle(!thinkingEnabled)}
+				type="button"
+			>
+				<HugeiconsIcon className="size-4" icon={AiBrain01Icon} />
+				{thinkingActive ? (
+					<span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
+				) : null}
+			</TooltipTrigger>
+			<TooltipContent side="top">
+				<p>{getTooltip()}</p>
+			</TooltipContent>
+		</Tooltip>
+	)
+}
+
+// ============================================================================
+// useProviderApiKey - Extract API key resolution
+// ============================================================================
+
+function useProviderApiKey(selectedProvider: string) {
 	const {
-		config,
 		isLoaded: isModelConfigLoaded,
 		getProviderConfig: getModelProviderConfig,
 	} = useModelProviderConfig()
@@ -65,48 +570,6 @@ function KnowledgePage() {
 		getProviderConfig: getAiProviderConfig,
 	} = useAiProviderConfig()
 
-	// Model catalog for enabled models
-	const {
-		providers: catalogProviders,
-		models: catalogModels,
-		isLoaded: isCatalogLoaded,
-	} = useAiModelCatalog()
-
-	// Last used model from localStorage
-	const { lastUsedProvider, lastUsedModel, saveLastUsed } = useLastUsedModel()
-
-	// Selected provider & model for this session
-	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
-	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
-
-	// Chat sessions management
-	const {
-		sessions,
-		selectedChatId,
-		isLoading: isSessionsLoading,
-		selectChat,
-		createChat: createNewChatSession,
-		deleteChat: deleteChatSession,
-		refreshSessions,
-		isSessionEmpty,
-	} = useChatSessions()
-
-	// Chat ID for persistence
-	const [chatId, setChatIdState] = useState<string>(() => nanoid(16))
-
-	// Sidebar visibility (mobile)
-	const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-
-	// Input state
-	const [inputValue, setInputValue] = useState('')
-
-	// Thinking/reasoning toggle state
-	const [thinkingEnabled, setThinkingEnabled] = useState(false)
-
-	// Attached notes state
-	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
-
-	// Provider config for API key
 	const apiProviderId = useMemo(
 		() => mapProviderIdToApi(selectedProvider),
 		[selectedProvider]
@@ -119,26 +582,63 @@ function KnowledgePage() {
 		() => getAiProviderConfig(apiProviderId),
 		[getAiProviderConfig, apiProviderId]
 	)
-	const resolvedApiKey = providerConfig?.apiKey?.trim() ?? ''
-	const resolvedBaseUrl = providerConfig?.baseUrl?.trim() || undefined
-	const fallbackApiKey = apiProviderConfig?.apiKey?.trim() ?? ''
-	const fallbackBaseUrl = apiProviderConfig?.baseUrl?.trim() || undefined
-	const activeApiKey = resolvedApiKey || fallbackApiKey
-	const activeBaseUrl = resolvedBaseUrl || fallbackBaseUrl
+	const activeApiKey =
+		providerConfig?.apiKey?.trim() || apiProviderConfig?.apiKey?.trim() || ''
+	const activeBaseUrl =
+		providerConfig?.baseUrl?.trim() ||
+		apiProviderConfig?.baseUrl?.trim() ||
+		undefined
 	const hasApiKey =
 		(isModelConfigLoaded || isAiProviderConfigLoaded) && Boolean(activeApiKey)
 
-	// Knowledge chat hook (AI SDK v6 based)
+	return {
+		apiProviderId,
+		activeApiKey,
+		activeBaseUrl,
+		hasApiKey,
+		isModelConfigLoaded,
+	}
+}
+
+// ============================================================================
+// Main page
+// ============================================================================
+
+function KnowledgePage() {
+	const { t } = useTranslation()
+
+	// ---- Provider & model config ----
+	const { config } = useModelProviderConfig()
 	const {
-		messages: chatMessages,
+		providers: catalogProviders,
+		models: catalogModels,
+		isLoaded: isCatalogLoaded,
+	} = useAiModelCatalog()
+	const { lastUsedProvider, lastUsedModel, saveLastUsed } = useLastUsedModel()
+
+	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
+	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
+	const [thinkingEnabled, setThinkingEnabled] = useState(false)
+	const [inputValue, setInputValue] = useState('')
+
+	const [chatId] = useState<string>(() => nanoid(16))
+
+	// ---- Resolve API key ----
+	const {
+		apiProviderId,
+		activeApiKey,
+		activeBaseUrl,
+		hasApiKey,
+		isModelConfigLoaded,
+	} = useProviderApiKey(selectedProvider)
+
+	// ---- Chat hook ----
+	const {
+		messages,
 		isStreaming,
 		isLoading,
 		error: chatError,
-		chatId: serverChatId,
 		sendMessage,
-		resetChat,
-		switchChat,
-		regenerate,
 		addToolApprovalResponse,
 	} = useKnowledgeChat({
 		chatId,
@@ -149,78 +649,43 @@ function KnowledgePage() {
 		enableReasoning: thinkingEnabled,
 	})
 
-	// Convert KnowledgeChatMessage to ChatMessage for existing UI components
-	const messages = useMemo<ChatMessage[]>(() => chatMessages, [chatMessages])
+	const isPending = isStreaming || isLoading
 
-	// Update local chatId when server returns one
-	useEffect(() => {
-		if (serverChatId && serverChatId !== chatId) {
-			setChatIdState(serverChatId)
-		}
-	}, [serverChatId, chatId])
-
-	// Sync chatId with selected session
-	useEffect(() => {
-		if (selectedChatId && selectedChatId !== chatId) {
-			setChatIdState(selectedChatId)
-			switchChat(selectedChatId).catch((err) => {
-				console.error('Failed to switch chat:', err)
-				toast.error(t('knowledge.loadChatFailed'))
-			})
-		}
-	}, [selectedChatId, chatId, switchChat, t])
-
-	// Get enabled chat models for a provider
+	// ---- Model selection helpers ----
 	const getEnabledChatModels = useCallback(
-		(providerId: string) => {
-			return catalogModels.filter(
+		(providerId: string) =>
+			catalogModels.filter(
 				(m) => m.providerId === providerId && m.type === 'chat' && m.enabled
-			)
-		},
+			),
 		[catalogModels]
 	)
 
-	// Find fallback provider and model when current selection is invalid
 	const findValidProviderAndModel = useCallback(
 		(
 			currentProvider: string,
 			currentModel: string
 		): { provider: string; model: string } => {
 			const enabledModels = getEnabledChatModels(currentProvider)
-
-			// Current provider has enabled models
 			if (enabledModels.length > 0) {
-				const modelStillEnabled = enabledModels.some((m) => m.id === currentModel)
-				if (modelStillEnabled) {
+				if (enabledModels.some((m) => m.id === currentModel)) {
 					return { provider: currentProvider, model: currentModel }
 				}
-				return {
-					provider: currentProvider,
-					model: enabledModels[0]?.id ?? '',
-				}
+				return { provider: currentProvider, model: enabledModels[0]?.id ?? '' }
 			}
-
-			// Find first provider with enabled models
 			for (const provider of catalogProviders) {
 				const models = getEnabledChatModels(provider.id)
-				const firstModel = models[0]
-				if (firstModel) {
-					return { provider: provider.id, model: firstModel.id }
-				}
+				const first = models[0]
+				if (first) return { provider: provider.id, model: first.id }
 			}
-
 			return { provider: currentProvider, model: '' }
 		},
 		[getEnabledChatModels, catalogProviders]
 	)
 
-	// Sync with loaded config and validate against enabled models
 	useEffect(() => {
 		if (!(isModelConfigLoaded && isCatalogLoaded)) return
-
 		const preferredProvider = lastUsedProvider || config.defaultProvider
 		const preferredModel = lastUsedModel || config.defaultModel || ''
-
 		const { provider, model } = findValidProviderAndModel(
 			preferredProvider,
 			preferredModel
@@ -237,12 +702,41 @@ function KnowledgePage() {
 		findValidProviderAndModel,
 	])
 
-	// When model changes, save to localStorage
+	// ---- Model info for thinking ----
+	const selectedModelInfo = useMemo(
+		() =>
+			catalogModels.find(
+				(m) => m.providerId === selectedProvider && m.id === selectedModel
+			),
+		[catalogModels, selectedProvider, selectedModel]
+	)
+	const supportsThinking = Boolean(selectedModelInfo?.reasoning)
+	const hasToggleableReasoning = Boolean(
+		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
+	)
+	const thinkingActive = hasToggleableReasoning ? thinkingEnabled : true
+
+	useEffect(() => {
+		if (!supportsThinking) {
+			setThinkingEnabled(false)
+			return
+		}
+		if (hasToggleableReasoning) return
+		setThinkingEnabled(true)
+	}, [supportsThinking, hasToggleableReasoning])
+
+	useEffect(() => {
+		if (chatError) {
+			toast.error(chatError.message || t('knowledge.requestFailed'))
+		}
+	}, [chatError, t])
+
+	// ---- Handlers ----
 	const handleModelChange = useCallback(
 		(modelId: string, providerId?: string) => {
 			const matchedProviderId =
 				providerId ??
-				catalogModels.find((model) => model.id === modelId)?.providerId ??
+				catalogModels.find((m) => m.id === modelId)?.providerId ??
 				selectedProvider
 			setSelectedProvider(matchedProviderId)
 			setSelectedModel(modelId)
@@ -251,389 +745,187 @@ function KnowledgePage() {
 		[catalogModels, selectedProvider, saveLastUsed]
 	)
 
-	// Handle chat error
-	useEffect(() => {
-		if (chatError) {
-			toast.error(chatError.message || t('knowledge.requestFailed'))
-		}
-	}, [chatError, t])
-
-	const handleAddNoteAttachment = useCallback(
-		(note: AttachedNote) => {
-			const trimmedTitle = note.title.trim()
-			const normalizedTitle =
-				trimmedTitle.length > 0 ? trimmedTitle : t('entryPicker.untitled')
-			setAttachedNotes((prev) => {
-				if (prev.some((item) => item.id === note.id)) {
-					return prev
-				}
-				return [...prev, { id: note.id, title: normalizedTitle }]
-			})
-		},
-		[t]
-	)
-
-	const handleRemoveAttachment = useCallback((noteId: string) => {
-		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
-	}, [])
-
-	// Get selected model info for context window
-	const selectedModelInfo = useMemo(() => {
-		return catalogModels.find(
-			(m) => m.providerId === selectedProvider && m.id === selectedModel
-		)
-	}, [catalogModels, selectedProvider, selectedModel])
-
-	const supportsThinking = Boolean(selectedModelInfo?.reasoning)
-	const hasToggleableReasoning = Boolean(
-		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
-	)
-
-	useEffect(() => {
-		if (!supportsThinking) {
-			setThinkingEnabled(false)
-			return
-		}
-
-		if (hasToggleableReasoning) {
-			return
-		}
-		setThinkingEnabled(true)
-	}, [supportsThinking, hasToggleableReasoning])
-
-	// Calculate context usage
-	const contextUsage = useMemo(() => {
-		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-		const usedTokens = calculateTotalTokens(messages)
-		const percent = Math.min(100, Math.round((usedTokens / contextWindow) * 100))
-		return {
-			used: usedTokens,
-			total: contextWindow,
-			percent,
-			isWarning: percent >= 80,
-			isExceeded: percent >= CONTEXT_CRITICAL_THRESHOLD,
-		}
-	}, [messages, selectedModelInfo])
-
-	// Calculate accumulated session usage for ChatInput context display
-	const chatContextUsage = useMemo<ChatContextUsage | undefined>(() => {
-		if (messages.length === 0) return undefined
-
-		const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-		const usedTokens = calculateTotalTokens(messages)
-
-		// Accumulate usage from all messages
-		const sessionUsage = messages.reduce<SessionUsage>(
-			(acc, msg) => {
-				if (!msg.usage) return acc
-				return {
-					inputTokens: (acc.inputTokens ?? 0) + (msg.usage.inputTokens ?? 0),
-					outputTokens: (acc.outputTokens ?? 0) + (msg.usage.outputTokens ?? 0),
-					totalTokens: (acc.totalTokens ?? 0) + (msg.usage.totalTokens ?? 0),
-					reasoningTokens:
-						(acc.reasoningTokens ?? 0) + (msg.usage.reasoningTokens ?? 0),
-				}
-			},
-			{
-				inputTokens: 0,
-				outputTokens: 0,
-				totalTokens: 0,
-				reasoningTokens: 0,
-			}
-		)
-
-		return {
-			usedTokens,
-			maxTokens: contextWindow,
-			sessionUsage,
-			modelId: selectedModel,
-		}
-	}, [messages, selectedModelInfo, selectedModel])
-
-	// State for context exceeded dialog
-	const [showContextExceededDialog, setShowContextExceededDialog] = useState(false)
-
-	const handleSendMessage = useCallback(
+	const handleSubmit = useCallback(
 		(message: PromptInputMessage) => {
-			const trimmedInput = message.text.trim()
+			const trimmedText = message.text.trim()
 			const hasFiles = message.files.length > 0
-			const hasContent = trimmedInput.length > 0 || hasFiles
-			if (!hasContent || isStreaming) return
+			if (!(trimmedText || hasFiles) || isPending) return
 
 			if (!isApiSupportedProvider(selectedProvider)) {
 				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
 				return
 			}
 
-			const fallbackText = t('knowledge.attachmentFallback')
-			const promptText = trimmedInput || fallbackText
+			const promptText = trimmedText || t('knowledge.attachmentFallback')
+			setInputValue('')
+			sendMessage({ text: promptText, files: message.files })
+		},
+		[isPending, selectedProvider, sendMessage, t]
+	)
 
-			// Check if context would be exceeded with new message
-			const newMessageTokens = estimateTokenCount(promptText)
-			const projectedUsage = contextUsage.used + newMessageTokens
-			const contextWindow = selectedModelInfo?.contextWindowTokens ?? 128_000
-			const projectedPercent = Math.round((projectedUsage / contextWindow) * 100)
-
-			if (projectedPercent >= CONTEXT_CRITICAL_THRESHOLD) {
-				setShowContextExceededDialog(true)
+	const handleSuggestionClick = useCallback(
+		(suggestion: string) => {
+			if (isPending) return
+			if (!isApiSupportedProvider(selectedProvider)) {
+				toast.error(`Provider "${selectedProvider}" is not yet supported by the API`)
 				return
 			}
-
-			// Capture note IDs and mention titles before clearing
-			const noteEntryIds = attachedNotes.map((n) => n.id)
-			const mentionTitles =
-				attachedNotes.length > 0
-					? attachedNotes.map((n) => n.title).filter(Boolean)
-					: undefined
-
-			// Clear input and attachments
 			setInputValue('')
-			setAttachedNotes([])
-
-			// Send message via AI SDK useChat
-			sendMessage({
-				text: promptText,
-				files: message.files,
-				mentionTitles,
-				noteEntryIds,
-			})
+			sendMessage({ text: suggestion })
 		},
-		[
-			isStreaming,
-			selectedProvider,
-			attachedNotes,
-			contextUsage,
-			selectedModelInfo,
-			sendMessage,
-			t,
-		]
+		[isPending, selectedProvider, sendMessage]
 	)
 
-	const handleNewChat = useCallback(async () => {
-		// If current session is already empty, don't create a new one
-		// Just focus on the input (the server will reuse the empty session anyway)
-		if (selectedChatId && isSessionEmpty(selectedChatId) && messages.length === 0) {
-			// Already on an empty session, just reset UI state
-			setInputValue('')
-			setAttachedNotes([])
-			setIsSidebarOpen(false)
-			return
-		}
-
-		try {
-			// Create a new chat session on the server
-			// Server will reuse existing empty session or create new one
-			const newChatId = await createNewChatSession()
-			setChatIdState(newChatId)
-			resetChat(newChatId)
-			setLastChatId(newChatId)
-
-			setInputValue('')
-			setAttachedNotes([])
-
-			// Close sidebar on mobile
-			setIsSidebarOpen(false)
-		} catch (err) {
-			console.error('Failed to create new chat:', err)
-			// Fallback to local-only chat ID
-			const newChatId = nanoid(16)
-			setChatIdState(newChatId)
-			resetChat(newChatId)
-			setLastChatId(newChatId)
-
-			setInputValue('')
-			setAttachedNotes([])
-		}
-	}, [
-		createNewChatSession,
-		resetChat,
-		selectedChatId,
-		isSessionEmpty,
-		messages.length,
-	])
-
-	const handleSelectChat = useCallback(
-		(chatIdToSelect: string) => {
-			selectChat(chatIdToSelect)
-			// Close sidebar on mobile
-			setIsSidebarOpen(false)
+	const handleTextChange = useCallback(
+		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+			setInputValue(e.target.value)
 		},
-		[selectChat]
+		[]
 	)
 
-	const handleDeleteChat = useCallback(
-		async (chatIdToDelete: string) => {
-			try {
-				await deleteChatSession(chatIdToDelete)
-				// If we deleted the current chat, the hook will auto-select another
-				if (chatIdToDelete === chatId) {
-					// Refresh will trigger auto-select
-					await refreshSessions()
-				}
-			} catch (err) {
-				console.error('Failed to delete chat:', err)
-				toast.error(t('knowledge.deleteChatFailed'))
-			}
-		},
-		[deleteChatSession, chatId, refreshSessions, t]
-	)
+	// ---- Waiting state ----
+	const showWaiting = useMemo(() => {
+		if (!isPending) return false
+		return !messages.some(
+			(m) =>
+				m.isStreaming &&
+				(m.content.length > 0 ||
+					(m.thinking?.length ?? 0) > 0 ||
+					(m.parts ?? []).some(isToolInvocationPart))
+		)
+	}, [isPending, messages])
 
-	const isPending = isStreaming || isLoading
+	const isInputDisabled = isPending || !hasApiKey
 
 	return (
-		<div className="flex h-svh">
-			{/* Sidebar - Chat History */}
-			<div
-				className={cn(
-					'absolute inset-y-0 left-0 z-40 w-72 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0',
-					isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-				)}
-			>
-				<ChatHistoryPanel
-					className="h-full"
-					isLoading={isSessionsLoading}
-					onDeleteChat={handleDeleteChat}
-					onNewChat={handleNewChat}
-					onSelectChat={handleSelectChat}
-					selectedChatId={selectedChatId}
-					sessions={sessions}
-				/>
-			</div>
-
-			{/* Overlay for mobile */}
-			{isSidebarOpen && (
-				<button
-					aria-label="Close sidebar"
-					className="fixed inset-0 z-30 bg-black/50 md:hidden"
-					onClick={() => setIsSidebarOpen(false)}
-					type="button"
-				/>
-			)}
-
-			{/* Main Content */}
-			<div className="flex flex-1 flex-col overflow-hidden">
-				<div className="container mx-auto flex h-full max-w-4xl flex-col px-4 py-4">
-					{/* Header */}
-					<div className="mb-4 flex items-center justify-between">
-						<div className="flex items-center gap-3">
-							{/* Mobile menu button */}
-							<Button
-								className="md:hidden"
-								onClick={() => setIsSidebarOpen(true)}
-								size="icon"
-								variant="ghost"
-							>
-								<HugeiconsIcon className="size-5" icon={Menu01Icon} />
-							</Button>
-							<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+		<div className="relative flex h-svh flex-col divide-y overflow-hidden">
+			{/* Conversation area */}
+			<Conversation>
+				<ConversationContent className="gap-4 p-4">
+					{messages.length > 0 ? (
+						<>
+							{messages.map((message) => (
+								<ChatMessageItem
+									key={message.id}
+									message={message}
+									onToolApprovalResponse={addToolApprovalResponse}
+									thinkingEnabled={thinkingEnabled}
+								/>
+							))}
+							{showWaiting ? <WaitingIndicator /> : null}
+						</>
+					) : (
+						<ConversationEmptyState
+							description={t('knowledge.emptyState.description')}
+							icon={
 								<HugeiconsIcon
-									className="size-6 text-primary"
+									className="size-12 text-muted-foreground/50"
 									icon={AiBrain01Icon}
 								/>
-							</div>
-							<div>
-								<h1 className="text-balance font-semibold text-lg">
-									{t('knowledge.title')}
-								</h1>
-								<p className="text-pretty text-muted-foreground text-sm">
-									{t('knowledge.subtitle')}
-								</p>
-							</div>
-						</div>
-						<div className="flex items-center gap-2">
-							{messages.length > 0 && (
-								<ContextUsageIndicator
-									contextUsage={contextUsage}
-									onNewChat={handleNewChat}
-								/>
-							)}
-							<Link to="/settings/models">
-								<Button size="sm" variant="ghost">
-									<HugeiconsIcon className="size-4" icon={Setting06Icon} />
-								</Button>
-							</Link>
-							<Button
-								className="rounded-lg"
-								onClick={handleNewChat}
-								size="sm"
-								variant="outline"
-							>
-								<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
-								{t('knowledge.newChat')}
-							</Button>
-						</div>
-					</div>
-
-					{/* Context Exceeded Dialog */}
-					<AlertDialog
-						onOpenChange={setShowContextExceededDialog}
-						open={showContextExceededDialog}
-					>
-						<AlertDialogContent>
-							<AlertDialogHeader>
-								<AlertDialogTitle className="flex items-center gap-2">
-									<HugeiconsIcon
-										className="size-5 text-destructive"
-										icon={Alert02Icon}
-									/>
-									{t('knowledge.contextExceeded')}
-								</AlertDialogTitle>
-								<AlertDialogDescription>
-									{t('knowledge.contextExceededDescription')}
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter>
-								<AlertDialogAction
-									onClick={() => {
-										setShowContextExceededDialog(false)
-										handleNewChat()
-									}}
-								>
-									<HugeiconsIcon className="mr-2 size-4" icon={MessageAdd01Icon} />
-									{t('knowledge.startNewChat')}
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
-
-					{/* Chat Messages */}
-					<div className="flex-1 overflow-hidden rounded-lg border bg-muted/30">
-						{messages.length === 0 ? (
-							<div className="flex h-full items-center justify-center p-4">
-								<EmptyState hasApiKey={hasApiKey} />
-							</div>
-						) : (
-							<MessageList
-								isPending={isPending}
-								messages={messages}
-								onRegenerate={regenerate}
-								onToolApprovalResponse={addToolApprovalResponse}
-								thinkingEnabled={thinkingEnabled}
-							/>
-						)}
-					</div>
-
-					{/* Input Area with integrated model selector */}
-					<div className="mt-4">
-						<ChatInput
-							attachedNotes={attachedNotes}
-							catalogModels={catalogModels}
-							catalogProviders={catalogProviders}
-							contextUsage={chatContextUsage}
-							hasApiKey={hasApiKey}
-							isPending={isPending}
-							onAddNoteAttachment={handleAddNoteAttachment}
-							onChange={setInputValue}
-							onModelChange={handleModelChange}
-							onRemoveNoteAttachment={handleRemoveAttachment}
-							onSubmit={handleSendMessage}
-							onThinkingToggle={setThinkingEnabled}
-							selectedModel={selectedModel}
-							selectedProvider={selectedProvider}
-							thinkingEnabled={thinkingEnabled}
-							value={inputValue}
+							}
+							title={t('knowledge.emptyState.title')}
 						/>
-					</div>
+					)}
+				</ConversationContent>
+				<ConversationScrollButton />
+			</Conversation>
+
+			{/* Bottom: suggestions + input */}
+			<div className="grid shrink-0 gap-4 pt-4">
+				{messages.length === 0 ? (
+					<Suggestions className="px-4">
+						{SUGGESTIONS.map((suggestion) => (
+							<Suggestion
+								key={suggestion}
+								onClick={handleSuggestionClick}
+								suggestion={suggestion}
+							/>
+						))}
+					</Suggestions>
+				) : null}
+
+				<div className="w-full px-4 pb-4">
+					<PromptInput
+						accept={FILE_ATTACHMENT_ACCEPT}
+						className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
+						globalDrop
+						maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
+						maxFiles={FILE_ATTACHMENT_MAX_FILES}
+						multiple
+						onError={(error) => {
+							toast.error(error.message)
+						}}
+						onSubmit={handleSubmit}
+					>
+						<AttachmentDisplay />
+						<PromptInputBody>
+							<PromptInputTextarea
+								disabled={isInputDisabled}
+								onChange={handleTextChange}
+								placeholder={
+									hasApiKey
+										? t('knowledge.inputPlaceholder')
+										: t('knowledge.configureApiKeyFirst')
+								}
+								value={inputValue}
+							/>
+						</PromptInputBody>
+						<PromptInputFooter className="px-3">
+							<PromptInputTools>
+								<PromptInputActionMenu>
+									<PromptInputActionMenuTrigger
+										aria-label={t('knowledge.addAttachments')}
+										disabled={isInputDisabled}
+									/>
+									<PromptInputActionMenuContent>
+										<PromptInputActionAddAttachments
+											label={t('knowledge.addAttachments')}
+										/>
+									</PromptInputActionMenuContent>
+								</PromptInputActionMenu>
+
+								<AiModelSelector
+									catalogModels={catalogModels}
+									catalogProviders={catalogProviders}
+									className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+									disabled={isInputDisabled}
+									onValueChange={handleModelChange}
+									placeholder={t('knowledge.selectModel')}
+									value={selectedModel}
+								/>
+
+								{supportsThinking ? (
+									<ThinkingToggle
+										hasToggleableReasoning={hasToggleableReasoning}
+										onToggle={setThinkingEnabled}
+										thinkingActive={thinkingActive}
+										thinkingEnabled={thinkingEnabled}
+									/>
+								) : null}
+
+								<Link className="contents" to="/settings/models">
+									<PromptInputButton
+										aria-label={t('knowledge.configuration')}
+										variant="ghost"
+									>
+										<HugeiconsIcon className="size-4" icon={Setting06Icon} />
+									</PromptInputButton>
+								</Link>
+							</PromptInputTools>
+
+							<PromptInputSubmit
+								aria-label={t('knowledge.send')}
+								className={cn(
+									'transition-colors duration-200 motion-reduce:transition-none',
+									isPending
+										? 'animate-pulse motion-reduce:animate-none'
+										: 'hover:bg-primary/90'
+								)}
+								disabled={!hasApiKey || isPending}
+								status={isPending ? 'submitted' : 'ready'}
+							/>
+						</PromptInputFooter>
+					</PromptInput>
 				</div>
 			</div>
 		</div>

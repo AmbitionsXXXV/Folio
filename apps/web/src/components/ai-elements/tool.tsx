@@ -10,6 +10,7 @@ import {
 	Cancel01Icon,
 	Clock01Icon,
 	Tick02Icon,
+	Wrench01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { DynamicToolUIPart, ToolUIPart } from 'ai'
@@ -18,7 +19,9 @@ import { isValidElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
-type ToolState = ToolUIPart['state'] | DynamicToolUIPart['state']
+export type ToolState = ToolUIPart['state'] | DynamicToolUIPart['state']
+
+export type ToolPart = ToolUIPart | DynamicToolUIPart
 
 const TOOL_STATE_CONFIG: Record<
 	ToolState,
@@ -59,30 +62,70 @@ const TOOL_STATE_CONFIG: Record<
 	},
 }
 
+export const getStatusBadge = (state: ToolState, t: (key: string) => string) => {
+	const config = TOOL_STATE_CONFIG[state] ?? TOOL_STATE_CONFIG['input-streaming']
+	return (
+		<Badge
+			className={cn('gap-1 rounded-full text-xs', config.className)}
+			variant="secondary"
+		>
+			<HugeiconsIcon icon={config.icon} size={12} />
+			<span>{t(config.labelKey)}</span>
+		</Badge>
+	)
+}
+
 export type ToolProps = ComponentProps<typeof Collapsible>
 
 export const Tool = ({ className, ...props }: ToolProps) => (
 	<Collapsible
-		className={cn('rounded-lg border border-border/60 bg-muted/30', className)}
+		className={cn('group rounded-lg border border-border/60 bg-muted/30', className)}
 		{...props}
 	/>
 )
 
 export type ToolHeaderProps = ComponentProps<typeof CollapsibleTrigger> & {
-	label: string
 	state: ToolState | string
+} & (
+		| { label: string; title?: never; type?: never; toolName?: never }
+		| {
+				label?: never
+				title?: string
+				type: ToolUIPart['type']
+				toolName?: never
+		  }
+		| {
+				label?: never
+				title?: string
+				type: DynamicToolUIPart['type']
+				toolName: string
+		  }
+	)
+
+function deriveToolName(type?: string, toolName?: string): string {
+	if (type === 'dynamic-tool' && toolName) return toolName
+	if (type) return type.split('-').slice(1).join('-')
+	return 'Tool'
 }
 
 export const ToolHeader = ({
 	className,
 	label,
+	title,
+	type,
 	state,
+	toolName,
 	...props
 }: ToolHeaderProps) => {
 	const { t } = useTranslation()
 	const config =
 		TOOL_STATE_CONFIG[state as ToolState] ?? TOOL_STATE_CONFIG['input-streaming']
 	const statusLabel = t(config.labelKey)
+
+	const derivedName =
+		label ??
+		title ??
+		deriveToolName(type as string | undefined, toolName as string | undefined)
 
 	return (
 		<CollapsibleTrigger
@@ -93,7 +136,11 @@ export const ToolHeader = ({
 			{...props}
 		>
 			<div className="flex min-w-0 items-center gap-2">
-				<span className="truncate font-medium text-sm">{label}</span>
+				<HugeiconsIcon
+					className="size-4 shrink-0 text-muted-foreground"
+					icon={Wrench01Icon}
+				/>
+				<span className="truncate font-medium text-sm">{derivedName}</span>
 			</div>
 			<div className="flex items-center gap-2">
 				<Badge className={cn('gap-1', config.className)} variant="secondary">
@@ -101,7 +148,7 @@ export const ToolHeader = ({
 					<span>{statusLabel}</span>
 				</Badge>
 				<HugeiconsIcon
-					className="size-4 text-muted-foreground"
+					className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
 					icon={ArrowDown01Icon}
 				/>
 			</div>

@@ -360,7 +360,6 @@ export function ChatInput({
 					<MentionPopover {...mention.popoverProps} />
 
 					<PromptInputTextarea
-						className="px-3 py-3"
 						disabled={isDisabled || !hasApiKey}
 						onChange={handleTextareaChange}
 						placeholder={resolvedPlaceholder}

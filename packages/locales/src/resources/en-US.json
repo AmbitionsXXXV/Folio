@@ -931,7 +931,9 @@
       "description": "This action needs your permission before proceeding.",
       "destructiveWarning": "This is a destructive action and cannot be undone.",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
     }
   },
   "aiProvider": {

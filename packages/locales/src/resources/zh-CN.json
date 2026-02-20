@@ -922,7 +922,9 @@
       "description": "此操作需要您的授权才能继续。",
       "destructiveWarning": "这是一个危险操作，无法撤销。",
       "approve": "批准",
-      "reject": "拒绝"
+      "reject": "拒绝",
+      "accepted": "已批准",
+      "rejected": "已拒绝"
     }
   },
   "aiProvider": {

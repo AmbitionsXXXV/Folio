@@ -922,7 +922,9 @@
       "description": "このアクションを続行するには許可が必要です。",
       "destructiveWarning": "これは破壊的なアクションで、元に戻すことはできません。",
       "approve": "承認",
-      "reject": "拒否"
+      "reject": "拒否",
+      "accepted": "承認済み",
+      "rejected": "拒否済み"
     }
   },
   "aiProvider": {
