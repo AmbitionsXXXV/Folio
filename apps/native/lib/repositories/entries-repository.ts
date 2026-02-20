@@ -14,37 +14,37 @@ export type EntriesFilter = 'all' | 'inbox' | 'starred' | 'library'
  * Options for listing entries
  */
 export interface ListEntriesOptions {
-	userId: string
+	cursor?: string
 	filter?: EntriesFilter
+	limit?: number
 	search?: string
 	tagId?: string
-	limit?: number
-	cursor?: string
+	userId: string
 }
 
 /**
  * Input for creating an entry
  */
 export interface CreateEntryInput {
-	userId: string
-	title?: string
 	contentJson?: string | null
 	contentText?: string | null
 	isInbox?: boolean
-	isStarred?: boolean
 	isPinned?: boolean
+	isStarred?: boolean
+	title?: string
+	userId: string
 }
 
 /**
  * Input for updating an entry
  */
 export interface UpdateEntryInput {
-	title?: string
 	contentJson?: string
 	contentText?: string
 	isInbox?: boolean
-	isStarred?: boolean
 	isPinned?: boolean
+	isStarred?: boolean
+	title?: string
 	version?: string
 }
 

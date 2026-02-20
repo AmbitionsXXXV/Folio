@@ -66,27 +66,27 @@ export type ProviderCapability =
  * Provider configuration with capabilities
  */
 export interface ProviderConfig {
-	id: AiProvider
-	name: string
-	/** Base URL for API calls (can be overridden by user) */
-	defaultBaseUrl: string
-	/**
-	 * Known base URLs for this provider.
-	 * Useful for UI selection and documentation.
-	 */
-	baseUrlOptions: ProviderBaseUrlOption[]
 	/**
 	 * AI SDK integration options for this provider.
 	 * This is metadata only; runtime logic lives in `vercel-ai.ts`.
 	 */
 	aiSdk: AiSdkIntegration
+	/**
+	 * Known base URLs for this provider.
+	 * Useful for UI selection and documentation.
+	 */
+	baseUrlOptions: ProviderBaseUrlOption[]
 	/** Supported capabilities */
 	capabilities: ProviderCapability[]
+	/** Base URL for API calls (can be overridden by user) */
+	defaultBaseUrl: string
 	/** Default models for different tasks */
 	defaultModels: {
 		chat?: string
 		embedding?: string
 	}
+	id: AiProvider
+	name: string
 }
 
 /**

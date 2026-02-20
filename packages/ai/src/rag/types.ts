@@ -10,24 +10,24 @@ import type { AiProvider } from '../providers/types'
  * Text chunk for embedding and retrieval
  */
 export interface TextChunk {
-	id: string
-	entryId: string
-	userId: string
 	/** Chunk index within the entry */
 	chunkIndex: number
-	/** Chunk text content */
-	text: string
-	/** Chunk metadata (e.g., position, heading) */
-	metadata?: Record<string, unknown>
+	createdAt: Date
 	/** Embedding vector */
 	embedding?: number[]
-	/** Provider used for embedding */
-	embeddingProvider?: AiProvider
 	/** Model used for embedding */
 	embeddingModel?: string
+	/** Provider used for embedding */
+	embeddingProvider?: AiProvider
 	/** Embedding version (for cache invalidation) */
 	embeddingVersion?: string
-	createdAt: Date
+	entryId: string
+	id: string
+	/** Chunk metadata (e.g., position, heading) */
+	metadata?: Record<string, unknown>
+	/** Chunk text content */
+	text: string
+	userId: string
 }
 
 /**
@@ -94,14 +94,14 @@ export interface Retriever {
  * Retrieval options
  */
 export interface RetrieveOptions {
-	/** Maximum number of results */
-	topK?: number
-	/** Minimum similarity threshold */
-	minScore?: number
 	/** Filter by entry IDs */
 	entryIds?: string[]
 	/** Exclude entry IDs */
 	excludeEntryIds?: string[]
+	/** Minimum similarity threshold */
+	minScore?: number
+	/** Maximum number of results */
+	topK?: number
 }
 
 /**
@@ -114,12 +114,12 @@ export interface Indexer {
 	indexEntry(entryId: string, chunks: TextChunk[]): Promise<void>
 
 	/**
-	 * Remove chunks for an entry
-	 */
-	removeEntry(entryId: string): Promise<void>
-
-	/**
 	 * Check if entry needs re-indexing
 	 */
 	needsReindex(entryId: string, contentHash: string): Promise<boolean>
+
+	/**
+	 * Remove chunks for an entry
+	 */
+	removeEntry(entryId: string): Promise<void>
 }

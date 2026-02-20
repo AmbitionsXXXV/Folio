@@ -27,10 +27,10 @@ export type ReviewMode = 'due' | 'new' | 'starred' | 'unreviewed' | 'all'
  * Options for getting review queue
  */
 export interface GetQueueOptions {
-	userId: string
-	mode?: ReviewMode
 	limit?: number
+	mode?: ReviewMode
 	tzOffset?: number
+	userId: string
 }
 
 /**
@@ -39,10 +39,10 @@ export interface GetQueueOptions {
  */
 export interface TodayStats {
 	reviewedToday: number
-	totalEntries: number
 	starredEntries: number
-	unreviewedEntries: number
 	streak: number
+	totalEntries: number
+	unreviewedEntries: number
 }
 
 /**
@@ -50,10 +50,10 @@ export interface TodayStats {
  * Matches the remote API response format
  */
 export interface DueStats {
-	overdue: number
 	dueToday: number
-	upcoming: number
 	newCount: number
+	overdue: number
+	upcoming: number
 }
 
 /**

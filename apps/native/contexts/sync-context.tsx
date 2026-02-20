@@ -48,45 +48,45 @@ function getUserIdForSync(
 
 interface SyncContextValue {
 	/**
-	 * Current sync state
+	 * Unresolved conflicts
 	 */
-	syncState: SyncState
+	conflicts: SyncConflict[]
 	/**
 	 * Whether the device is online
 	 */
 	isOnline: boolean
 	/**
+	 * Last sync result
+	 */
+	lastResult: SyncResult | null
+	/**
 	 * Sync metadata (last sync time, pending count, etc.)
 	 */
 	metadata: SyncMetadata | null
-	/**
-	 * Unresolved conflicts
-	 */
-	conflicts: SyncConflict[]
 	/**
 	 * Current sync progress (when syncing)
 	 */
 	progress: SyncProgress | null
 	/**
-	 * Last sync result
+	 * Refresh metadata
 	 */
-	lastResult: SyncResult | null
-	/**
-	 * Trigger a manual sync
-	 */
-	sync: () => Promise<SyncResult | null>
-	/**
-	 * Upload all local data (for first sync after login)
-	 */
-	uploadAllLocalData: () => Promise<SyncResult | null>
+	refreshMetadata: () => Promise<void>
 	/**
 	 * Resolve a conflict
 	 */
 	resolveConflict: (conflictId: string, strategy: ConflictStrategy) => Promise<void>
 	/**
-	 * Refresh metadata
+	 * Trigger a manual sync
 	 */
-	refreshMetadata: () => Promise<void>
+	sync: () => Promise<SyncResult | null>
+	/**
+	 * Current sync state
+	 */
+	syncState: SyncState
+	/**
+	 * Upload all local data (for first sync after login)
+	 */
+	uploadAllLocalData: () => Promise<SyncResult | null>
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null)

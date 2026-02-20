@@ -49,13 +49,13 @@ function getInboxBadgeText(count: number, hasMore: boolean): string {
  * Quick action item type
  */
 interface QuickActionItem {
-	icon: IconSvgElement
-	label: string
-	description: string
-	href: string
-	color: string
 	badge?: string
 	badgeVariant?: 'default' | 'secondary' | 'destructive' | 'outline'
+	color: string
+	description: string
+	href: string
+	icon: IconSvgElement
+	label: string
 }
 
 /**

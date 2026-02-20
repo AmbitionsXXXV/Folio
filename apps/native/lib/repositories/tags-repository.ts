@@ -15,27 +15,27 @@ import type { BaseRepository, PaginatedResult } from './base-repository'
  * Options for listing tags
  */
 export interface ListTagsOptions {
-	userId: string
-	search?: string
-	limit?: number
 	cursor?: string
+	limit?: number
+	search?: string
+	userId: string
 }
 
 /**
  * Input for creating a tag
  */
 export interface CreateTagInput {
-	userId: string
-	name: string
 	color?: string | null
+	name: string
+	userId: string
 }
 
 /**
  * Input for updating a tag
  */
 export interface UpdateTagInput {
-	name?: string
 	color?: string
+	name?: string
 }
 
 /**

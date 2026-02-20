@@ -26,21 +26,21 @@ interface SystemPreferences {
 
 interface UseFirstLaunchResult {
 	/**
-	 * Whether the first launch check is still loading
+	 * Mark the first launch as completed
 	 */
-	isLoading: boolean
+	completeFirstLaunch: () => Promise<void>
 	/**
 	 * Whether this is the first launch of the app
 	 */
 	isFirstLaunch: boolean
 	/**
+	 * Whether the first launch check is still loading
+	 */
+	isLoading: boolean
+	/**
 	 * System preferences detected from the device
 	 */
 	systemPreferences: SystemPreferences | null
-	/**
-	 * Mark the first launch as completed
-	 */
-	completeFirstLaunch: () => Promise<void>
 }
 
 /**

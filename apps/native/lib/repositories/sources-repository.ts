@@ -27,36 +27,36 @@ export type SourceType =
  * Options for listing sources
  */
 export interface ListSourcesOptions {
-	userId: string
-	type?: SourceType
-	search?: string
-	limit?: number
 	cursor?: string
+	limit?: number
+	search?: string
+	type?: SourceType
+	userId: string
 }
 
 /**
  * Input for creating a source
  */
 export interface CreateSourceInput {
-	userId: string
-	type?: string
-	title: string
-	url?: string | null
 	author?: string | null
-	publishedAt?: Date | null
 	metadata?: string | null
+	publishedAt?: Date | null
+	title: string
+	type?: string
+	url?: string | null
+	userId: string
 }
 
 /**
  * Input for updating a source
  */
 export interface UpdateSourceInput {
-	type?: SourceType
-	title?: string
-	url?: string
 	author?: string
-	publishedAt?: Date
 	metadata?: string
+	publishedAt?: Date
+	title?: string
+	type?: SourceType
+	url?: string
 }
 
 /**

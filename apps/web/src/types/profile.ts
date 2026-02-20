@@ -51,20 +51,20 @@ export type DangerZoneProps = {
  * User settings section - contains user profile related settings
  */
 export interface UserSettings {
-	profile: {
-		displayName?: string
-		avatar?: string
-		bio?: string
+	notifications: {
+		email: boolean
+		push: boolean
+		digest: 'daily' | 'weekly' | 'never'
 	}
 	preferences: {
 		theme: ThemeOption
 		language: string
 		timezone?: string
 	}
-	notifications: {
-		email: boolean
-		push: boolean
-		digest: 'daily' | 'weekly' | 'never'
+	profile: {
+		displayName?: string
+		avatar?: string
+		bio?: string
 	}
 }
 
@@ -74,6 +74,12 @@ export interface UserSettings {
 export interface AiProviderSettings {
 	/** Currently active provider */
 	activeProvider?: string
+	/** Global AI settings */
+	global: {
+		defaultProvider?: string
+		streamingEnabled: boolean
+		maxTokens?: number
+	}
 	/** Provider-specific configurations */
 	providers: Record<
 		string,
@@ -84,18 +90,12 @@ export interface AiProviderSettings {
 			defaultModel?: string
 		}
 	>
-	/** Global AI settings */
-	global: {
-		defaultProvider?: string
-		streamingEnabled: boolean
-		maxTokens?: number
-	}
 }
 
 /**
  * Root settings structure with nested sections
  */
 export interface SettingsRoot {
-	user: UserSettings
 	aiProvider: AiProviderSettings
+	user: UserSettings
 }

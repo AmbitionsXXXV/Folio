@@ -17,41 +17,41 @@ export type CredentialStatus = 'active' | 'invalid' | 'expired' | 'revoked'
  * User AI credential (stored in database)
  */
 export interface UserAiCredential {
-	id: string
-	userId: string
-	provider: AiProvider
-	/** Encrypted API key (never store plaintext) */
-	encryptedApiKey: string
-	/** Last 4 chars of key for display (e.g., "...abcd") */
-	keyHint: string
 	/** Optional custom base URL override */
 	baseUrl?: string
+	createdAt: Date
+	/** Encrypted API key (never store plaintext) */
+	encryptedApiKey: string
+	id: string
+	/** Last 4 chars of key for display (e.g., "...abcd") */
+	keyHint: string
+	lastValidatedAt?: Date
 	/** Optional custom model override */
 	model?: string
+	provider: AiProvider
 	status: CredentialStatus
-	lastValidatedAt?: Date
-	createdAt: Date
 	updatedAt: Date
+	userId: string
 }
 
 /**
  * Credential input for creating/updating
  */
 export interface CredentialInput {
-	provider: AiProvider
 	apiKey: string
 	baseUrl?: string
 	model?: string
+	provider: AiProvider
 }
 
 /**
  * Decrypted credential for internal use (never expose to client)
  */
 export interface DecryptedCredential {
-	provider: AiProvider
 	apiKey: string
 	baseUrl: string
 	model?: string
+	provider: AiProvider
 }
 
 /**
@@ -63,20 +63,23 @@ export interface DecryptedCredential {
  */
 export interface CredentialCrypto {
 	/**
-	 * Encrypt API key for storage
-	 */
-	encrypt(plaintext: string): Promise<string>
-
-	/**
 	 * Decrypt API key for use
 	 */
 	decrypt(ciphertext: string): Promise<string>
+	/**
+	 * Encrypt API key for storage
+	 */
+	encrypt(plaintext: string): Promise<string>
 }
 
 /**
  * Credential store interface
  */
 export interface CredentialStore {
+	/**
+	 * Delete credential
+	 */
+	delete(userId: string, provider: AiProvider): Promise<void>
 	/**
 	 * Get user's credential for a provider
 	 */
@@ -88,16 +91,6 @@ export interface CredentialStore {
 	list(userId: string): Promise<UserAiCredential[]>
 
 	/**
-	 * Create or update credential
-	 */
-	upsert(userId: string, input: CredentialInput): Promise<UserAiCredential>
-
-	/**
-	 * Delete credential
-	 */
-	delete(userId: string, provider: AiProvider): Promise<void>
-
-	/**
 	 * Update credential status (e.g., after validation)
 	 */
 	updateStatus(
@@ -105,6 +98,11 @@ export interface CredentialStore {
 		provider: AiProvider,
 		status: CredentialStatus
 	): Promise<void>
+
+	/**
+	 * Create or update credential
+	 */
+	upsert(userId: string, input: CredentialInput): Promise<UserAiCredential>
 }
 
 /**

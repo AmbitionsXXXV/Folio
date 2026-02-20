@@ -31,9 +31,11 @@ body {
 
 /* Editorial Theme Enhancements */
 body::before {
-	content: "";
 	position: fixed;
 	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	content: "";
 	background:
 		radial-gradient(
 			circle at 50% 0%,
@@ -45,15 +47,15 @@ body::before {
 			rgba(167, 139, 250, 0.03) 0%,
 			transparent 50%
 		);
-	pointer-events: none;
-	z-index: 0;
 }
 
 /* Subtle paper texture */
 body::after {
-	content: "";
 	position: fixed;
 	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	content: "";
 	background-image:
 		repeating-linear-gradient(
 			0deg,
@@ -70,8 +72,6 @@ body::after {
 			rgba(167, 139, 250, 0.008) 4px
 		);
 	opacity: 0.4;
-	pointer-events: none;
-	z-index: 0;
 	animation: grain 8s steps(10) infinite;
 }
 
@@ -404,10 +404,10 @@ textarea::-webkit-resizer {
 
 /* Streaming cursor animation for Streamdown */
 .streaming-cursor::after {
+	margin-left: 2px;
+	color: var(--primary);
 	content: "▋";
 	animation: cursor-blink 1s ease-in-out infinite;
-	color: var(--primary);
-	margin-left: 2px;
 }
 
 @keyframes cursor-blink {

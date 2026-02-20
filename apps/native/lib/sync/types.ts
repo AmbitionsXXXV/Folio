@@ -45,65 +45,65 @@ export type OperationType = 'create' | 'update' | 'delete'
  * Pending operation record
  */
 export interface PendingOperation {
-	id: string
-	entityType: SyncEntityType
+	createdAt: Date
 	entityId: string
+	entityType: SyncEntityType
+	id: string
+	lastError?: string
 	operation: OperationType
 	payload: string // JSON stringified data
-	createdAt: Date
 	retryCount: number
-	lastError?: string
 }
 
 /**
  * Sync conflict record
  */
 export interface SyncConflict {
-	id: string
-	entityType: SyncEntityType
-	entityId: string
-	localData: string // JSON stringified
-	remoteData: string // JSON stringified
-	localUpdatedAt: Date
-	remoteUpdatedAt: Date
 	createdAt: Date
-	resolvedAt?: Date
+	entityId: string
+	entityType: SyncEntityType
+	id: string
+	localData: string // JSON stringified
+	localUpdatedAt: Date
+	remoteData: string // JSON stringified
+	remoteUpdatedAt: Date
 	resolution?: ConflictStrategy
+	resolvedAt?: Date
 }
 
 /**
  * Sync result for a single entity
  */
 export interface SyncEntityResult {
-	entityType: SyncEntityType
-	entityId: string
-	success: boolean
-	error?: string
 	conflict?: boolean
+	entityId: string
+	entityType: SyncEntityType
+	error?: string
+	success: boolean
 }
 
 /**
  * Overall sync result
  */
 export interface SyncResult {
-	success: boolean
-	uploadedCount: number
-	downloadedCount: number
 	conflictCount: number
+	conflicts: SyncConflict[]
+	downloadedCount: number
+	duration: number
 	errorCount: number
 	errors: SyncEntityResult[]
-	conflicts: SyncConflict[]
-	duration: number
+	success: boolean
+	uploadedCount: number
 }
 
 /**
  * Sync progress callback
  */
 export interface SyncProgress {
-	phase: 'preparing' | 'uploading' | 'downloading' | 'resolving' | 'complete'
 	current: number
-	total: number
 	entityType?: SyncEntityType
+	phase: 'preparing' | 'uploading' | 'downloading' | 'resolving' | 'complete'
+	total: number
 }
 
 /**
@@ -112,22 +112,22 @@ export interface SyncProgress {
 export interface SyncOptions {
 	/** Conflict resolution strategy */
 	conflictStrategy?: ConflictStrategy
+	/** Entity types to sync (default: all) */
+	entityTypes?: SyncEntityType[]
 	/** Whether to sync incrementally (only changed items) */
 	incremental?: boolean
 	/** Last sync timestamp for incremental sync */
 	lastSyncAt?: Date
 	/** Progress callback */
 	onProgress?: (progress: SyncProgress) => void
-	/** Entity types to sync (default: all) */
-	entityTypes?: SyncEntityType[]
 }
 
 /**
  * Sync metadata stored locally
  */
 export interface SyncMetadata {
+	conflictsCount: number
 	lastSyncAt: Date | null
 	lastSyncResult: 'success' | 'partial' | 'failed' | null
 	pendingOperationsCount: number
-	conflictsCount: number
 }

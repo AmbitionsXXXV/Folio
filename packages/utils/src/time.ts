@@ -7,8 +7,8 @@ export type TimeUnit = 'second' | 'minute' | 'hour' | 'day'
  * Formatted time result with value and unit
  */
 export interface FormattedTime {
-	value: number
 	unit: TimeUnit
+	value: number
 }
 
 /**
@@ -16,15 +16,15 @@ export interface FormattedTime {
  */
 export interface FormatTimeOptions {
 	/**
-	 * Whether to use precise values (e.g., 1.5 hours) or round up
-	 * @default false - rounds up to nearest integer
-	 */
-	precise?: boolean
-	/**
 	 * Maximum unit to use (e.g., 'hour' will not convert to days)
 	 * @default 'day'
 	 */
 	maxUnit?: TimeUnit
+	/**
+	 * Whether to use precise values (e.g., 1.5 hours) or round up
+	 * @default false - rounds up to nearest integer
+	 */
+	precise?: boolean
 }
 
 /**

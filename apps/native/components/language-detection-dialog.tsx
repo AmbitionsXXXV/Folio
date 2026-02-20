@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Text, View } from 'react-native'
 
 interface LanguageDetectionDialogProps {
-	isOpen: boolean
 	detectedLanguageLabel: string
-	onConfirm: () => void
+	isOpen: boolean
 	onCancel: () => void
+	onConfirm: () => void
 }
 
 export function LanguageDetectionDialog({

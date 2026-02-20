@@ -14,45 +14,45 @@ import type { SourceType } from '../repositories/sources-repository'
  * Paginated list result
  */
 export interface PaginatedList<T> {
+	cursor?: string
+	hasMore: boolean
 	items: T[]
 	total?: number
-	hasMore: boolean
-	cursor?: string
 }
 
 /**
  * Entry list options
  */
 export interface ListEntriesInput {
+	cursor?: string
 	filter?: EntriesFilter
+	limit?: number
 	search?: string
 	tagId?: string
-	limit?: number
-	cursor?: string
 }
 
 /**
  * Entry create input
  */
 export interface CreateEntryInput {
-	title: string
 	contentJson?: string
 	contentText?: string
 	isInbox?: boolean
-	isStarred?: boolean
 	isPinned?: boolean
+	isStarred?: boolean
+	title: string
 }
 
 /**
  * Entry update input
  */
 export interface UpdateEntryInput {
-	title?: string
 	contentJson?: string
 	contentText?: string
 	isInbox?: boolean
-	isStarred?: boolean
 	isPinned?: boolean
+	isStarred?: boolean
+	title?: string
 	version?: string
 }
 
@@ -60,67 +60,67 @@ export interface UpdateEntryInput {
  * Tag list options
  */
 export interface ListTagsInput {
-	search?: string
-	limit?: number
 	cursor?: string
+	limit?: number
+	search?: string
 }
 
 /**
  * Tag create input
  */
 export interface CreateTagInput {
-	name: string
 	color?: string
+	name: string
 }
 
 /**
  * Tag update input
  */
 export interface UpdateTagInput {
-	name?: string
 	color?: string
+	name?: string
 }
 
 /**
  * Source list options
  */
 export interface ListSourcesInput {
-	type?: SourceType
-	search?: string
-	limit?: number
 	cursor?: string
+	limit?: number
+	search?: string
+	type?: SourceType
 }
 
 /**
  * Source create input
  */
 export interface CreateSourceInput {
-	type?: SourceType
-	title: string
-	url?: string
 	author?: string
-	publishedAt?: Date
 	metadata?: string
+	publishedAt?: Date
+	title: string
+	type?: SourceType
+	url?: string
 }
 
 /**
  * Source update input
  */
 export interface UpdateSourceInput {
-	type?: SourceType
-	title?: string
-	url?: string
 	author?: string
-	publishedAt?: Date
 	metadata?: string
+	publishedAt?: Date
+	title?: string
+	type?: SourceType
+	url?: string
 }
 
 /**
  * Review queue options
  */
 export interface GetQueueInput {
-	mode?: ReviewMode
 	limit?: number
+	mode?: ReviewMode
 	tzOffset?: number
 }
 
@@ -130,10 +130,10 @@ export interface GetQueueInput {
  */
 export interface TodayStats {
 	reviewedToday: number
-	totalEntries: number
 	starredEntries: number
-	unreviewedEntries: number
 	streak: number
+	totalEntries: number
+	unreviewedEntries: number
 }
 
 /**
@@ -141,10 +141,10 @@ export interface TodayStats {
  * Matches the remote API response format
  */
 export interface DueStats {
-	overdue: number
 	dueToday: number
-	upcoming: number
 	newCount: number
+	overdue: number
+	upcoming: number
 }
 
 /**
@@ -169,16 +169,13 @@ export interface DataService {
 		moveToInbox(id: string): Promise<Entry | null>
 	}
 
-	// Tags
-	tags: {
-		list(input: ListTagsInput): Promise<PaginatedList<Tag>>
-		get(id: string): Promise<Tag | null>
-		create(input: CreateTagInput): Promise<Tag>
-		update(id: string, input: UpdateTagInput): Promise<Tag | null>
-		delete(id: string): Promise<boolean>
-		getForEntry(entryId: string): Promise<Tag[]>
-		addToEntry(entryId: string, tagId: string): Promise<void>
-		removeFromEntry(entryId: string, tagId: string): Promise<void>
+	// Review
+	review: {
+		getQueue(input: GetQueueInput): Promise<Entry[]>
+		markReviewed(entryId: string, rating?: ReviewRating): Promise<void>
+		snooze(entryId: string, preset: SnoozePreset | number): Promise<void>
+		getTodayStats(tzOffset?: number): Promise<TodayStats>
+		getDueStats(tzOffset?: number): Promise<DueStats>
 	}
 
 	// Sources
@@ -193,12 +190,15 @@ export interface DataService {
 		removeFromEntry(entryId: string, sourceId: string): Promise<void>
 	}
 
-	// Review
-	review: {
-		getQueue(input: GetQueueInput): Promise<Entry[]>
-		markReviewed(entryId: string, rating?: ReviewRating): Promise<void>
-		snooze(entryId: string, preset: SnoozePreset | number): Promise<void>
-		getTodayStats(tzOffset?: number): Promise<TodayStats>
-		getDueStats(tzOffset?: number): Promise<DueStats>
+	// Tags
+	tags: {
+		list(input: ListTagsInput): Promise<PaginatedList<Tag>>
+		get(id: string): Promise<Tag | null>
+		create(input: CreateTagInput): Promise<Tag>
+		update(id: string, input: UpdateTagInput): Promise<Tag | null>
+		delete(id: string): Promise<boolean>
+		getForEntry(entryId: string): Promise<Tag[]>
+		addToEntry(entryId: string, tagId: string): Promise<void>
+		removeFromEntry(entryId: string, tagId: string): Promise<void>
 	}
 }

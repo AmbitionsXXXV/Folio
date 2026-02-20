@@ -82,93 +82,93 @@ export interface AiProviderConfig {
 
 // ==================== Provider List Item ====================
 export interface AiProviderListItem {
-	id: string
-	name?: string
 	description?: string
-	logo?: string
 	enabled: boolean
-	source: AiProviderSourceType
+	id: string
+	logo?: string
+	name?: string
 	sort?: number
+	source: AiProviderSourceType
 }
 
 // ==================== Provider Detail Item ====================
 export interface AiProviderDetailItem {
-	id: string
-	name: string
+	checkModel?: string
 	description?: string
-	logo?: string
 	enabled: boolean
-	source: AiProviderSourceType
+	fetchOnClient?: boolean
+	homeUrl?: string
+	id: string
+	keyVaults?: Record<string, unknown>
+	logo?: string
+	modelsUrl?: string
+	name: string
 
 	settings: AiProviderSettings
-	keyVaults?: Record<string, unknown>
-	fetchOnClient?: boolean
-	checkModel?: string
-	homeUrl?: string
-	modelsUrl?: string
+	source: AiProviderSourceType
 }
 
 // ==================== Enabled Provider ====================
 export interface EnabledProvider {
 	id: string
-	name?: string
 	logo?: string
+	name?: string
 	source: AiProviderSourceType
 }
 
 // ==================== Provider Runtime Config ====================
 export interface AiProviderRuntimeConfig {
 	config: AiProviderConfig
-	settings: AiProviderSettings
-	keyVaults: Record<string, string>
 	fetchOnClient?: boolean
+	keyVaults: Record<string, string>
+	settings: AiProviderSettings
 }
 
 // ==================== Model Provider Card ====================
 export interface ModelProviderCard {
-	id: string
-	name: string
-	description?: string
-	/** Provider logo/icon path (relative to public folder, e.g., '/svg/models/openai.svg') */
-	logo?: string
-	url: string
 	apiKeyUrl?: string
-	modelsUrl?: string
 
 	/** Models list (empty array, models are defined separately) */
 	chatModels: never[]
 	/** Model to use for connection check */
 	checkModel?: string
+	description?: string
 
 	/** Whether this provider is enabled by default */
 	enabled?: boolean
-	/** Whether to show config panel */
-	showConfig?: boolean
+	id: string
+	/** Provider logo/icon path (relative to public folder, e.g., '/svg/models/openai.svg') */
+	logo?: string
 
-	/** Provider settings */
-	settings: AiProviderSettings
+	/** Model list configuration */
+	modelList?: {
+		showModelFetcher?: boolean
+	}
+	modelsUrl?: string
+	name: string
 
 	/** Proxy URL configuration (deprecated, use settings.proxyUrl) */
 	proxyUrl?: {
 		placeholder: string
 	}
 
-	/** Model list configuration */
-	modelList?: {
-		showModelFetcher?: boolean
-	}
+	/** Provider settings */
+	settings: AiProviderSettings
+	/** Whether to show config panel */
+	showConfig?: boolean
+	url: string
 }
 
 // ==================== Model List Item for Provider ====================
 export interface ChatModelCard {
-	id: string
-	displayName?: string
-	description?: string
-	enabled?: boolean
-	legacy?: boolean
+	abilities?: AiModelSettings
 	contextWindowTokens?: number
+	description?: string
+	displayName?: string
+	enabled?: boolean
+	id: string
+	legacy?: boolean
 	maxOutput?: number
 	organization?: string
 	releasedAt?: string
-	abilities?: AiModelSettings
 }

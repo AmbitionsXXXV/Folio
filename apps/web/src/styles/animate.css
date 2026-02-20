@@ -32,13 +32,13 @@
 }
 
 .animate-fade-in {
-	animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	opacity: 0;
+	animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in-scale {
-	animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	opacity: 0;
+	animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-float {

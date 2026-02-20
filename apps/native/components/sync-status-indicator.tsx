@@ -22,17 +22,17 @@ import { useSync } from '@/contexts/sync-context'
 
 interface SyncStatusIndicatorProps {
 	/**
-	 * Size of the indicator icon
+	 * Whether tapping triggers a sync
 	 */
-	size?: number
+	interactive?: boolean
 	/**
 	 * Whether to show the label text
 	 */
 	showLabel?: boolean
 	/**
-	 * Whether tapping triggers a sync
+	 * Size of the indicator icon
 	 */
-	interactive?: boolean
+	size?: number
 }
 
 export function SyncStatusIndicator({

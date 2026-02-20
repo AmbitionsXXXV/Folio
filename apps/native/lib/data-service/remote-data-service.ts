@@ -32,47 +32,47 @@ const DEFAULT_SOURCES_LIMIT = 20
 const MAX_REMOTE_LIMIT = 100
 
 interface CursorPage<T> {
-	items: T[]
 	hasMore: boolean
+	items: T[]
 	nextCursor?: string
 }
 
 interface ServerEntry {
-	id: string
-	userId: string
-	title: string
 	contentJson?: string | null
 	contentText?: string | null
-	isInbox: boolean
-	isStarred: boolean
-	isPinned: boolean
 	createdAt: string | Date
-	updatedAt: string | Date
-	version: string
 	deletedAt?: string | Date | null
+	id: string
+	isInbox: boolean
+	isPinned: boolean
+	isStarred: boolean
+	title: string
+	updatedAt: string | Date
+	userId: string
+	version: string
 }
 
 interface ServerTag {
-	id: string
-	userId: string
-	name: string
 	color?: string | null
 	createdAt: string | Date
+	id: string
+	name: string
 	updatedAt: string | Date
+	userId: string
 }
 
 interface ServerSource {
-	id: string
-	userId: string
-	type: string
-	title: string
-	url?: string | null
 	author?: string | null
-	publishedAt?: string | Date | null
-	metadata?: string | null
 	createdAt: string | Date
-	updatedAt: string | Date
 	deletedAt?: string | Date | null
+	id: string
+	metadata?: string | null
+	publishedAt?: string | Date | null
+	title: string
+	type: string
+	updatedAt: string | Date
+	url?: string | null
+	userId: string
 }
 
 /**

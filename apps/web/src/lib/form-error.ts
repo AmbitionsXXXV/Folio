@@ -19,10 +19,10 @@ export type FlatFieldErrors = Record<string, string[]>
  * 扁平化错误结构，适合表单字段展示
  */
 export interface FlattenedError {
-	/** 表单级别的错误（非字段特定） */
-	formErrors: string[]
 	/** 字段级别的错误 */
 	fieldErrors: FlatFieldErrors
+	/** 表单级别的错误（非字段特定） */
+	formErrors: string[]
 }
 
 /**

@@ -1,9 +1,6 @@
 import { useState } from 'react'
 
 export interface UseUncontrolledOptions<T> {
-	/** Value for controlled state */
-	value?: T
-
 	/** Initial value for uncontrolled state */
 	defaultValue?: T
 
@@ -12,6 +9,8 @@ export interface UseUncontrolledOptions<T> {
 
 	/** Controlled state onChange handler */
 	onChange?: (value: T, ...payload: unknown[]) => void
+	/** Value for controlled state */
+	value?: T
 }
 
 export type UseUncontrolledReturnValue<T> = [

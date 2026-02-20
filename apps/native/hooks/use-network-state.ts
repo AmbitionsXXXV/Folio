@@ -10,13 +10,17 @@ import { useCallback, useEffect, useState } from 'react'
 
 export interface NetworkState {
 	/**
+	 * Whether the connection is using cellular data
+	 */
+	isCellular: boolean
+	/**
 	 * Whether the device is connected to the internet
 	 */
 	isConnected: boolean
 	/**
-	 * Whether the connection is using cellular data
+	 * Whether the network state is still being determined
 	 */
-	isCellular: boolean
+	isLoading: boolean
 	/**
 	 * Whether the connection is using WiFi
 	 */
@@ -25,10 +29,6 @@ export interface NetworkState {
 	 * Connection type (wifi, cellular, none, etc.)
 	 */
 	type: Network.NetworkStateType
-	/**
-	 * Whether the network state is still being determined
-	 */
-	isLoading: boolean
 }
 
 /**

@@ -32,13 +32,13 @@ function QuickCapture({ onCapture, isPending }: QuickCaptureProps) {
 		<Card className="p-4" variant="secondary">
 			<View className="flex-row items-center">
 				<TextField className="mr-3 flex-1">
-				<Input
-					onChangeText={setInputValue}
-					onSubmitEditing={handleSubmit}
-					placeholder={t('entry.quickCapture')}
-					returnKeyType="done"
-					value={inputValue}
-				/>
+					<Input
+						onChangeText={setInputValue}
+						onSubmitEditing={handleSubmit}
+						placeholder={t('entry.quickCapture')}
+						returnKeyType="done"
+						value={inputValue}
+					/>
 				</TextField>
 				<Button
 					className={cn(

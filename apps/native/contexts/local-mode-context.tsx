@@ -5,25 +5,25 @@ import { createContext, use, useCallback, useEffect, useState } from 'react'
 
 interface LocalModeContextValue {
 	/**
-	 * Whether the user is in local mode (skipped login)
+	 * Disable local mode (when user signs in)
 	 */
-	isLocalMode: boolean
-	/**
-	 * Whether the local mode state is being loaded
-	 */
-	isLoading: boolean
-	/**
-	 * Local user ID for offline data association
-	 */
-	localUserId: string | null
+	disableLocalMode: () => Promise<void>
 	/**
 	 * Enable local mode (skip login)
 	 */
 	enableLocalMode: () => Promise<void>
 	/**
-	 * Disable local mode (when user signs in)
+	 * Whether the local mode state is being loaded
 	 */
-	disableLocalMode: () => Promise<void>
+	isLoading: boolean
+	/**
+	 * Whether the user is in local mode (skipped login)
+	 */
+	isLocalMode: boolean
+	/**
+	 * Local user ID for offline data association
+	 */
+	localUserId: string | null
 }
 
 const LocalModeContext = createContext<LocalModeContextValue | null>(null)

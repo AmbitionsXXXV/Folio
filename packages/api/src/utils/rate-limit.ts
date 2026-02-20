@@ -19,28 +19,28 @@ import { getRedisClient } from './redis'
  * Rate limit configuration
  */
 export interface RateLimitConfig {
+	/** Unique identifier prefix for the rate limit bucket */
+	keyPrefix: string
 	/** Maximum number of requests allowed in the time window */
 	maxRequests: number
 	/** Time window in milliseconds */
 	windowMs: number
-	/** Unique identifier prefix for the rate limit bucket */
-	keyPrefix: string
 }
 
 /**
  * Rate limit status returned to clients
  */
 export interface RateLimitStatus {
-	/** Number of remaining requests in current window */
-	remaining: number
+	/** Whether the client is currently rate limited */
+	isLimited: boolean
 	/** Maximum requests allowed in window */
 	limit: number
+	/** Number of remaining requests in current window */
+	remaining: number
 	/** Unix timestamp when the rate limit resets */
 	resetAt: number
 	/** Milliseconds until the rate limit resets */
 	resetInMs: number
-	/** Whether the client is currently rate limited */
-	isLimited: boolean
 }
 
 /**

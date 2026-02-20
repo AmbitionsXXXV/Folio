@@ -11,14 +11,14 @@ import type { AiProvider } from '../providers/types'
  * Token usage breakdown
  */
 export interface TokenUsage {
-	/** Prompt tokens (input) */
-	prompt?: number
 	/** Completion tokens (output) */
 	completion?: number
-	/** Total tokens */
-	total?: number
 	/** Embedding tokens (if applicable) */
 	embedding?: number
+	/** Prompt tokens (input) */
+	prompt?: number
+	/** Total tokens */
+	total?: number
 }
 
 /**
@@ -37,20 +37,20 @@ export interface CostEstimate {
  * Context usage statistics
  */
 export interface ContextUsage {
+	/** Conversation context (for future chat feature) */
+	conversation?: ConversationContext
 	/** Input text character count */
 	inputTextChars?: number
 	/** Estimated input text tokens */
 	inputTextTokensEstimated?: number
-	/** RAG top-K setting */
-	ragTopK?: number
-	/** Retrieved chunk IDs */
-	ragRetrievedChunkIds?: string[]
 	/** RAG context character count */
 	ragContextChars?: number
 	/** Estimated RAG context tokens */
 	ragContextTokensEstimated?: number
-	/** Conversation context (for future chat feature) */
-	conversation?: ConversationContext
+	/** Retrieved chunk IDs */
+	ragRetrievedChunkIds?: string[]
+	/** RAG top-K setting */
+	ragTopK?: number
 }
 
 /**
@@ -59,8 +59,8 @@ export interface ContextUsage {
 export interface ConversationContext {
 	conversationId?: string
 	messageIdsIncluded?: string[]
-	windowStrategy?: 'last_n' | 'token_budget'
 	windowMessagesCount?: number
+	windowStrategy?: 'last_n' | 'token_budget'
 	windowTokensEstimated?: number
 }
 
@@ -68,9 +68,9 @@ export interface ConversationContext {
  * Complete usage record (stored in ai_runs.usage)
  */
 export interface AiUsage {
-	tokens?: TokenUsage
-	cost?: CostEstimate
 	context?: ContextUsage
+	cost?: CostEstimate
+	tokens?: TokenUsage
 }
 
 /**
@@ -87,30 +87,30 @@ export type AiRunType = 'summarize' | 'review_suggest' | 'embedding' | 'chat'
  * AI run record (maps to ai_runs table)
  */
 export interface AiRun {
+	createdAt: Date
+	error?: string
 	id: string
-	userId: string
-	type: AiRunType
-	provider: AiProvider
-	model: string
-	promptVersion: PromptVersion
 	/** References to input data (e.g., entryId, chunkIds) */
 	inputRefs?: Record<string, unknown>
 	/** Latency in milliseconds */
 	latencyMs?: number
+	model: string
+	promptVersion: PromptVersion
+	provider: AiProvider
 	status: AiRunStatus
-	error?: string
+	type: AiRunType
 	usage?: AiUsage
-	createdAt: Date
+	userId: string
 }
 
 /**
  * Daily usage aggregation (optional, for user dashboard)
  */
 export interface DailyUsage {
-	userId: string
 	date: string // YYYY-MM-DD
+	estimatedCost?: number
 	provider: AiProvider
 	runCount: number
 	totalTokens: number
-	estimatedCost?: number
+	userId: string
 }

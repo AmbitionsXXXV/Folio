@@ -15,8 +15,8 @@ import {
 import { tailwindConfig } from '../src/theme'
 
 interface ResetPasswordEmailProps {
-	userName: string
 	resetUrl: string
+	userName: string
 }
 
 export function ResetPasswordEmail({

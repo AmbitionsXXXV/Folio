@@ -23,6 +23,10 @@ interface DataServiceContextValue {
 	 */
 	isLocal: boolean
 	/**
+	 * Whether the database migrations are in progress
+	 */
+	isMigrating: boolean
+	/**
 	 * Whether the device is offline
 	 */
 	isOffline: boolean
@@ -31,17 +35,13 @@ interface DataServiceContextValue {
 	 */
 	isOfflineFirst: boolean
 	/**
-	 * Whether the database migrations are in progress
+	 * Error during migration
 	 */
-	isMigrating: boolean
+	migrationError: Error | null
 	/**
 	 * Whether migrations completed successfully
 	 */
 	migrationSuccess: boolean
-	/**
-	 * Error during migration
-	 */
-	migrationError: Error | null
 }
 
 const DataServiceContext = createContext<DataServiceContextValue | null>(null)

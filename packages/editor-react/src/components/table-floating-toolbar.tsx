@@ -157,9 +157,7 @@ export function TableFloatingToolbar({
 		// 需要分开执行，因为第一个命令执行后光标位置会变化
 		// 先添加列（在当前行的最后添加列）
 		// biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-		;(editor.chain().focus() as any)
-			.addColumnAfter()
-			.run()
+		;(editor.chain().focus() as any).addColumnAfter().run()
 
 		// 再添加行（这时光标在新列中，添加行会在最后一行后添加）
 		// biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands

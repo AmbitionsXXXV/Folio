@@ -17,8 +17,8 @@ const ONE_WEEK_MS = 7 * ONE_DAY_MS
  * Stores { value: unknown, expiresAt: number | null }
  */
 interface MockRedisEntry {
-	value: unknown
 	expiresAt: number | null
+	value: unknown
 }
 
 const mockRedisStore = new Map<string, MockRedisEntry>()

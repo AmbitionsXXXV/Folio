@@ -13,12 +13,12 @@ export type NodeState = 'pending' | 'running' | 'success' | 'error' | 'skipped'
  * Graph node definition
  */
 export interface GraphNode<TInput, TOutput> {
+	/** Node execution function */
+	execute: (input: TInput, context: GraphContext) => Promise<TOutput>
 	/** Unique node ID */
 	id: string
 	/** Human-readable name */
 	name: string
-	/** Node execution function */
-	execute: (input: TInput, context: GraphContext) => Promise<TOutput>
 	/** Optional retry configuration */
 	retry?: RetryConfig
 }
@@ -27,54 +27,54 @@ export interface GraphNode<TInput, TOutput> {
  * Retry configuration
  */
 export interface RetryConfig {
-	/** Maximum retry attempts */
-	maxAttempts: number
-	/** Base delay in milliseconds */
-	baseDelayMs: number
 	/** Exponential backoff multiplier */
 	backoffMultiplier?: number
+	/** Base delay in milliseconds */
+	baseDelayMs: number
+	/** Maximum retry attempts */
+	maxAttempts: number
 }
 
 /**
  * Graph execution context
  */
 export interface GraphContext {
-	/** User ID */
-	userId: string
 	/** Run ID for tracing */
 	runId: string
-	/** Accumulated state from previous nodes */
-	state: Record<string, unknown>
 	/** Signal for cancellation */
 	signal?: AbortSignal
+	/** Accumulated state from previous nodes */
+	state: Record<string, unknown>
+	/** User ID */
+	userId: string
 }
 
 /**
  * Edge definition (connection between nodes)
  */
 export interface GraphEdge {
+	/** Optional condition for traversal */
+	condition?: (context: GraphContext) => boolean
 	/** Source node ID */
 	from: string
 	/** Target node ID */
 	to: string
-	/** Optional condition for traversal */
-	condition?: (context: GraphContext) => boolean
 }
 
 /**
  * Graph definition
  */
 export interface GraphDefinition<_TInput, TOutput> {
+	/** Edges between nodes */
+	edges: GraphEdge[]
+	/** Entry node ID */
+	entryNode: string
 	/** Graph ID */
 	id: string
 	/** Human-readable name */
 	name: string
-	/** Entry node ID */
-	entryNode: string
 	/** All nodes */
 	nodes: GraphNode<unknown, unknown>[]
-	/** Edges between nodes */
-	edges: GraphEdge[]
 	/** Transform final output */
 	outputTransform?: (context: GraphContext) => TOutput
 }
@@ -83,29 +83,29 @@ export interface GraphDefinition<_TInput, TOutput> {
  * Graph execution result
  */
 export interface GraphResult<TOutput> {
-	/** Whether execution succeeded */
-	success: boolean
-	/** Output if successful */
-	output?: TOutput
 	/** Error if failed */
 	error?: Error
-	/** Execution trace */
-	trace: NodeTrace[]
+	/** Output if successful */
+	output?: TOutput
+	/** Whether execution succeeded */
+	success: boolean
 	/** Total execution time in milliseconds */
 	totalTimeMs: number
+	/** Execution trace */
+	trace: NodeTrace[]
 }
 
 /**
  * Node execution trace
  */
 export interface NodeTrace {
-	nodeId: string
-	state: NodeState
-	startTime: Date
-	endTime?: Date
 	durationMs?: number
+	endTime?: Date
 	error?: string
+	nodeId: string
 	retryCount?: number
+	startTime: Date
+	state: NodeState
 }
 
 /**
