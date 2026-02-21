@@ -15,7 +15,11 @@
  */
 
 import { type UIMessage, useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, type FileUIPart } from 'ai'
+import {
+	DefaultChatTransport,
+	type FileUIPart,
+	lastAssistantMessageIsCompleteWithToolCalls,
+} from 'ai'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getServerUrl } from '@/utils/api-environment'
 
@@ -243,6 +247,9 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		id: serverChatId,
 		messages: initialMessages ?? [],
 		transport,
+		sendAutomaticallyWhen: ({ messages }) =>
+			hasApprovalResponse(messages) ||
+			lastAssistantMessageIsCompleteWithToolCalls({ messages }),
 	})
 
 	// Convert UIMessages to KnowledgeChatMessages for UI
@@ -439,6 +446,14 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		// Regenerate
 		regenerate,
 	}
+}
+
+function hasApprovalResponse(messages: UIMessage[]): boolean {
+	const lastMessage = messages.at(-1)
+	if (!lastMessage || lastMessage.role !== 'assistant') return false
+	return lastMessage.parts.some(
+		(part) => 'state' in part && part.state === 'approval-responded'
+	)
 }
 
 function isCompactInfo(value: unknown): value is CompactInfo {
