@@ -1,5 +1,13 @@
 # @folionote/constants
 
+## 0.2.17
+
+### Patch Changes
+
+- feat: ✨ enhance chat input and mention functionality
+- Updated dependencies
+  - @folionote/locales@0.2.17
+
 ## 0.2.16
 
 ### Patch Changes
