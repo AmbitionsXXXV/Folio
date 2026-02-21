@@ -858,6 +858,20 @@ free -h
 pm2 monit
 ```
 
+如果在 GitHub Actions 构建 Web 端时遇到 OOM，优先从构建配置优化：
+
+```text
+1. 在 vite 配置中过滤第三方包的 "use client" 噪声告警（MODULE_LEVEL_DIRECTIVE）
+2. 仅对 client build 应用 manualChunks，避免 SSR 构建阶段额外分块开销
+3. 关闭 build.reportCompressedSize，减少构建期额外统计开销
+```
+
+验证命令：
+
+```bash
+pnpm -C apps/web build
+```
+
 ### 重新部署
 
 如果需要完全重新部署：

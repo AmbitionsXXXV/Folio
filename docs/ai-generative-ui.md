@@ -8,7 +8,7 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 
 ## Server Setup
 
-1. Define tools in `packages/stock-tool` and `packages/weather-tool`, then re-export in `apps/server/src/services/ai-tools.ts`.
+1. Define tools in `packages/ai-tools` (under `src/stock/`, `src/weather/`, `src/note/`), then re-export via `@folionote/ai-tools/tools` in `apps/server/src/services/ai-tools.ts`.
 2. Inject tools in `apps/server/src/routes/ai-stream.ts` when the provider supports `function_calling`.
 3. Add tool usage guidance in `packages/ai/src/prompts/knowledge-chat.ts`.
 4. Prompt 需要覆盖相对时间表达（比如 最近一周/过去一周/近 7 天），以及公司名称到 ticker 的明确映射（Apple -> AAPL）。

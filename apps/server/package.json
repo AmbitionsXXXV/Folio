@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
@@ -21,10 +21,8 @@
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
-    "@folionote/note-tool": "workspace:*",
-    "@folionote/stock-tool": "workspace:*",
+    "@folionote/ai-tools": "workspace:*",
     "@folionote/storage": "workspace:*",
-    "@folionote/weather-tool": "workspace:*",
     "@hono/node-server": "^1.19.8",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

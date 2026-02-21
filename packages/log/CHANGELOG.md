@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.11
+
+### Patch Changes
+
+- feat: ✨ enhance chat input and mention functionality
+
 ## 0.1.10
 
 ### Patch Changes

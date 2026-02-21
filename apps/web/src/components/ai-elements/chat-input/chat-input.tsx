@@ -334,31 +334,30 @@ export function ChatInput({
 		: t('knowledge.configureApiKeyFirst')
 
 	return (
-		<PromptInput
-			accept={FILE_ATTACHMENT_ACCEPT}
-			className={cn(
-				'rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none',
-				className
-			)}
-			globalDrop
-			maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
-			maxFiles={FILE_ATTACHMENT_MAX_FILES}
-			multiple
-			onError={(error) => {
-				toast.error(getAttachmentErrorMessage(t, error))
-			}}
-			onSubmit={handlePromptSubmit}
-		>
-			{/* Attachments (Notes + Files) */}
-			<ChatInputAttachmentsHeader
-				attachedNotes={attachedNotes}
-				onRemoveNoteAttachment={onRemoveNoteAttachment}
-			/>
+		<div className="relative">
+			<MentionPopover {...mention.popoverProps} />
+			<PromptInput
+				accept={FILE_ATTACHMENT_ACCEPT}
+				className={cn(
+					'rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none',
+					className
+				)}
+				globalDrop
+				maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
+				maxFiles={FILE_ATTACHMENT_MAX_FILES}
+				multiple
+				onError={(error) => {
+					toast.error(getAttachmentErrorMessage(t, error))
+				}}
+				onSubmit={handlePromptSubmit}
+			>
+				{/* Attachments (Notes + Files) */}
+				<ChatInputAttachmentsHeader
+					attachedNotes={attachedNotes}
+					onRemoveNoteAttachment={onRemoveNoteAttachment}
+				/>
 
-			<PromptInputBody>
-				<div className="relative w-full">
-					<MentionPopover {...mention.popoverProps} />
-
+				<PromptInputBody>
 					<PromptInputTextarea
 						disabled={isDisabled || !hasApiKey}
 						onChange={handleTextareaChange}
@@ -366,100 +365,100 @@ export function ChatInput({
 						ref={textareaRef}
 						value={value}
 					/>
-				</div>
-			</PromptInputBody>
+				</PromptInputBody>
 
-			<PromptInputFooter className="px-3">
-				<PromptInputTools>
-					<PromptInputActionMenu>
-						<PromptInputActionMenuTrigger
-							aria-label={t('knowledge.addAttachments')}
+				<PromptInputFooter className="px-3">
+					<PromptInputTools>
+						<PromptInputActionMenu>
+							<PromptInputActionMenuTrigger
+								aria-label={t('knowledge.addAttachments')}
+								disabled={isDisabled || !hasApiKey}
+							/>
+							<PromptInputActionMenuContent>
+								<PromptInputActionAddAttachments
+									label={t('knowledge.addAttachments')}
+								/>
+							</PromptInputActionMenuContent>
+						</PromptInputActionMenu>
+
+						{/* Model Selector */}
+						<AiModelSelector
+							catalogModels={catalogModels}
+							catalogProviders={catalogProviders}
+							className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
 							disabled={isDisabled || !hasApiKey}
+							onValueChange={onModelChange}
+							placeholder={t('knowledge.selectModel')}
+							value={selectedModel}
 						/>
-						<PromptInputActionMenuContent>
-							<PromptInputActionAddAttachments
-								label={t('knowledge.addAttachments')}
-							/>
-						</PromptInputActionMenuContent>
-					</PromptInputActionMenu>
 
-					{/* Model Selector */}
-					<AiModelSelector
-						catalogModels={catalogModels}
-						catalogProviders={catalogProviders}
-						className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
-						disabled={isDisabled || !hasApiKey}
-						onValueChange={onModelChange}
-						placeholder={t('knowledge.selectModel')}
-						value={selectedModel}
-					/>
+						{/* Thinking Toggle */}
+						{supportsThinking && onThinkingToggle && (
+							<Tooltip>
+								<TooltipTrigger
+									aria-label={t('knowledge.toggleThinking')}
+									aria-pressed={thinkingActive}
+									className={cn(
+										'relative inline-flex size-8 items-center justify-center rounded-lg',
+										'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+										'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+										'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
+										thinkingActive &&
+											'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+									)}
+									disabled={!hasToggleableReasoning}
+									onClick={() =>
+										hasToggleableReasoning && onThinkingToggle(!thinkingEnabled)
+									}
+									type="button"
+								>
+									<HugeiconsIcon className="size-4" icon={AiBrain01Icon} />
+									{thinkingActive && (
+										<span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
+									)}
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									<p>{getThinkingTooltip()}</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+					</PromptInputTools>
 
-					{/* Thinking Toggle */}
-					{supportsThinking && onThinkingToggle && (
-						<Tooltip>
-							<TooltipTrigger
-								aria-label={t('knowledge.toggleThinking')}
-								aria-pressed={thinkingActive}
-								className={cn(
-									'relative inline-flex size-8 items-center justify-center rounded-lg',
-									'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-									'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-									'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
-									thinkingActive &&
-										'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
-								)}
-								disabled={!hasToggleableReasoning}
-								onClick={() =>
-									hasToggleableReasoning && onThinkingToggle(!thinkingEnabled)
-								}
-								type="button"
+					<div className="flex items-center gap-1">
+						{/* Context Usage */}
+						{contextUsage && contextUsage.usedTokens > 0 && (
+							<Context
+								maxTokens={contextUsage.maxTokens}
+								modelId={contextUsage.modelId}
+								usage={contextUsage.sessionUsage}
+								usedTokens={contextUsage.usedTokens}
 							>
-								<HugeiconsIcon className="size-4" icon={AiBrain01Icon} />
-								{thinkingActive && (
-									<span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
-								)}
-							</TooltipTrigger>
-							<TooltipContent side="top">
-								<p>{getThinkingTooltip()}</p>
-							</TooltipContent>
-						</Tooltip>
-					)}
-				</PromptInputTools>
+								<ContextTrigger
+									className="h-8 gap-1.5 rounded-lg px-2 text-xs"
+									size="sm"
+								/>
+								<ContextContent align="start" side="top">
+									<ContextContentHeader />
+									<ContextContentBody className="space-y-1.5">
+										<ContextInputUsage />
+										<ContextOutputUsage />
+										<ContextReasoningUsage />
+										<ContextCacheUsage />
+									</ContextContentBody>
+									<ContextContentFooter />
+								</ContextContent>
+							</Context>
+						)}
 
-				<div className="flex items-center gap-1">
-					{/* Context Usage */}
-					{contextUsage && contextUsage.usedTokens > 0 && (
-						<Context
-							maxTokens={contextUsage.maxTokens}
-							modelId={contextUsage.modelId}
-							usage={contextUsage.sessionUsage}
-							usedTokens={contextUsage.usedTokens}
-						>
-							<ContextTrigger
-								className="h-8 gap-1.5 rounded-lg px-2 text-xs"
-								size="sm"
-							/>
-							<ContextContent align="start" side="top">
-								<ContextContentHeader />
-								<ContextContentBody className="space-y-1.5">
-									<ContextInputUsage />
-									<ContextOutputUsage />
-									<ContextReasoningUsage />
-									<ContextCacheUsage />
-								</ContextContentBody>
-								<ContextContentFooter />
-							</ContextContent>
-						</Context>
-					)}
-
-					<ChatInputSubmitButton
-						disabled={isDisabled}
-						hasApiKey={hasApiKey}
-						isPending={isPending}
-						value={value}
-					/>
-				</div>
-			</PromptInputFooter>
-		</PromptInput>
+						<ChatInputSubmitButton
+							disabled={isDisabled}
+							hasApiKey={hasApiKey}
+							isPending={isPending}
+							value={value}
+						/>
+					</div>
+				</PromptInputFooter>
+			</PromptInput>
+		</div>
 	)
 }

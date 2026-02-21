@@ -1,110 +1,12 @@
-// Auth schema
-
-// AI schema
-import {
-	aiChatSessions,
-	aiChatSessionsRelations,
-	userAiModelSettings,
-	userAiModelSettingsRelations,
-	userAiProviderSettings,
-	userAiProviderSettingsRelations,
-} from './schema/ai'
-import {
-	account,
-	accountRelations,
-	session,
-	sessionRelations,
-	user,
-	userRelations,
-	verification,
-} from './schema/auth'
-// Business schema
-import {
-	attachments,
-	attachmentsRelations,
-	dailyLogs,
-	dailyLogsRelations,
-	entries,
-	entriesRelations,
-	entryReviewState,
-	entryReviewStateRelations,
-	entryShares,
-	entrySharesRelations,
-	entrySources,
-	entrySourcesRelations,
-	entryTags,
-	entryTagsRelations,
-	reviewEvents,
-	reviewEventsRelations,
-	searchHistory,
-	searchHistoryRelations,
-	sources,
-	sourcesRelations,
-	tags,
-	tagsRelations,
-} from './schema/entries'
-
-// Schema configuration for drizzle
-const schema = {
-	// Auth
-	user,
-	userRelations,
-	session,
-	sessionRelations,
-	account,
-	accountRelations,
-	verification,
-	// Business
-	entries,
-	entriesRelations,
-	tags,
-	tagsRelations,
-	entryTags,
-	entryTagsRelations,
-	sources,
-	sourcesRelations,
-	entrySources,
-	entrySourcesRelations,
-	attachments,
-	attachmentsRelations,
-	reviewEvents,
-	reviewEventsRelations,
-	entryReviewState,
-	entryReviewStateRelations,
-	dailyLogs,
-	dailyLogsRelations,
-	entryShares,
-	entrySharesRelations,
-	searchHistory,
-	searchHistoryRelations,
-	// AI
-	userAiModelSettings,
-	userAiModelSettingsRelations,
-	userAiProviderSettings,
-	userAiProviderSettingsRelations,
-	aiChatSessions,
-	aiChatSessionsRelations,
-}
-
-// 延迟初始化数据库连接，避免模块循环依赖导致的初始化问题
-import { createRequire } from 'node:module'
-
-const require = createRequire(import.meta.url)
-
-type DrizzleNodePostgresModule = typeof import('drizzle-orm/node-postgres')
-type DbType = ReturnType<DrizzleNodePostgresModule['drizzle']>
-
-let dbInstance: DbType | null = null
+// Browser-safe stub: db is server-only, accessing any property throws at runtime.
+// The type import below is erased at compile time and produces no runtime code.
+type DbType = ReturnType<typeof import('drizzle-orm/node-postgres').drizzle>
 
 export const db = new Proxy({} as DbType, {
 	get(_target, prop) {
-		if (!dbInstance) {
-			const { drizzle } =
-				require('drizzle-orm/node-postgres') as DrizzleNodePostgresModule
-			dbInstance = drizzle(process.env.DATABASE_URL || '', { schema })
-		}
-
-		return (dbInstance as unknown as Record<string | symbol, unknown>)[prop]
+		throw new Error(
+			`Cannot access db.${String(prop)} on the client. Database operations are server-only.`
+		)
 	},
 }) as DbType
 

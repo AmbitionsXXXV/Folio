@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.10
+
+### Patch Changes
+
+- feat: ✨ enhance chat input and mention functionality
+
 ## 0.1.9
 
 ### Patch Changes

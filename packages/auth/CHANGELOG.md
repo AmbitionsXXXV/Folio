@@ -1,5 +1,14 @@
 # @folionote/auth
 
+## 0.2.17
+
+### Patch Changes
+
+- feat: ✨ enhance chat input and mention functionality
+- Updated dependencies
+  - @folionote/db@0.2.17
+  - @folionote/transactional@0.2.17
+
 ## 0.2.16
 
 ### Patch Changes

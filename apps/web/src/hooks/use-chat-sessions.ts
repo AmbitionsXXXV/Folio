@@ -69,7 +69,7 @@ export function useChatSessions(
 
 	const [sessions, setSessions] = useState<ChatSessionSummary[]>([])
 	const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
-	const [isLoading, setIsLoading] = useState(false)
+	const [isLoading, setIsLoading] = useState(autoLoad)
 	const [error, setError] = useState<Error | null>(null)
 
 	// Track previous chat ID for cleanup on switch

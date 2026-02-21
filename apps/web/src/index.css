@@ -9,8 +9,7 @@
 @import "./styles/caret.css";
 @import "./styles/table.css";
 @source "../node_modules/streamdown/dist/*.js";
-@source "../../../packages/stock-tool/src/**/*.{ts,tsx}";
-@source "../../../packages/weather-tool/src/**/*.{ts,tsx}";
+@source "../../../packages/ai-tools/src/**/*.{ts,tsx}";
 
 :root {
 	--radius: 1.5rem;

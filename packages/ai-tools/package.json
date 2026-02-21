@@ -1,0 +1,72 @@
+{
+  "name": "@folionote/ai-tools",
+  "version": "0.1.1",
+  "description": "AI tool definitions, API clients, and UI components for FolioNote",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./tools": {
+      "types": "./src/tools.ts",
+      "default": "./src/tools.ts"
+    },
+    "./note/tools": {
+      "types": "./src/note/tools/index.ts",
+      "default": "./src/note/tools/index.ts"
+    },
+    "./note/schemas": {
+      "types": "./src/note/schemas.ts",
+      "default": "./src/note/schemas.ts"
+    },
+    "./note/types": {
+      "types": "./src/note/types.ts",
+      "default": "./src/note/types.ts"
+    },
+    "./stock/tools": {
+      "types": "./src/stock/tools/index.ts",
+      "default": "./src/stock/tools/index.ts"
+    },
+    "./stock/components": {
+      "types": "./src/stock/components/index.ts",
+      "default": "./src/stock/components/index.ts"
+    },
+    "./stock/types": {
+      "types": "./src/stock/types.ts",
+      "default": "./src/stock/types.ts"
+    },
+    "./weather/tools": {
+      "types": "./src/weather/tools/index.ts",
+      "default": "./src/weather/tools/index.ts"
+    },
+    "./weather/components": {
+      "types": "./src/weather/components/index.ts",
+      "default": "./src/weather/components/index.ts"
+    },
+    "./weather/types": {
+      "types": "./src/weather/types.ts",
+      "default": "./src/weather/types.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@folionote/db": "workspace:*",
+    "ai": "catalog:",
+    "drizzle-orm": "catalog:",
+    "nanoid": "^5.1.6",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "@folionote/ui": "workspace:*",
+    "react": "catalog:",
+    "recharts": "catalog:"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "@types/react": "19.2.7",
+    "typescript": "catalog:"
+  }
+}

@@ -5,9 +5,7 @@
     { "path": "packages/db" },
     { "path": "packages/auth" },
     { "path": "packages/api" },
-    { "path": "packages/stock-tool" },
-    { "path": "packages/weather-tool" },
-    { "path": "packages/note-tool" },
+    { "path": "packages/ai-tools" },
     { "path": "apps/server" },
     { "path": "apps/web" },
     { "path": "apps/native" }

@@ -6,8 +6,8 @@ import {
 	getNote,
 	searchNotes,
 	updateNote,
-} from '../src/tools'
-import type { NoteToolContext, NoteToolResult } from '../src/types'
+} from '../src/note/tools'
+import type { NoteToolContext, NoteToolResult } from '../src/note/types'
 
 const SAMPLE_USER_ID = 'user-123'
 const SAMPLE_NOTE_ID = 'note-123'
