@@ -8,9 +8,9 @@ import {
 	providerSupports,
 } from '@folionote/ai'
 import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
+import type { NoteToolContext } from '@folionote/ai-tools/note/types'
 import { createContext } from '@folionote/api/context'
 import { createLogger } from '@folionote/log'
-import type { NoteToolContext } from '@folionote/note-tool/types'
 import {
 	generateText as aiGenerateText,
 	streamText as aiStreamText,

@@ -7,13 +7,11 @@ import {
 	StockTrendCard,
 	type StockTrendInput,
 	type StockTrendOutput,
-} from '@folionote/stock-tool'
-import {
 	type TemperatureUnit,
 	WeatherCard,
 	type WeatherToolInput,
 	type WeatherToolOutput,
-} from '@folionote/weather-tool'
+} from '@folionote/ai-tools'
 import type { UIMessage } from 'ai'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
