@@ -7,19 +7,90 @@ import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-export default defineConfig({
+const SHIKIJS_RE = /^@shikijs\//
+const FOLIONOTE_DB_RE = /^@folionote\/db$/
+
+const shouldIgnoreUseClientDirectiveWarning = (message: string) => {
+	return (
+		message.includes('Module level directives cause errors when bundled') &&
+		message.includes('"use client"')
+	)
+}
+
+const CHUNK_RULES: Array<{ test: (id: string) => boolean; chunk: string }> = [
+	{
+		test: (id) =>
+			id.includes('node_modules/react/') || id.includes('node_modules/react-dom/'),
+		chunk: 'react-vendor',
+	},
+	{
+		test: (id) => id.includes('node_modules/@tanstack/react-router'),
+		chunk: 'tanstack-router',
+	},
+	{
+		test: (id) => id.includes('node_modules/@tanstack/react-query'),
+		chunk: 'tanstack-query',
+	},
+	{
+		test: (id) =>
+			id.includes('node_modules/@tiptap/') ||
+			id.includes('node_modules/prosemirror-'),
+		chunk: 'tiptap',
+	},
+	{
+		test: (id) =>
+			id.includes('node_modules/shiki') || id.includes('node_modules/@shikijs'),
+		chunk: 'shiki',
+	},
+	{
+		test: (id) =>
+			id.includes('node_modules/tippy.js') || id.includes('node_modules/@popperjs'),
+		chunk: 'tippy',
+	},
+	{ test: (id) => id.includes('node_modules/motion'), chunk: 'motion' },
+]
+
+function resolveManualChunk(id: string): string | undefined {
+	for (const rule of CHUNK_RULES) {
+		if (rule.test(id)) return rule.chunk
+	}
+	return undefined
+}
+
+export default defineConfig(({ command, isSsrBuild }) => ({
 	plugins: [
-		devtools(),
+		...(command === 'serve' ? [devtools()] : []),
 		tsconfigPaths(),
 		tailwindcss(),
 		tanstackStart(),
-		nitro(),
+		nitro({
+			rollupConfig: {
+				external: [
+					'@base-ui/react',
+					'@base-ui/utils',
+					'motion',
+					'framer-motion',
+					'shiki',
+					'mermaid',
+					'cytoscape',
+					'cytoscape-fcose',
+					'recharts',
+					SHIKIJS_RE,
+				],
+				onwarn(warning, warn) {
+					if (shouldIgnoreUseClientDirectiveWarning(warning.message)) {
+						return
+					}
+					warn(warning)
+				},
+			},
+		}),
 		viteReact(),
 	],
 	resolve: {
 		alias: [
 			{
-				find: /^@folionote\/db$/,
+				find: FOLIONOTE_DB_RE,
 				replacement: fileURLToPath(
 					new URL('../../packages/db/src/index.lazy.ts', import.meta.url)
 				),
@@ -30,51 +101,15 @@ export default defineConfig({
 		port: 3001,
 	},
 	build: {
+		reportCompressedSize: false,
 		rollupOptions: {
-			output: {
-				manualChunks(id) {
-					// React core
-					if (
-						id.includes('node_modules/react/') ||
-						id.includes('node_modules/react-dom/')
-					) {
-						return 'react-vendor'
-					}
-					// TanStack Router
-					if (id.includes('node_modules/@tanstack/react-router')) {
-						return 'tanstack-router'
-					}
-					// TanStack Query
-					if (id.includes('node_modules/@tanstack/react-query')) {
-						return 'tanstack-query'
-					}
-					// Tiptap editor
-					if (
-						id.includes('node_modules/@tiptap/') ||
-						id.includes('node_modules/prosemirror-')
-					) {
-						return 'tiptap'
-					}
-					// Shiki (syntax highlighting)
-					if (
-						id.includes('node_modules/shiki') ||
-						id.includes('node_modules/@shikijs')
-					) {
-						return 'shiki'
-					}
-					// Tippy.js
-					if (
-						id.includes('node_modules/tippy.js') ||
-						id.includes('node_modules/@popperjs')
-					) {
-						return 'tippy'
-					}
-					// Motion
-					if (id.includes('node_modules/motion')) {
-						return 'motion'
-					}
-				},
+			onwarn(warning, warn) {
+				if (shouldIgnoreUseClientDirectiveWarning(warning.message)) {
+					return
+				}
+				warn(warning)
 			},
+			output: isSsrBuild ? undefined : { manualChunks: resolveManualChunk },
 		},
 	},
-})
+}))

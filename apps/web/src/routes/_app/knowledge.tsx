@@ -7,8 +7,10 @@ import {
 	SidebarLeftIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
+	type ChangeEvent,
 	Fragment,
 	lazy,
 	memo,
@@ -21,6 +23,14 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import {
+	findAtIndex,
+	type MentionItem,
+	MentionPopover,
+	useMentionPopover,
+} from '@/components/ai-elements/chat-input/mention-popover'
+import { NoteAttachment } from '@/components/ai-elements/chat-input/note-attachment'
+import type { AttachedNote } from '@/components/ai-elements/chat-input/types'
 import {
 	Conversation,
 	ConversationContent,
@@ -37,6 +47,7 @@ import {
 	PromptInputBody,
 	PromptInputButton,
 	PromptInputFooter,
+	PromptInputHeader,
 	type PromptInputMessage,
 	PromptInputSubmit,
 	PromptInputTextarea,
@@ -68,6 +79,10 @@ import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { useProviderApiKey } from '@/hooks/use-provider-api-key'
 import { useSessionContextUsage } from '@/hooks/use-session-context-usage'
 import { cn } from '@/lib/utils'
+import type { Entry } from '@/types'
+import { orpc } from '@/utils/orpc'
+
+const MENTION_QUERY_LIMIT = 100
 
 export const Route = createFileRoute('/_app/knowledge')({
 	component: KnowledgePage,
@@ -158,6 +173,8 @@ function KnowledgePage() {
 		return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
 	})
 	const [isMobileHistoryOpen, setMobileHistoryOpen] = useState(false)
+	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
+	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const loadedChatIdRef = useRef<string | null>(null)
 	const autoCompactKeyRef = useRef<string | null>(null)
 
@@ -213,6 +230,110 @@ function KnowledgePage() {
 
 	const isPending = isStreaming || isLoading || isCompacting
 	const firstSessionId = sessions[0]?.chatId
+
+	// ---- @ Mention: entries query and candidates ----
+
+	const { data: entriesData } = useQuery({
+		queryKey: ['entries', 'library', 'mention'],
+		queryFn: () =>
+			orpc.entries.list.call({
+				filter: 'all',
+				limit: MENTION_QUERY_LIMIT,
+			}),
+	})
+
+	const attachedNoteIds = useMemo(
+		() => new Set(attachedNotes.map((n) => n.id)),
+		[attachedNotes]
+	)
+
+	const mentionCandidates = useMemo<MentionItem[]>(() => {
+		const entries = (entriesData?.items ?? []) as Entry[]
+		const items: MentionItem[] = []
+		for (const entry of entries) {
+			if (entry.isInbox) continue
+			if (attachedNoteIds.has(entry.id)) continue
+			const rawTitle = entry.title?.trim() ?? ''
+			const title = rawTitle.length > 0 ? rawTitle : t('entryPicker.untitled')
+			items.push({ id: entry.id, title })
+		}
+		return items
+	}, [entriesData, attachedNoteIds, t])
+
+	const handleAddNote = useCallback((note: AttachedNote) => {
+		setAttachedNotes((prev) =>
+			prev.some((n) => n.id === note.id) ? prev : [...prev, note]
+		)
+	}, [])
+
+	const handleRemoveNote = useCallback((noteId: string) => {
+		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
+	}, [])
+
+	const callbackRefs = useRef({ inputValue, setInputValue, handleAddNote })
+	callbackRefs.current = { inputValue, setInputValue, handleAddNote }
+
+	const handleMentionSelect = useCallback((item: MentionItem) => {
+		callbackRefs.current.handleAddNote({ id: item.id, title: item.title })
+
+		const textarea = textareaRef.current
+		if (!textarea) return
+
+		const cursorPos = textarea.selectionStart
+		const currentValue = callbackRefs.current.inputValue
+		const atIndex = findAtIndex(currentValue, cursorPos)
+
+		if (atIndex >= 0) {
+			const before = currentValue.slice(0, atIndex)
+			const after = currentValue.slice(cursorPos)
+			const inserted = `@${item.title} `
+			callbackRefs.current.setInputValue(before + inserted + after)
+
+			const newCursorPos = before.length + inserted.length
+			requestAnimationFrame(() => {
+				textarea.setSelectionRange(newCursorPos, newCursorPos)
+				textarea.focus()
+			})
+		}
+	}, [])
+
+	const mentionEmptyText =
+		mentionCandidates.length === 0
+			? t('entryPicker.noEntriesAvailable')
+			: t('entryPicker.noMatchingEntries')
+
+	const mention = useMentionPopover({
+		items: mentionCandidates,
+		onSelect: handleMentionSelect,
+		emptyText: mentionEmptyText,
+		anchorRef: textareaRef,
+	})
+
+	const handleKeyRef = useRef(mention.handleKey)
+	handleKeyRef.current = mention.handleKey
+
+	useEffect(() => {
+		const node = textareaRef.current
+		if (!node) return
+		const handler = (e: KeyboardEvent) => {
+			if (handleKeyRef.current(e.key)) {
+				e.preventDefault()
+				e.stopPropagation()
+			}
+		}
+		node.addEventListener('keydown', handler, { capture: true })
+		return () => node.removeEventListener('keydown', handler, { capture: true })
+	})
+
+	const handleTextareaChange = useCallback(
+		(e: ChangeEvent<HTMLTextAreaElement>) => {
+			const newValue = e.currentTarget.value
+			const cursorPos = e.currentTarget.selectionStart
+			setInputValue(newValue)
+			mention.detectMention(newValue, cursorPos)
+		},
+		[mention.detectMention]
+	)
 
 	// Model selection helpers
 	const getEnabledChatModels = useCallback(
@@ -430,6 +551,7 @@ function KnowledgePage() {
 			loadedChatIdRef.current = newChatId
 			resetChat(newChatId)
 			setInputValue('')
+			setAttachedNotes([])
 			setMobileHistoryOpen(false)
 		} catch (error: unknown) {
 			toast.error(getErrorMessage(error))
@@ -495,10 +617,28 @@ function KnowledgePage() {
 			}
 
 			const promptText = trimmedText || t('knowledge.attachmentFallback')
+			const noteEntryIds = attachedNotes.map((n) => n.id)
+			const mentionTitles = attachedNotes.map((n) => n.title)
+
+			mention.close()
 			setInputValue('')
-			sendMessage({ text: promptText, files: message.files })
+			setAttachedNotes([])
+			sendMessage({
+				text: promptText,
+				files: message.files,
+				noteEntryIds,
+				mentionTitles,
+			})
 		},
-		[isPending, selectedChatId, selectedProvider, sendMessage, t]
+		[
+			isPending,
+			selectedChatId,
+			selectedProvider,
+			sendMessage,
+			t,
+			attachedNotes,
+			mention.close,
+		]
 	)
 
 	const handleSuggestionClick = useCallback(
@@ -664,7 +804,8 @@ function KnowledgePage() {
 							</Suggestions>
 						) : null}
 
-						<div className="w-full px-4 pb-4">
+						<div className="relative w-full px-4 pb-4">
+							<MentionPopover {...mention.popoverProps} />
 							<PromptInput
 								accept={FILE_ATTACHMENT_ACCEPT}
 								className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
@@ -678,15 +819,27 @@ function KnowledgePage() {
 								onSubmit={handleSubmit}
 							>
 								<AttachmentDisplay />
+								{attachedNotes.length > 0 && (
+									<PromptInputHeader className="flex-wrap gap-2 px-3 pt-2">
+										{attachedNotes.map((note) => (
+											<NoteAttachment
+												key={note.id}
+												note={note}
+												onRemove={handleRemoveNote}
+											/>
+										))}
+									</PromptInputHeader>
+								)}
 								<PromptInputBody>
 									<PromptInputTextarea
 										disabled={isInputDisabled}
-										onChange={(e) => setInputValue(e.target.value)}
+										onChange={handleTextareaChange}
 										placeholder={
 											hasApiKey
 												? t('knowledge.inputPlaceholder')
 												: t('knowledge.configureApiKeyFirst')
 										}
+										ref={textareaRef}
 										value={inputValue}
 									/>
 								</PromptInputBody>
@@ -695,7 +848,7 @@ function KnowledgePage() {
 										<PromptInputActionMenu>
 											<PromptInputActionMenuTrigger
 												aria-label={t('knowledge.addAttachments')}
-												disabled={isInputDisabled}
+												disabled={isPending || !selectedChatId}
 											/>
 											<PromptInputActionMenuContent>
 												<PromptInputActionAddAttachments
@@ -708,7 +861,7 @@ function KnowledgePage() {
 											catalogModels={catalogModels}
 											catalogProviders={catalogProviders}
 											className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
-											disabled={isInputDisabled}
+											disabled={isPending}
 											onValueChange={handleModelChange}
 											placeholder={t('knowledge.selectModel')}
 											value={selectedModel}
