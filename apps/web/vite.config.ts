@@ -69,7 +69,6 @@ export default defineConfig(({ command, isSsrBuild }) => ({
 					'@base-ui/react',
 					'@base-ui/utils',
 					'motion',
-					'framer-motion',
 					'shiki',
 					'mermaid',
 					'cytoscape',
