@@ -3,5 +3,11 @@ export {
 	TAVILY_API_KEY_ENV,
 	TAVILY_DEFAULT_MAX_RESULTS,
 	TAVILY_DEFAULT_SEARCH_DEPTH,
+	TAVILY_DEFAULT_TIMEOUT_MS,
+	TAVILY_MCP_BASE_URL,
 } from './constants'
-export { fetchWebSearchResults, isTavilyConfigured } from './tavily-api'
+export {
+	fetchWebSearchResults,
+	getTavilyMcpUrl,
+	isTavilyConfigured,
+} from './tavily-api'

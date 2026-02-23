@@ -22,6 +22,7 @@ export type WebSearchResult = {
 export type WebSearchToolOutput = {
 	query: string
 	results: WebSearchResult[]
+	message?: string
 }
 
 // =============================================================================

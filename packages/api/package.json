@@ -35,7 +35,7 @@
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
-    "nanoid": "^5.1.6",
+    "nanoid": "catalog:",
     "zod": "catalog:"
   }
 }

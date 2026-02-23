@@ -624,10 +624,10 @@ export function registerAiStreamRoute(app: App) {
 	function resolveTools(
 		shouldEnableTools: boolean,
 		shouldEnableWebSearch: boolean
-	): typeof aiTools | Omit<typeof aiTools, 'webSearch'> | undefined {
+	): typeof aiTools | Omit<typeof aiTools, 'webSearch' | 'webFetch'> | undefined {
 		if (!shouldEnableTools) return undefined
 		if (shouldEnableWebSearch) return aiTools
-		const { webSearch: _, ...rest } = aiTools
+		const { webSearch: _ws, webFetch: _wf, ...rest } = aiTools
 		return rest
 	}
 
