@@ -1,5 +1,17 @@
 # native
 
+## 0.2.18
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+- Updated dependencies
+  - @folionote/locales@0.2.18
+  - @folionote/api@0.2.18
+  - @folionote/constants@0.2.18
+  - @folionote/editor-core@0.2.18
+  - @folionote/utils@0.2.18
+
 ## 0.2.17
 
 ### Patch Changes

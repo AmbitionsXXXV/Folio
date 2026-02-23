@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.11
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+
 ## 0.1.10
 
 ### Patch Changes

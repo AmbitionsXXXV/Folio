@@ -1,5 +1,11 @@
 # @folionote/storage
 
+## 0.2.18
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+
 ## 0.2.17
 
 ### Patch Changes

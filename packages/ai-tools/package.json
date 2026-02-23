@@ -1,6 +1,6 @@
 {
   "name": "@folionote/ai-tools",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AI tool definitions, API clients, and UI components for FolioNote",
   "type": "module",
   "exports": {
@@ -47,6 +47,22 @@
     "./weather/types": {
       "types": "./src/weather/types.ts",
       "default": "./src/weather/types.ts"
+    },
+    "./web-search/api": {
+      "types": "./src/web-search/api/index.ts",
+      "default": "./src/web-search/api/index.ts"
+    },
+    "./web-search/tools": {
+      "types": "./src/web-search/tools/index.ts",
+      "default": "./src/web-search/tools/index.ts"
+    },
+    "./web-search/components": {
+      "types": "./src/web-search/components/index.ts",
+      "default": "./src/web-search/components/index.ts"
+    },
+    "./web-search/types": {
+      "types": "./src/web-search/types.ts",
+      "default": "./src/web-search/types.ts"
     }
   },
   "scripts": {

@@ -55,3 +55,16 @@ export type {
 	WeatherToolOutput,
 } from './weather/types'
 export { TEMPERATURE_UNITS } from './weather/types'
+// Web search tools
+export { fetchWebSearchResults, isTavilyConfigured } from './web-search/api'
+export { WebSearchCard } from './web-search/components'
+export { WebSearchToolInputSchema } from './web-search/schemas'
+export { webSearch } from './web-search/tools'
+export type {
+	SearchDepth,
+	WebSearchCardProps,
+	WebSearchResult,
+	WebSearchToolInput,
+	WebSearchToolOutput,
+} from './web-search/types'
+export { SEARCH_DEPTHS } from './web-search/types'

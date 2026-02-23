@@ -64,6 +64,7 @@
     "refetches",
     "resizer",
     "springify",
+    "tavily",
     "Toggleable",
     "tokenlens",
     "workerd",

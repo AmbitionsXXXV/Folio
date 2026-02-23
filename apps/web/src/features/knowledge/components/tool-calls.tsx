@@ -25,6 +25,7 @@ import {
 	isDisplayWeatherPart,
 	isStockPricePart,
 	isStockTrendPart,
+	isWebSearchPart,
 } from './tool-cards'
 
 export type ToolMessagePart = NonNullable<UIMessage['parts']>[number]
@@ -53,7 +54,10 @@ export function isToolInvocationPart(
 
 export function isToolCardPart(part: ToolMessagePart): boolean {
 	return (
-		isDisplayWeatherPart(part) || isStockPricePart(part) || isStockTrendPart(part)
+		isDisplayWeatherPart(part) ||
+		isStockPricePart(part) ||
+		isStockTrendPart(part) ||
+		isWebSearchPart(part)
 	)
 }
 

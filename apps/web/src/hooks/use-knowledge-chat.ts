@@ -15,7 +15,11 @@
  */
 
 import { type UIMessage, useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, type FileUIPart } from 'ai'
+import {
+	DefaultChatTransport,
+	type FileUIPart,
+	lastAssistantMessageIsCompleteWithToolCalls,
+} from 'ai'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getServerUrl } from '@/utils/api-environment'
 
@@ -70,6 +74,8 @@ export type KnowledgeChatConfig = {
 	noteEntryIds?: string[]
 	/** Enable extended thinking/reasoning */
 	enableReasoning?: boolean
+	/** Enable web search tool */
+	enableWebSearch?: boolean
 	/** Called after one full stream finishes successfully */
 	onMessageComplete?: (chatId: string) => void | Promise<void>
 }
@@ -154,6 +160,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		model,
 		noteEntryIds: defaultNoteEntryIds = [],
 		enableReasoning = false,
+		enableWebSearch = false,
 		onMessageComplete,
 	} = config
 
@@ -164,8 +171,16 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		baseUrl,
 		model,
 		enableReasoning,
+		enableWebSearch,
 	})
-	configRef.current = { provider, apiKey, baseUrl, model, enableReasoning }
+	configRef.current = {
+		provider,
+		apiKey,
+		baseUrl,
+		model,
+		enableReasoning,
+		enableWebSearch,
+	}
 
 	// Track current request's note IDs (can be overridden per-message)
 	const currentNoteEntryIdsRef = useRef<string[]>(defaultNoteEntryIds)
@@ -222,6 +237,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 									? currentNoteEntryIdsRef.current
 									: undefined,
 							enableReasoning: currentConfig.enableReasoning,
+							enableWebSearch: currentConfig.enableWebSearch,
 						},
 					}
 				},
@@ -243,6 +259,9 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		id: serverChatId,
 		messages: initialMessages ?? [],
 		transport,
+		sendAutomaticallyWhen: ({ messages }) =>
+			hasApprovalResponse(messages) ||
+			lastAssistantMessageIsCompleteWithToolCalls({ messages }),
 	})
 
 	// Convert UIMessages to KnowledgeChatMessages for UI
@@ -439,6 +458,14 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		// Regenerate
 		regenerate,
 	}
+}
+
+function hasApprovalResponse(messages: UIMessage[]): boolean {
+	const lastMessage = messages.at(-1)
+	if (!lastMessage || lastMessage.role !== 'assistant') return false
+	return lastMessage.parts.some(
+		(part) => 'state' in part && part.state === 'approval-responded'
+	)
 }
 
 function isCompactInfo(value: unknown): value is CompactInfo {

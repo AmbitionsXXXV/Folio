@@ -826,6 +826,9 @@
     "enableThinking": "拡張思考を有効化",
     "thinkingEnabled": "拡張思考が有効",
     "thinkingBuiltIn": "拡張思考が内蔵（常時オン）",
+    "toggleWebSearch": "ウェブ検索を切り替え",
+    "enableWebSearch": "ウェブ検索を有効化",
+    "webSearchEnabled": "ウェブ検索が有効",
     "viewThinking": "思考プロセスを表示",
     "thinkingInProgress": "考え中…",
     "sourcesUsed_one": "参照元 {{count}} 件",
@@ -926,6 +929,12 @@
         "loading": "株価トレンドを読み込み中… {{symbol}}",
         "errorTitle": "株価トレンドツールに失敗しました",
         "errorFallback": "株価トレンドデータを読み込めませんでした"
+      },
+      "webSearch": {
+        "title": "ウェブ検索",
+        "loading": "検索中… {{query}}",
+        "errorTitle": "ウェブ検索に失敗しました",
+        "errorFallback": "ウェブ検索を実行できませんでした"
       }
     },
     "emptyState": {

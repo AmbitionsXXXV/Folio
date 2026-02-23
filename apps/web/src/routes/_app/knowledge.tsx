@@ -71,6 +71,7 @@ import {
 } from '@/features/knowledge/components/context-usage-section'
 import { ThinkingToggle } from '@/features/knowledge/components/thinking-toggle'
 import { isToolInvocationPart } from '@/features/knowledge/components/tool-calls'
+import { WebSearchToggle } from '@/features/knowledge/components/web-search-toggle'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
 import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
@@ -167,6 +168,7 @@ function KnowledgePage() {
 	const [selectedProvider, setSelectedProvider] = useState(config.defaultProvider)
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 	const [thinkingEnabled, setThinkingEnabled] = useState(false)
+	const [webSearchEnabled, setWebSearchEnabled] = useState(false)
 	const [inputValue, setInputValue] = useState('')
 	const [isHistoryCollapsed, setIsHistoryCollapsed] = useState<boolean>(() => {
 		if (typeof window === 'undefined') return false
@@ -225,6 +227,7 @@ function KnowledgePage() {
 		baseUrl: activeBaseUrl,
 		model: selectedModel.trim() || '',
 		enableReasoning: thinkingEnabled,
+		enableWebSearch: webSearchEnabled,
 		onMessageComplete: handleMessageComplete,
 	})
 
@@ -865,6 +868,12 @@ function KnowledgePage() {
 											onValueChange={handleModelChange}
 											placeholder={t('knowledge.selectModel')}
 											value={selectedModel}
+										/>
+
+										<WebSearchToggle
+											disabled={isPending}
+											enabled={webSearchEnabled}
+											onToggle={setWebSearchEnabled}
 										/>
 
 										{supportsThinking ? (

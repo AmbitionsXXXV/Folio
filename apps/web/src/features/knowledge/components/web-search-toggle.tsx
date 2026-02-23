@@ -1,0 +1,50 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from '@folionote/ui/tooltip'
+import { Search01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
+
+type WebSearchToggleProps = {
+	enabled: boolean
+	onToggle: (enabled: boolean) => void
+	disabled?: boolean
+}
+
+export function WebSearchToggle({
+	enabled,
+	onToggle,
+	disabled = false,
+}: WebSearchToggleProps) {
+	const { t } = useTranslation()
+
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				aria-label={t('knowledge.toggleWebSearch')}
+				aria-pressed={enabled}
+				className={cn(
+					'relative inline-flex size-8 items-center justify-center rounded-lg',
+					'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+					'transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none',
+					enabled && 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
+				)}
+				disabled={disabled}
+				onClick={() => onToggle(!enabled)}
+				type="button"
+			>
+				<HugeiconsIcon className="size-4" icon={Search01Icon} />
+				{enabled ? (
+					<span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
+				) : null}
+			</TooltipTrigger>
+			<TooltipContent side="top">
+				<p>
+					{enabled
+						? t('knowledge.webSearchEnabled')
+						: t('knowledge.enableWebSearch')}
+				</p>
+			</TooltipContent>
+		</Tooltip>
+	)
+}

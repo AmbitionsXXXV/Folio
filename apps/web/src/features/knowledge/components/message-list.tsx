@@ -42,6 +42,7 @@ import {
 	isDisplayWeatherPart,
 	isStockPricePart,
 	isStockTrendPart,
+	isWebSearchPart,
 } from './tool-cards'
 
 // ============================================================================
@@ -90,6 +91,7 @@ const TOOL_TYPE_LABELS: Record<string, string> = {
 	'tool-displayWeather': 'Weather',
 	'tool-getStockPrice': 'Stock Price',
 	'tool-getStockTrend': 'Stock Trend',
+	'tool-webSearch': 'Web Search',
 }
 
 const TOOL_LABEL_FALLBACK = 'Tool'
@@ -168,7 +170,10 @@ function getToolKey(messageId: string, part: ToolMessagePart): string {
 
 function isToolCardPart(part: ToolMessagePart): boolean {
 	return (
-		isDisplayWeatherPart(part) || isStockPricePart(part) || isStockTrendPart(part)
+		isDisplayWeatherPart(part) ||
+		isStockPricePart(part) ||
+		isStockTrendPart(part) ||
+		isWebSearchPart(part)
 	)
 }
 

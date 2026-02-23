@@ -1,5 +1,13 @@
 # @folionote/editor-react
 
+## 0.2.18
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+- Updated dependencies
+  - @folionote/editor-core@0.2.18
+
 ## 0.2.17
 
 ### Patch Changes

@@ -21,9 +21,11 @@ import {
 	isDisplayWeatherPart,
 	isStockPricePart,
 	isStockTrendPart,
+	isWebSearchPart,
 	StockToolCard,
 	StockTrendToolCard,
 	WeatherToolCard,
+	WebSearchToolCard,
 } from './tool-cards'
 
 const WAITING_SHIMMER_DURATION = 1.4
@@ -149,6 +151,11 @@ export const ChatMessageItem = memo(function ChatMessageItem({
 								if (isStockTrendPart(part)) {
 									return (
 										<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
+									)
+								}
+								if (isWebSearchPart(part)) {
+									return (
+										<WebSearchToolCard key={`web-search-${toolKey}`} part={part} />
 									)
 								}
 								return null
