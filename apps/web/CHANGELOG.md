@@ -1,5 +1,22 @@
 # web
 
+## 0.2.18
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+- Updated dependencies
+  - @folionote/ai-tools@0.1.2
+  - @folionote/locales@0.2.18
+  - @folionote/api@0.2.18
+  - @folionote/auth@0.2.18
+  - @folionote/constants@0.2.18
+  - @folionote/editor-core@0.2.18
+  - @folionote/editor-react@0.2.18
+  - @folionote/model-list@0.1.11
+  - @folionote/ui@0.2.18
+  - @folionote/utils@0.2.18
+
 ## 0.2.17
 
 ### Patch Changes

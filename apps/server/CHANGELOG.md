@@ -1,5 +1,20 @@
 # server
 
+## 0.2.18
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+- Updated dependencies
+  - @folionote/ai-tools@0.1.2
+  - @folionote/locales@0.2.18
+  - @folionote/ai@0.2.18
+  - @folionote/api@0.2.18
+  - @folionote/auth@0.2.18
+  - @folionote/db@0.2.18
+  - @folionote/log@0.1.12
+  - @folionote/storage@0.2.18
+
 ## 0.2.17
 
 ### Patch Changes

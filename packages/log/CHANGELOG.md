@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.12
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+
 ## 0.1.11
 
 ### Patch Changes

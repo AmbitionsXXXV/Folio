@@ -1,5 +1,14 @@
 # @folionote/ai-tools
 
+## 0.1.2
+
+### Patch Changes
+
+- feat: ✨ support web search tool
+- Updated dependencies
+  - @folionote/db@0.2.18
+  - @folionote/ui@0.2.18
+
 ## 0.1.1
 
 ### Patch Changes
