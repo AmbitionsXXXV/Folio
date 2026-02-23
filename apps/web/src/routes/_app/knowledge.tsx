@@ -70,7 +70,6 @@ import {
 	ContextUsagePopover,
 } from '@/features/knowledge/components/context-usage-section'
 import { ThinkingToggle } from '@/features/knowledge/components/thinking-toggle'
-import { isToolInvocationPart } from '@/features/knowledge/components/tool-calls'
 import { WebSearchToggle } from '@/features/knowledge/components/web-search-toggle'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
@@ -205,7 +204,7 @@ function KnowledgePage() {
 	} = useProviderApiKey(selectedProvider)
 
 	const handleMessageComplete = useCallback(async () => {
-		await refreshSessions()
+		await refreshSessions({ silent: true })
 	}, [refreshSessions])
 
 	const {
@@ -657,15 +656,16 @@ function KnowledgePage() {
 		[isPending, selectedChatId, selectedProvider, sendMessage]
 	)
 
-	// Waiting state
 	const showWaiting = useMemo(() => {
 		if (!isPending) return false
+		const hasStreamingContent = (p: { type: string }) =>
+			p.type === 'reasoning' || p.type.startsWith('tool-')
 		return !messages.some(
 			(m) =>
 				m.isStreaming &&
 				(m.content.length > 0 ||
 					(m.thinking?.length ?? 0) > 0 ||
-					(m.parts ?? []).some(isToolInvocationPart))
+					(m.parts ?? []).some(hasStreamingContent))
 		)
 	}, [isPending, messages])
 

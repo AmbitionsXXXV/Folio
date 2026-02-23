@@ -14,7 +14,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.8",
+    "@ai-sdk/devtools": "^0.0.15",
     "@folionote/ai": "workspace:*",
     "@folionote/api": "workspace:*",
     "@folionote/auth": "workspace:*",
@@ -23,7 +23,7 @@
     "@folionote/log": "workspace:*",
     "@folionote/ai-tools": "workspace:*",
     "@folionote/storage": "workspace:*",
-    "@hono/node-server": "^1.19.8",
+    "@hono/node-server": "^1.19.9",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
@@ -41,7 +41,7 @@
     "@folionote/config": "workspace:*",
     "@types/node": "catalog:",
     "msw": "catalog:",
-    "tsdown": "^0.19.0",
+    "tsdown": "^0.20.3",
     "tsx": "^4.21.0",
     "typescript": "catalog:",
     "vitest": "catalog:"

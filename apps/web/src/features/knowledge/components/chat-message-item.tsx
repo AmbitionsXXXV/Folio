@@ -1,4 +1,3 @@
-import { CollapsibleContent } from '@folionote/ui/collapsible'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader } from '@/components/ai-elements/loader'
@@ -11,6 +10,7 @@ import { Shimmer } from '@/components/ai-elements/shimmer'
 import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
 import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
 import type { KnowledgeChatMessage } from '@/hooks/use-knowledge-chat'
+import type { ToolMessagePart } from './tool-calls'
 import {
 	getToolKey,
 	isToolCardPart,
@@ -60,13 +60,70 @@ export const WaitingIndicator = memo(function WaitingIndicator() {
 	)
 })
 
-const REASONING_TOOL_CLASSNAME = [
-	'mt-3 space-y-3 text-sm outline-none',
-	'data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2',
-	'data-[state=open]:slide-in-from-top-2 data-[state=closed]:animate-out',
-	'data-[state=open]:animate-in duration-200 ease-out',
-	'motion-reduce:transition-none motion-reduce:animate-none',
-].join(' ')
+// =============================================================================
+// Parts Grouping
+// =============================================================================
+
+type ReasoningSegment = { kind: 'reasoning'; text: string; index: number }
+type ToolSegment = {
+	kind: 'tool'
+	tools: ToolMessagePart[]
+	index: number
+}
+type ProcessSegment = ReasoningSegment | ToolSegment
+
+function isReasoningPart(
+	part: ToolMessagePart
+): part is ToolMessagePart & { type: 'reasoning' } {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		part.type === 'reasoning'
+	)
+}
+
+function getReasoningText(part: ToolMessagePart): string {
+	if ('text' in part && typeof part.text === 'string') return part.text
+	if ('reasoning' in part && typeof part.reasoning === 'string')
+		return part.reasoning
+	return ''
+}
+
+/**
+ * Group message.parts into ordered segments of reasoning and tool-invocation,
+ * preserving the interleaved order they appear in the stream.
+ */
+function groupProcessSegments(parts: ToolMessagePart[]): ProcessSegment[] {
+	const segments: ProcessSegment[] = []
+	let segmentIndex = 0
+
+	for (const part of parts) {
+		if (isReasoningPart(part)) {
+			const text = getReasoningText(part)
+			if (!text) continue
+			const last = segments.at(-1)
+			if (last?.kind === 'reasoning') {
+				last.text += `\n${text}`
+			} else {
+				segments.push({ kind: 'reasoning', text, index: segmentIndex++ })
+			}
+		} else if (isToolInvocationPart(part) && !isToolCardPart(part)) {
+			const last = segments.at(-1)
+			if (last?.kind === 'tool') {
+				last.tools.push(part)
+			} else {
+				segments.push({ kind: 'tool', tools: [part], index: segmentIndex++ })
+			}
+		}
+	}
+
+	return segments
+}
+
+// =============================================================================
+// ChatMessageItem
+// =============================================================================
 
 type ChatMessageItemProps = {
 	message: KnowledgeChatMessage
@@ -79,54 +136,51 @@ export const ChatMessageItem = memo(function ChatMessageItem({
 	thinkingEnabled,
 	onToolApprovalResponse,
 }: ChatMessageItemProps) {
-	const toolInvocations = useMemo(
-		() => (message.parts ?? []).filter(isToolInvocationPart),
-		[message.parts]
-	)
-	const toolCardParts = useMemo(
-		() => (message.parts ?? []).filter(isToolCardPart),
-		[message.parts]
-	)
-	const hasToolInvocations = toolInvocations.length > 0
-	const hasToolCards = message.role === 'assistant' && toolCardParts.length > 0
-	const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
-	const shouldShowReasoning =
-		message.role === 'assistant' && thinkingEnabled && hasThinking
+	const parts = message.parts ?? []
 	const isMessageStreaming = Boolean(message.isStreaming)
+
+	const processSegments = useMemo(() => groupProcessSegments(parts), [parts])
+
+	const toolCardParts = useMemo(() => parts.filter(isToolCardPart), [parts])
+
+	const hasProcessSegments =
+		message.role === 'assistant' && processSegments.length > 0
+	const hasToolCards = message.role === 'assistant' && toolCardParts.length > 0
 
 	return (
 		<>
-			{message.role === 'assistant' &&
-			(shouldShowReasoning || hasToolInvocations) ? (
-				<Message from="assistant">
-					{shouldShowReasoning ? (
-						<Reasoning className="mb-0" isStreaming={isMessageStreaming}>
-							<ReasoningTrigger />
-							{hasThinking ? (
-								<ReasoningContent>{message.thinking ?? ''}</ReasoningContent>
-							) : null}
-							{hasToolInvocations ? (
-								<CollapsibleContent className={REASONING_TOOL_CLASSNAME}>
+			{hasProcessSegments
+				? processSegments.map((segment) => {
+						if (segment.kind === 'reasoning' && thinkingEnabled) {
+							return (
+								<Message from="assistant" key={`reason-${segment.index}`}>
+									<Reasoning
+										className="mb-0"
+										defaultOpen={isMessageStreaming}
+										isStreaming={isMessageStreaming}
+									>
+										<ReasoningTrigger />
+										<ReasoningContent>{segment.text}</ReasoningContent>
+									</Reasoning>
+								</Message>
+							)
+						}
+						if (segment.kind === 'tool') {
+							return (
+								<Message from="assistant" key={`tool-${segment.index}`}>
 									<ToolCalls
+										className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
 										isStreaming={isMessageStreaming}
 										messageId={message.id}
 										onToolApprovalResponse={onToolApprovalResponse}
-										tools={toolInvocations}
+										tools={segment.tools}
 									/>
-								</CollapsibleContent>
-							) : null}
-						</Reasoning>
-					) : (
-						<ToolCalls
-							className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
-							isStreaming={isMessageStreaming}
-							messageId={message.id}
-							onToolApprovalResponse={onToolApprovalResponse}
-							tools={toolInvocations}
-						/>
-					)}
-				</Message>
-			) : null}
+								</Message>
+							)
+						}
+						return null
+					})
+				: null}
 
 			{message.content ? (
 				<Message from={message.role}>

@@ -24,6 +24,11 @@ export type UseChatSessionsConfig = {
 	autoCreateIfEmpty?: boolean
 }
 
+export type RefreshSessionsOptions = {
+	/** Skip isLoading toggle to avoid Skeleton flicker when data already exists */
+	silent?: boolean
+}
+
 export type UseChatSessionsReturn = {
 	/** List of chat sessions */
 	sessions: ChatSessionSummary[]
@@ -34,7 +39,7 @@ export type UseChatSessionsReturn = {
 	/** Error state */
 	error: Error | null
 	/** Refresh the session list */
-	refreshSessions: () => Promise<void>
+	refreshSessions: (options?: RefreshSessionsOptions) => Promise<void>
 	/** Select a chat session */
 	selectChat: (chatId: string) => void
 	/** Create a new chat session */
@@ -131,38 +136,45 @@ export function useChatSessions(
 		setSessions(refreshedChats)
 	}, [fetchChatSessions])
 
-	// Fetch chat sessions from server
-	const refreshSessions = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
-
-		try {
-			const chatList = await fetchChatSessions()
-			setSessions(chatList)
-			const currentSelectedChatId = selectedChatIdRef.current
-			selectInitialChatIfNeeded(chatList, currentSelectedChatId)
-
-			const shouldCreateInitialChat =
-				autoCreateIfEmpty &&
-				chatList.length === 0 &&
-				!hasAutoCreatedInitialChatRef.current &&
-				!currentSelectedChatId
-
-			if (shouldCreateInitialChat) {
-				hasAutoCreatedInitialChatRef.current = true
-				await createInitialChatAndRefresh()
+	const refreshSessions = useCallback(
+		async (options?: RefreshSessionsOptions) => {
+			const silent = options?.silent ?? false
+			if (!silent) {
+				setIsLoading(true)
 			}
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Unknown error'))
-		} finally {
-			setIsLoading(false)
-		}
-	}, [
-		autoCreateIfEmpty,
-		fetchChatSessions,
-		selectInitialChatIfNeeded,
-		createInitialChatAndRefresh,
-	])
+			setError(null)
+
+			try {
+				const chatList = await fetchChatSessions()
+				setSessions(chatList)
+				const currentSelectedChatId = selectedChatIdRef.current
+				selectInitialChatIfNeeded(chatList, currentSelectedChatId)
+
+				const shouldCreateInitialChat =
+					autoCreateIfEmpty &&
+					chatList.length === 0 &&
+					!hasAutoCreatedInitialChatRef.current &&
+					!currentSelectedChatId
+
+				if (shouldCreateInitialChat) {
+					hasAutoCreatedInitialChatRef.current = true
+					await createInitialChatAndRefresh()
+				}
+			} catch (err) {
+				setError(err instanceof Error ? err : new Error('Unknown error'))
+			} finally {
+				if (!silent) {
+					setIsLoading(false)
+				}
+			}
+		},
+		[
+			autoCreateIfEmpty,
+			fetchChatSessions,
+			selectInitialChatIfNeeded,
+			createInitialChatAndRefresh,
+		]
+	)
 
 	// Check if a session is empty by chatId
 	const isSessionEmpty = useCallback(

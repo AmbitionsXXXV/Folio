@@ -492,10 +492,14 @@ function getTextFromParts(parts: UIMessage['parts']): string {
 }
 
 function getReasoningFromParts(parts: UIMessage['parts']): string | undefined {
-	const part = (parts ?? []).find((p) => p.type === 'reasoning')
-	if (!part) return undefined
-	if ('text' in part && typeof part.text === 'string') return part.text
-	if ('reasoning' in part && typeof part.reasoning === 'string')
-		return part.reasoning
-	return undefined
+	const fragments: string[] = []
+	for (const part of parts ?? []) {
+		if (part.type !== 'reasoning') continue
+		if ('text' in part && typeof part.text === 'string') {
+			fragments.push(part.text)
+		} else if ('reasoning' in part && typeof part.reasoning === 'string') {
+			fragments.push(part.reasoning)
+		}
+	}
+	return fragments.length > 0 ? fragments.join('\n') : undefined
 }
