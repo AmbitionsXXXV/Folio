@@ -9,6 +9,7 @@ import {
 } from '@folionote/ai'
 import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
 import type { NoteToolContext } from '@folionote/ai-tools/note/types'
+import { isTavilyConfigured } from '@folionote/ai-tools/web-search/api'
 import { createContext } from '@folionote/api/context'
 import { createLogger } from '@folionote/log'
 import {
@@ -67,8 +68,9 @@ type AiStreamRequestBody = {
 	/**
 	 * The user's prompt/question.
 	 * Used for RAG query even when messages are provided.
+	 * May be empty during tool-calling follow-ups or regeneration.
 	 */
-	prompt: string
+	prompt?: string
 	/**
 	 * Conversation history as UIMessage array.
 	 * For bandwidth optimization, can send only the last message
@@ -81,6 +83,8 @@ type AiStreamRequestBody = {
 	ragTopK?: number
 	/** Optional: Enable extended thinking/reasoning */
 	enableReasoning?: boolean
+	/** Optional: Enable web search tool */
+	enableWebSearch?: boolean
 }
 
 type AiCompactRequestBody = {
@@ -133,6 +137,22 @@ function getLocalDateString(date: Date): string {
 	const m = String(date.getMonth() + 1).padStart(2, '0')
 	const d = String(date.getDate()).padStart(2, '0')
 	return `${y}-${m}-${d}`
+}
+
+/**
+ * Extract text from the last user message in a conversation for RAG query.
+ */
+function extractLastUserText(messages: UIMessage[]): string {
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const msg = messages[i]
+		if (msg?.role !== 'user') continue
+		const textParts = (msg.parts ?? []).filter(
+			(p): p is { type: 'text'; text: string } => p.type === 'text'
+		)
+		const text = textParts.map((p) => p.text).join('')
+		if (text.length > 0) return text
+	}
+	return ''
 }
 
 /**
@@ -581,6 +601,36 @@ export function registerAiStreamRoute(app: App) {
 		}
 	})
 
+	function validateStreamRequest(
+		body: AiStreamRequestBody
+	): { error: string; status: 400 } | null {
+		if (!(body.provider && body.apiKey)) {
+			return { error: 'Missing required fields', status: 400 }
+		}
+		const hasPromptOrMessages =
+			Boolean(body.prompt) || Boolean(body.messages && body.messages.length > 0)
+		if (!hasPromptOrMessages) {
+			return { error: 'Either prompt or messages is required', status: 400 }
+		}
+		if (!isValidProvider(body.provider)) {
+			return {
+				error: `Unsupported provider: ${body.provider}`,
+				status: 400,
+			}
+		}
+		return null
+	}
+
+	function resolveTools(
+		shouldEnableTools: boolean,
+		shouldEnableWebSearch: boolean
+	): typeof aiTools | Omit<typeof aiTools, 'webSearch'> | undefined {
+		if (!shouldEnableTools) return undefined
+		if (shouldEnableWebSearch) return aiTools
+		const { webSearch: _, ...rest } = aiTools
+		return rest
+	}
+
 	app.post('/api/ai/stream', async (c) => {
 		const auth = await getAuthenticatedUser(c)
 		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
@@ -597,36 +647,39 @@ export function registerAiStreamRoute(app: App) {
 			noteEntryIds,
 			ragTopK,
 			enableReasoning,
+			enableWebSearch,
 		} = body
 
-		if (!(provider && apiKey && prompt)) {
-			return c.json({ error: 'Missing required fields' }, 400)
+		const validationError = validateStreamRequest(body)
+		if (validationError) {
+			return c.json({ error: validationError.error }, validationError.status)
 		}
-		if (!isValidProvider(provider)) {
-			return c.json({ error: `Unsupported provider: ${provider}` }, 400)
-		}
+		const hasMessages = requestMessages && requestMessages.length > 0
 
-		const credential = buildCredential(provider, apiKey, baseUrl, model)
+		const validProvider = provider as AiProvider
+		const credential = buildCredential(validProvider, apiKey, baseUrl, model)
 
 		try {
 			const chatId = requestChatId || generateChatId()
 
 			let messages: UIMessage[]
-			if (requestMessages && requestMessages.length > 0) {
-				messages = requestMessages
+			if (hasMessages) {
+				messages = requestMessages as UIMessage[]
 			} else {
 				const storedMessages = await loadChatMessages(auth.userId, chatId)
 				const userMessage: UIMessage = {
 					id: `user-${Date.now()}`,
 					role: 'user',
-					parts: [{ type: 'text', text: prompt }],
+					parts: [{ type: 'text', text: prompt ?? '' }],
 				}
 				messages = [...storedMessages, userMessage]
 			}
 
+			const ragQuery = prompt || extractLastUserText(messages)
+
 			const { attachedNotes, retrievedNotes } = await prepareNoteContext(
 				auth.userId,
-				prompt,
+				ragQuery,
 				noteEntryIds,
 				ragTopK
 			)
@@ -641,16 +694,19 @@ export function registerAiStreamRoute(app: App) {
 			const aiModel = createVercelAiChatModel(credential, { model })
 			const modelMessages = await convertToModelMessages(messages)
 			const providerOptions = buildProviderOptions(
-				provider,
+				validProvider,
 				enableReasoning ?? false
 			)
-			const shouldEnableTools = providerSupports(provider, 'function_calling')
+			const shouldEnableTools = providerSupports(validProvider, 'function_calling')
+			const shouldEnableWebSearch = Boolean(enableWebSearch) && isTavilyConfigured()
+
+			const tools = resolveTools(shouldEnableTools, shouldEnableWebSearch)
 
 			const result = aiStreamText({
 				model: aiModel,
 				system: systemPrompt,
 				messages: modelMessages,
-				tools: shouldEnableTools ? aiTools : undefined,
+				tools,
 				experimental_context: {
 					userId: auth.userId,
 				} satisfies NoteToolContext,

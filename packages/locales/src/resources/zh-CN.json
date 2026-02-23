@@ -826,6 +826,9 @@
     "enableThinking": "启用深度思考",
     "thinkingEnabled": "深度思考已启用",
     "thinkingBuiltIn": "内置深度思考（始终开启）",
+    "toggleWebSearch": "切换联网搜索",
+    "enableWebSearch": "启用联网搜索",
+    "webSearchEnabled": "联网搜索已启用",
     "viewThinking": "查看思考过程",
     "thinkingInProgress": "思考中…",
     "sourcesUsed_one": "使用了 {{count}} 个来源",
@@ -926,6 +929,12 @@
         "loading": "正在加载股票走势… {{symbol}}",
         "errorTitle": "股票走势工具失败",
         "errorFallback": "无法加载股票走势数据"
+      },
+      "webSearch": {
+        "title": "联网搜索",
+        "loading": "正在搜索… {{query}}",
+        "errorTitle": "联网搜索失败",
+        "errorFallback": "无法执行联网搜索"
       }
     },
     "emptyState": {

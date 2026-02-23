@@ -11,6 +11,9 @@ import {
 	WeatherCard,
 	type WeatherToolInput,
 	type WeatherToolOutput,
+	WebSearchCard,
+	type WebSearchResult,
+	type WebSearchToolOutput,
 } from '@folionote/ai-tools'
 import type { UIMessage } from 'ai'
 import { memo, type ReactNode } from 'react'
@@ -72,6 +75,10 @@ export function isStockPricePart(part: UIMessagePart): boolean {
 
 export function isStockTrendPart(part: UIMessagePart): boolean {
 	return part.type === 'tool-getStockTrend'
+}
+
+export function isWebSearchPart(part: UIMessagePart): boolean {
+	return part.type === 'tool-webSearch'
 }
 
 // =============================================================================
@@ -610,6 +617,99 @@ export const StockTrendToolCard = memo(function StockTrendToolCard({
 				symbol={output.symbol}
 				title={t('knowledge.toolCards.stockTrend.title')}
 			/>
+		</ToolCardContainer>
+	)
+})
+
+// =============================================================================
+// Web Search Tool Card
+// =============================================================================
+
+function parseWebSearchOutput(value: unknown): WebSearchToolOutput | null {
+	if (!isRecord(value)) return null
+	const query = typeof value.query === 'string' ? value.query : null
+	const resultsRaw = Array.isArray(value.results) ? value.results : null
+	if (!(query && resultsRaw)) return null
+
+	const results: WebSearchResult[] = []
+	for (const item of resultsRaw) {
+		if (!isRecord(item)) continue
+		const title = typeof item.title === 'string' ? item.title : null
+		const url = typeof item.url === 'string' ? item.url : null
+		const snippet = typeof item.snippet === 'string' ? item.snippet : ''
+		const content = typeof item.content === 'string' ? item.content : undefined
+		if (title && url) {
+			results.push({ title, url, snippet, content })
+		}
+	}
+
+	return { query, results }
+}
+
+type WebSearchToolCardProps = {
+	part: UIMessagePart
+}
+
+export const WebSearchToolCard = memo(function WebSearchToolCard({
+	part,
+}: WebSearchToolCardProps) {
+	const { t } = useTranslation()
+	if (part.type !== 'tool-webSearch') return null
+	if (!('state' in part)) return null
+	const state = typeof part.state === 'string' ? part.state : null
+	if (!state) return null
+	const input = 'input' in part ? part.input : undefined
+	const outputValue = 'output' in part ? part.output : undefined
+	const errorText =
+		'errorText' in part && typeof part.errorText === 'string'
+			? part.errorText
+			: undefined
+
+	if (state === 'input-available') {
+		const query =
+			isRecord(input) && typeof input.query === 'string' ? input.query : ''
+		return (
+			<ToolCardContainer>
+				<div className="font-medium">{t('knowledge.toolCards.webSearch.title')}</div>
+				<div className="mt-1 text-muted-foreground text-xs">
+					{t('knowledge.toolCards.webSearch.loading', { query })}
+				</div>
+			</ToolCardContainer>
+		)
+	}
+
+	if (state === 'output-error') {
+		return (
+			<ToolCardContainer>
+				<div className="font-medium text-destructive">
+					{t('knowledge.toolCards.webSearch.errorTitle')}
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs">
+					{errorText || t('knowledge.toolCards.webSearch.errorFallback')}
+				</div>
+			</ToolCardContainer>
+		)
+	}
+
+	if (state !== 'output-available') return null
+
+	const output = parseWebSearchOutput(outputValue)
+	if (!output) {
+		return (
+			<ToolCardContainer>
+				<div className="font-medium text-destructive">
+					{t('knowledge.toolCards.webSearch.errorTitle')}
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs">
+					{t('knowledge.toolCards.webSearch.errorFallback')}
+				</div>
+			</ToolCardContainer>
+		)
+	}
+
+	return (
+		<ToolCardContainer>
+			<WebSearchCard query={output.query} results={output.results} />
 		</ToolCardContainer>
 	)
 })

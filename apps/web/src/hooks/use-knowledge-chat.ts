@@ -74,6 +74,8 @@ export type KnowledgeChatConfig = {
 	noteEntryIds?: string[]
 	/** Enable extended thinking/reasoning */
 	enableReasoning?: boolean
+	/** Enable web search tool */
+	enableWebSearch?: boolean
 	/** Called after one full stream finishes successfully */
 	onMessageComplete?: (chatId: string) => void | Promise<void>
 }
@@ -158,6 +160,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		model,
 		noteEntryIds: defaultNoteEntryIds = [],
 		enableReasoning = false,
+		enableWebSearch = false,
 		onMessageComplete,
 	} = config
 
@@ -168,8 +171,16 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		baseUrl,
 		model,
 		enableReasoning,
+		enableWebSearch,
 	})
-	configRef.current = { provider, apiKey, baseUrl, model, enableReasoning }
+	configRef.current = {
+		provider,
+		apiKey,
+		baseUrl,
+		model,
+		enableReasoning,
+		enableWebSearch,
+	}
 
 	// Track current request's note IDs (can be overridden per-message)
 	const currentNoteEntryIdsRef = useRef<string[]>(defaultNoteEntryIds)
@@ -226,6 +237,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 									? currentNoteEntryIdsRef.current
 									: undefined,
 							enableReasoning: currentConfig.enableReasoning,
+							enableWebSearch: currentConfig.enableWebSearch,
 						},
 					}
 				},

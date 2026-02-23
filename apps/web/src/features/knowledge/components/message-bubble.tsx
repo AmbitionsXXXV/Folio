@@ -38,9 +38,11 @@ import {
 	isDisplayWeatherPart,
 	isStockPricePart,
 	isStockTrendPart,
+	isWebSearchPart,
 	StockToolCard,
 	StockTrendToolCard,
 	WeatherToolCard,
+	WebSearchToolCard,
 } from './tool-cards'
 
 // ============================================================================
@@ -203,7 +205,8 @@ export const MessageBubble = memo(function MessageBubble({
 			(part) =>
 				isDisplayWeatherPart(part) ||
 				isStockPricePart(part) ||
-				isStockTrendPart(part)
+				isStockTrendPart(part) ||
+				isWebSearchPart(part)
 		)
 	const shouldRenderBubble = isUser || hasAssistantContent || hasToolCards
 
@@ -291,6 +294,11 @@ export const MessageBubble = memo(function MessageBubble({
 							if (isStockTrendPart(part)) {
 								return (
 									<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
+								)
+							}
+							if (isWebSearchPart(part)) {
+								return (
+									<WebSearchToolCard key={`web-search-${toolKey}`} part={part} />
 								)
 							}
 							return null

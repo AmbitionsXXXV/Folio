@@ -835,6 +835,9 @@
     "enableThinking": "Enable extended thinking",
     "thinkingEnabled": "Extended thinking enabled",
     "thinkingBuiltIn": "Extended thinking built-in (always on)",
+    "toggleWebSearch": "Toggle web search",
+    "enableWebSearch": "Enable web search",
+    "webSearchEnabled": "Web search enabled",
     "viewThinking": "View thinking process",
     "thinkingInProgress": "Thinking…",
     "sourcesUsed_one": "Used {{count}} source",
@@ -935,6 +938,12 @@
         "loading": "Loading stock trend… {{symbol}}",
         "errorTitle": "Stock trend tool failed",
         "errorFallback": "Unable to load stock trend data"
+      },
+      "webSearch": {
+        "title": "Web Search",
+        "loading": "Searching the web… {{query}}",
+        "errorTitle": "Web search failed",
+        "errorFallback": "Unable to perform web search"
       }
     },
     "emptyState": {

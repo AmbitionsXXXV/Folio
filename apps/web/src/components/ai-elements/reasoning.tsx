@@ -7,7 +7,7 @@ import { cn } from '@folionote/ui/lib/utils'
 import { ArrowDown01Icon, BrainIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { ComponentProps, ReactNode } from 'react'
-import { createContext, memo, use, useEffect, useState } from 'react'
+import { createContext, memo, use, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Streamdown } from 'streamdown'
 import { useUncontrolled } from '@/hooks/use-uncontrolled'
@@ -64,6 +64,7 @@ export const Reasoning = memo(
 
 		const [hasAutoClosed, setHasAutoClosed] = useState(false)
 		const [startTime, setStartTime] = useState<number | null>(null)
+		const userInteractedRef = useRef(false)
 
 		// Track duration when streaming starts and ends
 		useEffect(() => {
@@ -77,9 +78,10 @@ export const Reasoning = memo(
 			}
 		}, [isStreaming, startTime, setDuration])
 
-		// Auto-open when streaming starts
+		// Auto-open when streaming starts, reset interaction flag for new session
 		useEffect(() => {
 			if (isStreaming) {
+				userInteractedRef.current = false
 				setHasAutoClosed(false)
 				if (!isOpen) {
 					setIsOpen(true)
@@ -87,10 +89,9 @@ export const Reasoning = memo(
 			}
 		}, [isStreaming, isOpen, setIsOpen])
 
-		// Auto-open when streaming starts, auto-close when streaming ends (once only)
+		// Auto-close when streaming ends (once only), skip if user manually toggled
 		useEffect(() => {
-			if (!isStreaming && isOpen && !hasAutoClosed) {
-				// Add a small delay before closing to allow user to see the content
+			if (!isStreaming && isOpen && !hasAutoClosed && !userInteractedRef.current) {
 				const timer = setTimeout(() => {
 					setIsOpen(false)
 					setHasAutoClosed(true)
@@ -98,9 +99,10 @@ export const Reasoning = memo(
 
 				return () => clearTimeout(timer)
 			}
-		}, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosed])
+		}, [isStreaming, isOpen, setIsOpen, hasAutoClosed])
 
 		const handleOpenChange = (newOpen: boolean) => {
+			userInteractedRef.current = true
 			setIsOpen(newOpen)
 		}
 
