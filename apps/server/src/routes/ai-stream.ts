@@ -37,6 +37,7 @@ import {
 	MAX_ATTACHED_NOTES,
 	searchNotesForRag,
 } from '../services/notes'
+import { buildTopologyContext } from '../services/topology-context'
 import type { App, AppVariables } from '../types'
 import { calculateCostFromUsage } from '../utils/cost'
 import { convertToSupportedLanguage } from '../utils/language'
@@ -684,12 +685,24 @@ export function registerAiStreamRoute(app: App) {
 				ragTopK
 			)
 
+			const topologyEntryIds = [
+				...(noteEntryIds ?? []),
+				...attachedNotes.map((n) => n.id),
+			]
+			const { contextText: topologyContextText } =
+				topologyEntryIds.length > 0
+					? await buildTopologyContext(auth.userId, topologyEntryIds, 1)
+					: { contextText: '' }
+
 			const currentDate = getLocalDateString(new Date())
-			const { systemPrompt } = buildKnowledgeChatSystemPrompt({
+			const { systemPrompt: baseSystemPrompt } = buildKnowledgeChatSystemPrompt({
 				attachedNotes,
 				retrievedNotes,
 				currentDate,
 			})
+			const systemPrompt = topologyContextText
+				? `${baseSystemPrompt}\n\n${topologyContextText}`
+				: baseSystemPrompt
 
 			const aiModel = createVercelAiChatModel(credential, { model })
 			const modelMessages = await convertToModelMessages(messages)

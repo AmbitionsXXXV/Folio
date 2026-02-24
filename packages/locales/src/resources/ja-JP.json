@@ -318,7 +318,8 @@
     "tags": "タグ",
     "settings": "設定",
     "profile": "プロフィール",
-    "knowledge": "ナレッジ"
+    "knowledge": "ナレッジ",
+    "graph": "グラフ"
   },
   "search": {
     "placeholder": "エントリを検索...",
@@ -983,5 +984,27 @@
     "removed": "{{provider}} の設定を削除しました",
     "removeConfirmTitle": "APIキーを削除",
     "removeConfirmDescription": "{{provider}} のAPIキーを削除してもよろしいですか？このプロバイダーを使用するには再設定が必要です。"
+  },
+  "graph": {
+    "searchPlaceholder": "ノードを検索...",
+    "filterByTag": "タグでフィルター",
+    "allTags": "すべてのタグ",
+    "inferredEdges": "推論エッジ",
+    "addLink": "リンクを追加",
+    "connectingDone": "完了",
+    "fitView": "ビューに合わせる",
+    "emptyTitle": "エントリがありません",
+    "emptyDescription": "エントリを作成し、/ref で参照リンクを作成してください。ナレッジグラフがここに表示されます。",
+    "untitled": "無題",
+    "starred": "スター付き",
+    "pinned": "ピン留め",
+    "inbox": "受信箱",
+    "tags": "タグ",
+    "referencesTo": "参照先",
+    "referencedBy": "参照元",
+    "openEntry": "エントリを開く",
+    "linkAlreadyExists": "リンクは既に存在します",
+    "linkAdded": "リンクを追加しました",
+    "linkFailed": "リンクの追加に失敗しました"
   }
 }

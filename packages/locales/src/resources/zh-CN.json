@@ -420,7 +420,8 @@
     "tags": "标签",
     "settings": "设置",
     "profile": "个人资料",
-    "knowledge": "知识库"
+    "knowledge": "知识库",
+    "graph": "图谱"
   },
   "search": {
     "placeholder": "搜索条目...",
@@ -983,5 +984,27 @@
     "removed": "{{provider}} 配置已移除",
     "removeConfirmTitle": "移除 API 密钥",
     "removeConfirmDescription": "确定要移除 {{provider}} 的 API 密钥吗？您需要重新配置才能使用此提供商。"
+  },
+  "graph": {
+    "searchPlaceholder": "搜索节点...",
+    "filterByTag": "按标签筛选",
+    "allTags": "全部标签",
+    "inferredEdges": "推断边",
+    "addLink": "添加关联",
+    "connectingDone": "完成",
+    "fitView": "适应视图",
+    "emptyTitle": "暂无条目",
+    "emptyDescription": "创建条目并使用 /ref 建立引用关系，您的知识图谱将显示在这里。",
+    "untitled": "无标题",
+    "starred": "星标",
+    "pinned": "置顶",
+    "inbox": "收件箱",
+    "tags": "标签",
+    "referencesTo": "引用了",
+    "referencedBy": "被引用",
+    "openEntry": "打开条目",
+    "linkAlreadyExists": "关联已存在",
+    "linkAdded": "关联已添加",
+    "linkFailed": "添加关联失败"
   }
 }
