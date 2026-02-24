@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
+    "@folionote/constants": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/transactional": "workspace:*",
     "better-auth": "catalog:",

@@ -1,5 +1,5 @@
 /**
- * Avatar image compression and upload constants
+ * Avatar image compression and cropper UI constants
  */
 
 /**
@@ -39,23 +39,8 @@ export const AVATAR_CROPPER_MAX_ZOOM = 3
 export const AVATAR_CROPPER_ZOOM_STEP = 0.1
 
 /**
- * Rate limit polling intervals (in milliseconds)
+ * Rate limit polling intervals for avatar operations (in milliseconds)
  */
-export const RATE_LIMIT_POLL_INTERVAL_LIMITED = 60 * 1000 // 1 minute when limited
-export const RATE_LIMIT_POLL_INTERVAL_NORMAL = 30 * 1000 // 30 seconds normally
-export const RATE_LIMIT_STALE_TIME = 10 * 1000 // 10 seconds cache
-
-/**
- * Time unit constants (in milliseconds)
- * Used for rate limiting and other time-based operations
- */
-export const ONE_SECOND_MS = 1000
-export const ONE_MINUTE_MS = 60 * ONE_SECOND_MS
-export const ONE_HOUR_MS = 60 * ONE_MINUTE_MS
-export const ONE_DAY_MS = 24 * ONE_HOUR_MS
-export const ONE_WEEK_MS = 7 * ONE_DAY_MS
-
-/**
- * Rate limit cleanup interval (1 minute)
- */
-export const RATE_LIMIT_CLEANUP_INTERVAL_MS = ONE_MINUTE_MS
+export const RATE_LIMIT_POLL_INTERVAL_LIMITED = 60 * 1000
+export const RATE_LIMIT_POLL_INTERVAL_NORMAL = 30 * 1000
+export const RATE_LIMIT_STALE_TIME = 10 * 1000

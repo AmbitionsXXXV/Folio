@@ -1,10 +1,4 @@
-/**
- * Time unit constants (in milliseconds)
- */
-const ONE_SECOND_MS = 1000
-const ONE_MINUTE_MS = 60 * ONE_SECOND_MS
-const ONE_WEEK_MS = 7 * 24 * 60 * ONE_MINUTE_MS
-
+import { ONE_MINUTE_MS, ONE_WEEK_MS } from '@folionote/constants'
 import {
 	type ErrorMap,
 	type Meta,

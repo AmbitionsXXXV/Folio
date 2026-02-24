@@ -1,51 +1,17 @@
 /**
- * Supabase Storage bucket names (used as S3 bucket names)
+ * Re-export shared file upload constants from @folionote/constants
+ * so existing consumers of @folionote/storage don't need to change imports.
  */
-export const STORAGE_BUCKETS = {
-	/** User avatar images bucket */
-	AVATARS: 'avatars',
-	/** Entry attachment images bucket */
-	ATTACHMENTS: 'attachments',
-} as const
-
-export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS]
-
-/**
- * Allowed image MIME types for avatars
- */
-export const ALLOWED_AVATAR_TYPES = [
-	'image/jpeg',
-	'image/png',
-	'image/gif',
-	'image/webp',
-] as const
-
-export type AllowedAvatarType = (typeof ALLOWED_AVATAR_TYPES)[number]
-
-/**
- * Maximum file size for avatars (3MB)
- * Note: Supabase has a 50MB limit, but we use 3MB for better UX
- */
-export const MAX_AVATAR_SIZE = 3 * 1024 * 1024
-
-/**
- * Allowed image MIME types for entry attachments
- */
-export const ALLOWED_ATTACHMENT_IMAGE_TYPES = [
-	'image/jpeg',
-	'image/png',
-	'image/gif',
-	'image/webp',
-	'image/svg+xml',
-] as const
-
-export type AllowedAttachmentImageType =
-	(typeof ALLOWED_ATTACHMENT_IMAGE_TYPES)[number]
-
-/**
- * Maximum file size for attachments (10MB)
- */
-export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
+export {
+	ALLOWED_ATTACHMENT_IMAGE_TYPES,
+	ALLOWED_AVATAR_TYPES,
+	type AllowedAttachmentImageType,
+	type AllowedAvatarType,
+	MAX_ATTACHMENT_SIZE,
+	MAX_AVATAR_SIZE,
+	STORAGE_BUCKETS,
+	type StorageBucket,
+} from '@folionote/constants'
 
 /**
  * Get the default S3 endpoint for local Supabase development
@@ -70,9 +36,6 @@ export function getS3Config() {
 	const secretAccessKey = process.env.S3_SECRET_KEY
 	const region = process.env.S3_REGION || 'local'
 
-	// Derive public URL from endpoint if not explicitly set
-	// S3 endpoint: http://127.0.0.1:54321/storage/v1/s3
-	// Public URL: http://127.0.0.1:54321/storage/v1/object/public
 	const defaultPublicUrl = endpoint.replace('/s3', '/object/public')
 	const publicUrl = process.env.S3_PUBLIC_URL || defaultPublicUrl
 

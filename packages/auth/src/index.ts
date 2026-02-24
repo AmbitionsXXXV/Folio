@@ -1,4 +1,5 @@
 import { expo } from '@better-auth/expo'
+import { USER_ADDITIONAL_FIELDS_SCHEMA } from '@folionote/constants'
 import { db } from '@folionote/db'
 import {
 	account,
@@ -100,10 +101,8 @@ export const auth = betterAuth({
 	}),
 	user: {
 		additionalFields: {
-			/** 用户编号，自动递增，用于展示 */
 			no: {
-				type: 'number',
-				required: false,
+				...USER_ADDITIONAL_FIELDS_SCHEMA.no,
 				input: false,
 			},
 		},

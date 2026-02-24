@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.800.0",
+    "@folionote/constants": "workspace:*",
     "dotenv": "catalog:",
     "nanoid": "^5.1.6"
   },
