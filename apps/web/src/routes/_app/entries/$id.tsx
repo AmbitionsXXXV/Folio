@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
+import { createImageCommand } from '@/components/editor/image-command'
 import {
 	createRefCommandWithEvent,
 	getCurrentEditor,
@@ -175,9 +176,41 @@ function EntryEditPage() {
 	// Create ref command for slash menu
 	const refCommand = useMemo(() => createRefCommandWithEvent(t), [t])
 
+	const uploadImage = useCallback(
+		async (file: File) => {
+			const buffer = await file.arrayBuffer()
+			const bytes = new Uint8Array(buffer)
+			const chunks: string[] = []
+			for (let i = 0; i < bytes.length; i += 8192) {
+				const chunk = bytes.subarray(i, i + 8192)
+				chunks.push(String.fromCharCode(...chunk))
+			}
+			const binary = chunks.join('')
+			const base64 = btoa(binary)
+			const result = await orpc.storage.uploadAttachment.call({
+				fileData: base64,
+				contentType: file.type as
+					| 'image/jpeg'
+					| 'image/png'
+					| 'image/gif'
+					| 'image/webp'
+					| 'image/svg+xml',
+				filename: file.name,
+				entryId: id,
+			})
+			return { publicUrl: result.publicUrl }
+		},
+		[id]
+	)
+
+	const imageCommand = useMemo(
+		() => createImageCommand({ t, uploadImage }),
+		[t, uploadImage]
+	)
+
 	const additionalCommands = useMemo(
-		() => [tagCommand, sourceCommand, refCommand],
-		[tagCommand, sourceCommand, refCommand]
+		() => [tagCommand, sourceCommand, refCommand, imageCommand],
+		[tagCommand, sourceCommand, refCommand, imageCommand]
 	)
 
 	// Listen for custom events from slash commands
@@ -574,6 +607,7 @@ function EntryEditPage() {
 						content={editorContent}
 						contentFormat="json"
 						onChange={handleContentChange}
+						onUploadImage={uploadImage}
 						placeholder={t('editor.placeholderWithSlash')}
 					/>
 				</div>

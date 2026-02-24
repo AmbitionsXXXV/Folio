@@ -212,6 +212,18 @@ export const RATE_LIMIT_CONFIGS = {
 		windowMs: ONE_MINUTE_MS,
 		keyPrefix: 'avatar:delete',
 	},
+	/** Attachment upload: 20 requests per minute */
+	ATTACHMENT_UPLOAD: {
+		maxRequests: 20,
+		windowMs: ONE_MINUTE_MS,
+		keyPrefix: 'attachment:upload',
+	},
+	/** Attachment delete: 20 requests per minute */
+	ATTACHMENT_DELETE: {
+		maxRequests: 20,
+		windowMs: ONE_MINUTE_MS,
+		keyPrefix: 'attachment:delete',
+	},
 } as const satisfies Record<string, RateLimitConfig>
 
 type AuthenticatedContext = Context & { session: NonNullable<Context['session']> }

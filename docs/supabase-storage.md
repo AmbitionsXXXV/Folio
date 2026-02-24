@@ -333,9 +333,53 @@ Maximum file size is 3MB. Consider compressing the image before upload or using 
 3. **User Isolation**: Files are stored in user-specific paths (`{userId}/{fileId}`).
 4. **Public Access**: Avatar images are publicly accessible by URL. Don't store sensitive files in the avatars bucket.
 
+## Entry Attachments (Images)
+
+Entry images are stored in the `attachments` bucket and managed via oRPC endpoints.
+
+### Bucket Setup
+
+The `attachments` bucket is created via `packages/db/supabase/seed.sql` during local development.
+For production, create it manually in the Supabase dashboard with:
+
+- **Name**: `attachments`
+- **Public**: Yes
+- **File size limit**: 10 MB
+- **Allowed types**: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/svg+xml`
+
+### Storage Path Convention
+
+```text
+{userId}/entries/{entryId}/{nanoid}.{ext}   # Attached to entry
+{userId}/orphan/{nanoid}.{ext}              # Not yet linked
+```
+
+### API Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `storage.uploadAttachment` | Upload an image, writes metadata to `attachments` table |
+| `storage.deleteAttachment` | Soft-delete an attachment (marks `deletedAt`, removes from S3) |
+| `storage.getAttachmentConfig` | Returns allowed types and max size for client validation |
+
+### Editor Integration
+
+Images can be inserted in the Tiptap editor via:
+
+1. **Slash command**: Type `/image` to open a file picker
+2. **Paste**: Paste an image from the clipboard
+3. **Drag and drop**: Drop an image file onto the editor
+
+All methods use the same upload pipeline: client-side validation → oRPC `storage.uploadAttachment` → S3 upload → insert `<img>` node.
+
+### Rate Limits
+
+- Upload: 20 requests per minute per user
+- Delete: 20 requests per minute per user
+
 ## Future Enhancements
 
-- [ ] Support for entry attachments (images, documents)
 - [ ] Image optimization and thumbnails
 - [ ] Native app avatar upload support
 - [ ] Presigned URLs for large file uploads
+- [ ] Document attachments (PDF, etc.)

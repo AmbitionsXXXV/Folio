@@ -388,7 +388,13 @@
       "divider": "区切り線",
       "dividerDesc": "水平区切り線",
       "table": "テーブル",
-      "tableDesc": "テーブルを挿入"
+      "tableDesc": "テーブルを挿入",
+      "image": "画像",
+      "imageDesc": "画像をアップロードして挿入"
+    },
+    "imageUpload": {
+      "fileTooLarge": "ファイルが大きすぎます。最大サイズは {{maxMB}}MB です",
+      "uploading": "画像をアップロード中…"
     },
     "sourceCommand": {
       "linkSource": "ソースをリンク",

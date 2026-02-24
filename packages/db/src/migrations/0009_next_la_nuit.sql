@@ -1,0 +1,1 @@
+CREATE INDEX "attachments_user_id_entry_id_idx" ON "attachments" USING btree ("user_id","entry_id");

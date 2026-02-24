@@ -4,6 +4,8 @@
 export const STORAGE_BUCKETS = {
 	/** User avatar images bucket */
 	AVATARS: 'avatars',
+	/** Entry attachment images bucket */
+	ATTACHMENTS: 'attachments',
 } as const
 
 export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS]
@@ -25,6 +27,25 @@ export type AllowedAvatarType = (typeof ALLOWED_AVATAR_TYPES)[number]
  * Note: Supabase has a 50MB limit, but we use 3MB for better UX
  */
 export const MAX_AVATAR_SIZE = 3 * 1024 * 1024
+
+/**
+ * Allowed image MIME types for entry attachments
+ */
+export const ALLOWED_ATTACHMENT_IMAGE_TYPES = [
+	'image/jpeg',
+	'image/png',
+	'image/gif',
+	'image/webp',
+	'image/svg+xml',
+] as const
+
+export type AllowedAttachmentImageType =
+	(typeof ALLOWED_ATTACHMENT_IMAGE_TYPES)[number]
+
+/**
+ * Maximum file size for attachments (10MB)
+ */
+export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
 
 /**
  * Get the default S3 endpoint for local Supabase development

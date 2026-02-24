@@ -226,6 +226,7 @@ function KnowledgePage() {
 		addToolApprovalResponse,
 		clearMessages,
 		loadMessages,
+		restoreFromCache,
 		resetChat,
 	} = useKnowledgeChat({
 		chatId: selectedChatId ?? '',
@@ -452,11 +453,14 @@ function KnowledgePage() {
 		if (loadedChatIdRef.current === selectedChatId) return
 
 		loadedChatIdRef.current = selectedChatId
+
+		// Synchronously restore from cache to avoid blank flash, then revalidate
+		restoreFromCache(selectedChatId)
 		loadMessages(selectedChatId).catch((error: unknown) => {
 			loadedChatIdRef.current = null
 			toast.error(getErrorMessage(error))
 		})
-	}, [selectedChatId, clearMessages, loadMessages])
+	}, [selectedChatId, clearMessages, loadMessages, restoreFromCache])
 
 	useEffect(() => {
 		autoCompactKeyRef.current = null
@@ -589,7 +593,7 @@ function KnowledgePage() {
 				}
 
 				setMobileHistoryOpen(false)
-				await refreshSessions()
+				await refreshSessions({ silent: true })
 			} catch (error: unknown) {
 				toast.error(getErrorMessage(error))
 			}

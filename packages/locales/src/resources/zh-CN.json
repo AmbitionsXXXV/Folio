@@ -490,7 +490,13 @@
       "divider": "分割线",
       "dividerDesc": "水平分隔线",
       "table": "表格",
-      "tableDesc": "插入表格"
+      "tableDesc": "插入表格",
+      "image": "图片",
+      "imageDesc": "上传并插入图片"
+    },
+    "imageUpload": {
+      "fileTooLarge": "文件过大，最大允许 {{maxMB}}MB",
+      "uploading": "正在上传图片…"
     },
     "sourceCommand": {
       "linkSource": "关联来源",

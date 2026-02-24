@@ -435,7 +435,13 @@
       "divider": "Divider",
       "dividerDesc": "Horizontal separator",
       "table": "Table",
-      "tableDesc": "Insert a table"
+      "tableDesc": "Insert a table",
+      "image": "Image",
+      "imageDesc": "Upload and insert an image"
+    },
+    "imageUpload": {
+      "fileTooLarge": "File too large. Maximum size is {{maxMB}}MB",
+      "uploading": "Uploading image…"
     },
     "sourceCommand": {
       "linkSource": "Link Source",
