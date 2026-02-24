@@ -504,6 +504,15 @@
       "refEntry": "引用条目",
       "refEntryDesc": "插入指向其他条目的链接",
       "untitled": "无标题"
+    },
+    "table": {
+      "addRowBefore": "在上方插入行",
+      "addRowAfter": "在下方插入行",
+      "deleteRow": "删除行",
+      "addColumnBefore": "在左侧插入列",
+      "addColumnAfter": "在右侧插入列",
+      "deleteColumn": "删除列",
+      "toggleHeaderRow": "切换标题行"
     }
   },
   "error": {
@@ -935,7 +944,11 @@
         "title": "联网搜索",
         "loading": "正在搜索… {{query}}",
         "errorTitle": "联网搜索失败",
-        "errorFallback": "无法执行联网搜索"
+        "errorFallback": "无法执行联网搜索",
+        "panelTitle": "搜索结果",
+        "panelResultCount": "{{count}} 条结果",
+        "panelNoResults": "未找到结果",
+        "reference": "条引用"
       }
     },
     "emptyState": {

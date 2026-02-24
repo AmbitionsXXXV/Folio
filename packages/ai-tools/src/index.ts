@@ -73,12 +73,13 @@ export {
 	getTavilyMcpUrl,
 	isTavilyConfigured,
 } from './web-search/api'
-export { WebSearchCard } from './web-search/components'
+export { WebSearchCard, WebSearchCompactBar } from './web-search/components'
 export { WebSearchToolInputSchema } from './web-search/schemas'
 export { webSearch } from './web-search/tools'
 export type {
 	SearchDepth,
 	WebSearchCardProps,
+	WebSearchCompactBarProps,
 	WebSearchResult,
 	WebSearchToolInput,
 	WebSearchToolOutput,

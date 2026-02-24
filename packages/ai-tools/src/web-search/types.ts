@@ -34,3 +34,11 @@ export type WebSearchCardProps = {
 	results: WebSearchResult[]
 	className?: string
 }
+
+export type WebSearchCompactBarProps = {
+	query: string
+	resultCount: number
+	isLoading?: boolean
+	onClick?: () => void
+	className?: string
+}

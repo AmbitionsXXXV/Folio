@@ -944,7 +944,11 @@
         "title": "Web Search",
         "loading": "Searching the web… {{query}}",
         "errorTitle": "Web search failed",
-        "errorFallback": "Unable to perform web search"
+        "errorFallback": "Unable to perform web search",
+        "panelTitle": "Search Results",
+        "panelResultCount": "{{count}} results",
+        "panelNoResults": "No results found",
+        "reference": "Reference"
       }
     },
     "emptyState": {

@@ -62,6 +62,7 @@ import { AttachmentDisplay } from '@/features/knowledge/components/attachment-di
 import {
 	ChatMessageItem,
 	WaitingIndicator,
+	type WebSearchPanelOpenHandler,
 } from '@/features/knowledge/components/chat-message-item'
 import { CompactMessage } from '@/features/knowledge/components/compact-message'
 import {
@@ -70,6 +71,10 @@ import {
 	ContextUsagePopover,
 } from '@/features/knowledge/components/context-usage-section'
 import { ThinkingToggle } from '@/features/knowledge/components/thinking-toggle'
+import {
+	WebSearchPanel,
+	type WebSearchPanelData,
+} from '@/features/knowledge/components/web-search-panel'
 import { WebSearchToggle } from '@/features/knowledge/components/web-search-toggle'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
@@ -175,6 +180,9 @@ function KnowledgePage() {
 	})
 	const [isMobileHistoryOpen, setMobileHistoryOpen] = useState(false)
 	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
+	const [webSearchPanelOpen, setWebSearchPanelOpen] = useState(false)
+	const [webSearchPanelData, setWebSearchPanelData] =
+		useState<WebSearchPanelData | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const loadedChatIdRef = useRef<string | null>(null)
 	const autoCompactKeyRef = useRef<string | null>(null)
@@ -656,6 +664,11 @@ function KnowledgePage() {
 		[isPending, selectedChatId, selectedProvider, sendMessage]
 	)
 
+	const handleOpenWebSearchPanel = useCallback<WebSearchPanelOpenHandler>((data) => {
+		setWebSearchPanelData(data)
+		setWebSearchPanelOpen(true)
+	}, [])
+
 	const showWaiting = useMemo(() => {
 		if (!isPending) return false
 		const hasStreamingContent = (p: { type: string }) =>
@@ -770,6 +783,7 @@ function KnowledgePage() {
 											) : (
 												<ChatMessageItem
 													message={message}
+													onOpenWebSearchPanel={handleOpenWebSearchPanel}
 													onToolApprovalResponse={addToolApprovalResponse}
 													thinkingEnabled={thinkingEnabled}
 												/>
@@ -920,6 +934,12 @@ function KnowledgePage() {
 					</div>
 				</div>
 			</div>
+
+			<WebSearchPanel
+				data={webSearchPanelData}
+				onOpenChange={setWebSearchPanelOpen}
+				open={webSearchPanelOpen}
+			/>
 		</div>
 	)
 }

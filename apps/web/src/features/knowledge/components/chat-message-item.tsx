@@ -1,3 +1,4 @@
+import type { WebSearchResult } from '@folionote/ai-tools'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader } from '@/components/ai-elements/loader'
@@ -18,6 +19,7 @@ import {
 	ToolCalls,
 } from './tool-calls'
 import {
+	extractWebSearchData,
 	isDisplayWeatherPart,
 	isStockPricePart,
 	isStockTrendPart,
@@ -28,9 +30,74 @@ import {
 	WebSearchToolCard,
 } from './tool-cards'
 
+export type WebSearchPanelOpenHandler = (data: {
+	query: string
+	results: WebSearchResult[]
+}) => void
+
 const WAITING_SHIMMER_DURATION = 1.4
 const WAITING_SHIMMER_SPREAD = 3
 const WAITING_LOADER_SIZE = 14
+const MAX_VISIBLE_REFERENCES = 3
+
+function getHostname(url: string): string {
+	try {
+		return new URL(url).hostname
+	} catch {
+		return url
+	}
+}
+
+function getFaviconUrl(url: string): string {
+	const hostname = getHostname(url)
+	return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`
+}
+
+const WebSearchReferences = memo(function WebSearchReferences({
+	results,
+	onViewAll,
+}: {
+	results: WebSearchResult[]
+	onViewAll?: () => void
+}) {
+	const { t } = useTranslation()
+	if (results.length === 0) return null
+
+	const visible = results.slice(0, MAX_VISIBLE_REFERENCES)
+	const remaining = results.length - MAX_VISIBLE_REFERENCES
+
+	return (
+		<div className="flex flex-wrap items-center gap-2 pt-1 text-muted-foreground text-xs">
+			{visible.map((result) => (
+				<a
+					className="inline-flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1 transition-colors duration-150 hover:border-border/60 hover:bg-muted/50"
+					href={result.url}
+					key={result.url}
+					rel="noopener noreferrer"
+					target="_blank"
+				>
+					<img
+						alt=""
+						className="size-3.5 shrink-0 rounded-sm"
+						loading="lazy"
+						src={getFaviconUrl(result.url)}
+					/>
+					<span className="max-w-[140px] truncate">{getHostname(result.url)}</span>
+				</a>
+			))}
+			{remaining > 0 && onViewAll ? (
+				<button
+					className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/40 bg-muted/30 px-2 py-1 transition-colors duration-150 hover:border-border/60 hover:bg-muted/50"
+					onClick={onViewAll}
+					type="button"
+				>
+					<span>+{remaining}</span>
+					<span>{t('knowledge.toolCards.webSearch.reference')}</span>
+				</button>
+			) : null}
+		</div>
+	)
+})
 
 export const WaitingIndicator = memo(function WaitingIndicator() {
 	const { t } = useTranslation()
@@ -129,19 +196,29 @@ type ChatMessageItemProps = {
 	message: KnowledgeChatMessage
 	thinkingEnabled: boolean
 	onToolApprovalResponse?: ToolApprovalHandler
+	onOpenWebSearchPanel?: WebSearchPanelOpenHandler
 }
 
 export const ChatMessageItem = memo(function ChatMessageItem({
 	message,
 	thinkingEnabled,
 	onToolApprovalResponse,
+	onOpenWebSearchPanel,
 }: ChatMessageItemProps) {
 	const parts = message.parts ?? []
 	const isMessageStreaming = Boolean(message.isStreaming)
 
 	const processSegments = useMemo(() => groupProcessSegments(parts), [parts])
 
-	const toolCardParts = useMemo(() => parts.filter(isToolCardPart), [parts])
+	const toolCardParts = useMemo(
+		() => parts.filter((p) => isToolCardPart(p) && !isWebSearchPart(p)),
+		[parts]
+	)
+
+	const webSearchData = useMemo(
+		() => (message.role === 'assistant' ? extractWebSearchData(parts) : null),
+		[message.role, parts]
+	)
 
 	const hasProcessSegments =
 		message.role === 'assistant' && processSegments.length > 0
@@ -182,10 +259,34 @@ export const ChatMessageItem = memo(function ChatMessageItem({
 					})
 				: null}
 
-			{message.content ? (
-				<Message from={message.role}>
+			{message.content || webSearchData ? (
+				<Message from={message.role === 'assistant' ? 'assistant' : message.role}>
 					<MessageContent>
-						<MessageResponse>{message.content}</MessageResponse>
+						{webSearchData ? (
+							<WebSearchToolCard
+								onOpenPanel={onOpenWebSearchPanel}
+								webSearchData={webSearchData}
+							/>
+						) : null}
+						{message.content ? (
+							<MessageResponse>{message.content}</MessageResponse>
+						) : null}
+						{webSearchData &&
+						!webSearchData.isLoading &&
+						webSearchData.results.length > 0 ? (
+							<WebSearchReferences
+								onViewAll={
+									onOpenWebSearchPanel
+										? () =>
+												onOpenWebSearchPanel({
+													query: webSearchData.query,
+													results: webSearchData.results,
+												})
+										: undefined
+								}
+								results={webSearchData.results}
+							/>
+						) : null}
 					</MessageContent>
 				</Message>
 			) : null}
@@ -205,11 +306,6 @@ export const ChatMessageItem = memo(function ChatMessageItem({
 								if (isStockTrendPart(part)) {
 									return (
 										<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
-									)
-								}
-								if (isWebSearchPart(part)) {
-									return (
-										<WebSearchToolCard key={`web-search-${toolKey}`} part={part} />
 									)
 								}
 								return null

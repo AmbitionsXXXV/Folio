@@ -402,6 +402,15 @@
       "refEntry": "エントリを参照",
       "refEntryDesc": "他のエントリへのリンクを挿入",
       "untitled": "無題"
+    },
+    "table": {
+      "addRowBefore": "上に行を追加",
+      "addRowAfter": "下に行を追加",
+      "deleteRow": "行を削除",
+      "addColumnBefore": "左に列を追加",
+      "addColumnAfter": "右に列を追加",
+      "deleteColumn": "列を削除",
+      "toggleHeaderRow": "ヘッダー行の切り替え"
     }
   },
   "entryCard": {
@@ -935,7 +944,11 @@
         "title": "ウェブ検索",
         "loading": "検索中… {{query}}",
         "errorTitle": "ウェブ検索に失敗しました",
-        "errorFallback": "ウェブ検索を実行できませんでした"
+        "errorFallback": "ウェブ検索を実行できませんでした",
+        "panelTitle": "検索結果",
+        "panelResultCount": "{{count}} 件の結果",
+        "panelNoResults": "結果が見つかりません",
+        "reference": "件の参照"
       }
     },
     "emptyState": {
