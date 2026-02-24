@@ -99,7 +99,7 @@
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",
-    "@types/react": "19.2.7",
+    "@types/react": "catalog:",
     "@types/turndown": "^5.0.6",
     "typescript": "catalog:"
   }

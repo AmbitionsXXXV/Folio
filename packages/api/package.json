@@ -31,7 +31,7 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "@upstash/redis": "^1.36.1",
+    "@upstash/redis": "^1.36.2",
     "bcryptjs": "^3.0.3",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",

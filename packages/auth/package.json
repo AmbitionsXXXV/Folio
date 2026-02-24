@@ -24,7 +24,7 @@
     "@folionote/transactional": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "react": "^19.2.3",
+    "react": "catalog:",
     "resend": "^6.6.0",
     "zod": "catalog:"
   }

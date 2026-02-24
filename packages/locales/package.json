@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",
-    "tsx": "^4.19.0",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   }
 }
