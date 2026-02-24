@@ -1,4 +1,5 @@
 import type { WebSearchResult } from '@folionote/ai-tools'
+import { getFaviconUrl, getHostname } from '@folionote/utils'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader } from '@/components/ai-elements/loader'
@@ -39,19 +40,6 @@ const WAITING_SHIMMER_DURATION = 1.4
 const WAITING_SHIMMER_SPREAD = 3
 const WAITING_LOADER_SIZE = 14
 const MAX_VISIBLE_REFERENCES = 3
-
-function getHostname(url: string): string {
-	try {
-		return new URL(url).hostname
-	} catch {
-		return url
-	}
-}
-
-function getFaviconUrl(url: string): string {
-	const hostname = getHostname(url)
-	return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`
-}
 
 const WebSearchReferences = memo(function WebSearchReferences({
 	results,

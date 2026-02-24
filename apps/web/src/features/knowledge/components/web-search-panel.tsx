@@ -6,10 +6,9 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from '@folionote/ui/sheet'
+import { getFaviconUrl, getHostname, truncateText } from '@folionote/utils'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
-
-const MAX_SNIPPET_LENGTH = 300
 
 type WebSearchPanelData = {
 	query: string
@@ -22,32 +21,13 @@ type WebSearchPanelProps = {
 	data: WebSearchPanelData | null
 }
 
-function getHostname(url: string): string {
-	try {
-		return new URL(url).hostname
-	} catch {
-		return url
-	}
-}
-
-function getFaviconUrl(url: string): string {
-	const hostname = getHostname(url)
-	return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`
-}
-
-function truncateSnippet(raw: string | undefined): string | null {
-	if (!raw) return null
-	if (raw.length <= MAX_SNIPPET_LENGTH) return raw
-	return `${raw.slice(0, MAX_SNIPPET_LENGTH)}…`
-}
-
 const SearchResultItem = memo(function SearchResultItem({
 	result,
 }: {
 	result: WebSearchResult
 }) {
 	const hostname = getHostname(result.url)
-	const snippet = truncateSnippet(result.snippet)
+	const snippet = result.snippet ? truncateText(result.snippet, 300) : null
 
 	return (
 		<a
