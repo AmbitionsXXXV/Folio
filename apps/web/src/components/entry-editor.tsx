@@ -11,11 +11,15 @@ import {
 } from '@folionote/editor-react'
 import { CodeBlockShiki } from '@folionote/editor-react/extensions'
 import type { JSONContent } from '@tiptap/core'
+import { Extension } from '@tiptap/core'
+import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 /**
  * 内容格式类型
@@ -23,6 +27,8 @@ import { useTranslation } from 'react-i18next'
  * - html: HTML 字符串格式（向后兼容）
  */
 type ContentFormat = 'json' | 'html'
+
+export type ImageUploadHandler = (file: File) => Promise<{ publicUrl: string }>
 
 type EntryEditorProps = {
 	/** 初始内容，可以是 JSON 字符串或 HTML */
@@ -39,6 +45,8 @@ type EntryEditorProps = {
 	additionalCommands?: SlashCommandItem[]
 	/** 粘贴策略：'preserve' 保留富文本结构，'plain' 转换为纯文本 */
 	pasteStrategy?: PasteStrategy
+	/** Image upload handler for paste/drop */
+	onUploadImage?: ImageUploadHandler
 }
 
 /**
@@ -59,6 +67,75 @@ function parseContent(content: string, format: ContentFormat): string | JSONCont
 	}
 
 	return content
+}
+
+const IMAGE_TYPES = new Set([
+	'image/jpeg',
+	'image/png',
+	'image/gif',
+	'image/webp',
+	'image/svg+xml',
+])
+
+function handleImageUpload(
+	editor: ReturnType<typeof useEditor>,
+	uploadFn: ImageUploadHandler,
+	file: File,
+	t: (key: string) => string
+) {
+	if (!editor) return
+
+	const toastId = `image-upload-${Date.now()}`
+	toast.loading(t('editor.imageUpload.uploading'), { id: toastId })
+
+	uploadFn(file)
+		.then(({ publicUrl }) => {
+			toast.dismiss(toastId)
+			editor.chain().focus().setImage({ src: publicUrl, alt: file.name }).run()
+		})
+		.catch((error: unknown) => {
+			toast.dismiss(toastId)
+			const message = error instanceof Error ? error.message : 'Upload failed'
+			toast.error(message)
+		})
+}
+
+function createImageUploadExtension(
+	uploadFn: ImageUploadHandler,
+	t: (key: string) => string
+) {
+	return Extension.create({
+		name: 'imageUpload',
+
+		addProseMirrorPlugins() {
+			const { editor } = this
+			return [
+				new Plugin({
+					key: new PluginKey('imageUpload'),
+					props: {
+						handlePaste(_view, event) {
+							const files = Array.from(event.clipboardData?.files ?? [])
+							const imageFile = files.find((f) => IMAGE_TYPES.has(f.type))
+							if (!imageFile) return false
+
+							event.preventDefault()
+							handleImageUpload(editor, uploadFn, imageFile, t)
+							return true
+						},
+						handleDrop(_view, event) {
+							const files = Array.from(event.dataTransfer?.files ?? [])
+							const imageFile = files.find((f) => IMAGE_TYPES.has(f.type))
+							if (!imageFile) return false
+
+							event.preventDefault()
+							handleImageUpload(editor, uploadFn, imageFile, t)
+							return true
+						},
+					},
+				}),
+			]
+		},
+	})
 }
 
 /**
@@ -84,6 +161,7 @@ export function EntryEditor({
 	className = '',
 	additionalCommands = [],
 	pasteStrategy = 'preserve',
+	onUploadImage,
 }: EntryEditorProps) {
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 	const { t } = useTranslation()
@@ -127,11 +205,19 @@ export function EntryEditor({
 				placeholder,
 				emptyEditorClass: 'is-editor-empty',
 			}),
+			Image.configure({
+				inline: false,
+				allowBase64: false,
+				HTMLAttributes: {
+					class: 'rounded-lg max-w-full',
+					loading: 'lazy',
+				},
+			}),
+			...(onUploadImage ? [createImageUploadExtension(onUploadImage, t)] : []),
 			createSlashCommandExtension({
 				commands,
 				t,
 			}),
-			// 自定义光标：带彗星尾巴动画效果（只在可编辑模式下启用）
 			CustomCaret.configure({
 				enabled: editable,
 			}),

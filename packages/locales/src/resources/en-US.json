@@ -365,7 +365,8 @@
     "tags": "Tags",
     "settings": "Settings",
     "profile": "Profile",
-    "knowledge": "Knowledge"
+    "knowledge": "Knowledge",
+    "graph": "Graph"
   },
   "search": {
     "placeholder": "Search entries...",
@@ -434,7 +435,13 @@
       "divider": "Divider",
       "dividerDesc": "Horizontal separator",
       "table": "Table",
-      "tableDesc": "Insert a table"
+      "tableDesc": "Insert a table",
+      "image": "Image",
+      "imageDesc": "Upload and insert an image"
+    },
+    "imageUpload": {
+      "fileTooLarge": "File too large. Maximum size is {{maxMB}}MB",
+      "uploading": "Uploading image…"
     },
     "sourceCommand": {
       "linkSource": "Link Source",
@@ -943,7 +950,11 @@
         "title": "Web Search",
         "loading": "Searching the web… {{query}}",
         "errorTitle": "Web search failed",
-        "errorFallback": "Unable to perform web search"
+        "errorFallback": "Unable to perform web search",
+        "panelTitle": "Search Results",
+        "panelResultCount": "{{count}} results",
+        "panelNoResults": "No results found",
+        "reference": "Reference"
       }
     },
     "emptyState": {
@@ -992,5 +1003,27 @@
     "removed": "{{provider}} configuration removed",
     "removeConfirmTitle": "Remove API Key",
     "removeConfirmDescription": "Are you sure you want to remove the API key for {{provider}}? You will need to reconfigure it to use this provider."
+  },
+  "graph": {
+    "searchPlaceholder": "Search nodes...",
+    "filterByTag": "Filter by tag",
+    "allTags": "All tags",
+    "inferredEdges": "Inferred edges",
+    "addLink": "Add link",
+    "connectingDone": "Done",
+    "fitView": "Fit view",
+    "emptyTitle": "No entries yet",
+    "emptyDescription": "Create entries and use /ref to link them. Your knowledge graph will appear here.",
+    "untitled": "Untitled",
+    "starred": "Starred",
+    "pinned": "Pinned",
+    "inbox": "Inbox",
+    "tags": "Tags",
+    "referencesTo": "References to",
+    "referencedBy": "Referenced by",
+    "openEntry": "Open entry",
+    "linkAlreadyExists": "Link already exists",
+    "linkAdded": "Link added",
+    "linkFailed": "Failed to add link"
   }
 }

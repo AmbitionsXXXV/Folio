@@ -25,6 +25,7 @@ import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppKnowledgeRouteImport } from './routes/_app/knowledge'
 import { Route as AppInboxRouteImport } from './routes/_app/inbox'
+import { Route as AppGraphRouteImport } from './routes/_app/graph'
 import { Route as AppActivityRouteImport } from './routes/_app/activity'
 import { Route as AppSettingsModelsRouteImport } from './routes/_app/settings/models'
 import { Route as AppSettingsGeneralRouteImport } from './routes/_app/settings/general'
@@ -110,6 +111,11 @@ const AppInboxRoute = AppInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => AppRoute,
 } as any)
+const AppGraphRoute = AppGraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppActivityRoute = AppActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
+  '/graph': typeof AppGraphRoute
   '/inbox': typeof AppInboxRoute
   '/knowledge': typeof AppKnowledgeRoute
   '/library': typeof AppLibraryRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
+  '/graph': typeof AppGraphRoute
   '/inbox': typeof AppInboxRoute
   '/knowledge': typeof AppKnowledgeRoute
   '/library': typeof AppLibraryRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/activity': typeof AppActivityRoute
+  '/_app/graph': typeof AppGraphRoute
   '/_app/inbox': typeof AppInboxRoute
   '/_app/knowledge': typeof AppKnowledgeRoute
   '/_app/library': typeof AppLibraryRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/activity'
+    | '/graph'
     | '/inbox'
     | '/knowledge'
     | '/library'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/activity'
+    | '/graph'
     | '/inbox'
     | '/knowledge'
     | '/library'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/_app/activity'
+    | '/_app/graph'
     | '/_app/inbox'
     | '/_app/knowledge'
     | '/_app/library'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInboxRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/graph': {
+      id: '/_app/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof AppGraphRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/activity': {
       id: '/_app/activity'
       path: '/activity'
@@ -452,6 +471,7 @@ const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
+  AppGraphRoute: typeof AppGraphRoute
   AppInboxRoute: typeof AppInboxRoute
   AppKnowledgeRoute: typeof AppKnowledgeRoute
   AppLibraryRoute: typeof AppLibraryRoute
@@ -467,6 +487,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
+  AppGraphRoute: AppGraphRoute,
   AppInboxRoute: AppInboxRoute,
   AppKnowledgeRoute: AppKnowledgeRoute,
   AppLibraryRoute: AppLibraryRoute,

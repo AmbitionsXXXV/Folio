@@ -1,6 +1,6 @@
 {
   "name": "@folionote/storage",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "description": "FolioNote Storage client using S3 protocol",
   "type": "module",
   "exports": {
@@ -17,9 +17,10 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.800.0",
+    "@aws-sdk/client-s3": "^3.996.0",
+    "@folionote/constants": "workspace:*",
     "dotenv": "catalog:",
-    "nanoid": "^5.1.6"
+    "nanoid": "catalog:"
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",

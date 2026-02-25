@@ -37,6 +37,8 @@ import {
 	MAX_ATTACHED_NOTES,
 	searchNotesForRag,
 } from '../services/notes'
+import { ragRetrieve } from '../services/rag'
+import { buildTopologyContext } from '../services/topology-context'
 import type { App, AppVariables } from '../types'
 import { calculateCostFromUsage } from '../utils/cost'
 import { convertToSupportedLanguage } from '../utils/language'
@@ -156,13 +158,16 @@ function extractLastUserText(messages: UIMessage[]): string {
 }
 
 /**
- * Prepare note context for AI streaming (RAG)
+ * Prepare note context for AI streaming (RAG).
+ * When a LanguageModel is provided, the enhanced RAG pipeline (query rewrite + multi-retrieve + rerank)
+ * is used. Falls back to the legacy FTS-only path on failure or when no model is given.
  */
 async function prepareNoteContext(
 	userId: string,
 	prompt: string,
 	noteEntryIds: string[] | undefined,
-	ragTopK: number | undefined
+	ragTopK: number | undefined,
+	model?: import('ai').LanguageModel
 ) {
 	const sanitizedNoteIds = (noteEntryIds ?? [])
 		.filter((id) => typeof id === 'string' && id.length > 0)
@@ -172,12 +177,16 @@ async function prepareNoteContext(
 	const attachedNotes = await fetchNotesByIds(userId, uniqueNoteIds)
 
 	const effectiveRagTopK = ragTopK ?? DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K
-	const retrievedNotes = await searchNotesForRag(
-		userId,
-		prompt,
-		uniqueNoteIds,
-		effectiveRagTopK
-	)
+
+	const retrievedNotes = model
+		? await ragRetrieve({
+				userId,
+				query: prompt,
+				excludeIds: uniqueNoteIds,
+				topK: effectiveRagTopK,
+				model,
+			})
+		: await searchNotesForRag(userId, prompt, uniqueNoteIds, effectiveRagTopK)
 
 	return { attachedNotes, retrievedNotes }
 }
@@ -624,10 +633,10 @@ export function registerAiStreamRoute(app: App) {
 	function resolveTools(
 		shouldEnableTools: boolean,
 		shouldEnableWebSearch: boolean
-	): typeof aiTools | Omit<typeof aiTools, 'webSearch'> | undefined {
+	): typeof aiTools | Omit<typeof aiTools, 'webSearch' | 'webFetch'> | undefined {
 		if (!shouldEnableTools) return undefined
 		if (shouldEnableWebSearch) return aiTools
-		const { webSearch: _, ...rest } = aiTools
+		const { webSearch: _ws, webFetch: _wf, ...rest } = aiTools
 		return rest
 	}
 
@@ -676,22 +685,34 @@ export function registerAiStreamRoute(app: App) {
 			}
 
 			const ragQuery = prompt || extractLastUserText(messages)
+			const aiModel = createVercelAiChatModel(credential, { model })
 
 			const { attachedNotes, retrievedNotes } = await prepareNoteContext(
 				auth.userId,
 				ragQuery,
 				noteEntryIds,
-				ragTopK
+				ragTopK,
+				aiModel
 			)
 
+			const topologyEntryIds = [
+				...(noteEntryIds ?? []),
+				...attachedNotes.map((n) => n.id),
+			]
+			const { contextText: topologyContextText } =
+				topologyEntryIds.length > 0
+					? await buildTopologyContext(auth.userId, topologyEntryIds, 1)
+					: { contextText: '' }
+
 			const currentDate = getLocalDateString(new Date())
-			const { systemPrompt } = buildKnowledgeChatSystemPrompt({
+			const { systemPrompt: baseSystemPrompt } = buildKnowledgeChatSystemPrompt({
 				attachedNotes,
 				retrievedNotes,
 				currentDate,
 			})
-
-			const aiModel = createVercelAiChatModel(credential, { model })
+			const systemPrompt = topologyContextText
+				? `${baseSystemPrompt}\n\n${topologyContextText}`
+				: baseSystemPrompt
 			const modelMessages = await convertToModelMessages(messages)
 			const providerOptions = buildProviderOptions(
 				validProvider,

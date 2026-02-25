@@ -1,15 +1,22 @@
-import { db, user } from '@folionote/db'
+import { attachments, db, user } from '@folionote/db'
 import {
+	ALLOWED_ATTACHMENT_IMAGE_TYPES,
 	ALLOWED_AVATAR_TYPES,
+	type AllowedAttachmentImageType,
 	type AllowedAvatarType,
+	deleteAttachment,
 	deleteAvatar,
 	getPathFromPublicUrl,
+	MAX_ATTACHMENT_SIZE,
 	MAX_AVATAR_SIZE,
+	uploadAttachment,
 	uploadAvatar,
+	validateAttachmentFile,
 	validateAvatarFile,
 } from '@folionote/storage'
 import { ORPCError } from '@orpc/server'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { protectedProcedure } from '../index'
 import {
@@ -295,6 +302,126 @@ export const getAllAvatarRateLimitStatus = protectedProcedure.handler(
 	}
 )
 
+// =============================================================================
+// Attachment Operations
+// =============================================================================
+
+const UploadAttachmentInputSchema = z.object({
+	fileData: z.string(),
+	contentType: z.enum(
+		ALLOWED_ATTACHMENT_IMAGE_TYPES as unknown as [string, ...string[]]
+	),
+	filename: z.string().optional(),
+	entryId: z.string().optional(),
+})
+
+const attachmentUploadRateLimitMiddleware = createRateLimitMiddleware(
+	RATE_LIMIT_CONFIGS.ATTACHMENT_UPLOAD
+)
+const attachmentDeleteRateLimitMiddleware = createRateLimitMiddleware(
+	RATE_LIMIT_CONFIGS.ATTACHMENT_DELETE
+)
+
+/**
+ * storage.uploadAttachment - Upload an image attachment for a note entry
+ *
+ * Rate limited: 20 requests per minute
+ */
+export const uploadEntryAttachment = protectedProcedure
+	.use(attachmentUploadRateLimitMiddleware)
+	.input(UploadAttachmentInputSchema)
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+		const buffer = Buffer.from(input.fileData, 'base64')
+
+		const validation = validateAttachmentFile(input.contentType, buffer.length)
+		if (!validation.valid) {
+			throw new ORPCError('BAD_REQUEST', { message: validation.error })
+		}
+
+		const result = await uploadAttachment({
+			userId,
+			entryId: input.entryId,
+			file: buffer,
+			contentType: input.contentType as AllowedAttachmentImageType,
+			filename: input.filename,
+		})
+
+		const attachmentId = nanoid()
+		const [record] = await db
+			.insert(attachments)
+			.values({
+				id: attachmentId,
+				userId,
+				entryId: input.entryId ?? null,
+				filename:
+					input.filename || `image.${input.contentType.split('/').at(1) || 'bin'}`,
+				mimeType: input.contentType,
+				size: String(buffer.length),
+				storageKey: result.path,
+			})
+			.returning({
+				id: attachments.id,
+				storageKey: attachments.storageKey,
+			})
+
+		return {
+			id: record?.id ?? attachmentId,
+			publicUrl: result.publicUrl,
+			path: result.path,
+		}
+	})
+
+/**
+ * storage.deleteAttachment - Delete an attachment by ID
+ *
+ * Rate limited: 20 requests per minute
+ */
+export const deleteEntryAttachment = protectedProcedure
+	.use(attachmentDeleteRateLimitMiddleware)
+	.input(z.object({ attachmentId: z.string() }))
+	.handler(async ({ context, input }) => {
+		const userId = context.session.user.id
+
+		const [record] = await db
+			.select({ id: attachments.id, storageKey: attachments.storageKey })
+			.from(attachments)
+			.where(
+				and(eq(attachments.id, input.attachmentId), eq(attachments.userId, userId))
+			)
+			.limit(1)
+
+		if (!record) {
+			throw new ORPCError('NOT_FOUND', { message: 'Attachment not found' })
+		}
+
+		try {
+			await deleteAttachment(record.storageKey)
+		} catch {
+			// Storage deletion failure is non-critical
+		}
+
+		await db
+			.update(attachments)
+			.set({ deletedAt: new Date() })
+			.where(eq(attachments.id, input.attachmentId))
+
+		return { success: true }
+	})
+
+/**
+ * storage.getAttachmentConfig - Get attachment upload config for client validation
+ */
+export const getAttachmentConfig = protectedProcedure.handler(() => ({
+	allowedTypes: ALLOWED_ATTACHMENT_IMAGE_TYPES,
+	maxSize: MAX_ATTACHMENT_SIZE,
+	maxSizeMB: MAX_ATTACHMENT_SIZE / 1024 / 1024,
+}))
+
+// =============================================================================
+// Router
+// =============================================================================
+
 /**
  * Storage router - file storage related procedures
  */
@@ -305,4 +432,7 @@ export const storageRouter = {
 	getAvatarConfig,
 	getRateLimitStatus: getAvatarRateLimitStatus,
 	getAllRateLimitStatus: getAllAvatarRateLimitStatus,
+	uploadAttachment: uploadEntryAttachment,
+	deleteAttachment: deleteEntryAttachment,
+	getAttachmentConfig,
 }

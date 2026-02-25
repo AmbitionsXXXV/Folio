@@ -18,7 +18,6 @@ import {
 	userRelations,
 	verification,
 } from './schema/auth'
-// Business schema
 import {
 	attachments,
 	attachmentsRelations,
@@ -43,6 +42,8 @@ import {
 	tags,
 	tagsRelations,
 } from './schema/entries'
+// Business schema
+import { entryLinks, entryLinksRelations } from './schema/graph'
 
 // Schema configuration for drizzle
 const schema = {
@@ -77,6 +78,9 @@ const schema = {
 	entrySharesRelations,
 	searchHistory,
 	searchHistoryRelations,
+	// Graph
+	entryLinks,
+	entryLinksRelations,
 	// AI
 	userAiModelSettings,
 	userAiModelSettingsRelations,
@@ -133,3 +137,7 @@ export {
 	tags,
 	tagsRelations,
 } from './schema/entries'
+export {
+	entryLinks,
+	entryLinksRelations,
+} from './schema/graph'

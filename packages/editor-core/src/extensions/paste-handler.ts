@@ -66,6 +66,14 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
 							return false
 						}
 
+						// Let image files pass through to the imageUpload plugin
+						const hasImageFile = Array.from(clipboardData.files).some((f) =>
+							f.type.startsWith('image/')
+						)
+						if (hasImageFile) {
+							return false
+						}
+
 						const plainText = clipboardData.getData('text/plain')
 						const htmlText = clipboardData.getData('text/html')
 

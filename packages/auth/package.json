@@ -1,6 +1,6 @@
 {
   "name": "@folionote/auth",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -19,11 +19,12 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
+    "@folionote/constants": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/transactional": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "react": "^19.2.3",
+    "react": "catalog:",
     "resend": "^6.6.0",
     "zod": "catalog:"
   }

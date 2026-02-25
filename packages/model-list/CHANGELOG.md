@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.12
+
+### Patch Changes
+
+- add image upload functionality to the editor
+
 ## 0.1.11
 
 ### Patch Changes

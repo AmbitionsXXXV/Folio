@@ -318,7 +318,8 @@
     "tags": "タグ",
     "settings": "設定",
     "profile": "プロフィール",
-    "knowledge": "ナレッジ"
+    "knowledge": "ナレッジ",
+    "graph": "グラフ"
   },
   "search": {
     "placeholder": "エントリを検索...",
@@ -387,7 +388,13 @@
       "divider": "区切り線",
       "dividerDesc": "水平区切り線",
       "table": "テーブル",
-      "tableDesc": "テーブルを挿入"
+      "tableDesc": "テーブルを挿入",
+      "image": "画像",
+      "imageDesc": "画像をアップロードして挿入"
+    },
+    "imageUpload": {
+      "fileTooLarge": "ファイルが大きすぎます。最大サイズは {{maxMB}}MB です",
+      "uploading": "画像をアップロード中…"
     },
     "sourceCommand": {
       "linkSource": "ソースをリンク",
@@ -401,6 +408,15 @@
       "refEntry": "エントリを参照",
       "refEntryDesc": "他のエントリへのリンクを挿入",
       "untitled": "無題"
+    },
+    "table": {
+      "addRowBefore": "上に行を追加",
+      "addRowAfter": "下に行を追加",
+      "deleteRow": "行を削除",
+      "addColumnBefore": "左に列を追加",
+      "addColumnAfter": "右に列を追加",
+      "deleteColumn": "列を削除",
+      "toggleHeaderRow": "ヘッダー行の切り替え"
     }
   },
   "entryCard": {
@@ -934,7 +950,11 @@
         "title": "ウェブ検索",
         "loading": "検索中… {{query}}",
         "errorTitle": "ウェブ検索に失敗しました",
-        "errorFallback": "ウェブ検索を実行できませんでした"
+        "errorFallback": "ウェブ検索を実行できませんでした",
+        "panelTitle": "検索結果",
+        "panelResultCount": "{{count}} 件の結果",
+        "panelNoResults": "結果が見つかりません",
+        "reference": "件の参照"
       }
     },
     "emptyState": {
@@ -983,5 +1003,27 @@
     "removed": "{{provider}} の設定を削除しました",
     "removeConfirmTitle": "APIキーを削除",
     "removeConfirmDescription": "{{provider}} のAPIキーを削除してもよろしいですか？このプロバイダーを使用するには再設定が必要です。"
+  },
+  "graph": {
+    "searchPlaceholder": "ノードを検索...",
+    "filterByTag": "タグでフィルター",
+    "allTags": "すべてのタグ",
+    "inferredEdges": "推論エッジ",
+    "addLink": "リンクを追加",
+    "connectingDone": "完了",
+    "fitView": "ビューに合わせる",
+    "emptyTitle": "エントリがありません",
+    "emptyDescription": "エントリを作成し、/ref で参照リンクを作成してください。ナレッジグラフがここに表示されます。",
+    "untitled": "無題",
+    "starred": "スター付き",
+    "pinned": "ピン留め",
+    "inbox": "受信箱",
+    "tags": "タグ",
+    "referencesTo": "参照先",
+    "referencedBy": "参照元",
+    "openEntry": "エントリを開く",
+    "linkAlreadyExists": "リンクは既に存在します",
+    "linkAdded": "リンクを追加しました",
+    "linkFailed": "リンクの追加に失敗しました"
   }
 }

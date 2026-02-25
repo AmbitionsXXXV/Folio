@@ -9,6 +9,7 @@ import {
 	timestamp,
 } from 'drizzle-orm/pg-core'
 import { user } from './auth'
+import { entryLinks } from './graph'
 
 /**
  * entries - 学习笔记/知识条目
@@ -72,6 +73,8 @@ export const entriesRelations = relations(entries, ({ one, many }) => ({
 		references: [entryReviewState.entryId],
 	}),
 	entryShares: many(entryShares),
+	outgoingLinks: many(entryLinks, { relationName: 'outgoingLinks' }),
+	incomingLinks: many(entryLinks, { relationName: 'incomingLinks' }),
 }))
 
 /**
@@ -259,6 +262,7 @@ export const attachments = pgTable(
 	(table) => [
 		index('attachments_user_id_idx').on(table.userId),
 		index('attachments_entry_id_idx').on(table.entryId),
+		index('attachments_user_id_entry_id_idx').on(table.userId, table.entryId),
 		index('attachments_user_id_deleted_at_idx').on(table.userId, table.deletedAt),
 	]
 )

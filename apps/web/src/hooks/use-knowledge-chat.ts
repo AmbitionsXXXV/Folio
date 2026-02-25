@@ -106,6 +106,30 @@ export type CompactContextResult = {
 }
 
 // =============================================================================
+// Message Cache (module-level, survives re-renders and component remounts)
+// =============================================================================
+
+const MAX_CACHED_CHATS = 20
+
+const chatMessageCache = new Map<string, UIMessage[]>()
+
+export function getCachedMessages(chatId: string): UIMessage[] | undefined {
+	return chatMessageCache.get(chatId)
+}
+
+function setCachedMessages(chatId: string, messages: UIMessage[]): void {
+	if (chatMessageCache.size >= MAX_CACHED_CHATS) {
+		const oldest = chatMessageCache.keys().next().value
+		if (oldest) chatMessageCache.delete(oldest)
+	}
+	chatMessageCache.set(chatId, messages)
+}
+
+export function clearCachedMessages(chatId: string): void {
+	chatMessageCache.delete(chatId)
+}
+
+// =============================================================================
 // Helpers
 // =============================================================================
 
@@ -354,7 +378,21 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		[clearMessages]
 	)
 
-	// Load messages from server for a given chat
+	// Synchronously restore messages from cache (returns true if cache hit)
+	const restoreFromCache = useCallback(
+		(targetChatId: string): boolean => {
+			const cached = getCachedMessages(targetChatId)
+			if (cached) {
+				setUIMessages(cached)
+				setServerChatId(targetChatId)
+				return true
+			}
+			return false
+		},
+		[setUIMessages]
+	)
+
+	// Load messages from server for a given chat (writes to cache on success)
 	const loadMessages = useCallback(
 		async (targetChatId: string) => {
 			if (!targetChatId.trim()) {
@@ -368,8 +406,8 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 			if (!response.ok) {
 				if (response.status === 404) {
-					// Chat not found, clear messages
 					clearMessages()
+					clearCachedMessages(targetChatId)
 					return
 				}
 				throw new Error(`Failed to load chat: ${response.status}`)
@@ -380,9 +418,9 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 				messages: UIMessage[]
 			}
 
-			// Update messages
 			setUIMessages(data.messages)
 			setServerChatId(data.chatId)
+			setCachedMessages(targetChatId, data.messages)
 		},
 		[clearMessages, setUIMessages]
 	)
@@ -449,6 +487,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		clearMessages,
 		resetChat,
 		loadMessages,
+		restoreFromCache,
 		compactContext,
 		stop,
 
@@ -492,10 +531,14 @@ function getTextFromParts(parts: UIMessage['parts']): string {
 }
 
 function getReasoningFromParts(parts: UIMessage['parts']): string | undefined {
-	const part = (parts ?? []).find((p) => p.type === 'reasoning')
-	if (!part) return undefined
-	if ('text' in part && typeof part.text === 'string') return part.text
-	if ('reasoning' in part && typeof part.reasoning === 'string')
-		return part.reasoning
-	return undefined
+	const fragments: string[] = []
+	for (const part of parts ?? []) {
+		if (part.type !== 'reasoning') continue
+		if ('text' in part && typeof part.text === 'string') {
+			fragments.push(part.text)
+		} else if ('reasoning' in part && typeof part.reasoning === 'string') {
+			fragments.push(part.reasoning)
+		}
+	}
+	return fragments.length > 0 ? fragments.join('\n') : undefined
 }

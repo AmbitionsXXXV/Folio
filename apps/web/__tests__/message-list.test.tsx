@@ -51,6 +51,6 @@ describe('MessageList', () => {
 		)
 
 		expect(screen.getByText(SAMPLE_THINKING)).toBeTruthy()
-		expect(screen.getByText('Tool Calls')).toBeTruthy()
+		expect(screen.getByText('Stock')).toBeTruthy()
 	})
 })

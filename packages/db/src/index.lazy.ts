@@ -52,3 +52,7 @@ export {
 	tags,
 	tagsRelations,
 } from './schema/entries'
+export {
+	entryLinks,
+	entryLinksRelations,
+} from './schema/graph'

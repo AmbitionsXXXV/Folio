@@ -1,5 +1,22 @@
 # web
 
+## 0.2.19
+
+### Patch Changes
+
+- add image upload functionality to the editor
+- Updated dependencies
+  - @folionote/editor-react@0.2.19
+  - @folionote/editor-core@0.2.19
+  - @folionote/constants@0.2.19
+  - @folionote/ai-tools@0.1.3
+  - @folionote/locales@0.2.19
+  - @folionote/utils@0.2.19
+  - @folionote/auth@0.2.19
+  - @folionote/api@0.2.19
+  - @folionote/ui@0.2.19
+  - @folionote/model-list@0.1.12
+
 ## 0.2.18
 
 ### Patch Changes

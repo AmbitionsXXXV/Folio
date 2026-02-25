@@ -35,10 +35,10 @@ import { cn } from '@/lib/utils'
 import type { ChatMessage, CitationSource } from '../types'
 import { formatCost, formatTokenCount } from '../utils'
 import {
+	extractWebSearchData,
 	isDisplayWeatherPart,
 	isStockPricePart,
 	isStockTrendPart,
-	isWebSearchPart,
 	StockToolCard,
 	StockTrendToolCard,
 	WeatherToolCard,
@@ -199,16 +199,17 @@ export const MessageBubble = memo(function MessageBubble({
 	const messageParts = message.parts ?? []
 	const sources = messageParts.filter(isSourceUrlPart)
 	const hasSources = sources.length > 0
+	const webSearchData = isUser ? null : extractWebSearchData(messageParts)
 	const hasToolCards =
 		!isUser &&
 		messageParts.some(
 			(part) =>
 				isDisplayWeatherPart(part) ||
 				isStockPricePart(part) ||
-				isStockTrendPart(part) ||
-				isWebSearchPart(part)
+				isStockTrendPart(part)
 		)
-	const shouldRenderBubble = isUser || hasAssistantContent || hasToolCards
+	const shouldRenderBubble =
+		isUser || hasAssistantContent || hasToolCards || webSearchData !== null
 
 	// Pre-compute derived values
 	const outputTokens = formatTokenCount(message.usage?.outputTokens)
@@ -265,6 +266,9 @@ export const MessageBubble = memo(function MessageBubble({
 						mentionTitles={message.mentionTitles}
 					/>
 				) : null}
+				{!isUser && webSearchData ? (
+					<WebSearchToolCard webSearchData={webSearchData} />
+				) : null}
 				{!isUser && hasAssistantContent ? (
 					<AssistantMessageContent
 						citations={message.citations}
@@ -273,7 +277,7 @@ export const MessageBubble = memo(function MessageBubble({
 					/>
 				) : null}
 
-				{/* Tool UI cards for assistant messages */}
+				{/* Tool UI cards for assistant messages (excludes web search) */}
 				{!isUser && hasToolCards ? (
 					<div className="mt-2 grid gap-2">
 						{messageParts.map((part) => {
@@ -294,11 +298,6 @@ export const MessageBubble = memo(function MessageBubble({
 							if (isStockTrendPart(part)) {
 								return (
 									<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
-								)
-							}
-							if (isWebSearchPart(part)) {
-								return (
-									<WebSearchToolCard key={`web-search-${toolKey}`} part={part} />
 								)
 							}
 							return null

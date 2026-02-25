@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { protectedProcedure } from '../index'
 import { processContentUpdate } from '../utils/content'
+import { extractEntryRefs, syncEntryLinks } from '../utils/link-sync'
 
 const BCRYPT_ROUNDS = 10
 
@@ -108,6 +109,13 @@ export const createEntry = protectedProcedure
 			})
 			.returning()
 
+		if (contentJson) {
+			const refIds = extractEntryRefs(contentJson)
+			if (refIds.length > 0) {
+				await syncEntryLinks(userId, id, refIds)
+			}
+		}
+
 		return entry
 	})
 
@@ -167,6 +175,11 @@ export const updateEntry = protectedProcedure
 			.set(fieldsToUpdate)
 			.where(and(...conditions))
 			.returning()
+
+		if (entry && updateData.contentJson !== undefined) {
+			const refIds = extractEntryRefs(updateData.contentJson)
+			await syncEntryLinks(userId, id, refIds)
+		}
 
 		if (!entry) {
 			// 检查是否因为版本冲突导致更新失败

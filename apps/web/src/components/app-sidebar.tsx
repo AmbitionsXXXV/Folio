@@ -3,6 +3,7 @@ import { cn } from '@folionote/ui/lib/utils'
 import {
 	Activity01Icon,
 	AiBrain01Icon,
+	Atom02Icon,
 	BookOpen01Icon,
 	InboxIcon,
 	Link01Icon,
@@ -45,6 +46,7 @@ const mainNavItems: NavItem[] = [
 const secondaryNavItems: NavItem[] = [
 	{ to: '/tags', labelKey: 'nav.tags', icon: Tag01Icon },
 	{ to: '/sources', labelKey: 'nav.sources', icon: Link01Icon },
+	{ to: '/graph', labelKey: 'nav.graph', icon: Atom02Icon },
 	{ to: '/review', labelKey: 'nav.review', icon: Rocket01Icon },
 	{ to: '/knowledge', labelKey: 'nav.knowledge', icon: AiBrain01Icon },
 ]

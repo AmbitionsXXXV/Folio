@@ -1,10 +1,4 @@
-/**
- * Time unit constants (in milliseconds)
- */
-const ONE_SECOND_MS = 1000
-const ONE_MINUTE_MS = 60 * ONE_SECOND_MS
-const ONE_WEEK_MS = 7 * 24 * 60 * ONE_MINUTE_MS
-
+import { ONE_MINUTE_MS, ONE_WEEK_MS } from '@folionote/constants'
 import {
 	type ErrorMap,
 	type Meta,
@@ -211,6 +205,18 @@ export const RATE_LIMIT_CONFIGS = {
 		maxRequests: 10,
 		windowMs: ONE_MINUTE_MS,
 		keyPrefix: 'avatar:delete',
+	},
+	/** Attachment upload: 20 requests per minute */
+	ATTACHMENT_UPLOAD: {
+		maxRequests: 20,
+		windowMs: ONE_MINUTE_MS,
+		keyPrefix: 'attachment:upload',
+	},
+	/** Attachment delete: 20 requests per minute */
+	ATTACHMENT_DELETE: {
+		maxRequests: 20,
+		windowMs: ONE_MINUTE_MS,
+		keyPrefix: 'attachment:delete',
 	},
 } as const satisfies Record<string, RateLimitConfig>
 

@@ -420,7 +420,8 @@
     "tags": "标签",
     "settings": "设置",
     "profile": "个人资料",
-    "knowledge": "知识库"
+    "knowledge": "知识库",
+    "graph": "图谱"
   },
   "search": {
     "placeholder": "搜索条目...",
@@ -489,7 +490,13 @@
       "divider": "分割线",
       "dividerDesc": "水平分隔线",
       "table": "表格",
-      "tableDesc": "插入表格"
+      "tableDesc": "插入表格",
+      "image": "图片",
+      "imageDesc": "上传并插入图片"
+    },
+    "imageUpload": {
+      "fileTooLarge": "文件过大，最大允许 {{maxMB}}MB",
+      "uploading": "正在上传图片…"
     },
     "sourceCommand": {
       "linkSource": "关联来源",
@@ -503,6 +510,15 @@
       "refEntry": "引用条目",
       "refEntryDesc": "插入指向其他条目的链接",
       "untitled": "无标题"
+    },
+    "table": {
+      "addRowBefore": "在上方插入行",
+      "addRowAfter": "在下方插入行",
+      "deleteRow": "删除行",
+      "addColumnBefore": "在左侧插入列",
+      "addColumnAfter": "在右侧插入列",
+      "deleteColumn": "删除列",
+      "toggleHeaderRow": "切换标题行"
     }
   },
   "error": {
@@ -934,7 +950,11 @@
         "title": "联网搜索",
         "loading": "正在搜索… {{query}}",
         "errorTitle": "联网搜索失败",
-        "errorFallback": "无法执行联网搜索"
+        "errorFallback": "无法执行联网搜索",
+        "panelTitle": "搜索结果",
+        "panelResultCount": "{{count}} 条结果",
+        "panelNoResults": "未找到结果",
+        "reference": "条引用"
       }
     },
     "emptyState": {
@@ -983,5 +1003,27 @@
     "removed": "{{provider}} 配置已移除",
     "removeConfirmTitle": "移除 API 密钥",
     "removeConfirmDescription": "确定要移除 {{provider}} 的 API 密钥吗？您需要重新配置才能使用此提供商。"
+  },
+  "graph": {
+    "searchPlaceholder": "搜索节点...",
+    "filterByTag": "按标签筛选",
+    "allTags": "全部标签",
+    "inferredEdges": "推断边",
+    "addLink": "添加关联",
+    "connectingDone": "完成",
+    "fitView": "适应视图",
+    "emptyTitle": "暂无条目",
+    "emptyDescription": "创建条目并使用 /ref 建立引用关系，您的知识图谱将显示在这里。",
+    "untitled": "无标题",
+    "starred": "星标",
+    "pinned": "置顶",
+    "inbox": "收件箱",
+    "tags": "标签",
+    "referencesTo": "引用了",
+    "referencedBy": "被引用",
+    "openEntry": "打开条目",
+    "linkAlreadyExists": "关联已存在",
+    "linkAdded": "关联已添加",
+    "linkFailed": "添加关联失败"
   }
 }

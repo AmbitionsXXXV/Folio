@@ -15,6 +15,7 @@ export {
 	unwrap,
 	unwrapOr,
 } from './result'
+export { truncateText } from './text'
 export type {
 	FormatTimeOptions,
 	FormattedTime,
@@ -31,3 +32,4 @@ export {
 	getTimeUnitKey,
 	getTzOffset,
 } from './time'
+export { getFaviconUrl, getHostname } from './url'

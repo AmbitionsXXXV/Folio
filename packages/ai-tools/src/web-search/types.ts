@@ -22,6 +22,7 @@ export type WebSearchResult = {
 export type WebSearchToolOutput = {
 	query: string
 	results: WebSearchResult[]
+	message?: string
 }
 
 // =============================================================================
@@ -31,5 +32,13 @@ export type WebSearchToolOutput = {
 export type WebSearchCardProps = {
 	query: string
 	results: WebSearchResult[]
+	className?: string
+}
+
+export type WebSearchCompactBarProps = {
+	query: string
+	resultCount: number
+	isLoading?: boolean
+	onClick?: () => void
 	className?: string
 }

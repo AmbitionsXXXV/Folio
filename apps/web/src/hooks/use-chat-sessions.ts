@@ -8,7 +8,7 @@
  * - Empty session cleanup on switch
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react'
 import type { ChatSessionSummary } from '@/features/knowledge'
 import { getLastChatId, setLastChatId } from '@/features/knowledge'
 import { getServerUrl } from '@/utils/api-environment'
@@ -24,6 +24,11 @@ export type UseChatSessionsConfig = {
 	autoCreateIfEmpty?: boolean
 }
 
+export type RefreshSessionsOptions = {
+	/** Skip isLoading toggle to avoid Skeleton flicker when data already exists */
+	silent?: boolean
+}
+
 export type UseChatSessionsReturn = {
 	/** List of chat sessions */
 	sessions: ChatSessionSummary[]
@@ -34,7 +39,7 @@ export type UseChatSessionsReturn = {
 	/** Error state */
 	error: Error | null
 	/** Refresh the session list */
-	refreshSessions: () => Promise<void>
+	refreshSessions: (options?: RefreshSessionsOptions) => Promise<void>
 	/** Select a chat session */
 	selectChat: (chatId: string) => void
 	/** Create a new chat session */
@@ -76,6 +81,7 @@ export function useChatSessions(
 	const previousChatIdRef = useRef<string | null>(null)
 	const selectedChatIdRef = useRef<string | null>(null)
 	const hasAutoCreatedInitialChatRef = useRef(false)
+	const hasCompletedInitialLoadRef = useRef(false)
 
 	const fetchChatSessions = useCallback(async (): Promise<ChatSessionSummary[]> => {
 		const response = await fetch(`${getServerUrl()}/api/ai/chats`, {
@@ -131,38 +137,48 @@ export function useChatSessions(
 		setSessions(refreshedChats)
 	}, [fetchChatSessions])
 
-	// Fetch chat sessions from server
-	const refreshSessions = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
-
-		try {
-			const chatList = await fetchChatSessions()
-			setSessions(chatList)
-			const currentSelectedChatId = selectedChatIdRef.current
-			selectInitialChatIfNeeded(chatList, currentSelectedChatId)
-
-			const shouldCreateInitialChat =
-				autoCreateIfEmpty &&
-				chatList.length === 0 &&
-				!hasAutoCreatedInitialChatRef.current &&
-				!currentSelectedChatId
-
-			if (shouldCreateInitialChat) {
-				hasAutoCreatedInitialChatRef.current = true
-				await createInitialChatAndRefresh()
+	const refreshSessions = useCallback(
+		async (options?: RefreshSessionsOptions) => {
+			const silent = options?.silent ?? hasCompletedInitialLoadRef.current
+			if (!silent) {
+				setIsLoading(true)
 			}
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Unknown error'))
-		} finally {
-			setIsLoading(false)
-		}
-	}, [
-		autoCreateIfEmpty,
-		fetchChatSessions,
-		selectInitialChatIfNeeded,
-		createInitialChatAndRefresh,
-	])
+			setError(null)
+
+			try {
+				const chatList = await fetchChatSessions()
+				startTransition(() => {
+					setSessions(chatList)
+				})
+				const currentSelectedChatId = selectedChatIdRef.current
+				selectInitialChatIfNeeded(chatList, currentSelectedChatId)
+
+				const shouldCreateInitialChat =
+					autoCreateIfEmpty &&
+					chatList.length === 0 &&
+					!hasAutoCreatedInitialChatRef.current &&
+					!currentSelectedChatId
+
+				if (shouldCreateInitialChat) {
+					hasAutoCreatedInitialChatRef.current = true
+					await createInitialChatAndRefresh()
+				}
+			} catch (err) {
+				setError(err instanceof Error ? err : new Error('Unknown error'))
+			} finally {
+				hasCompletedInitialLoadRef.current = true
+				if (!silent) {
+					setIsLoading(false)
+				}
+			}
+		},
+		[
+			autoCreateIfEmpty,
+			fetchChatSessions,
+			selectInitialChatIfNeeded,
+			createInitialChatAndRefresh,
+		]
+	)
 
 	// Check if a session is empty by chatId
 	const isSessionEmpty = useCallback(
@@ -249,13 +265,31 @@ export function useChatSessions(
 
 			const data = (await response.json()) as { chatId: string }
 			const newChatId = data.chatId
+			const now = new Date().toISOString()
 
-			// Update local state
+			// Optimistic update: prepend the new session immediately
+			const optimisticSession: ChatSessionSummary = {
+				chatId: newChatId,
+				userId: '',
+				title: title || '',
+				messageCount: 0,
+				lastMessagePreview: '',
+				lastMessageAt: null,
+				lastOpenedAt: now,
+				updatedAt: now,
+				createdAt: now,
+			}
+
 			setSelectedChatId(newChatId)
 			setLastChatId(newChatId)
+			startTransition(() => {
+				setSessions((prev) => [optimisticSession, ...prev])
+			})
 
-			// Refresh sessions to include the new chat
-			await refreshSessions()
+			// Background revalidate — fire and forget
+			refreshSessions({ silent: true }).catch(() => {
+				// Non-critical: optimistic state is already visible
+			})
 
 			return newChatId
 		},

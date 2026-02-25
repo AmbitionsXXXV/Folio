@@ -1,5 +1,21 @@
 # @folionote/api
 
+## 0.2.19
+
+### Patch Changes
+
+- add image upload functionality to the editor
+- Updated dependencies
+  - @folionote/constants@0.2.19
+  - @folionote/locales@0.2.19
+  - @folionote/storage@0.2.19
+  - @folionote/utils@0.2.19
+  - @folionote/auth@0.2.19
+  - @folionote/db@0.2.19
+  - @folionote/ai@0.2.19
+  - @folionote/log@0.1.13
+  - @folionote/model-list@0.1.12
+
 ## 0.2.18
 
 ### Patch Changes

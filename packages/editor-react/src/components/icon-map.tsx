@@ -6,6 +6,7 @@ import {
 	Heading01Icon,
 	Heading02Icon,
 	Heading03Icon,
+	Image02Icon,
 	LeftToRightListBulletIcon,
 	LeftToRightListNumberIcon,
 	Link04Icon,
@@ -33,6 +34,7 @@ export const defaultIconMap: Record<IconId, ReactNode> = {
 	ref: <HugeiconsIcon className="size-4" icon={Link04Icon} />,
 	source: <HugeiconsIcon className="size-4" icon={Book02Icon} />,
 	table: <HugeiconsIcon className="size-4" icon={Table01Icon} />,
+	image: <HugeiconsIcon className="size-4" icon={Image02Icon} />,
 }
 
 export type IconMapType = Record<IconId, ReactNode>

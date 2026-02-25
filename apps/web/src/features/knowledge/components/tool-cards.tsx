@@ -11,7 +11,7 @@ import {
 	WeatherCard,
 	type WeatherToolInput,
 	type WeatherToolOutput,
-	WebSearchCard,
+	WebSearchCompactBar,
 	type WebSearchResult,
 	type WebSearchToolOutput,
 } from '@folionote/ai-tools'
@@ -646,70 +646,71 @@ function parseWebSearchOutput(value: unknown): WebSearchToolOutput | null {
 	return { query, results }
 }
 
-type WebSearchToolCardProps = {
-	part: UIMessagePart
+// =============================================================================
+// Web Search Data Extraction (for layout positioning)
+// =============================================================================
+
+export type WebSearchData = {
+	query: string
+	results: WebSearchResult[]
+	isLoading: boolean
 }
 
-export const WebSearchToolCard = memo(function WebSearchToolCard({
-	part,
-}: WebSearchToolCardProps) {
-	const { t } = useTranslation()
-	if (part.type !== 'tool-webSearch') return null
+function extractFromWebSearchPart(part: UIMessagePart): WebSearchData | null {
 	if (!('state' in part)) return null
 	const state = typeof part.state === 'string' ? part.state : null
 	if (!state) return null
-	const input = 'input' in part ? part.input : undefined
-	const outputValue = 'output' in part ? part.output : undefined
-	const errorText =
-		'errorText' in part && typeof part.errorText === 'string'
-			? part.errorText
-			: undefined
 
 	if (state === 'input-available') {
+		const input = 'input' in part ? part.input : undefined
 		const query =
 			isRecord(input) && typeof input.query === 'string' ? input.query : ''
-		return (
-			<ToolCardContainer>
-				<div className="font-medium">{t('knowledge.toolCards.webSearch.title')}</div>
-				<div className="mt-1 text-muted-foreground text-xs">
-					{t('knowledge.toolCards.webSearch.loading', { query })}
-				</div>
-			</ToolCardContainer>
-		)
+		return { query, results: [], isLoading: true }
 	}
 
-	if (state === 'output-error') {
-		return (
-			<ToolCardContainer>
-				<div className="font-medium text-destructive">
-					{t('knowledge.toolCards.webSearch.errorTitle')}
-				</div>
-				<div className="mt-1 text-muted-foreground text-xs">
-					{errorText || t('knowledge.toolCards.webSearch.errorFallback')}
-				</div>
-			</ToolCardContainer>
-		)
+	if (state === 'output-available') {
+		const outputValue = 'output' in part ? part.output : undefined
+		const output = parseWebSearchOutput(outputValue)
+		if (output) {
+			return { query: output.query, results: output.results, isLoading: false }
+		}
 	}
 
-	if (state !== 'output-available') return null
+	return null
+}
 
-	const output = parseWebSearchOutput(outputValue)
-	if (!output) {
-		return (
-			<ToolCardContainer>
-				<div className="font-medium text-destructive">
-					{t('knowledge.toolCards.webSearch.errorTitle')}
-				</div>
-				<div className="mt-1 text-muted-foreground text-xs">
-					{t('knowledge.toolCards.webSearch.errorFallback')}
-				</div>
-			</ToolCardContainer>
-		)
+export function extractWebSearchData(parts: UIMessagePart[]): WebSearchData | null {
+	for (const part of parts) {
+		if (!isWebSearchPart(part)) continue
+		const data = extractFromWebSearchPart(part)
+		if (data) return data
 	}
+	return null
+}
 
+type WebSearchToolCardProps = {
+	webSearchData: WebSearchData
+	onOpenPanel?: (data: { query: string; results: WebSearchResult[] }) => void
+}
+
+export const WebSearchToolCard = memo(function WebSearchToolCard({
+	webSearchData,
+	onOpenPanel,
+}: WebSearchToolCardProps) {
 	return (
-		<ToolCardContainer>
-			<WebSearchCard query={output.query} results={output.results} />
-		</ToolCardContainer>
+		<WebSearchCompactBar
+			isLoading={webSearchData.isLoading}
+			onClick={
+				onOpenPanel && !webSearchData.isLoading && webSearchData.results.length > 0
+					? () =>
+							onOpenPanel({
+								query: webSearchData.query,
+								results: webSearchData.results,
+							})
+					: undefined
+			}
+			query={webSearchData.query}
+			resultCount={webSearchData.results.length}
+		/>
 	)
 })
