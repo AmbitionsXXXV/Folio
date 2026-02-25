@@ -243,3 +243,43 @@ Concise rules for building accessible, fast, delightful UIs Use MUST/SHOULD/NEVE
 - MUST: Increase contrast on `:hover/:active/:focus`
 - SHOULD: Match browser UI to bg
 - SHOULD: Avoid gradient banding (use masks when needed)
+
+## Cursor Cloud specific instructions
+
+### Services overview
+
+| Service | Command | Port | Notes |
+|---------|---------|------|-------|
+| PostgreSQL | `sudo docker compose up -d` (in `packages/db/`) | 5432 | Uses `docker-compose.yml` with postgres:17-alpine |
+| API server | `pnpm dev:server` | 3000 | Hono backend; needs `DATABASE_URL` env var |
+| Web app | `pnpm dev:web` | 3001 | TanStack Start + Vite |
+
+### Database setup
+
+This project supports three PostgreSQL options (see `CLAUDE.md`). For Cloud VMs, Docker Compose is simplest:
+
+1. Start PostgreSQL: `cd packages/db && sudo docker compose up -d`
+2. Push schema: `DATABASE_URL="postgresql://postgres:password@localhost:5432/folio_note" pnpm db:push`
+
+The `drizzle.config.ts` falls back to a Supabase URL on port 54322 if `DATABASE_URL` is unset. Always pass `DATABASE_URL` explicitly when running `db:push` or dev servers.
+
+### Environment files
+
+- `apps/server/.env` — must contain `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+- `apps/web/.env` — must contain `VITE_SERVER_URL`, `VITE_WEB_URL`
+- Copy from `.env.example` files and fill in values. See `CLAUDE.md` for full list.
+
+### Running dev servers
+
+Pass `DATABASE_URL` as an env var when starting the server to avoid the Supabase fallback:
+
+```bash
+DATABASE_URL="postgresql://postgres:password@localhost:5432/folio_note" pnpm dev:server
+pnpm dev:web
+```
+
+### Gotchas
+
+- `pnpm install` will fail if `CI` env is not set, because `lefthook install` conflicts with Cursor's git hooks path. Use `CI=true pnpm install` in Cloud VMs.
+- One pre-existing test failure exists in `apps/web/__tests__/message-list.test.tsx` (expects "Tool Calls" text that doesn't render). This is not environment-related.
+- Standard commands are documented in `CLAUDE.md` (lint, test, build, type-check).
