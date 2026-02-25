@@ -249,6 +249,14 @@ export const attachments = pgTable(
 		storageKey: text('storage_key').notNull(),
 		/** 缩略图路径（如果是图片） */
 		thumbnailKey: text('thumbnail_key'),
+		/** 图片描述（由视觉模型生成） */
+		description: text('description'),
+		/** 生成描述所使用的模型 ID */
+		descriptionModel: text('description_model'),
+		/** 图片描述生成时间 */
+		descriptionGeneratedAt: timestamp('description_generated_at', {
+			withTimezone: true,
+		}),
 		createdAt: timestamp('created_at', { withTimezone: true })
 			.defaultNow()
 			.notNull(),

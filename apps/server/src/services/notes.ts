@@ -1,6 +1,7 @@
 import type { NoteContext } from '@folionote/ai'
-import { db, entries } from '@folionote/db'
+import { attachments, db, entries } from '@folionote/db'
 import { createLogger } from '@folionote/log'
+import { getS3Config, STORAGE_BUCKETS } from '@folionote/storage'
 import { and, desc, eq, inArray, isNull, notInArray, sql } from 'drizzle-orm'
 
 const log = createLogger({ prefix: 'notes-service' })
@@ -10,6 +11,79 @@ export const MAX_ATTACHED_NOTES = 10
 
 /** Regex for splitting query into search terms */
 const WHITESPACE_REGEX = /\s+/
+
+function getAttachmentPublicUrl(storageKey: string): string {
+	const s3Config = getS3Config()
+	return `${s3Config.publicUrl}/${STORAGE_BUCKETS.ATTACHMENTS}/${storageKey}`
+}
+
+export async function fetchNoteImageMap(
+	userId: string,
+	noteIds: string[]
+): Promise<Map<string, NonNullable<NoteContext['images']>>> {
+	const uniqueNoteIds = [...new Set(noteIds.filter((noteId) => noteId.length > 0))]
+	if (uniqueNoteIds.length === 0) {
+		return new Map()
+	}
+
+	const rows = await db
+		.select({
+			entryId: attachments.entryId,
+			storageKey: attachments.storageKey,
+			mimeType: attachments.mimeType,
+			description: attachments.description,
+		})
+		.from(attachments)
+		.where(
+			and(
+				eq(attachments.userId, userId),
+				isNull(attachments.deletedAt),
+				inArray(attachments.entryId, uniqueNoteIds)
+			)
+		)
+		.orderBy(desc(attachments.createdAt))
+
+	const imageMap = new Map<string, NonNullable<NoteContext['images']>>()
+	for (const row of rows) {
+		if (!row.entryId) continue
+		if (!row.mimeType.startsWith('image/')) continue
+
+		const images = imageMap.get(row.entryId) ?? []
+		images.push({
+			url: getAttachmentPublicUrl(row.storageKey),
+			mimeType: row.mimeType,
+			description: row.description ?? undefined,
+		})
+		imageMap.set(row.entryId, images)
+	}
+
+	return imageMap
+}
+
+async function attachImagesToNotes(
+	userId: string,
+	notes: NoteContext[]
+): Promise<NoteContext[]> {
+	if (notes.length === 0) {
+		return notes
+	}
+
+	const imageMap = await fetchNoteImageMap(
+		userId,
+		notes.map((note) => note.id)
+	)
+
+	return notes.map((note) => {
+		const images = imageMap.get(note.id)
+		if (!images || images.length === 0) {
+			return note
+		}
+		return {
+			...note,
+			images,
+		}
+	})
+}
 
 /**
  * Fetch notes by IDs for the given user (Library only, not deleted)
@@ -36,11 +110,13 @@ export async function fetchNotesByIds(
 			)
 		)
 
-	return notes.map((n) => ({
+	const mappedNotes = notes.map((n) => ({
 		id: n.id,
 		title: n.title,
 		contentText: n.contentText ?? '',
 	}))
+
+	return attachImagesToNotes(userId, mappedNotes)
 }
 
 /**
@@ -91,11 +167,12 @@ export async function searchNotesForRag(
 			.limit(limit)
 
 		if (ftsResults.length > 0) {
-			return ftsResults.map((n) => ({
+			const mappedNotes = ftsResults.map((n) => ({
 				id: n.id,
 				title: n.title,
 				contentText: n.contentText ?? '',
 			}))
+			return attachImagesToNotes(userId, mappedNotes)
 		}
 	} catch (error) {
 		log.warn('FTS search failed, falling back to ILIKE:', error)
@@ -119,9 +196,11 @@ export async function searchNotesForRag(
 		.orderBy(desc(entries.updatedAt))
 		.limit(limit)
 
-	return ilikeResults.map((n) => ({
+	const mappedNotes = ilikeResults.map((n) => ({
 		id: n.id,
 		title: n.title,
 		contentText: n.contentText ?? '',
 	}))
+
+	return attachImagesToNotes(userId, mappedNotes)
 }

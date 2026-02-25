@@ -1,13 +1,14 @@
 import type { NoteContext } from '@folionote/ai'
-import { db, entries, entryTags, tags } from '@folionote/db'
+import { attachments, db, entries, entryTags, tags } from '@folionote/db'
 import { createLogger } from '@folionote/log'
 import { and, desc, eq, inArray, isNull, notInArray, or, sql } from 'drizzle-orm'
+import { fetchNoteImageMap } from '../notes'
 
 const log = createLogger({ prefix: 'rag:multi-retriever' })
 
 const WHITESPACE_REGEX = /\s+/
 
-type RetrievalSource = 'fts' | 'ilike' | 'title' | 'tag'
+type RetrievalSource = 'fts' | 'ilike' | 'title' | 'tag' | 'image'
 
 export type ScoredNoteContext = NoteContext & {
 	sources: Set<RetrievalSource>
@@ -175,6 +176,38 @@ async function searchByTag(
 	}
 }
 
+async function searchByImageDescription(
+	userId: string,
+	query: string,
+	excludeIds: string[],
+	limit: number
+): Promise<NoteContext[]> {
+	const pattern = `%${query}%`
+	try {
+		const rows = await db
+			.selectDistinct({
+				id: entries.id,
+				title: entries.title,
+				contentText: entries.contentText,
+			})
+			.from(entries)
+			.innerJoin(attachments, eq(entries.id, attachments.entryId))
+			.where(
+				and(
+					...buildBaseConditions(userId, excludeIds),
+					isNull(attachments.deletedAt),
+					sql`${attachments.description} ILIKE ${pattern}`
+				)
+			)
+			.orderBy(desc(entries.updatedAt))
+			.limit(limit)
+		return mapToNoteContext(rows)
+	} catch (error) {
+		log.warn('Image description search failed:', error)
+		return []
+	}
+}
+
 /**
  * Run multiple retrieval strategies in parallel, merge and deduplicate results.
  * Each note is annotated with which sources found it.
@@ -204,12 +237,19 @@ export async function multiRetrieve(
 		excludeIds,
 		limitPerRoute
 	)
+	const imagePromise = searchByImageDescription(
+		userId,
+		originalQuery,
+		excludeIds,
+		limitPerRoute
+	)
 
 	const results = await Promise.all([
 		...ftsPromises,
 		titlePromise,
 		tagPromise,
 		ilikePromise,
+		imagePromise,
 	])
 
 	const sourceLabels: RetrievalSource[] = [
@@ -217,6 +257,7 @@ export async function multiRetrieve(
 		'title',
 		'tag',
 		'ilike',
+		'image',
 	]
 
 	const mergedMap = new Map<string, ScoredNoteContext>()
@@ -244,5 +285,19 @@ export async function multiRetrieve(
 		`Multi-retrieve: ${merged.length} unique notes from ${results.flat().length} total hits`
 	)
 
-	return merged
+	const imageMap = await fetchNoteImageMap(
+		userId,
+		merged.map((note) => note.id)
+	)
+
+	return merged.map((note) => {
+		const images = imageMap.get(note.id)
+		if (!images || images.length === 0) {
+			return note
+		}
+		return {
+			...note,
+			images,
+		}
+	})
 }

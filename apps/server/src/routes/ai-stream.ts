@@ -4,6 +4,7 @@ import {
 	buildKnowledgeChatSystemPrompt,
 	DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
 	type DecryptedCredential,
+	type NoteContext,
 	PROVIDER_CONFIGS,
 	providerSupports,
 } from '@folionote/ai'
@@ -17,6 +18,7 @@ import {
 	streamText as aiStreamText,
 	convertToModelMessages,
 	createIdGenerator,
+	type ModelMessage,
 	type UIMessage,
 } from 'ai'
 import type { Context as HonoContext } from 'hono'
@@ -32,6 +34,10 @@ import {
 	touchChat,
 } from '../services/ai-chat-store'
 import { aiTools } from '../services/ai-tools'
+import {
+	ensureAttachmentImageCaption,
+	ensureEntryImageCaptions,
+} from '../services/image-captioning'
 import {
 	fetchNotesByIds,
 	MAX_ATTACHED_NOTES,
@@ -100,6 +106,22 @@ type AiCompactRequestBody = {
 	tokensToCompact?: number
 }
 
+type CaptionImageRequestBody = {
+	attachmentId: string
+	provider?: string
+	apiKey?: string
+	baseUrl?: string
+	model?: string
+	force?: boolean
+}
+
+type InternalCaptionImageRequestBody = {
+	userId: string
+	attachmentId: string
+	model?: string
+	force?: boolean
+}
+
 // =============================================================================
 // Helper Functions
 // =============================================================================
@@ -157,6 +179,87 @@ function extractLastUserText(messages: UIMessage[]): string {
 	return ''
 }
 
+const MAX_NOTE_IMAGES_FOR_VISION = 5
+const MAX_IMAGE_DESCRIPTION_CHARS = 280
+
+function truncateText(text: string, maxChars: number): string {
+	if (text.length <= maxChars) return text
+	return `${text.slice(0, maxChars - 3)}...`
+}
+
+function buildVisionContextMessage(
+	notes: Array<{ title: string; images?: NoteContext['images'] }>
+): ModelMessage | undefined {
+	const content: Array<
+		| { type: 'text'; text: string }
+		| { type: 'image'; image: URL; mediaType?: string }
+	> = [
+		{
+			type: 'text',
+			text: [
+				'Reference images from the user notes are attached below.',
+				'Use them as supporting context when answering the user question.',
+				'If an image is irrelevant, ignore it.',
+			].join('\n'),
+		},
+	]
+
+	let imageCount = 0
+	for (const note of notes) {
+		if (!note.images || note.images.length === 0) continue
+		for (const image of note.images) {
+			if (imageCount >= MAX_NOTE_IMAGES_FOR_VISION) break
+			try {
+				const imageUrl = new URL(image.url)
+				const description =
+					image.description?.trim() ?? 'No generated description available.'
+				content.push({
+					type: 'text',
+					text: `Note: ${note.title}\nImage summary: ${truncateText(description, MAX_IMAGE_DESCRIPTION_CHARS)}`,
+				})
+				content.push({
+					type: 'image',
+					image: imageUrl,
+					mediaType: image.mimeType,
+				})
+				imageCount += 1
+			} catch (error) {
+				log.warn(`Invalid image URL skipped: ${image.url}`, error)
+			}
+		}
+		if (imageCount >= MAX_NOTE_IMAGES_FOR_VISION) break
+	}
+
+	if (imageCount === 0) {
+		return undefined
+	}
+
+	return {
+		role: 'user',
+		content,
+	}
+}
+
+async function resolveStreamMessages(input: {
+	userId: string
+	chatId: string
+	prompt?: string
+	requestMessages?: UIMessage[]
+}): Promise<UIMessage[]> {
+	if (input.requestMessages && input.requestMessages.length > 0) {
+		return input.requestMessages
+	}
+
+	const storedMessages = await loadChatMessages(input.userId, input.chatId)
+	const userMessage: UIMessage = {
+		id: `user-${Date.now()}`,
+		role: 'user',
+		parts: [{ type: 'text', text: input.prompt ?? '' }],
+	}
+
+	return [...storedMessages, userMessage]
+}
+
 /**
  * Prepare note context for AI streaming (RAG).
  * When a LanguageModel is provided, the enhanced RAG pipeline (query rewrite + multi-retrieve + rerank)
@@ -167,18 +270,22 @@ async function prepareNoteContext(
 	prompt: string,
 	noteEntryIds: string[] | undefined,
 	ragTopK: number | undefined,
-	model?: import('ai').LanguageModel
+	model?: import('ai').LanguageModel,
+	captionOptions?: {
+		credential: DecryptedCredential
+		model?: string
+	}
 ) {
 	const sanitizedNoteIds = (noteEntryIds ?? [])
 		.filter((id) => typeof id === 'string' && id.length > 0)
 		.slice(0, MAX_ATTACHED_NOTES)
 
 	const uniqueNoteIds = [...new Set(sanitizedNoteIds)]
-	const attachedNotes = await fetchNotesByIds(userId, uniqueNoteIds)
+	let attachedNotes = await fetchNotesByIds(userId, uniqueNoteIds)
 
 	const effectiveRagTopK = ragTopK ?? DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K
 
-	const retrievedNotes = model
+	let retrievedNotes = model
 		? await ragRetrieve({
 				userId,
 				query: prompt,
@@ -188,7 +295,95 @@ async function prepareNoteContext(
 			})
 		: await searchNotesForRag(userId, prompt, uniqueNoteIds, effectiveRagTopK)
 
+	const allNoteIds = [
+		...new Set([...uniqueNoteIds, ...retrievedNotes.map((note) => note.id)]),
+	]
+	if (allNoteIds.length > 0) {
+		const generatedCount = await ensureEntryImageCaptions({
+			userId,
+			entryIds: allNoteIds,
+			credential: captionOptions?.credential,
+			model: captionOptions?.model,
+			allowEnvFallback: true,
+		})
+
+		if (generatedCount > 0) {
+			const refreshedNotes = await fetchNotesByIds(userId, allNoteIds)
+			const refreshedNoteMap = new Map(
+				refreshedNotes.map((note) => [note.id, note] as const)
+			)
+
+			attachedNotes = uniqueNoteIds
+				.map((noteId) => refreshedNoteMap.get(noteId))
+				.filter((note): note is NoteContext => Boolean(note))
+
+			retrievedNotes = retrievedNotes.map(
+				(note) => refreshedNoteMap.get(note.id) ?? note
+			)
+
+			log.debug(`Generated image captions for ${generatedCount} attachment(s)`)
+		}
+	}
+
 	return { attachedNotes, retrievedNotes }
+}
+
+async function resolveTopologyContextText(
+	userId: string,
+	noteEntryIds: string[] | undefined,
+	attachedNotes: NoteContext[]
+): Promise<string> {
+	const topologyEntryIds = [
+		...(noteEntryIds ?? []),
+		...attachedNotes.map((note) => note.id),
+	]
+	if (topologyEntryIds.length === 0) {
+		return ''
+	}
+
+	const { contextText } = await buildTopologyContext(userId, topologyEntryIds, 1)
+	return contextText
+}
+
+function mergeVisionCandidateNotes(
+	attachedNotes: NoteContext[],
+	retrievedNotes: NoteContext[]
+): NoteContext[] {
+	const attachedNoteIds = new Set(attachedNotes.map((note) => note.id))
+	const uniqueRetrievedNotes = retrievedNotes.filter(
+		(note) => !attachedNoteIds.has(note.id)
+	)
+	return [...attachedNotes, ...uniqueRetrievedNotes]
+}
+
+function buildModelMessagesWithVisionContext(input: {
+	provider: AiProvider
+	modelMessages: ModelMessage[]
+	attachedNotes: NoteContext[]
+	retrievedNotes: NoteContext[]
+}): ModelMessage[] {
+	if (!providerSupports(input.provider, 'vision')) {
+		return input.modelMessages
+	}
+
+	const visionContextMessage = buildVisionContextMessage(
+		mergeVisionCandidateNotes(input.attachedNotes, input.retrievedNotes)
+	)
+	if (!visionContextMessage) {
+		return input.modelMessages
+	}
+
+	return [...input.modelMessages, visionContextMessage]
+}
+
+function combineSystemPrompt(
+	baseSystemPrompt: string,
+	topologyContextText: string
+): string {
+	if (topologyContextText.length === 0) {
+		return baseSystemPrompt
+	}
+	return `${baseSystemPrompt}\n\n${topologyContextText}`
 }
 
 /** Default reasoning budget tokens */
@@ -610,6 +805,84 @@ export function registerAiStreamRoute(app: App) {
 		}
 	})
 
+	app.post('/api/image/caption', async (c) => {
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
+
+		const body = await c.req.json<CaptionImageRequestBody>()
+		if (!(body.attachmentId && body.attachmentId.trim().length > 0)) {
+			return c.json({ error: 'Missing attachmentId' }, 400)
+		}
+
+		const hasProviderOrApiKey = Boolean(body.provider) || Boolean(body.apiKey)
+		if (hasProviderOrApiKey && !(body.provider && body.apiKey)) {
+			return c.json({ error: 'provider and apiKey must be provided together' }, 400)
+		}
+
+		let credential: DecryptedCredential | undefined
+		if (body.provider && body.apiKey) {
+			if (!isValidProvider(body.provider)) {
+				return c.json({ error: `Unsupported provider: ${body.provider}` }, 400)
+			}
+			credential = buildCredential(
+				body.provider,
+				body.apiKey,
+				body.baseUrl,
+				body.model
+			)
+		}
+
+		const result = await ensureAttachmentImageCaption({
+			userId: auth.userId,
+			attachmentId: body.attachmentId,
+			credential,
+			model: body.model,
+			force: body.force ?? false,
+			allowEnvFallback: credential === undefined,
+		})
+
+		return c.json({
+			success: true,
+			generated: Boolean(result),
+			caption: result?.description,
+			modelId: result?.modelId,
+		})
+	})
+
+	app.post('/api/image/caption/internal', async (c) => {
+		const expectedToken = process.env.IMAGE_CAPTION_INTERNAL_TOKEN
+		const providedToken = c.req.header('x-caption-internal-token')
+
+		if (!expectedToken || providedToken !== expectedToken) {
+			return c.json({ error: 'Unauthorized' }, 401)
+		}
+
+		const body = await c.req.json<InternalCaptionImageRequestBody>()
+		if (
+			!(
+				body.userId &&
+				body.userId.trim().length > 0 &&
+				body.attachmentId &&
+				body.attachmentId.trim().length > 0
+			)
+		) {
+			return c.json({ error: 'Missing required fields' }, 400)
+		}
+
+		const result = await ensureAttachmentImageCaption({
+			userId: body.userId,
+			attachmentId: body.attachmentId,
+			model: body.model,
+			force: body.force ?? false,
+			allowEnvFallback: true,
+		})
+
+		return c.json({
+			success: true,
+			generated: Boolean(result),
+		})
+	})
+
 	function validateStreamRequest(
 		body: AiStreamRequestBody
 	): { error: string; status: 400 } | null {
@@ -663,26 +936,18 @@ export function registerAiStreamRoute(app: App) {
 		if (validationError) {
 			return c.json({ error: validationError.error }, validationError.status)
 		}
-		const hasMessages = requestMessages && requestMessages.length > 0
-
 		const validProvider = provider as AiProvider
 		const credential = buildCredential(validProvider, apiKey, baseUrl, model)
 
 		try {
 			const chatId = requestChatId || generateChatId()
 
-			let messages: UIMessage[]
-			if (hasMessages) {
-				messages = requestMessages as UIMessage[]
-			} else {
-				const storedMessages = await loadChatMessages(auth.userId, chatId)
-				const userMessage: UIMessage = {
-					id: `user-${Date.now()}`,
-					role: 'user',
-					parts: [{ type: 'text', text: prompt ?? '' }],
-				}
-				messages = [...storedMessages, userMessage]
-			}
+			const messages = await resolveStreamMessages({
+				userId: auth.userId,
+				chatId,
+				prompt,
+				requestMessages,
+			})
 
 			const ragQuery = prompt || extractLastUserText(messages)
 			const aiModel = createVercelAiChatModel(credential, { model })
@@ -692,17 +957,18 @@ export function registerAiStreamRoute(app: App) {
 				ragQuery,
 				noteEntryIds,
 				ragTopK,
-				aiModel
+				aiModel,
+				{
+					credential,
+					model,
+				}
 			)
 
-			const topologyEntryIds = [
-				...(noteEntryIds ?? []),
-				...attachedNotes.map((n) => n.id),
-			]
-			const { contextText: topologyContextText } =
-				topologyEntryIds.length > 0
-					? await buildTopologyContext(auth.userId, topologyEntryIds, 1)
-					: { contextText: '' }
+			const topologyContextText = await resolveTopologyContextText(
+				auth.userId,
+				noteEntryIds,
+				attachedNotes
+			)
 
 			const currentDate = getLocalDateString(new Date())
 			const { systemPrompt: baseSystemPrompt } = buildKnowledgeChatSystemPrompt({
@@ -710,10 +976,14 @@ export function registerAiStreamRoute(app: App) {
 				retrievedNotes,
 				currentDate,
 			})
-			const systemPrompt = topologyContextText
-				? `${baseSystemPrompt}\n\n${topologyContextText}`
-				: baseSystemPrompt
+			const systemPrompt = combineSystemPrompt(baseSystemPrompt, topologyContextText)
 			const modelMessages = await convertToModelMessages(messages)
+			const modelMessagesWithVision = buildModelMessagesWithVisionContext({
+				provider: validProvider,
+				modelMessages,
+				attachedNotes,
+				retrievedNotes,
+			})
 			const providerOptions = buildProviderOptions(
 				validProvider,
 				enableReasoning ?? false
@@ -726,7 +996,7 @@ export function registerAiStreamRoute(app: App) {
 			const result = aiStreamText({
 				model: aiModel,
 				system: systemPrompt,
-				messages: modelMessages,
+				messages: modelMessagesWithVision,
 				tools,
 				experimental_context: {
 					userId: auth.userId,

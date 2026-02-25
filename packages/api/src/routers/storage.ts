@@ -1,4 +1,5 @@
 import { attachments, db, user } from '@folionote/db'
+import { createLogger } from '@folionote/log'
 import {
 	ALLOWED_ATTACHMENT_IMAGE_TYPES,
 	ALLOWED_AVATAR_TYPES,
@@ -322,6 +323,47 @@ const attachmentDeleteRateLimitMiddleware = createRateLimitMiddleware(
 	RATE_LIMIT_CONFIGS.ATTACHMENT_DELETE
 )
 
+const log = createLogger({ prefix: 'api:storage' })
+
+function getInternalCaptionEndpoint(): string | null {
+	const explicitUrl = process.env.IMAGE_CAPTION_INTERNAL_URL?.trim()
+	if (explicitUrl) {
+		return explicitUrl
+	}
+
+	const port = process.env.PORT?.trim()
+	if (!port) return null
+	return `http://127.0.0.1:${port}/api/image/caption/internal`
+}
+
+async function triggerAttachmentCaptionGeneration(
+	userId: string,
+	attachmentId: string
+): Promise<void> {
+	const endpoint = getInternalCaptionEndpoint()
+	const token = process.env.IMAGE_CAPTION_INTERNAL_TOKEN?.trim()
+
+	if (!(endpoint && token)) {
+		return
+	}
+
+	try {
+		await fetch(endpoint, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+				'x-caption-internal-token': token,
+			},
+			body: JSON.stringify({
+				userId,
+				attachmentId,
+			}),
+		})
+	} catch (error) {
+		log.warn('Async attachment caption trigger failed:', error)
+	}
+}
+
 /**
  * storage.uploadAttachment - Upload an image attachment for a note entry
  *
@@ -362,11 +404,17 @@ export const uploadEntryAttachment = protectedProcedure
 			})
 			.returning({
 				id: attachments.id,
-				storageKey: attachments.storageKey,
 			})
 
+		const resolvedAttachmentId = record?.id ?? attachmentId
+		triggerAttachmentCaptionGeneration(userId, resolvedAttachmentId).catch(
+			(error) => {
+				log.warn('Attachment caption trigger rejected:', error)
+			}
+		)
+
 		return {
-			id: record?.id ?? attachmentId,
+			id: resolvedAttachmentId,
 			publicUrl: result.publicUrl,
 			path: result.path,
 		}

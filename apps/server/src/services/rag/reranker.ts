@@ -7,6 +7,7 @@ const log = createLogger({ prefix: 'rag:reranker' })
 
 const MAX_SNIPPET_CHARS = 200
 const MAX_CANDIDATES_FOR_RERANK = 20
+const MAX_IMAGE_DESCRIPTIONS_FOR_RERANK = 2
 
 const RerankResultSchema = z.object({
 	rankings: z.array(
@@ -40,7 +41,15 @@ function buildCandidateList(notes: NoteContext[]): string {
 				note.contentText.length > MAX_SNIPPET_CHARS
 					? `${note.contentText.slice(0, MAX_SNIPPET_CHARS)}…`
 					: note.contentText
-			return `[${note.id}] "${note.title}"\n${snippet}`
+			const imageDescriptions = (note.images ?? [])
+				.map((image) => image.description?.trim())
+				.filter((description): description is string => Boolean(description))
+				.slice(0, MAX_IMAGE_DESCRIPTIONS_FOR_RERANK)
+			const imageSection =
+				imageDescriptions.length > 0
+					? `\nImage descriptions: ${imageDescriptions.join(' | ')}`
+					: ''
+			return `[${note.id}] "${note.title}"\n${snippet}${imageSection}`
 		})
 		.join('\n\n')
 }
