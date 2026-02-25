@@ -1,5 +1,11 @@
 # @folionote/config
 
+## 0.2.19
+
+### Patch Changes
+
+- add image upload functionality to the editor
+
 ## 0.2.18
 
 ### Patch Changes

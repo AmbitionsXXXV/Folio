@@ -1,5 +1,14 @@
 # @folionote/ai-tools
 
+## 0.1.3
+
+### Patch Changes
+
+- add image upload functionality to the editor
+- Updated dependencies
+  - @folionote/db@0.2.19
+  - @folionote/ui@0.2.19
+
 ## 0.1.2
 
 ### Patch Changes

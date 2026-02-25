@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.13
+
+### Patch Changes
+
+- add image upload functionality to the editor
+
 ## 0.1.12
 
 ### Patch Changes
