@@ -70,7 +70,6 @@ function buildProviderOptions(
 
 	switch (provider) {
 		case 'claude':
-			// Anthropic extended thinking
 			return {
 				anthropic: {
 					thinking: {
@@ -81,7 +80,6 @@ function buildProviderOptions(
 			}
 		case 'deepseek':
 		case 'qwen':
-			// OpenAI-compatible providers with reasoning_effort
 			return {
 				openai: {
 					reasoningEffort: 'medium',

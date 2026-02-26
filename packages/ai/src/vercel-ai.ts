@@ -19,6 +19,7 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { devToolsMiddleware } from '@ai-sdk/devtools'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { EmbeddingModelV3, LanguageModelV3 } from '@ai-sdk/provider'
 import { wrapLanguageModel } from 'ai'
 import type { DecryptedCredential } from './credentials/types'
@@ -125,14 +126,21 @@ export function createVercelAiChatModel(
 			break
 		}
 		case 'deepseek':
-		case 'qwen':
-		case 'moonshot': {
-			const openaiCompatible = createOpenAI({
+		case 'qwen': {
+			const openaiCompat = createOpenAI({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
 			})
-			// OpenAI-compatible providers do not support /v1/responses.
-			model = openaiCompatible.chat(modelId)
+			model = openaiCompat.chat(modelId)
+			break
+		}
+		case 'moonshot': {
+			const moonshotai = createOpenAICompatible({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+				name: 'moonshotai',
+			})
+			model = moonshotai(modelId)
 			break
 		}
 		case 'claude': {
@@ -184,13 +192,20 @@ export function createVercelAiEmbeddingModel(
 	switch (credential.provider) {
 		case 'openai':
 		case 'deepseek':
-		case 'qwen':
-		case 'moonshot': {
+		case 'qwen': {
 			const openai = createOpenAI({
 				apiKey: credential.apiKey,
 				baseURL: credential.baseUrl,
 			})
 			return openai.embedding(modelId)
+		}
+		case 'moonshot': {
+			const moonshotai = createOpenAICompatible({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+				name: 'moonshotai',
+			})
+			return moonshotai.embeddingModel(modelId)
 		}
 		case 'gemini': {
 			if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
