@@ -94,10 +94,6 @@ function StackLayout() {
 						},
 					}}
 				/>
-				<Stack.Screen
-					name="modal"
-					options={{ title: 'Modal', presentation: 'modal' }}
-				/>
 			</Stack.Protected>
 
 			{/* Protected routes for unauthenticated users (not in local mode) */}

@@ -12,7 +12,6 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import Constants from 'expo-constants'
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics'
-import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import {
 	Avatar,
@@ -122,13 +121,11 @@ export default function SettingsScreen() {
 							elevation: 8,
 						}}
 					>
-						<LinearGradient
-							colors={[`${accentColor}95`, `${accentColor}60`, `${accentColor}25`]}
-							end={{ x: 1, y: 1 }}
-							start={{ x: 0, y: 0 }}
+						<View
 							style={{
 								padding: 16,
 								borderRadius: 16,
+								experimental_backgroundImage: `linear-gradient(135deg, ${accentColor}95, ${accentColor}60, ${accentColor}25)`,
 							}}
 						>
 							<View className="flex-row items-center">
@@ -211,7 +208,7 @@ export default function SettingsScreen() {
 									size={20}
 								/>
 							</View>
-						</LinearGradient>
+						</View>
 					</PressableFeedback>
 				)}
 

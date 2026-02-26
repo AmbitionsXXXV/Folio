@@ -11,7 +11,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useQuery } from '@tanstack/react-query'
 import { router } from 'expo-router'
-import { Button, Card, useThemeColor } from 'heroui-native'
+import { Button, Card, PressableFeedback, useThemeColor } from 'heroui-native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -301,7 +301,8 @@ export default function HomeScreen() {
 
 					<View className="gap-3">
 						{/* Inbox */}
-						<Pressable onPress={navigateToInbox}>
+						<PressableFeedback onPress={navigateToInbox}>
+							<PressableFeedback.Highlight />
 							<Card className="p-4" variant="secondary">
 								<View className="flex-row items-center">
 									<View className="mr-3 size-12 items-center justify-center rounded-lg bg-accent/10">
@@ -331,10 +332,11 @@ export default function HomeScreen() {
 									/>
 								</View>
 							</Card>
-						</Pressable>
+						</PressableFeedback>
 
 						{/* Library */}
-						<Pressable onPress={navigateToLibrary}>
+						<PressableFeedback onPress={navigateToLibrary}>
+							<PressableFeedback.Highlight />
 							<Card className="p-4" variant="secondary">
 								<View className="flex-row items-center">
 									<View className="mr-3 size-12 items-center justify-center rounded-lg bg-success/10">
@@ -363,10 +365,11 @@ export default function HomeScreen() {
 									/>
 								</View>
 							</Card>
-						</Pressable>
+						</PressableFeedback>
 
 						{/* Review */}
-						<Pressable onPress={navigateToReview}>
+						<PressableFeedback onPress={navigateToReview}>
+							<PressableFeedback.Highlight />
 							<Card className="p-4" variant="secondary">
 								<View className="flex-row items-center">
 									<View className="mr-3 size-12 items-center justify-center rounded-lg bg-warning/10">
@@ -393,7 +396,7 @@ export default function HomeScreen() {
 									/>
 								</View>
 							</Card>
-						</Pressable>
+						</PressableFeedback>
 					</View>
 				</View>
 

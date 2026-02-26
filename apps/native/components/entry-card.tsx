@@ -2,10 +2,10 @@ import { formatDate } from '@folionote/locales'
 import { PinIcon, StarIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useRouter } from 'expo-router'
-import { Card, useThemeColor } from 'heroui-native'
+import { Card, PressableFeedback, useThemeColor } from 'heroui-native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 
 type Entry = {
 	id: string
@@ -59,8 +59,9 @@ export function EntryCard({
 		: t('entryCard.emptyNote')
 
 	return (
-		<Pressable onPress={handlePress}>
-			<Card className="p-4 active:opacity-90" variant="secondary">
+		<PressableFeedback onPress={handlePress}>
+			<PressableFeedback.Highlight />
+			<Card className="p-4" variant="secondary">
 				<View className="flex-row items-start justify-between">
 					<View className="flex-1 pr-2">
 						<View className="mb-1 flex-row items-center">
@@ -98,6 +99,6 @@ export function EntryCard({
 					)}
 				</View>
 			</Card>
-		</Pressable>
+		</PressableFeedback>
 	)
 }
