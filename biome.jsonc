@@ -22,7 +22,9 @@
       "!**/.source",
       "!**/convex/_generated",
       "!**/*.lock",
-      "!tools/clean.js"
+      "!tools/clean.js",
+      "!.agents",
+      "!.claude"
     ]
   },
   "formatter": {
