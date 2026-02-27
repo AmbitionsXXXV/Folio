@@ -14,8 +14,8 @@ type Entry = {
 	isStarred: boolean | null
 	isPinned: boolean | null
 	isInbox: boolean | null
-	createdAt: Date
-	updatedAt: Date
+	createdAt: Date | string | number
+	updatedAt: Date | string | number | null | undefined
 }
 
 type EntryCardProps = {
@@ -33,6 +33,41 @@ function truncateText(text: string | null, maxLength: number): string {
 		return text
 	}
 	return `${text.slice(0, maxLength)}...`
+}
+
+const DATE_FALLBACK_TEXT = '--'
+
+function toValidDate(dateValue: Entry['updatedAt']): Date | null {
+	if (dateValue == null) {
+		return null
+	}
+
+	const normalizedDate = dateValue instanceof Date ? dateValue : new Date(dateValue)
+	if (Number.isNaN(normalizedDate.getTime())) {
+		return null
+	}
+
+	return normalizedDate
+}
+
+function formatUpdatedAtSafely(
+	dateValue: Entry['updatedAt'],
+	locale: string
+): string {
+	const normalizedDate = toValidDate(dateValue)
+	if (!normalizedDate) {
+		return DATE_FALLBACK_TEXT
+	}
+
+	try {
+		return formatDate(normalizedDate, { locale, preset: 'relative' })
+	} catch {
+		try {
+			return formatDate(normalizedDate, { locale, preset: 'medium' })
+		} catch {
+			return DATE_FALLBACK_TEXT
+		}
+	}
 }
 
 export function EntryCard({
@@ -57,6 +92,7 @@ export function EntryCard({
 	const preview = entry.contentText
 		? truncateText(entry.contentText, 120)
 		: t('entryCard.emptyNote')
+	const updatedAtText = formatUpdatedAtSafely(entry.updatedAt, i18n.language)
 
 	return (
 		<PressableFeedback onPress={handlePress}>
@@ -85,12 +121,7 @@ export function EntryCard({
 						)}
 
 						<View className="flex-row items-center">
-							<Text className="text-muted text-xs">
-								{formatDate(entry.updatedAt, {
-									locale: i18n.language,
-									preset: 'relative',
-								})}
-							</Text>
+							<Text className="text-muted text-xs">{updatedAtText}</Text>
 						</View>
 					</View>
 

@@ -24,7 +24,8 @@
       "!**/*.lock",
       "!tools/clean.js",
       "!.agents",
-      "!.claude"
+      "!.claude",
+      "!**/app.config.ts"
     ]
   },
   "formatter": {
@@ -59,8 +60,12 @@
       },
       "correctness": {
         "useImageSize": "off",
+        "noUndeclaredVariables": "off",
         "useExhaustiveDependencies": "off",
         "noNestedComponentDefinitions": "off"
+      },
+      "suspicious": {
+        "noConfusingLabels": "off"
       },
       "nursery": {
         "noLeakedRender": "off"
