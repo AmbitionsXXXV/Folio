@@ -7,6 +7,7 @@ export default defineConfig({
 	clean: true,
 	// Bundle all dependencies into the output (zero-dependency deployment)
 	noExternal: [/.*/],
+	inlineOnly: false,
 	// Exclude Node.js built-in modules
 	external: [
 		/^node:/,
