@@ -1,5 +1,11 @@
 # @folionote/model-list
 
+## 0.1.13
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+
 ## 0.1.12
 
 ### Patch Changes

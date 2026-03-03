@@ -1,5 +1,22 @@
 # web
 
+## 0.2.20
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+- Updated dependencies
+  - @folionote/model-list@0.1.13
+  - @folionote/api@0.2.20
+  - @folionote/ai-tools@0.1.4
+  - @folionote/auth@0.2.20
+  - @folionote/constants@0.2.20
+  - @folionote/editor-core@0.2.20
+  - @folionote/editor-react@0.2.20
+  - @folionote/locales@0.2.20
+  - @folionote/ui@0.2.20
+  - @folionote/utils@0.2.20
+
 ## 0.2.19
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # native
 
+## 0.2.20
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+- Updated dependencies
+  - @folionote/api@0.2.20
+  - @folionote/constants@0.2.20
+  - @folionote/editor-core@0.2.20
+  - @folionote/locales@0.2.20
+  - @folionote/utils@0.2.20
+
 ## 0.2.19
 
 ### Patch Changes

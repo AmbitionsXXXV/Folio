@@ -1,5 +1,11 @@
 # @folionote/log
 
+## 0.1.14
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+
 ## 0.1.13
 
 ### Patch Changes

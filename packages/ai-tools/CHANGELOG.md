@@ -1,5 +1,14 @@
 # @folionote/ai-tools
 
+## 0.1.4
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+- Updated dependencies
+  - @folionote/db@0.2.20
+  - @folionote/ui@0.2.20
+
 ## 0.1.3
 
 ### Patch Changes
