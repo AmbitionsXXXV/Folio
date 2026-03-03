@@ -25,6 +25,7 @@
     "@ai-sdk/provider": "^3.0.2",
     "@ai-sdk/xai": "^3.0.22",
     "@folionote/constants": "workspace:*",
+    "@langchain/textsplitters": "^1.0.1",
     "ai": "catalog:",
     "tokenlens": "catalog:",
     "zod": "catalog:"

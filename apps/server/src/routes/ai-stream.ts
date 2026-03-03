@@ -8,7 +8,10 @@ import {
 	PROVIDER_CONFIGS,
 	providerSupports,
 } from '@folionote/ai'
-import { createVercelAiChatModel } from '@folionote/ai/vercel-ai'
+import {
+	createVercelAiChatModel,
+	createVercelAiEmbeddingModel,
+} from '@folionote/ai/vercel-ai'
 import type { NoteToolContext } from '@folionote/ai-tools/note/types'
 import { isTavilyConfigured } from '@folionote/ai-tools/web-search/api'
 import { createContext } from '@folionote/api/context'
@@ -285,6 +288,17 @@ async function prepareNoteContext(
 
 	const effectiveRagTopK = ragTopK ?? DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K
 
+	let embeddingModel: import('ai').EmbeddingModel | undefined
+	if (captionOptions?.credential) {
+		try {
+			if (providerSupports(captionOptions.credential.provider, 'embedding')) {
+				embeddingModel = createVercelAiEmbeddingModel(captionOptions.credential)
+			}
+		} catch {
+			/* embedding not available for this provider */
+		}
+	}
+
 	let retrievedNotes = model
 		? await ragRetrieve({
 				userId,
@@ -292,6 +306,7 @@ async function prepareNoteContext(
 				excludeIds: uniqueNoteIds,
 				topK: effectiveRagTopK,
 				model,
+				embeddingModel,
 			})
 		: await searchNotesForRag(userId, prompt, uniqueNoteIds, effectiveRagTopK)
 

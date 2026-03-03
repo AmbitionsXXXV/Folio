@@ -7,6 +7,7 @@ import {
 	real,
 	text,
 	timestamp,
+	vector,
 } from 'drizzle-orm/pg-core'
 import { user } from './auth'
 import { entryLinks } from './graph'
@@ -50,6 +51,10 @@ export const entries = pgTable(
 		passwordHash: text('password_hash'),
 		/** soft-delete 字段 */
 		deletedAt: timestamp('deleted_at', { withTimezone: true }),
+		/** Embedding 索引状态: 'pending' | 'indexed' | 'failed' | 'no_provider' */
+		embeddingStatus: text('embedding_status'),
+		/** 内容哈希（SHA-256），用于判断内容是否变更 */
+		contentHash: text('content_hash'),
 	},
 	(table) => [
 		index('entries_user_id_updated_at_idx').on(table.userId, table.updatedAt),
@@ -75,6 +80,56 @@ export const entriesRelations = relations(entries, ({ one, many }) => ({
 	entryShares: many(entryShares),
 	outgoingLinks: many(entryLinks, { relationName: 'outgoingLinks' }),
 	incomingLinks: many(entryLinks, { relationName: 'incomingLinks' }),
+	entryChunks: many(entryChunks),
+}))
+
+/**
+ * entry_chunks - 向量化分块
+ * 存储 entry 的文本分块及其 embedding 向量，供 RAG 检索使用
+ */
+export const entryChunks = pgTable(
+	'entry_chunks',
+	{
+		id: text('id').primaryKey(),
+		entryId: text('entry_id')
+			.notNull()
+			.references(() => entries.id, { onDelete: 'cascade' }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		chunkIndex: integer('chunk_index').notNull(),
+		content: text('content').notNull(),
+		embedding: vector('embedding', { dimensions: 1536 }),
+		embeddingModel: text('embedding_model'),
+		contentHash: text('content_hash'),
+		metadata: text('metadata'),
+		createdAt: timestamp('created_at', { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp('updated_at', { withTimezone: true })
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index('entry_chunks_entry_id_idx').on(table.entryId),
+		index('entry_chunks_user_id_idx').on(table.userId),
+		index('entry_chunks_embedding_cosine_idx').using(
+			'hnsw',
+			table.embedding.op('vector_cosine_ops')
+		),
+	]
+)
+
+export const entryChunksRelations = relations(entryChunks, ({ one }) => ({
+	entry: one(entries, {
+		fields: [entryChunks.entryId],
+		references: [entries.id],
+	}),
+	user: one(user, {
+		fields: [entryChunks.userId],
+		references: [user.id],
+	}),
 }))
 
 /**

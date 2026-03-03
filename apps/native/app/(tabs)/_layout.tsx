@@ -45,7 +45,10 @@ export default function TabLayout() {
 		>
 			<NativeTabs.Trigger name="home">
 				<NativeTabs.Trigger.Label>{t('nav.home')}</NativeTabs.Trigger.Label>
-				<NativeTabs.Trigger.Icon drawable="ic_home" sf={{ default: 'house', selected: 'house.fill' }} />
+				<NativeTabs.Trigger.Icon
+					drawable="ic_home"
+					sf={{ default: 'house', selected: 'house.fill' }}
+				/>
 			</NativeTabs.Trigger>
 
 			<NativeTabs.Trigger name="inbox">

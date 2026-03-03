@@ -10,6 +10,17 @@ import { extractEntryRefs, syncEntryLinks } from '../utils/link-sync'
 
 const BCRYPT_ROUNDS = 10
 
+type ContentChangeListener = (entryId: string, userId: string) => void
+let onContentChange: ContentChangeListener | undefined
+
+/**
+ * Register a callback invoked after entry content is created or updated.
+ * Used by the server to trigger async embedding indexing.
+ */
+export function setContentChangeListener(listener: ContentChangeListener) {
+	onContentChange = listener
+}
+
 /**
  * Entry filter types for list queries
  */
@@ -116,6 +127,10 @@ export const createEntry = protectedProcedure
 			}
 		}
 
+		if (contentText) {
+			onContentChange?.(id, userId)
+		}
+
 		return entry
 	})
 
@@ -179,6 +194,7 @@ export const updateEntry = protectedProcedure
 		if (entry && updateData.contentJson !== undefined) {
 			const refIds = extractEntryRefs(updateData.contentJson)
 			await syncEntryLinks(userId, id, refIds)
+			onContentChange?.(id, userId)
 		}
 
 		if (!entry) {

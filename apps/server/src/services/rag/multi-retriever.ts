@@ -3,12 +3,13 @@ import { attachments, db, entries, entryTags, tags } from '@folionote/db'
 import { createLogger } from '@folionote/log'
 import { and, desc, eq, inArray, isNull, notInArray, or, sql } from 'drizzle-orm'
 import { fetchNoteImageMap } from '../notes'
+import { searchByVectorSimilarity } from './vector-retriever'
 
 const log = createLogger({ prefix: 'rag:multi-retriever' })
 
 const WHITESPACE_REGEX = /\s+/
 
-type RetrievalSource = 'fts' | 'ilike' | 'title' | 'tag' | 'image'
+type RetrievalSource = 'fts' | 'ilike' | 'title' | 'tag' | 'image' | 'vector'
 
 export type ScoredNoteContext = NoteContext & {
 	sources: Set<RetrievalSource>
@@ -211,13 +212,18 @@ async function searchByImageDescription(
 /**
  * Run multiple retrieval strategies in parallel, merge and deduplicate results.
  * Each note is annotated with which sources found it.
+ *
+ * When `queryEmbedding` is provided, a vector similarity search route runs
+ * in parallel with keyword-based routes. Vector hits receive an extra source
+ * weight during merge.
  */
 export async function multiRetrieve(
 	userId: string,
 	originalQuery: string,
 	rewrittenQueries: string[],
 	excludeIds: string[],
-	limitPerRoute: number
+	limitPerRoute: number,
+	queryEmbedding?: number[]
 ): Promise<ScoredNoteContext[]> {
 	const allQueries = [originalQuery, ...rewrittenQueries]
 
@@ -243,6 +249,9 @@ export async function multiRetrieve(
 		excludeIds,
 		limitPerRoute
 	)
+	const vectorPromise = queryEmbedding
+		? searchByVectorSimilarity(userId, queryEmbedding, excludeIds, limitPerRoute)
+		: Promise.resolve([] as NoteContext[])
 
 	const results = await Promise.all([
 		...ftsPromises,
@@ -250,6 +259,7 @@ export async function multiRetrieve(
 		tagPromise,
 		ilikePromise,
 		imagePromise,
+		vectorPromise,
 	])
 
 	const sourceLabels: RetrievalSource[] = [
@@ -258,6 +268,7 @@ export async function multiRetrieve(
 		'tag',
 		'ilike',
 		'image',
+		'vector',
 	]
 
 	const mergedMap = new Map<string, ScoredNoteContext>()
@@ -278,7 +289,6 @@ export async function multiRetrieve(
 
 	const merged = [...mergedMap.values()]
 
-	// Sort by number of sources (more = higher relevance signal)
 	merged.sort((a, b) => b.sources.size - a.sources.size)
 
 	log.debug(
