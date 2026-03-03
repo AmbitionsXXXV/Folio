@@ -49,13 +49,15 @@ import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/entries/$id')({
-	loader: async ({ params }) => {
-		// SSR / 刷新时，服务端没有 API 层的 Hono 请求上下文，直接调用会触发 req 为空的报错。
+	loader: async ({ params, context: { queryClient } }) => {
 		if (typeof window === 'undefined') {
 			return { entry: undefined }
 		}
 
-		const entry = await orpc.entries.get.call({ id: params.id })
+		const entry = await queryClient.ensureQueryData({
+			queryKey: ['entries', params.id],
+			queryFn: () => orpc.entries.get.call({ id: params.id }),
+		})
 		return { entry }
 	},
 

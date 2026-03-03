@@ -56,6 +56,12 @@ const PRESET_COLORS = [
 ]
 
 export const Route = createFileRoute('/_app/tags')({
+	loader: ({ context: { queryClient } }) => {
+		queryClient.ensureQueryData({
+			queryKey: ['tags'],
+			queryFn: () => orpc.tags.list.call({}),
+		})
+	},
 	component: TagsPage,
 })
 

@@ -9,8 +9,8 @@
  */
 
 import { startTransition, useCallback, useEffect, useRef, useState } from 'react'
-import type { ChatSessionSummary } from '@/features/knowledge'
-import { getLastChatId, setLastChatId } from '@/features/knowledge'
+import type { ChatSessionSummary } from '@/features/knowledge/types'
+import { getLastChatId, setLastChatId } from '@/features/knowledge/utils'
 import { getServerUrl } from '@/utils/api-environment'
 
 // =============================================================================

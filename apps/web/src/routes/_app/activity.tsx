@@ -18,6 +18,25 @@ import { getGreetingKey } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/activity')({
+	loader: ({ context: { queryClient } }) => {
+		const tzOffset = getUserTimezoneOffset()
+		queryClient.ensureQueryData({
+			queryKey: ['entries', 'recent', 4],
+			queryFn: () => orpc.entries.list.call({ filter: 'all', limit: 4 }),
+		})
+		queryClient.ensureQueryData({
+			queryKey: ['review', 'stats', tzOffset],
+			queryFn: () => orpc.review.getTodayStats.call({ tzOffset }),
+		})
+		queryClient.ensureQueryData({
+			queryKey: ['review', 'dueStats', tzOffset],
+			queryFn: () => orpc.review.getDueStats.call({ tzOffset }),
+		})
+		queryClient.ensureQueryData({
+			queryKey: ['entries', 'inbox', 'count'],
+			queryFn: () => orpc.entries.list.call({ filter: 'inbox', limit: 1 }),
+		})
+	},
 	component: ActivityPage,
 })
 

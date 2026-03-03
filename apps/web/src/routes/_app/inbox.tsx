@@ -8,6 +8,12 @@ import { QuickCapture } from '@/components/quick-capture'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/inbox')({
+	loader: ({ context: { queryClient } }) => {
+		queryClient.ensureQueryData({
+			queryKey: ['entries', 'inbox'],
+			queryFn: () => orpc.entries.list.call({ filter: 'inbox', limit: 20 }),
+		})
+	},
 	component: InboxPage,
 })
 

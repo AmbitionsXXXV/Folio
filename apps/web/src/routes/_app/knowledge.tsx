@@ -54,10 +54,6 @@ import {
 	PromptInputTools,
 } from '@/components/ai-elements/prompt-input'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
-import {
-	type ChatSessionSummary,
-	isApiSupportedProvider,
-} from '@/features/knowledge'
 import { AttachmentDisplay } from '@/features/knowledge/components/attachment-display'
 import {
 	ChatMessageItem,
@@ -76,6 +72,8 @@ import {
 	type WebSearchPanelData,
 } from '@/features/knowledge/components/web-search-panel'
 import { WebSearchToggle } from '@/features/knowledge/components/web-search-toggle'
+import type { ChatSessionSummary } from '@/features/knowledge/types'
+import { isApiSupportedProvider } from '@/features/knowledge/utils'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
 import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'

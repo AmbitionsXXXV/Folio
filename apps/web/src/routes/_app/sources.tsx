@@ -39,6 +39,12 @@ const SOURCE_TYPE_CONFIG: Record<
 }
 
 export const Route = createFileRoute('/_app/sources')({
+	loader: ({ context: { queryClient } }) => {
+		queryClient.ensureQueryData({
+			queryKey: ['sources', 'infinite', 'all'],
+			queryFn: () => orpc.sources.list.call({ type: undefined, limit: 20 }),
+		})
+	},
 	component: SourcesPage,
 })
 

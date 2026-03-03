@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { mapProviderIdToApi } from '@/features/knowledge'
+import { mapProviderIdToApi } from '@/features/knowledge/utils'
 import { useAiProviderConfig } from '@/hooks/use-ai-provider-config'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 

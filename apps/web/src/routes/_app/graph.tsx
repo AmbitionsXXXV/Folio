@@ -13,6 +13,16 @@ type GraphSearchParams = {
 }
 
 export const Route = createFileRoute('/_app/graph')({
+	loader: ({ context: { queryClient } }) => {
+		queryClient.ensureQueryData({
+			queryKey: ['graph', 'getGraph', undefined, true],
+			queryFn: () => orpc.graph.getGraph.call({ includeInferred: true }),
+		})
+		queryClient.ensureQueryData({
+			queryKey: ['tags', 'list'],
+			queryFn: () => orpc.tags.list.call(),
+		})
+	},
 	component: GraphPage,
 	validateSearch: (search: Record<string, unknown>): GraphSearchParams => ({
 		tagId: typeof search.tagId === 'string' ? search.tagId : undefined,
