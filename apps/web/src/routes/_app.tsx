@@ -34,7 +34,7 @@ function AppLayout() {
 					className="flex-1 overflow-y-auto overscroll-contain scroll-smooth"
 					id="main-content"
 				>
-					<div className="mx-auto max-w-screen-2xl animate-fade-in-scale">
+					<div className="animate-fade-in-scale">
 						<Outlet />
 					</div>
 				</main>

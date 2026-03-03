@@ -1,4 +1,3 @@
-import { Button } from '@folionote/ui/button'
 import { cn } from '@folionote/ui/lib/utils'
 import {
 	Activity01Icon,
@@ -21,11 +20,11 @@ import {
 	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
+	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarSeparator,
 	useSidebar,
 } from '@/components/sidebar'
 import { useCommandPalette } from '@/contexts/command-palette-context'
@@ -54,7 +53,6 @@ const secondaryNavItems: NavItem[] = [
 function NavItems({ items }: { items: NavItem[] }) {
 	const { t } = useTranslation()
 	const matchRoute = useMatchRoute()
-	// Track pending navigation target for visual feedback
 	const pendingLocation = useRouterState({
 		select: (state) => (state.isTransitioning ? state.location.pathname : null),
 	})
@@ -63,19 +61,29 @@ function NavItems({ items }: { items: NavItem[] }) {
 		<SidebarMenu>
 			{items.map(({ to, labelKey, icon }) => {
 				const isActive = matchRoute({ to, fuzzy: true })
-				// Check if this item is the pending navigation target
 				const isPending = pendingLocation?.startsWith(to) ?? false
 
 				return (
 					<SidebarMenuItem key={to}>
 						<SidebarMenuButton
-							className={cn('gap-3 transition-opacity', isPending && 'opacity-70')}
+							className={cn(
+								'relative gap-3 transition-all duration-200',
+								isPending && 'opacity-70',
+								(isActive || isPending) && 'bg-sidebar-accent/60 font-medium'
+							)}
 							isActive={!!isActive || isPending}
 							render={<Link preload="intent" to={to} />}
 							tooltip={t(labelKey)}
 						>
+							{(isActive || isPending) && (
+								<span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+							)}
 							<HugeiconsIcon
-								className={cn('size-5', isPending && 'animate-pulse')}
+								className={cn(
+									'size-5 transition-colors',
+									isActive || isPending ? 'text-primary' : 'text-muted-foreground',
+									isPending && 'animate-pulse'
+								)}
 								icon={icon}
 								strokeWidth={isActive || isPending ? 2.5 : 2}
 							/>
@@ -95,26 +103,29 @@ function SearchButton() {
 	const isCollapsed = state === 'collapsed'
 
 	return (
-		<Button
-			className="w-full justify-start gap-3 bg-muted text-muted-foreground"
+		<button
+			className={cn(
+				'flex w-full items-center gap-3 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+				isCollapsed && 'justify-center px-0'
+			)}
 			onClick={() => setOpen(true)}
-			size={isCollapsed ? 'icon' : 'default'}
-			variant="ghost"
+			type="button"
 		>
-			<HugeiconsIcon className="size-5" icon={Search01Icon} />
+			<HugeiconsIcon className="size-4 shrink-0" icon={Search01Icon} />
 			{!isCollapsed && (
 				<>
 					<span className="flex-1 text-left">{t('nav.search')}</span>
-					<kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100 md:flex">
+					<kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border/40 bg-muted/40 px-1.5 font-medium font-mono text-[10px] text-muted-foreground/70 md:flex">
 						<span className="text-xs">⌘</span>K
 					</kbd>
 				</>
 			)}
-		</Button>
+		</button>
 	)
 }
 
 export function AppSidebar() {
+	const { t } = useTranslation()
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
 
@@ -132,24 +143,30 @@ export function AppSidebar() {
 
 			<SidebarContent>
 				<SidebarGroup className="px-2">
+					<SidebarGroupLabel className="px-3 font-medium text-xs uppercase tracking-wide">
+						{t('nav.sectionMain', 'Main')}
+					</SidebarGroupLabel>
 					<SidebarGroupContent>
-						<div className="mb-2 group-data-[collapsible=icon]:hidden">
+						<div className="mb-1 group-data-[collapsible=icon]:hidden">
 							<SearchButton />
 						</div>
 						<NavItems items={mainNavItems} />
 					</SidebarGroupContent>
 				</SidebarGroup>
 
-				<SidebarSeparator className="mx-4" />
+				<div className="mx-4 h-px bg-border/50" />
 
 				<SidebarGroup className="px-2">
+					<SidebarGroupLabel className="px-3 font-medium text-xs uppercase tracking-wide">
+						{t('nav.sectionExplore', 'Explore')}
+					</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<NavItems items={secondaryNavItems} />
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
 
-			<SidebarFooter className="border-sidebar-border border-t p-2">
+			<SidebarFooter className="border-sidebar-border/40 border-t p-2">
 				<UserMenu collapsed={isCollapsed} />
 			</SidebarFooter>
 		</Sidebar>

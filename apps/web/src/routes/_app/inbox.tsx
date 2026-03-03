@@ -9,9 +9,10 @@ import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/_app/inbox')({
 	loader: ({ context: { queryClient } }) => {
-		queryClient.ensureQueryData({
+		queryClient.ensureInfiniteQueryData({
 			queryKey: ['entries', 'inbox'],
 			queryFn: () => orpc.entries.list.call({ filter: 'inbox', limit: 20 }),
+			initialPageParam: undefined as string | undefined,
 		})
 	},
 	component: InboxPage,

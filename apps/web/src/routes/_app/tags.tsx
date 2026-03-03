@@ -1,6 +1,5 @@
-import { Badge } from '@folionote/ui/badge'
 import { Button } from '@folionote/ui/button'
-import { Card, CardContent, CardHeader } from '@folionote/ui/card'
+import { Card, CardContent } from '@folionote/ui/card'
 import {
 	Dialog,
 	DialogContent,
@@ -25,6 +24,7 @@ import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
+import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
 
 type Tag = {
@@ -35,24 +35,23 @@ type Tag = {
 	updatedAt: Date | string
 }
 
-// Preset colors for tags
 const PRESET_COLORS = [
-	'#ef4444', // red
-	'#f97316', // orange
-	'#f59e0b', // amber
-	'#eab308', // yellow
-	'#84cc16', // lime
-	'#22c55e', // green
-	'#14b8a6', // teal
-	'#06b6d4', // cyan
-	'#0ea5e9', // sky
-	'#3b82f6', // blue
-	'#6366f1', // indigo
-	'#8b5cf6', // violet
-	'#a855f7', // purple
-	'#d946ef', // fuchsia
-	'#ec4899', // pink
-	'#f43f5e', // rose
+	'#ef4444',
+	'#f97316',
+	'#f59e0b',
+	'#eab308',
+	'#84cc16',
+	'#22c55e',
+	'#14b8a6',
+	'#06b6d4',
+	'#0ea5e9',
+	'#3b82f6',
+	'#6366f1',
+	'#8b5cf6',
+	'#a855f7',
+	'#d946ef',
+	'#ec4899',
+	'#f43f5e',
 ]
 
 export const Route = createFileRoute('/_app/tags')({
@@ -65,6 +64,11 @@ export const Route = createFileRoute('/_app/tags')({
 	component: TagsPage,
 })
 
+function getSubmitLabel(editing: Tag | null, t: (key: string) => string) {
+	if (editing) return t('common.save')
+	return t('common.create')
+}
+
 function TagsPage() {
 	const { t } = useTranslation()
 	const queryClient = useQueryClient()
@@ -72,10 +76,8 @@ function TagsPage() {
 	const [editingTag, setEditingTag] = useState<Tag | null>(null)
 	const [tagName, setTagName] = useState('')
 	const [tagColor, setTagColor] = useState<string | null>(null)
-	// 删除确认对话框状态
 	const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null)
 
-	// Fetch all tags
 	const {
 		data: tagsData,
 		isLoading,
@@ -88,7 +90,6 @@ function TagsPage() {
 	})
 	const tags = tagsData ?? []
 
-	// Create tag mutation
 	const createMutation = useMutation({
 		mutationFn: (data: { name: string; color?: string }) =>
 			orpc.tags.create.call(data),
@@ -106,7 +107,6 @@ function TagsPage() {
 		},
 	})
 
-	// Update tag mutation
 	const updateMutation = useMutation({
 		mutationFn: (data: { id: string; name?: string; color?: string | null }) =>
 			orpc.tags.update.call(data),
@@ -124,7 +124,6 @@ function TagsPage() {
 		},
 	})
 
-	// Delete tag mutation
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => orpc.tags.delete.call({ id }),
 		onSuccess: () => {
@@ -191,28 +190,31 @@ function TagsPage() {
 
 	const isPending = createMutation.isPending || updateMutation.isPending
 
-	const getSubmitButtonText = (editing: Tag | null) =>
-		editing ? t('common.save') : t('common.create')
-
 	return (
-		<div className="container mx-auto max-w-5xl px-4 py-8">
+		<div className="container mx-auto max-w-5xl px-4 py-10 md:py-14">
 			{/* Header */}
-			<div className="mb-8 flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div className="rounded-lg bg-primary/10 p-2">
-						<HugeiconsIcon className="size-6 text-primary" icon={Tag01Icon} />
+			<header className="mb-10 flex animate-fade-in items-start justify-between gap-4 md:mb-14">
+				<div>
+					<div className="mb-2 flex items-center gap-2.5">
+						<div className="flex size-10 items-center justify-center rounded-xl bg-primary/8 ring-1 ring-primary/15">
+							<HugeiconsIcon className="size-5 text-primary" icon={Tag01Icon} />
+						</div>
+						<h1 className="font-display font-semibold text-3xl text-foreground tracking-tight md:text-4xl">
+							{t('tag.tags')}
+						</h1>
 					</div>
-					<div>
-						<h1 className="font-bold text-2xl">{t('tag.tags')}</h1>
-						<p className="text-muted-foreground text-sm">{t('tag.noTags')}</p>
-					</div>
+					<p className="text-muted-foreground text-sm">
+						{tags.length > 0
+							? `${String(tags.length)} ${t('tag.tags').toLowerCase()}`
+							: t('tag.noTags')}
+					</p>
 				</div>
 
-				<Button onClick={handleOpenCreate}>
+				<Button className="shrink-0" onClick={handleOpenCreate}>
 					<HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
 					{t('tag.newTag')}
 				</Button>
-			</div>
+			</header>
 
 			{/* Tag list */}
 			<TagListContent
@@ -231,12 +233,12 @@ function TagsPage() {
 			<Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>
+						<DialogTitle className="font-display">
 							{editingTag ? t('tag.editTag') : t('tag.newTag')}
 						</DialogTitle>
 					</DialogHeader>
 
-					<form className="space-y-4" onSubmit={handleSubmit}>
+					<form className="space-y-5" onSubmit={handleSubmit}>
 						<div className="space-y-2">
 							<Label htmlFor="tag-name">{t('tag.tagName')}</Label>
 							<Input
@@ -250,16 +252,16 @@ function TagsPage() {
 							/>
 						</div>
 
-						<div className="space-y-2">
+						<div className="space-y-2.5">
 							<Label>{t('tag.tagColor')}</Label>
 							<div className="flex flex-wrap gap-2">
-								{/* No color option */}
 								<button
-									className={`flex size-8 items-center justify-center rounded-full border-2 transition-all ${
+									className={cn(
+										'flex size-8 items-center justify-center rounded-full border-2 transition-all',
 										tagColor === null
-											? 'border-primary ring-2 ring-primary/30'
+											? 'border-primary ring-2 ring-primary/20'
 											: 'border-border hover:border-muted-foreground'
-									}`}
+									)}
 									onClick={() => setTagColor(null)}
 									type="button"
 								>
@@ -268,14 +270,14 @@ function TagsPage() {
 										icon={Cancel01Icon}
 									/>
 								</button>
-								{/* Preset colors */}
 								{PRESET_COLORS.map((color) => (
 									<button
-										className={`size-8 rounded-full border-2 transition-all ${
+										className={cn(
+											'size-8 rounded-full border-2 transition-all',
 											tagColor === color
-												? 'border-primary ring-2 ring-primary/30'
+												? 'scale-110 border-foreground/30 ring-2 ring-foreground/10'
 												: 'border-transparent hover:scale-110'
-										}`}
+										)}
 										key={color}
 										onClick={() => setTagColor(color)}
 										style={{ backgroundColor: color }}
@@ -288,13 +290,21 @@ function TagsPage() {
 						{/* Preview */}
 						<div className="space-y-2">
 							<Label>{t('tag.preview')}</Label>
-							<div className="flex items-center gap-2">
-								<Badge
-									style={tagColor ? { backgroundColor: tagColor } : undefined}
-									variant="secondary"
-								>
+							<div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
+								{tagColor ? (
+									<span
+										className="size-3 rounded-full ring-1 ring-black/5"
+										style={{ backgroundColor: tagColor }}
+									/>
+								) : (
+									<HugeiconsIcon
+										className="size-3 text-muted-foreground"
+										icon={Tag01Icon}
+									/>
+								)}
+								<span className="font-medium text-sm">
 									{tagName || t('tag.tagName')}
-								</Badge>
+								</span>
 							</div>
 						</div>
 
@@ -308,7 +318,7 @@ function TagsPage() {
 								{t('common.cancel')}
 							</Button>
 							<Button disabled={!tagName.trim() || isPending} type="submit">
-								{isPending ? t('common.loading') : getSubmitButtonText(editingTag)}
+								{isPending ? t('common.loading') : getSubmitLabel(editingTag, t)}
 							</Button>
 						</DialogFooter>
 					</form>
@@ -328,16 +338,17 @@ function TagsPage() {
 	)
 }
 
-type TagCardProps = {
+function TagCard({
+	tag,
+	onEdit,
+	onDelete,
+}: {
 	tag: Tag
 	onEdit: () => void
 	onDelete: () => void
-}
-
-function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
+}) {
 	const queryClient = useQueryClient()
 
-	// Fetch entries count for this tag
 	const { data: countData } = useQuery({
 		queryKey: ['tags', tag.id, 'entriesCount'],
 		queryFn: () => orpc.tags.getEntriesCount.call({ id: tag.id }),
@@ -346,62 +357,68 @@ function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
 	const entriesCount = countData?.count ?? 0
 
 	return (
-		<Card className="group relative transition-all hover:shadow-md">
+		<Card className="group relative overflow-hidden border-border/50 transition-all duration-300 hover:border-border hover:shadow-md">
+			{/* Color accent bar */}
+			<div
+				className="absolute inset-y-0 left-0 w-1 transition-all duration-300 group-hover:w-1.5"
+				style={{ backgroundColor: tag.color ?? 'var(--primary)' }}
+			/>
+
 			<Link
-				className="block"
+				className="block py-1 pl-4"
 				onClick={() => {
-					// Invalidate library queries to ensure fresh data with tag filter
 					queryClient.invalidateQueries({ queryKey: ['entries', 'library'] })
 				}}
 				search={{ tagId: tag.id }}
 				to="/library"
 			>
-				<CardHeader className="pb-2">
-					<div className="flex items-start justify-between gap-2">
-						<div className="flex items-center gap-2">
+				<CardContent className="flex items-center justify-between gap-3 py-4">
+					<div className="min-w-0 flex-1">
+						<div className="mb-1 flex items-center gap-2">
 							{tag.color ? (
 								<span
-									className="size-4 rounded-full"
+									className="size-3 shrink-0 rounded-full ring-1 ring-black/5"
 									style={{ backgroundColor: tag.color }}
 								/>
 							) : (
 								<HugeiconsIcon
-									className="size-4 text-muted-foreground"
+									className="size-3 shrink-0 text-muted-foreground"
 									icon={Tag01Icon}
 								/>
 							)}
-							<h3 className="font-medium text-foreground">{tag.name}</h3>
+							<h3 className="truncate font-medium text-foreground">{tag.name}</h3>
 						</div>
-						<div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-							<Button
-								className="h-7 w-7"
-								onClick={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									onEdit()
-								}}
-								size="icon"
-								variant="ghost"
-							>
-								<HugeiconsIcon className="size-3.5" icon={Edit02Icon} />
-							</Button>
-							<Button
-								className="h-7 w-7 text-destructive hover:text-destructive"
-								onClick={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									onDelete()
-								}}
-								size="icon"
-								variant="ghost"
-							>
-								<HugeiconsIcon className="size-3.5" icon={Delete02Icon} />
-							</Button>
-						</div>
+						<p className="pl-5 text-muted-foreground text-sm tabular-nums">
+							{entriesCount} 个条目
+						</p>
 					</div>
-				</CardHeader>
-				<CardContent className="pt-0">
-					<p className="text-muted-foreground text-sm">{entriesCount} 个条目</p>
+
+					<div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+						<Button
+							className="h-7 w-7"
+							onClick={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								onEdit()
+							}}
+							size="icon"
+							variant="ghost"
+						>
+							<HugeiconsIcon className="size-3.5" icon={Edit02Icon} />
+						</Button>
+						<Button
+							className="h-7 w-7 text-destructive hover:text-destructive"
+							onClick={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								onDelete()
+							}}
+							size="icon"
+							variant="ghost"
+						>
+							<HugeiconsIcon className="size-3.5" icon={Delete02Icon} />
+						</Button>
+					</div>
 				</CardContent>
 			</Link>
 		</Card>
@@ -434,25 +451,29 @@ function TagListContent({
 	if (isLoading) {
 		return (
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				<Skeleton className="h-24" />
-				<Skeleton className="h-24" />
-				<Skeleton className="h-24" />
-				<Skeleton className="h-24" />
-				<Skeleton className="h-24" />
-				<Skeleton className="h-24" />
+				{Array.from({ length: 6 }).map((_, i) => (
+					<Skeleton
+						className={cn(
+							'h-20 rounded-2xl',
+							`animate-fade-in delay-${((i % 4) + 1) * 100}`
+						)}
+						key={`tag-skel-${String(i)}`}
+					/>
+				))}
 			</div>
 		)
 	}
 
 	if (isError) {
 		return (
-			<div className="flex flex-col items-center justify-center py-16 text-center">
-				<HugeiconsIcon
-					className="mb-4 size-12 text-destructive/50"
-					icon={Tag01Icon}
-				/>
-				<p className="mb-2 font-medium text-destructive">{t('common.error')}</p>
-				<p className="mb-4 text-muted-foreground text-sm">
+			<div className="flex animate-fade-in flex-col items-center justify-center py-20 text-center">
+				<div className="mb-4 rounded-full bg-destructive/8 p-4">
+					<HugeiconsIcon className="size-8 text-destructive/50" icon={Tag01Icon} />
+				</div>
+				<p className="mb-1 font-display font-medium text-destructive text-lg">
+					{t('common.error')}
+				</p>
+				<p className="mb-5 max-w-sm text-muted-foreground text-sm">
 					{error?.message ?? t('common.unknownError')}
 				</p>
 				<Button onClick={() => refetch()} variant="outline">
@@ -464,13 +485,16 @@ function TagListContent({
 
 	if (tags.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center py-16 text-center">
-				<HugeiconsIcon
-					className="mb-4 size-12 text-muted-foreground/50"
-					icon={Tag01Icon}
-				/>
-				<p className="mb-2 font-medium text-muted-foreground">{t('tag.noTags')}</p>
-				<p className="mb-4 text-muted-foreground text-sm">{t('tag.addTag')}</p>
+			<div className="flex animate-fade-in flex-col items-center justify-center rounded-2xl border border-border/60 border-dashed py-20 text-center">
+				<div className="mb-4 rounded-full bg-primary/5 p-4">
+					<HugeiconsIcon className="size-8 text-primary/40" icon={Tag01Icon} />
+				</div>
+				<p className="mb-1 font-display font-medium text-foreground/70 text-lg">
+					{t('tag.noTags')}
+				</p>
+				<p className="mb-5 max-w-sm text-muted-foreground text-sm">
+					{t('tag.addTag')}
+				</p>
 				<Button onClick={handleOpenCreate} variant="outline">
 					<HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
 					{t('tag.newTag')}
@@ -481,13 +505,17 @@ function TagListContent({
 
 	return (
 		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{tags.map((tag: Tag) => (
-				<TagCard
+			{tags.map((tag: Tag, i: number) => (
+				<div
+					className={cn('animate-fade-in', i > 0 && `delay-${(i % 4) * 100}`)}
 					key={tag.id}
-					onDelete={() => handleDelete(tag)}
-					onEdit={() => handleOpenEdit(tag)}
-					tag={tag}
-				/>
+				>
+					<TagCard
+						onDelete={() => handleDelete(tag)}
+						onEdit={() => handleOpenEdit(tag)}
+						tag={tag}
+					/>
+				</div>
 			))}
 		</div>
 	)

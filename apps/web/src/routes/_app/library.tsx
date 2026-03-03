@@ -24,9 +24,10 @@ export type LibrarySearchParams = z.infer<typeof librarySearchSchema>
 
 export const Route = createFileRoute('/_app/library')({
 	loader: ({ context: { queryClient } }) => {
-		queryClient.ensureQueryData({
+		queryClient.ensureInfiniteQueryData({
 			queryKey: ['entries', 'library', 'all', undefined],
 			queryFn: () => orpc.entries.list.call({ filter: 'all', limit: 20 }),
+			initialPageParam: undefined as string | undefined,
 		})
 	},
 	component: LibraryPage,

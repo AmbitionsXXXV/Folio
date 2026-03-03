@@ -30,7 +30,7 @@ function AlertDialogOverlay({
 	return (
 		<DialogPrimitive.Backdrop
 			className={cn(
-				'data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-50 bg-black/20 duration-100 data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-xs',
+				'data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-50 bg-black/50 duration-100 data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-sm',
 				className
 			)}
 			data-slot="alert-dialog-overlay"
@@ -49,7 +49,7 @@ function AlertDialogContent({
 			<AlertDialogOverlay />
 			<DialogPrimitive.Popup
 				className={cn(
-					'data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-background p-6 text-sm outline-none duration-100 data-closed:animate-out data-open:animate-in sm:max-w-md',
+					'data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-card p-6 text-sm shadow-2xl outline-none ring-1 ring-border/50 duration-100 data-closed:animate-out data-open:animate-in sm:max-w-md',
 					className
 				)}
 				data-slot="alert-dialog-content"
