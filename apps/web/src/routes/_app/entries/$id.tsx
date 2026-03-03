@@ -44,6 +44,7 @@ import { ShareDialog } from '@/components/share-dialog'
 import { TableOfContents } from '@/components/table-of-contents'
 import { type SaveStatus, useAutoSave } from '@/hooks/use-auto-save'
 import { useTocPosition } from '@/hooks/use-toc-position'
+import { createPageHead } from '@/lib/seo'
 import { assignHeadingIds, parseTocFromContent } from '@/lib/toc'
 import { cn } from '@/lib/utils'
 import { orpc } from '@/utils/orpc'
@@ -61,21 +62,15 @@ export const Route = createFileRoute('/_app/entries/$id')({
 		return { entry }
 	},
 
-	head: ({ loaderData }) => ({
-		meta: [
-			{
-				title: loaderData?.entry?.title
-					? `Edit · ${loaderData.entry.title}`
-					: 'Edit · Untitled',
-			},
-			{
-				name: 'description',
-				content: loaderData?.entry?.title
-					? `Edit entry: ${loaderData.entry.title}`
-					: 'Edit entry',
-			},
-		],
-	}),
+	head: ({ loaderData }) =>
+		createPageHead({
+			title: loaderData?.entry?.title
+				? `Edit · ${loaderData.entry.title}`
+				: 'Edit · Untitled',
+			description: loaderData?.entry?.title
+				? `Edit entry: ${loaderData.entry.title}`
+				: 'Edit entry',
+		}),
 
 	component: EntryEditPage,
 })

@@ -25,16 +25,16 @@ export const Route = createFileRoute('/_app')({
 function AppLayout() {
 	return (
 		<SidebarProvider>
-			{/* Desktop Sidebar - hidden on mobile */}
 			<AppSidebar />
 
-			{/* Main Content Area */}
 			<SidebarInset>
-				{/* Mobile Header - visible only on mobile, inside SidebarInset */}
 				<MobileHeader />
 
-				<main className="flex-1">
-					<div className="animate-fade-in-scale">
+				<main
+					className="flex-1 overflow-y-auto overscroll-contain scroll-smooth"
+					id="main-content"
+				>
+					<div className="mx-auto max-w-screen-2xl animate-fade-in-scale">
 						<Outlet />
 					</div>
 				</main>

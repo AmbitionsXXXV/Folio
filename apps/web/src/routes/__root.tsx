@@ -16,6 +16,7 @@ import { CommandPalette } from '@/components/command-palette'
 import { RouterPendingIndicator } from '@/components/router-pending-indicator'
 import { CommandPaletteProvider } from '@/contexts/command-palette-context'
 import i18n from '@/lib/i18n'
+import { siteConfig } from '@/lib/site-config'
 import { cn } from '@/lib/utils'
 import type { orpc } from '@/utils/orpc'
 import appCss from '../index.css?url'
@@ -25,27 +26,34 @@ export type RouterAppContext = {
 	queryClient: QueryClient
 }
 
-const TITLE = import.meta.env.DEV ? 'FolioNote Dev' : 'FolioNote'
-
 export const Route = createRootRouteWithContext<RouterAppContext>()({
 	head: () => ({
 		meta: [
-			{
-				charSet: 'utf-8',
-			},
+			{ charSet: 'utf-8' },
 			{
 				name: 'viewport',
 				content: 'width=device-width, initial-scale=1',
 			},
-			{
-				title: TITLE,
-			},
+			{ title: siteConfig.name },
+			{ name: 'description', content: siteConfig.description },
+			{ name: 'theme-color', content: '#0D9488' },
+			// Open Graph
+			{ property: 'og:type', content: 'website' },
+			{ property: 'og:site_name', content: siteConfig.name },
+			{ property: 'og:title', content: siteConfig.name },
+			{ property: 'og:description', content: siteConfig.description },
+			{ property: 'og:image', content: siteConfig.ogImage },
+			{ property: 'og:url', content: siteConfig.url },
+			{ property: 'og:locale', content: siteConfig.locale },
+			// Twitter Card
+			{ name: 'twitter:card', content: 'summary_large_image' },
+			{ name: 'twitter:title', content: siteConfig.name },
+			{ name: 'twitter:description', content: siteConfig.description },
+			{ name: 'twitter:image', content: siteConfig.ogImage },
+			{ name: 'twitter:site', content: siteConfig.twitter },
 		],
 		links: [
-			{
-				rel: 'stylesheet',
-				href: appCss,
-			},
+			{ rel: 'stylesheet', href: appCss },
 			{ rel: 'icon', href: '/favicon.ico' },
 			{
 				rel: 'apple-touch-icon',

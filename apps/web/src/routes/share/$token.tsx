@@ -8,18 +8,17 @@ import {
 	ShareLoading,
 	SharePasswordForm,
 } from '@/components/share'
+import { createPageHead } from '@/lib/seo'
 import { getShareErrorMessage } from '@/lib/share-error'
 import { orpc } from '@/utils/orpc'
 
 export const Route = createFileRoute('/share/$token')({
 	component: ShareViewPage,
-	head: () => ({
-		meta: [
-			{
-				title: 'Shared Note - FolioNote',
-			},
-		],
-	}),
+	head: () =>
+		createPageHead({
+			title: 'Shared Note',
+			description: 'View a shared note on FolioNote.',
+		}),
 })
 
 function ShareViewPage() {
