@@ -2,9 +2,8 @@ const { getDefaultConfig } = require('expo/metro-config')
 const { withUniwindConfig } = require('uniwind/metro')
 
 /** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(import.meta.dirname)
-
-config.resolver.unstable_enablePackageExports = true
+// biome-ignore lint: Metro CJS config requires __dirname
+const config = getDefaultConfig(__dirname)
 
 const uniwindConfig = withUniwindConfig(config, {
 	cssEntryFile: './global.css',

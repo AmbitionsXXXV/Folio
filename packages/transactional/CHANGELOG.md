@@ -1,5 +1,11 @@
 # @folionote/transactional
 
+## 0.2.20
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+
 ## 0.2.19
 
 ### Patch Changes

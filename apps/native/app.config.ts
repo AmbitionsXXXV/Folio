@@ -1,5 +1,5 @@
 import type { ExpoConfig } from 'expo/config'
-import pkg from './package.json'
+import pkg from './package.json' assert { type: 'json' }
 
 const config: ExpoConfig = {
 	owner: 'etcetera',
@@ -28,6 +28,7 @@ const config: ExpoConfig = {
 					'Allow $(PRODUCT_NAME) to access your Face ID biometric data.',
 			},
 		],
+		'expo-sharing'
 	],
 	experiments: {
 		typedRoutes: true,

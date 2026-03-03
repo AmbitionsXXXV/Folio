@@ -1,5 +1,15 @@
 # @folionote/auth
 
+## 0.2.20
+
+### Patch Changes
+
+- feat: ✨ implement landing page layout and navigation
+- Updated dependencies
+  - @folionote/db@0.2.20
+  - @folionote/constants@0.2.20
+  - @folionote/transactional@0.2.20
+
 ## 0.2.19
 
 ### Patch Changes

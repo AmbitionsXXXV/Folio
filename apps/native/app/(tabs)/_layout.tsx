@@ -1,4 +1,4 @@
-import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs'
+import { NativeTabs } from 'expo-router/unstable-native-tabs'
 import { useTranslation } from 'react-i18next'
 import { DynamicColorIOS, Platform } from 'react-native'
 
@@ -44,33 +44,32 @@ export default function TabLayout() {
 			tintColor={dynamicTintColor}
 		>
 			<NativeTabs.Trigger name="home">
-				<Label>{t('nav.home')}</Label>
-				{/* SF Symbols: house / house.fill for iOS */}
-				<Icon drawable="ic_home" sf={{ default: 'house', selected: 'house.fill' }} />
+				<NativeTabs.Trigger.Label>{t('nav.home')}</NativeTabs.Trigger.Label>
+				<NativeTabs.Trigger.Icon
+					drawable="ic_home"
+					sf={{ default: 'house', selected: 'house.fill' }}
+				/>
 			</NativeTabs.Trigger>
 
 			<NativeTabs.Trigger name="inbox">
-				<Label>{t('nav.inbox')}</Label>
-				{/* SF Symbols: envelope / envelope.fill for iOS */}
-				<Icon
+				<NativeTabs.Trigger.Label>{t('nav.inbox')}</NativeTabs.Trigger.Label>
+				<NativeTabs.Trigger.Icon
 					drawable="ic_mail"
 					sf={{ default: 'envelope', selected: 'envelope.fill' }}
 				/>
 			</NativeTabs.Trigger>
 
 			<NativeTabs.Trigger name="today">
-				<Label>{t('nav.today')}</Label>
-				{/* SF Symbols: calendar / calendar.circle.fill for iOS */}
-				<Icon
+				<NativeTabs.Trigger.Label>{t('nav.today')}</NativeTabs.Trigger.Label>
+				<NativeTabs.Trigger.Icon
 					drawable="ic_calendar"
 					sf={{ default: 'calendar', selected: 'calendar.circle.fill' }}
 				/>
 			</NativeTabs.Trigger>
 
 			<NativeTabs.Trigger name="review">
-				<Label>{t('nav.review')}</Label>
-				{/* SF Symbols: arrow.clockwise / arrow.clockwise.circle.fill for iOS */}
-				<Icon
+				<NativeTabs.Trigger.Label>{t('nav.review')}</NativeTabs.Trigger.Label>
+				<NativeTabs.Trigger.Icon
 					drawable="ic_refresh"
 					sf={{
 						default: 'arrow.clockwise',
@@ -80,9 +79,8 @@ export default function TabLayout() {
 			</NativeTabs.Trigger>
 
 			<NativeTabs.Trigger name="settings">
-				<Label>{t('common.settings')}</Label>
-				{/* SF Symbols: gear / gearshape.fill for iOS */}
-				<Icon
+				<NativeTabs.Trigger.Label>{t('common.settings')}</NativeTabs.Trigger.Label>
+				<NativeTabs.Trigger.Icon
 					drawable="ic_settings"
 					sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
 				/>

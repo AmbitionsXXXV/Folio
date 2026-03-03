@@ -2,10 +2,10 @@ import { formatDate } from '@folionote/locales'
 import { PinIcon, StarIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react-native'
 import { useRouter } from 'expo-router'
-import { Card, useThemeColor } from 'heroui-native'
+import { Card, PressableFeedback, useThemeColor } from 'heroui-native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 
 type Entry = {
 	id: string
@@ -14,8 +14,8 @@ type Entry = {
 	isStarred: boolean | null
 	isPinned: boolean | null
 	isInbox: boolean | null
-	createdAt: Date
-	updatedAt: Date
+	createdAt: Date | string | number
+	updatedAt: Date | string | number | null | undefined
 }
 
 type EntryCardProps = {
@@ -33,6 +33,41 @@ function truncateText(text: string | null, maxLength: number): string {
 		return text
 	}
 	return `${text.slice(0, maxLength)}...`
+}
+
+const DATE_FALLBACK_TEXT = '--'
+
+function toValidDate(dateValue: Entry['updatedAt']): Date | null {
+	if (dateValue == null) {
+		return null
+	}
+
+	const normalizedDate = dateValue instanceof Date ? dateValue : new Date(dateValue)
+	if (Number.isNaN(normalizedDate.getTime())) {
+		return null
+	}
+
+	return normalizedDate
+}
+
+function formatUpdatedAtSafely(
+	dateValue: Entry['updatedAt'],
+	locale: string
+): string {
+	const normalizedDate = toValidDate(dateValue)
+	if (!normalizedDate) {
+		return DATE_FALLBACK_TEXT
+	}
+
+	try {
+		return formatDate(normalizedDate, { locale, preset: 'relative' })
+	} catch {
+		try {
+			return formatDate(normalizedDate, { locale, preset: 'medium' })
+		} catch {
+			return DATE_FALLBACK_TEXT
+		}
+	}
 }
 
 export function EntryCard({
@@ -57,10 +92,12 @@ export function EntryCard({
 	const preview = entry.contentText
 		? truncateText(entry.contentText, 120)
 		: t('entryCard.emptyNote')
+	const updatedAtText = formatUpdatedAtSafely(entry.updatedAt, i18n.language)
 
 	return (
-		<Pressable onPress={handlePress}>
-			<Card className="p-4 active:opacity-90" variant="secondary">
+		<PressableFeedback onPress={handlePress}>
+			<PressableFeedback.Highlight />
+			<Card className="p-4" variant="secondary">
 				<View className="flex-row items-start justify-between">
 					<View className="flex-1 pr-2">
 						<View className="mb-1 flex-row items-center">
@@ -84,12 +121,7 @@ export function EntryCard({
 						)}
 
 						<View className="flex-row items-center">
-							<Text className="text-muted text-xs">
-								{formatDate(entry.updatedAt, {
-									locale: i18n.language,
-									preset: 'relative',
-								})}
-							</Text>
+							<Text className="text-muted text-xs">{updatedAtText}</Text>
 						</View>
 					</View>
 
@@ -98,6 +130,6 @@ export function EntryCard({
 					)}
 				</View>
 			</Card>
-		</Pressable>
+		</PressableFeedback>
 	)
 }

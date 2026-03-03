@@ -1,6 +1,6 @@
 import type { NoteContext } from '@folionote/ai'
 import { createLogger } from '@folionote/log'
-import type { LanguageModel } from 'ai'
+import { type EmbeddingModel, embed, type LanguageModel } from 'ai'
 import { searchNotesForRag } from '../notes'
 import { multiRetrieve } from './multi-retriever'
 import { rewriteQuery } from './query-rewriter'
@@ -21,15 +21,16 @@ type RagPipelineInput = {
 	excludeIds: string[]
 	topK: number
 	model: LanguageModel
+	embeddingModel?: EmbeddingModel
 	config?: RagPipelineConfig
 }
 
 /**
- * Full RAG pipeline: query rewrite -> multi-retrieve -> rerank -> top-k.
+ * Full RAG pipeline: query rewrite -> embed query -> multi-retrieve (with vector) -> rerank -> top-k.
  * Falls back to the legacy FTS-only path if any LLM step fails.
  */
 export async function ragRetrieve(input: RagPipelineInput): Promise<NoteContext[]> {
-	const { userId, query, excludeIds, topK, model, config } = input
+	const { userId, query, excludeIds, topK, model, embeddingModel, config } = input
 
 	const enableRewrite = config?.enableQueryRewrite !== false
 	const enableRerank = config?.enableRerank !== false
@@ -41,13 +42,28 @@ export async function ragRetrieve(input: RagPipelineInput): Promise<NoteContext[
 			rewrittenQueries = await rewriteQuery(query, model)
 		}
 
-		// Step 2: Multi-retrieval
+		// Step 1.5: Generate query embedding for vector search
+		let queryEmbedding: number[] | undefined
+		if (embeddingModel) {
+			try {
+				const result = await embed({ model: embeddingModel, value: query })
+				queryEmbedding = result.embedding
+			} catch (error) {
+				log.warn(
+					'Query embedding failed, falling back to keyword-only retrieval:',
+					error
+				)
+			}
+		}
+
+		// Step 2: Multi-retrieval (with optional vector route)
 		const candidates = await multiRetrieve(
 			userId,
 			query,
 			rewrittenQueries,
 			excludeIds,
-			DEFAULT_LIMIT_PER_ROUTE
+			DEFAULT_LIMIT_PER_ROUTE,
+			queryEmbedding
 		)
 
 		if (candidates.length === 0) {
@@ -61,14 +77,14 @@ export async function ragRetrieve(input: RagPipelineInput): Promise<NoteContext[
 		)
 		let ranked = notes
 		if (enableRerank && notes.length > 1) {
-			ranked = await rerankNotes(query, notes, model)
+			ranked = await rerankNotes(query, notes, { languageModel: model })
 		}
 
 		// Step 4: Top-K selection
 		const topResults = ranked.slice(0, topK)
 
 		log.debug(
-			`RAG pipeline: ${rewrittenQueries.length} rewrites, ${candidates.length} candidates, returning top-${topResults.length}`
+			`RAG pipeline: ${rewrittenQueries.length} rewrites, ${candidates.length} candidates, vector=${queryEmbedding ? 'yes' : 'no'}, returning top-${topResults.length}`
 		)
 
 		return topResults

@@ -7,6 +7,36 @@ const moonshotChatModels: AIChatModelCard[] = [
 			functionCall: true,
 			reasoning: true,
 			structuredOutput: true,
+			vision: true,
+		},
+		contextWindowTokens: 262_144,
+		description:
+			'Kimi K2.5 is a native multimodal MoE model (1T total / 32B active params) with MoonViT vision encoder. Supports image+text input, dual modes (Thinking with reasoning traces at temperature=1.0, Instant at temperature=0.6), function calling, visual coding, and agent swarm orchestration.',
+		displayName: 'Kimi K2.5',
+		enabled: true,
+		id: 'kimi-k2.5',
+		maxOutput: 131_072,
+		pricing: {
+			currency: 'CNY',
+			units: [
+				{
+					name: 'textInput_cacheRead',
+					rate: 1,
+					strategy: 'fixed',
+					unit: 'millionTokens',
+				},
+				{ name: 'textInput', rate: 4, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'textOutput', rate: 21, strategy: 'fixed', unit: 'millionTokens' },
+			],
+		},
+		releasedAt: '2026-01-27',
+		type: 'chat',
+	},
+	{
+		abilities: {
+			functionCall: true,
+			reasoning: true,
+			structuredOutput: true,
 		},
 		contextWindowTokens: 262_144,
 		description:
@@ -70,6 +100,7 @@ const moonshotChatModels: AIChatModelCard[] = [
 		displayName: 'Kimi K2 0905',
 		enabled: true,
 		id: 'kimi-k2-0905-preview',
+		maxOutput: 65_536,
 		pricing: {
 			currency: 'CNY',
 			units: [
@@ -95,6 +126,7 @@ const moonshotChatModels: AIChatModelCard[] = [
 			'kimi-k2 is an MoE foundation model with strong coding and agent capabilities (1T total params, 32B active), outperforming other mainstream open models across reasoning, programming, math, and agent benchmarks.',
 		displayName: 'Kimi K2 0711',
 		id: 'kimi-k2-0711-preview',
+		maxOutput: 65_536,
 		pricing: {
 			currency: 'CNY',
 			units: [
@@ -120,6 +152,7 @@ const moonshotChatModels: AIChatModelCard[] = [
 			'kimi-k2 is an MoE foundation model with strong coding and agent capabilities (1T total params, 32B active), outperforming other mainstream open models across reasoning, programming, math, and agent benchmarks.',
 		displayName: 'Kimi K2 0905 Turbo',
 		id: 'kimi-k2-turbo-preview',
+		maxOutput: 65_536,
 		pricing: {
 			currency: 'CNY',
 			units: [

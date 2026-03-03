@@ -266,14 +266,19 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 		baseUrlOptions: [
 			{
 				id: 'default',
-				name: 'Moonshot (default)',
+				name: 'Moonshot (CN)',
 				baseUrl: 'https://api.moonshot.cn/v1',
+			},
+			{
+				id: 'intl',
+				name: 'Moonshot (INTL)',
+				baseUrl: 'https://api.moonshot.ai/v1',
 			},
 		],
 		aiSdk: {
 			createInstance: {
-				importFrom: '@ai-sdk/openai',
-				factoryName: 'createOpenAI',
+				importFrom: '@ai-sdk/openai-compatible',
+				factoryName: 'createOpenAICompatible',
 				supportsBaseUrl: true,
 			},
 		},
@@ -286,7 +291,7 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 			'streaming',
 		],
 		defaultModels: {
-			chat: 'moonshot-chat',
+			chat: 'kimi-k2.5',
 			embedding: 'text-embedding-v3',
 		},
 	},

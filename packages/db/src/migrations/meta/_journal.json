@@ -71,6 +71,20 @@
       "when": 1771956233062,
       "tag": "0009_next_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772022168831,
+      "tag": "0010_even_dracula",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772474587341,
+      "tag": "0011_worthless_nightmare",
+      "breakpoints": true
     }
   ]
 }

@@ -24,7 +24,9 @@ vi.mock('../../src/services/rag/multi-retriever', () => ({
 }))
 
 vi.mock('../../src/services/rag/reranker', () => ({
-	rerankNotes: vi.fn().mockImplementation(async (_query, candidates) => candidates),
+	rerankNotes: vi
+		.fn()
+		.mockImplementation(async (_query, candidates, _options) => candidates),
 }))
 
 vi.mock('../../src/services/notes', () => ({

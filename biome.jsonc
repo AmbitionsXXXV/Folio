@@ -22,7 +22,10 @@
       "!**/.source",
       "!**/convex/_generated",
       "!**/*.lock",
-      "!tools/clean.js"
+      "!tools/clean.js",
+      "!.agents",
+      "!.claude",
+      "!**/app.config.ts"
     ]
   },
   "formatter": {
@@ -57,8 +60,12 @@
       },
       "correctness": {
         "useImageSize": "off",
+        "noUndeclaredVariables": "off",
         "useExhaustiveDependencies": "off",
         "noNestedComponentDefinitions": "off"
+      },
+      "suspicious": {
+        "noConfusingLabels": "off"
       },
       "nursery": {
         "noLeakedRender": "off"

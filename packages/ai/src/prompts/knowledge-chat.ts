@@ -53,6 +53,14 @@ export type NoteContext = {
 	id: string
 	title: string
 	contentText: string
+	images?: NoteImageContext[]
+}
+
+/** Image data attached to a note */
+export type NoteImageContext = {
+	url: string
+	description?: string
+	mimeType: string
 }
 
 /** Input for building knowledge chat prompt */
@@ -93,14 +101,30 @@ function truncateText(text: string, maxChars: number): string {
 	return `${text.slice(0, maxChars - 3)}...`
 }
 
+const MAX_IMAGES_PER_NOTE_IN_PROMPT = 5
+
 /**
  * Format a note for inclusion in the prompt
  */
 function formatNoteForPrompt(note: NoteContext, maxChars: number): string {
 	const truncatedContent = truncateText(note.contentText, maxChars)
-	return `### ${note.title}
+	const sections = [`### ${note.title}`, '', truncatedContent]
 
-${truncatedContent}`
+	if (note.images && note.images.length > 0) {
+		sections.push('', '**Images in this note:**')
+		const promptImages = note.images.slice(0, MAX_IMAGES_PER_NOTE_IN_PROMPT)
+		for (const [index, image] of promptImages.entries()) {
+			const description =
+				image?.description?.trim() || 'Image present (description unavailable).'
+			sections.push(`- Image ${index + 1}: ${description}`)
+		}
+		if (note.images.length > MAX_IMAGES_PER_NOTE_IN_PROMPT) {
+			const extraCount = note.images.length - MAX_IMAGES_PER_NOTE_IN_PROMPT
+			sections.push(`- ... and ${extraCount} more image(s)`)
+		}
+	}
+
+	return sections.join('\n')
 }
 
 /** Minimum chars required for useful note content */

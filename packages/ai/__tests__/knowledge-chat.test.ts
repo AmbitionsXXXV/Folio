@@ -105,6 +105,33 @@ describe('buildKnowledgeChatPrompt', () => {
 		expect(result.retrievedNotesCount).toBe(1)
 	})
 
+	it('includes image descriptions when present', () => {
+		const attachedNotes: NoteContext[] = [
+			{
+				id: 'img-1',
+				title: 'Architecture Screenshot',
+				contentText: 'System overview.',
+				images: [
+					{
+						url: 'https://example.com/image-1.png',
+						description: 'Dashboard screenshot with latency and error charts.',
+						mimeType: 'image/png',
+					},
+				],
+			},
+		]
+
+		const result = buildKnowledgeChatPrompt({
+			userPrompt: 'What does the dashboard show?',
+			attachedNotes,
+		})
+
+		expect(result.prompt).toContain('**Images in this note:**')
+		expect(result.prompt).toContain(
+			'Dashboard screenshot with latency and error charts.'
+		)
+	})
+
 	it('deduplicates retrieved notes that are also attached', () => {
 		const attachedNotes = [
 			createNote('1', 'Same Note', 'This note is both attached and retrieved.'),
@@ -290,6 +317,27 @@ describe('buildKnowledgeChatSystemPrompt (conversation mode)', () => {
 		expect(result.systemPrompt).toContain('### RAG Note')
 		expect(result.systemPrompt).not.toContain('## User Question')
 		expect(result.retrievedNotesCount).toBe(1)
+	})
+
+	it('includes image descriptions in system prompt when present', () => {
+		const attachedNotes: NoteContext[] = [
+			{
+				id: 'img-2',
+				title: 'Roadmap Photo',
+				contentText: 'Planning note.',
+				images: [
+					{
+						url: 'https://example.com/image-2.jpg',
+						description: 'Whiteboard photo listing Q1 priorities.',
+						mimeType: 'image/jpeg',
+					},
+				],
+			},
+		]
+
+		const result = buildKnowledgeChatSystemPrompt({ attachedNotes })
+		expect(result.systemPrompt).toContain('**Images in this note:**')
+		expect(result.systemPrompt).toContain('Whiteboard photo listing Q1 priorities.')
 	})
 
 	it('deduplicates retrieved notes that are also attached', () => {

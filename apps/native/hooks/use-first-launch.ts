@@ -110,7 +110,9 @@ export function useFirstLaunch(
 
 				// First launch - detect system preferences
 				const detectedLanguage = detectSystemLanguage()
-				const systemColorScheme = Appearance.getColorScheme() ?? 'light'
+				const rawScheme = Appearance.getColorScheme()
+				const systemColorScheme: 'light' | 'dark' =
+					rawScheme === 'dark' ? 'dark' : 'light'
 
 				// Only show language prompt if detected language differs from current
 				// and is actually supported

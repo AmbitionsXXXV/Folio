@@ -1,10 +1,18 @@
 /**
  * RAG (Retrieval Augmented Generation) types
  *
- * RAG enables using user's own notes as context for AI responses
+ * RAG enables using user's own notes as context for AI responses.
+ *
+ * Embedding generation is handled by AI SDK's native `embed()` / `embedMany()`
+ * paired with `createVercelAiEmbeddingModel` -- no custom bridging layer needed.
  */
 
 import type { AiProvider } from '../providers/types'
+
+/**
+ * Embedding index status tracked on entries.
+ */
+export type EmbeddingStatus = 'failed' | 'indexed' | 'no_provider' | 'pending'
 
 /**
  * Text chunk for embedding and retrieval
@@ -13,14 +21,12 @@ export interface TextChunk {
 	/** Chunk index within the entry */
 	chunkIndex: number
 	createdAt: Date
-	/** Embedding vector */
+	/** Embedding vector (populated after indexing) */
 	embedding?: number[]
 	/** Model used for embedding */
 	embeddingModel?: string
 	/** Provider used for embedding */
 	embeddingProvider?: AiProvider
-	/** Embedding version (for cache invalidation) */
-	embeddingVersion?: string
 	entryId: string
 	id: string
 	/** Chunk metadata (e.g., position, heading) */
@@ -28,16 +34,6 @@ export interface TextChunk {
 	/** Chunk text content */
 	text: string
 	userId: string
-}
-
-/**
- * Chunker interface
- */
-export interface Chunker {
-	/**
-	 * Split text into chunks
-	 */
-	chunk(text: string, options?: ChunkOptions): TextChunk[]
 }
 
 /**
@@ -53,41 +49,12 @@ export interface ChunkOptions {
 }
 
 /**
- * Embedding provider interface
- */
-export interface EmbeddingProvider {
-	/**
-	 * Generate embeddings for texts
-	 */
-	embed(texts: string[]): Promise<number[][]>
-
-	/**
-	 * Get embedding dimension
-	 */
-	getDimension(): number
-}
-
-/**
  * Retrieval result
  */
 export interface RetrievalResult {
 	chunk: TextChunk
 	/** Similarity score (0-1, higher is better) */
 	score: number
-}
-
-/**
- * Retriever interface
- */
-export interface Retriever {
-	/**
-	 * Retrieve relevant chunks for a query
-	 */
-	retrieve(
-		userId: string,
-		query: string,
-		options?: RetrieveOptions
-	): Promise<RetrievalResult[]>
 }
 
 /**
@@ -108,18 +75,7 @@ export interface RetrieveOptions {
  * Indexer interface for managing chunk embeddings
  */
 export interface Indexer {
-	/**
-	 * Index chunks for an entry
-	 */
 	indexEntry(entryId: string, chunks: TextChunk[]): Promise<void>
-
-	/**
-	 * Check if entry needs re-indexing
-	 */
 	needsReindex(entryId: string, contentHash: string): Promise<boolean>
-
-	/**
-	 * Remove chunks for an entry
-	 */
 	removeEntry(entryId: string): Promise<void>
 }
