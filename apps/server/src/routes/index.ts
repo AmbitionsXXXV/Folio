@@ -1,5 +1,5 @@
 import type { App } from '../types'
-import { registerAiStreamRoute } from './ai-stream'
+import { registerAiStreamRoute } from './ai'
 import { registerHealthRoutes } from './health'
 import { registerReindexRoute } from './reindex'
 
