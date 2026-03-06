@@ -20,7 +20,11 @@ import { devToolsMiddleware } from '@ai-sdk/devtools'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import type { EmbeddingModelV3, LanguageModelV3 } from '@ai-sdk/provider'
+import type {
+	EmbeddingModelV3,
+	ImageModelV3,
+	LanguageModelV3,
+} from '@ai-sdk/provider'
 import { wrapLanguageModel } from 'ai'
 import type { DecryptedCredential } from './credentials/types'
 import { getProviderConfig } from './providers/types'
@@ -50,6 +54,14 @@ type CreateEmbeddingModelOptions = {
 	model?: string
 }
 
+type CreateImageModelOptions = {
+	/**
+	 * Explicit image model override.
+	 * If omitted, falls back to provider defaults.
+	 */
+	model?: string
+}
+
 function resolveChatModelId(
 	credential: DecryptedCredential,
 	overrideModel?: string
@@ -73,6 +85,20 @@ function resolveEmbeddingModelId(
 	if (!resolvedModelId) {
 		throw new Error(
 			`No default embedding model configured for provider: ${credential.provider}`
+		)
+	}
+	return resolvedModelId
+}
+
+function resolveImageModelId(
+	credential: DecryptedCredential,
+	overrideModel?: string
+): string {
+	const providerDefaults = getProviderConfig(credential.provider).defaultModels
+	const resolvedModelId = overrideModel ?? providerDefaults.image
+	if (!resolvedModelId) {
+		throw new Error(
+			`No default image model configured for provider: ${credential.provider}`
 		)
 	}
 	return resolvedModelId
@@ -223,6 +249,57 @@ export function createVercelAiEmbeddingModel(
 		case 'claude': {
 			throw new Error(
 				`Embedding model not implemented for provider: ${credential.provider}`
+			)
+		}
+		default: {
+			const unreachableProvider: never = credential.provider
+			throw new Error(`Unsupported provider: ${unreachableProvider}`)
+		}
+	}
+}
+
+/**
+ * Create a Vercel AI SDK image model from decrypted BYOK credential.
+ *
+ * Supported providers:
+ * - openai: via `@ai-sdk/openai` `.image()` (dall-e-3, gpt-image-1)
+ * - gemini: via `@ai-sdk/google` `.image()` (imagen-4.0-generate-001)
+ * - moonshot: via `@ai-sdk/openai-compatible` `.imageModel()`
+ */
+export function createVercelAiImageModel(
+	credential: DecryptedCredential,
+	options: CreateImageModelOptions = {}
+): ImageModelV3 {
+	const modelId = resolveImageModelId(credential, options.model)
+
+	switch (credential.provider) {
+		case 'openai': {
+			const openai = createOpenAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return openai.image(modelId)
+		}
+		case 'gemini': {
+			const google = createGoogleGenerativeAI({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+			})
+			return google.image(stripModelsPrefix(modelId))
+		}
+		case 'moonshot': {
+			const moonshotai = createOpenAICompatible({
+				apiKey: credential.apiKey,
+				baseURL: credential.baseUrl,
+				name: 'moonshotai',
+			})
+			return moonshotai.imageModel(modelId)
+		}
+		case 'deepseek':
+		case 'qwen':
+		case 'claude': {
+			throw new Error(
+				`Image generation not supported for provider: ${credential.provider}`
 			)
 		}
 		default: {

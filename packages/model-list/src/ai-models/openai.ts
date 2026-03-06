@@ -1,5 +1,10 @@
 import type { ModelParamsSchema } from '../standard-parameters'
-import type { AIChatModelCard, AISTTModelCard, AITTSModelCard } from '../types'
+import type {
+	AIChatModelCard,
+	AIImageModelCard,
+	AISTTModelCard,
+	AITTSModelCard,
+} from '../types'
 
 export const gptImage1ParamsSchema: ModelParamsSchema = {
 	imageUrls: { default: [] },
@@ -1316,8 +1321,80 @@ export const openaiSTTModels: AISTTModelCard[] = [
 	},
 ]
 
+const openaiImageModels: AIImageModelCard[] = [
+	{
+		description:
+			'DALL-E 3 generates original, high-quality images from text descriptions with improved accuracy and detail over previous versions.',
+		displayName: 'DALL-E 3',
+		enabled: true,
+		id: 'dall-e-3',
+		parameters: gptImage1ParamsSchema,
+		pricing: {
+			approximatePricePerImage: 0.04,
+			units: [
+				{
+					lookup: {
+						prices: {
+							'1024x1024_standard': 0.04,
+							'1024x1792_standard': 0.08,
+							'1792x1024_standard': 0.08,
+							'1024x1024_hd': 0.08,
+							'1024x1792_hd': 0.12,
+							'1792x1024_hd': 0.12,
+						},
+						pricingParams: ['size', 'quality'],
+					},
+					name: 'imageGeneration',
+					strategy: 'lookup',
+					unit: 'image',
+				},
+			],
+		},
+		resolutions: ['1024x1024', '1024x1792', '1792x1024'],
+		type: 'image',
+	},
+	{
+		description:
+			"GPT Image 1 (gpt-image-1) is OpenAI's native image generation model with high-fidelity text rendering and precise instruction following.",
+		displayName: 'GPT Image 1',
+		enabled: true,
+		id: 'gpt-image-1',
+		parameters: gptImage1ParamsSchema,
+		pricing: {
+			approximatePricePerImage: 0.04,
+			units: [
+				{
+					lookup: {
+						prices: {
+							'1024x1024_low': 0.011,
+							'1024x1024_medium': 0.042,
+							'1024x1024_high': 0.167,
+							'1536x1024_low': 0.016,
+							'1536x1024_medium': 0.063,
+							'1536x1024_high': 0.25,
+							'1024x1536_low': 0.016,
+							'1024x1536_medium': 0.063,
+							'1024x1536_high': 0.25,
+							auto_low: 0.011,
+							auto_medium: 0.042,
+							auto_high: 0.167,
+						},
+						pricingParams: ['size', 'quality'],
+					},
+					name: 'imageGeneration',
+					strategy: 'lookup',
+					unit: 'image',
+				},
+			],
+		},
+		resolutions: ['auto', '1024x1024', '1536x1024', '1024x1536'],
+		type: 'image',
+	},
+]
+
 export const allModels = [
 	...openaiChatModels,
+	...openaiImageModels,
 	...openaiTTSModels,
 	...openaiSTTModels,
 ]

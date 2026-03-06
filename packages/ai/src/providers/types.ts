@@ -57,6 +57,7 @@ export type AiProvider = AiProviderId
 export type ProviderCapability =
 	| 'chat'
 	| 'embedding'
+	| 'image_generation'
 	| 'structured_output'
 	| 'function_calling'
 	| 'vision'
@@ -84,6 +85,7 @@ export interface ProviderConfig {
 	defaultModels: {
 		chat?: string
 		embedding?: string
+		image?: string
 	}
 	id: AiProvider
 	name: string
@@ -121,6 +123,7 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 		capabilities: [
 			'chat',
 			'embedding',
+			'image_generation',
 			'structured_output',
 			'function_calling',
 			'vision',
@@ -129,6 +132,7 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 		defaultModels: {
 			chat: 'gpt-4o-mini',
 			embedding: 'text-embedding-3-small',
+			image: 'dall-e-3',
 		},
 	},
 	deepseek: {
@@ -185,6 +189,7 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 		capabilities: [
 			'chat',
 			'embedding',
+			'image_generation',
 			'structured_output',
 			'function_calling',
 			'vision',
@@ -193,6 +198,7 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
 		defaultModels: {
 			chat: 'gemini-2.5-flash-lite',
 			embedding: 'text-embedding-004',
+			image: 'imagen-4.0-generate-001',
 		},
 	},
 	claude: {

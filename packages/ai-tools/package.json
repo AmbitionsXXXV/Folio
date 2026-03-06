@@ -79,12 +79,21 @@
     "./web-fetch/types": {
       "types": "./src/web-fetch/types.ts",
       "default": "./src/web-fetch/types.ts"
+    },
+    "./image-generation/tools": {
+      "types": "./src/image-generation/tools/index.ts",
+      "default": "./src/image-generation/tools/index.ts"
+    },
+    "./image-generation/schemas": {
+      "types": "./src/image-generation/schemas.ts",
+      "default": "./src/image-generation/schemas.ts"
     }
   },
   "scripts": {
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/provider": "^3.0.8",
     "@folionote/db": "workspace:*",
     "ai": "catalog:",
     "drizzle-orm": "catalog:",

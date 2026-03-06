@@ -5,13 +5,14 @@ const moonshotChatModels: AIChatModelCard[] = [
 	{
 		abilities: {
 			functionCall: true,
+			imageOutput: true,
 			reasoning: true,
 			structuredOutput: true,
 			vision: true,
 		},
 		contextWindowTokens: 262_144,
 		description:
-			'Kimi K2.5 is a native multimodal MoE model (1T total / 32B active params) with MoonViT vision encoder. Supports image+text input, dual modes (Thinking with reasoning traces at temperature=1.0, Instant at temperature=0.6), function calling, visual coding, and agent swarm orchestration.',
+			'Kimi K2.5 is a native multimodal MoE model (1T total / 32B active params) with MoonViT vision encoder. Supports image+text input, inline image generation, dual modes (Thinking with reasoning traces at temperature=1.0, Instant at temperature=0.6), function calling, visual coding, and agent swarm orchestration.',
 		displayName: 'Kimi K2.5',
 		enabled: true,
 		id: 'kimi-k2.5',

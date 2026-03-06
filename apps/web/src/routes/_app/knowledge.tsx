@@ -54,6 +54,7 @@ import {
 	PromptInputTools,
 } from '@/components/ai-elements/prompt-input'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
+import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
 import { AttachmentDisplay } from '@/features/knowledge/components/attachment-display'
 import {
 	ChatMessageItem,
@@ -66,6 +67,7 @@ import {
 	ContextCompactBanner,
 	ContextUsagePopover,
 } from '@/features/knowledge/components/context-usage-section'
+import { ImageGenerationToggle } from '@/features/knowledge/components/image-generation-toggle'
 import { ThinkingToggle } from '@/features/knowledge/components/thinking-toggle'
 import {
 	WebSearchPanel,
@@ -76,7 +78,11 @@ import type { ChatSessionSummary } from '@/features/knowledge/types'
 import { isApiSupportedProvider } from '@/features/knowledge/utils'
 import { useAiModelCatalog } from '@/hooks/use-ai-model-catalog'
 import { useChatSessions } from '@/hooks/use-chat-sessions'
-import { useKnowledgeChat } from '@/hooks/use-knowledge-chat'
+import { useGenerateImage } from '@/hooks/use-generate-image'
+import {
+	type KnowledgeChatMessage,
+	useKnowledgeChat,
+} from '@/hooks/use-knowledge-chat'
 import { useLastUsedModel } from '@/hooks/use-last-used-model'
 import { useModelProviderConfig } from '@/hooks/use-model-provider-config'
 import { useProviderApiKey } from '@/hooks/use-provider-api-key'
@@ -156,6 +162,362 @@ const ChatHistorySidebar = memo(function ChatHistorySidebar(
 	)
 })
 
+function computeShowWaiting(
+	isPending: boolean,
+	messages: Array<{
+		isStreaming?: boolean
+		content: string
+		thinking?: string
+		parts?: Array<{ type: string }>
+	}>
+): boolean {
+	if (!isPending) return false
+	const hasStreamingContent = (p: { type: string }) =>
+		p.type === 'reasoning' || p.type.startsWith('tool-')
+	return !messages.some(
+		(m) =>
+			m.isStreaming &&
+			(m.content.length > 0 ||
+				(m.thinking?.length ?? 0) > 0 ||
+				(m.parts ?? []).some(hasStreamingContent))
+	)
+}
+
+function applyMentionSelection(
+	item: MentionItem,
+	textareaRef: { current: HTMLTextAreaElement | null },
+	callbackRefs: {
+		current: {
+			inputValue: string
+			setInputValue: (v: string) => void
+			handleAddNote: (note: AttachedNote) => void
+		}
+	}
+) {
+	callbackRefs.current.handleAddNote({ id: item.id, title: item.title })
+
+	const textarea = textareaRef.current
+	if (!textarea) return
+
+	const cursorPos = textarea.selectionStart
+	const currentValue = callbackRefs.current.inputValue
+	const atIndex = findAtIndex(currentValue, cursorPos)
+
+	if (atIndex >= 0) {
+		const before = currentValue.slice(0, atIndex)
+		const after = currentValue.slice(cursorPos)
+		const inserted = `@${item.title} `
+		callbackRefs.current.setInputValue(before + inserted + after)
+
+		const newCursorPos = before.length + inserted.length
+		requestAnimationFrame(() => {
+			textarea.setSelectionRange(newCursorPos, newCursorPos)
+			textarea.focus()
+		})
+	}
+}
+
+function addNoteIfAbsent(
+	note: AttachedNote,
+	setNotes: (fn: (prev: AttachedNote[]) => AttachedNote[]) => void
+) {
+	setNotes((prev) => (prev.some((n) => n.id === note.id) ? prev : [...prev, note]))
+}
+
+function resolveInputPlaceholder(
+	t: ReturnType<typeof useTranslation>['t'],
+	hasApiKey: boolean,
+	isImageMode: boolean
+): string {
+	if (!hasApiKey) return t('knowledge.configureApiKeyFirst')
+	if (isImageMode)
+		return t('knowledge.imagePromptPlaceholder', {
+			defaultValue: 'Describe the image you want to create\u2026',
+		})
+	return t('knowledge.inputPlaceholder')
+}
+
+function getInitialSidebarCollapsed(): boolean {
+	if (typeof window === 'undefined') return false
+	return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
+}
+
+function useMentionKeyHandler(
+	textareaRef: { current: HTMLTextAreaElement | null },
+	handleKey: (key: string) => boolean
+) {
+	const handleKeyRef = useRef(handleKey)
+	handleKeyRef.current = handleKey
+	useEffect(() => {
+		const node = textareaRef.current
+		if (!node) return
+		const handler = (e: KeyboardEvent) => {
+			if (handleKeyRef.current(e.key)) {
+				e.preventDefault()
+				e.stopPropagation()
+			}
+		}
+		node.addEventListener('keydown', handler, { capture: true })
+		return () => node.removeEventListener('keydown', handler, { capture: true })
+	})
+}
+
+function useErrorToasts(
+	chatError: Error | undefined | null,
+	sessionsError: Error | undefined | null,
+	t: ReturnType<typeof useTranslation>['t']
+) {
+	useEffect(() => {
+		const error = chatError || sessionsError
+		if (error) {
+			toast.error(error.message || t('knowledge.requestFailed'))
+		}
+	}, [chatError, sessionsError, t])
+}
+
+function useSyncThinkingState(
+	supportsThinking: boolean,
+	hasToggleableReasoning: boolean,
+	setThinkingEnabled: (v: boolean) => void
+) {
+	useEffect(() => {
+		if (!supportsThinking) {
+			setThinkingEnabled(false)
+			return
+		}
+		if (hasToggleableReasoning) return
+		setThinkingEnabled(true)
+	}, [supportsThinking, hasToggleableReasoning, setThinkingEnabled])
+}
+
+function useSyncSidebarCollapsed(isCollapsed: boolean) {
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+		localStorage.setItem(
+			SIDEBAR_COLLAPSED_STORAGE_KEY,
+			isCollapsed ? 'true' : 'false'
+		)
+	}, [isCollapsed])
+}
+
+function buildMentionCandidates(
+	rawItems: Entry[] | undefined,
+	excludeIds: Set<string>,
+	t: ReturnType<typeof useTranslation>['t']
+): MentionItem[] {
+	const entries = (rawItems ?? []) as Entry[]
+	const items: MentionItem[] = []
+	for (const entry of entries) {
+		if (entry.isInbox) continue
+		if (excludeIds.has(entry.id)) continue
+		const rawTitle = entry.title?.trim() ?? ''
+		const title = rawTitle.length > 0 ? rawTitle : t('entryPicker.untitled')
+		items.push({ id: entry.id, title })
+	}
+	return items
+}
+
+type CatalogModel = {
+	providerId: string
+	id: string
+	type: string
+	enabled: boolean
+}
+type CatalogProvider = { id: string }
+
+function findValidProviderAndModel(
+	catalogModels: CatalogModel[],
+	catalogProviders: CatalogProvider[],
+	currentProvider: string,
+	currentModel: string
+): { provider: string; model: string } {
+	const enabled = catalogModels.filter(
+		(m) =>
+			m.providerId === currentProvider &&
+			(m.type === 'chat' || m.type === 'image') &&
+			m.enabled
+	)
+	if (enabled.length > 0) {
+		if (enabled.some((m) => m.id === currentModel)) {
+			return { provider: currentProvider, model: currentModel }
+		}
+		const firstChat = enabled.find((m) => m.type === 'chat')
+		return {
+			provider: currentProvider,
+			model: firstChat?.id ?? enabled[0]?.id ?? '',
+		}
+	}
+	for (const provider of catalogProviders) {
+		const models = catalogModels.filter(
+			(m) =>
+				m.providerId === provider.id &&
+				(m.type === 'chat' || m.type === 'image') &&
+				m.enabled
+		)
+		const firstChat = models.find((m) => m.type === 'chat')
+		const first = firstChat ?? models[0]
+		if (first) return { provider: provider.id, model: first.id }
+	}
+	return { provider: currentProvider, model: '' }
+}
+
+function useInitModelSelection(opts: {
+	catalogModels: CatalogModel[]
+	catalogProviders: CatalogProvider[]
+	isModelConfigLoaded: boolean
+	isCatalogLoaded: boolean
+	lastUsedProvider?: string
+	lastUsedModel?: string
+	defaultProvider: string
+	defaultModel?: string | null
+	setSelectedProvider: (v: string) => void
+	setSelectedModel: (v: string) => void
+}) {
+	useEffect(() => {
+		if (!(opts.isModelConfigLoaded && opts.isCatalogLoaded)) return
+		const preferredProvider = opts.lastUsedProvider || opts.defaultProvider
+		const preferredModel = opts.lastUsedModel || opts.defaultModel || ''
+		const { provider, model } = findValidProviderAndModel(
+			opts.catalogModels,
+			opts.catalogProviders,
+			preferredProvider,
+			preferredModel
+		)
+		opts.setSelectedProvider(provider)
+		opts.setSelectedModel(model)
+	}, [
+		opts.catalogModels,
+		opts.catalogProviders,
+		opts.isModelConfigLoaded,
+		opts.isCatalogLoaded,
+		opts.defaultProvider,
+		opts.defaultModel,
+		opts.lastUsedProvider,
+		opts.lastUsedModel,
+		opts.setSelectedProvider,
+		opts.setSelectedModel,
+	])
+}
+
+function useAutoCompact(opts: {
+	selectedChatId: string | null
+	sessionContextUsage: ReturnType<typeof useSessionContextUsage>
+	isPending: boolean
+	isCompacting: boolean
+	messagesLength: number
+	compactContext: (input: {
+		tokensToCompact: number
+	}) => Promise<{ compactedCount: number } | null>
+	t: ReturnType<typeof useTranslation>['t']
+}) {
+	const keyRef = useRef<string | null>(null)
+	useEffect(() => {
+		keyRef.current = null
+	}, [opts.selectedChatId])
+	useEffect(() => {
+		if (!opts.selectedChatId) return
+		if (!opts.sessionContextUsage?.shouldCompact) return
+		if (opts.isPending || opts.isCompacting) return
+		const key = [
+			opts.selectedChatId,
+			opts.messagesLength,
+			opts.sessionContextUsage.tokensToCompact,
+		].join(':')
+		if (keyRef.current === key) return
+		keyRef.current = key
+		opts
+			.compactContext({ tokensToCompact: opts.sessionContextUsage.tokensToCompact })
+			.then((result) => {
+				if (!result) return
+				toast.success(
+					opts.t('knowledge.compactMessage.success', {
+						count: result.compactedCount,
+					})
+				)
+			})
+			.catch((error: unknown) => {
+				toast.error(getErrorMessage(error))
+			})
+	}, [
+		opts.compactContext,
+		opts.isCompacting,
+		opts.isPending,
+		opts.messagesLength,
+		opts.selectedChatId,
+		opts.sessionContextUsage,
+		opts.t,
+	])
+}
+
+type ChatConversationContentProps = {
+	messages: KnowledgeChatMessage[]
+	sessionContextUsage: ReturnType<typeof useSessionContextUsage>
+	isCompacting: boolean
+	showWaiting: boolean
+	thinkingEnabled: boolean
+	handleCompactNow: () => void
+	handleOpenWebSearchPanel: WebSearchPanelOpenHandler
+	addToolApprovalResponse: ToolApprovalHandler
+}
+
+function ChatConversationContent(props: ChatConversationContentProps) {
+	const { t } = useTranslation()
+	const {
+		messages,
+		sessionContextUsage,
+		isCompacting,
+		showWaiting,
+		thinkingEnabled,
+	} = props
+
+	if (messages.length === 0) {
+		return (
+			<ConversationContent className="gap-4 p-4">
+				<ConversationEmptyState
+					description={t('knowledge.emptyState.description')}
+					icon={
+						<HugeiconsIcon
+							className="size-12 text-muted-foreground/50"
+							icon={AiBrain01Icon}
+						/>
+					}
+					title={t('knowledge.emptyState.title')}
+				/>
+			</ConversationContent>
+		)
+	}
+
+	return (
+		<ConversationContent className="gap-4 p-4">
+			{sessionContextUsage ? (
+				<ContextCompactBanner
+					contextUsage={sessionContextUsage}
+					isCompacting={isCompacting}
+					onCompact={props.handleCompactNow}
+				/>
+			) : null}
+			{messages.map((message) => (
+				<Fragment key={message.id}>
+					{message.compactInfo ? (
+						<CompactMessage
+							compactInfo={message.compactInfo}
+							summary={message.content}
+						/>
+					) : (
+						<ChatMessageItem
+							message={message}
+							onOpenWebSearchPanel={props.handleOpenWebSearchPanel}
+							onToolApprovalResponse={props.addToolApprovalResponse}
+							thinkingEnabled={thinkingEnabled}
+						/>
+					)}
+				</Fragment>
+			))}
+			{showWaiting ? <WaitingIndicator /> : null}
+		</ConversationContent>
+	)
+}
+
 function KnowledgePage() {
 	const { t } = useTranslation()
 
@@ -171,11 +533,11 @@ function KnowledgePage() {
 	const [selectedModel, setSelectedModel] = useState(config.defaultModel ?? '')
 	const [thinkingEnabled, setThinkingEnabled] = useState(false)
 	const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+	const [imageGenerationEnabled, setImageGenerationEnabled] = useState(false)
 	const [inputValue, setInputValue] = useState('')
-	const [isHistoryCollapsed, setIsHistoryCollapsed] = useState<boolean>(() => {
-		if (typeof window === 'undefined') return false
-		return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
-	})
+	const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(
+		getInitialSidebarCollapsed
+	)
 	const [isMobileHistoryOpen, setMobileHistoryOpen] = useState(false)
 	const [attachedNotes, setAttachedNotes] = useState<AttachedNote[]>([])
 	const [webSearchPanelOpen, setWebSearchPanelOpen] = useState(false)
@@ -183,7 +545,6 @@ function KnowledgePage() {
 		useState<WebSearchPanelData | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const loadedChatIdRef = useRef<string | null>(null)
-	const autoCompactKeyRef = useRef<string | null>(null)
 
 	const {
 		sessions,
@@ -209,6 +570,9 @@ function KnowledgePage() {
 		isModelConfigLoaded,
 	} = useProviderApiKey(selectedProvider)
 
+	const { generate: generateImage, isGenerating: isImageGenerating } =
+		useGenerateImage()
+
 	const handleMessageComplete = useCallback(async () => {
 		await refreshSessions({ silent: true })
 	}, [refreshSessions])
@@ -226,6 +590,7 @@ function KnowledgePage() {
 		loadMessages,
 		restoreFromCache,
 		resetChat,
+		setMessages,
 	} = useKnowledgeChat({
 		chatId: selectedChatId ?? '',
 		provider: apiProviderId,
@@ -234,10 +599,11 @@ function KnowledgePage() {
 		model: selectedModel.trim() || '',
 		enableReasoning: thinkingEnabled,
 		enableWebSearch: webSearchEnabled,
+		enableImageGeneration: imageGenerationEnabled,
 		onMessageComplete: handleMessageComplete,
 	})
 
-	const isPending = isStreaming || isLoading || isCompacting
+	const isPending = isStreaming || isLoading || isCompacting || isImageGenerating
 	const firstSessionId = sessions[0]?.chatId
 
 	// ---- @ Mention: entries query and candidates ----
@@ -256,24 +622,15 @@ function KnowledgePage() {
 		[attachedNotes]
 	)
 
-	const mentionCandidates = useMemo<MentionItem[]>(() => {
-		const entries = (entriesData?.items ?? []) as Entry[]
-		const items: MentionItem[] = []
-		for (const entry of entries) {
-			if (entry.isInbox) continue
-			if (attachedNoteIds.has(entry.id)) continue
-			const rawTitle = entry.title?.trim() ?? ''
-			const title = rawTitle.length > 0 ? rawTitle : t('entryPicker.untitled')
-			items.push({ id: entry.id, title })
-		}
-		return items
-	}, [entriesData, attachedNoteIds, t])
+	const mentionCandidates = useMemo<MentionItem[]>(
+		() => buildMentionCandidates(entriesData?.items, attachedNoteIds, t),
+		[entriesData, attachedNoteIds, t]
+	)
 
-	const handleAddNote = useCallback((note: AttachedNote) => {
-		setAttachedNotes((prev) =>
-			prev.some((n) => n.id === note.id) ? prev : [...prev, note]
-		)
-	}, [])
+	const handleAddNote = useCallback(
+		(note: AttachedNote) => addNoteIfAbsent(note, setAttachedNotes),
+		[]
+	)
 
 	const handleRemoveNote = useCallback((noteId: string) => {
 		setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
@@ -282,34 +639,16 @@ function KnowledgePage() {
 	const callbackRefs = useRef({ inputValue, setInputValue, handleAddNote })
 	callbackRefs.current = { inputValue, setInputValue, handleAddNote }
 
-	const handleMentionSelect = useCallback((item: MentionItem) => {
-		callbackRefs.current.handleAddNote({ id: item.id, title: item.title })
+	const handleMentionSelect = useCallback(
+		(item: MentionItem) => applyMentionSelection(item, textareaRef, callbackRefs),
+		[]
+	)
 
-		const textarea = textareaRef.current
-		if (!textarea) return
-
-		const cursorPos = textarea.selectionStart
-		const currentValue = callbackRefs.current.inputValue
-		const atIndex = findAtIndex(currentValue, cursorPos)
-
-		if (atIndex >= 0) {
-			const before = currentValue.slice(0, atIndex)
-			const after = currentValue.slice(cursorPos)
-			const inserted = `@${item.title} `
-			callbackRefs.current.setInputValue(before + inserted + after)
-
-			const newCursorPos = before.length + inserted.length
-			requestAnimationFrame(() => {
-				textarea.setSelectionRange(newCursorPos, newCursorPos)
-				textarea.focus()
-			})
-		}
-	}, [])
-
-	const mentionEmptyText =
+	const mentionEmptyText = t(
 		mentionCandidates.length === 0
-			? t('entryPicker.noEntriesAvailable')
-			: t('entryPicker.noMatchingEntries')
+			? 'entryPicker.noEntriesAvailable'
+			: 'entryPicker.noMatchingEntries'
+	)
 
 	const mention = useMentionPopover({
 		items: mentionCandidates,
@@ -318,21 +657,7 @@ function KnowledgePage() {
 		anchorRef: textareaRef,
 	})
 
-	const handleKeyRef = useRef(mention.handleKey)
-	handleKeyRef.current = mention.handleKey
-
-	useEffect(() => {
-		const node = textareaRef.current
-		if (!node) return
-		const handler = (e: KeyboardEvent) => {
-			if (handleKeyRef.current(e.key)) {
-				e.preventDefault()
-				e.stopPropagation()
-			}
-		}
-		node.addEventListener('keydown', handler, { capture: true })
-		return () => node.removeEventListener('keydown', handler, { capture: true })
-	})
+	useMentionKeyHandler(textareaRef, mention.handleKey)
 
 	const handleTextareaChange = useCallback(
 		(e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -344,58 +669,20 @@ function KnowledgePage() {
 		[mention.detectMention]
 	)
 
-	// Model selection helpers
-	const getEnabledChatModels = useCallback(
-		(providerId: string) =>
-			catalogModels.filter(
-				(m) => m.providerId === providerId && m.type === 'chat' && m.enabled
-			),
-		[catalogModels]
-	)
-
-	const findValidProviderAndModel = useCallback(
-		(
-			currentProvider: string,
-			currentModel: string
-		): { provider: string; model: string } => {
-			const enabledModels = getEnabledChatModels(currentProvider)
-			if (enabledModels.length > 0) {
-				if (enabledModels.some((m) => m.id === currentModel)) {
-					return { provider: currentProvider, model: currentModel }
-				}
-				return { provider: currentProvider, model: enabledModels[0]?.id ?? '' }
-			}
-			for (const provider of catalogProviders) {
-				const models = getEnabledChatModels(provider.id)
-				const first = models[0]
-				if (first) return { provider: provider.id, model: first.id }
-			}
-			return { provider: currentProvider, model: '' }
-		},
-		[getEnabledChatModels, catalogProviders]
-	)
-
-	useEffect(() => {
-		if (!(isModelConfigLoaded && isCatalogLoaded)) return
-		const preferredProvider = lastUsedProvider || config.defaultProvider
-		const preferredModel = lastUsedModel || config.defaultModel || ''
-		const { provider, model } = findValidProviderAndModel(
-			preferredProvider,
-			preferredModel
-		)
-		setSelectedProvider(provider)
-		setSelectedModel(model)
-	}, [
+	useInitModelSelection({
+		catalogModels,
+		catalogProviders,
 		isModelConfigLoaded,
 		isCatalogLoaded,
-		config.defaultProvider,
-		config.defaultModel,
 		lastUsedProvider,
 		lastUsedModel,
-		findValidProviderAndModel,
-	])
+		defaultProvider: config.defaultProvider,
+		defaultModel: config.defaultModel,
+		setSelectedProvider,
+		setSelectedModel,
+	})
 
-	// Model info for thinking
+	// Model info for thinking and image mode
 	const selectedModelInfo = useMemo(
 		() =>
 			catalogModels.find(
@@ -403,7 +690,8 @@ function KnowledgePage() {
 			),
 		[catalogModels, selectedProvider, selectedModel]
 	)
-	const supportsThinking = Boolean(selectedModelInfo?.reasoning)
+	const isImageMode = selectedModelInfo?.type === 'image'
+	const supportsThinking = !isImageMode && Boolean(selectedModelInfo?.reasoning)
 	const hasToggleableReasoning = Boolean(
 		selectedModelInfo?.settings?.extendParams?.includes('enableReasoning')
 	)
@@ -415,35 +703,15 @@ function KnowledgePage() {
 		modelContextWindowTokens: selectedModelInfo?.contextWindowTokens,
 	})
 
-	useEffect(() => {
-		if (!supportsThinking) {
-			setThinkingEnabled(false)
-			return
-		}
-		if (hasToggleableReasoning) return
-		setThinkingEnabled(true)
-	}, [supportsThinking, hasToggleableReasoning])
+	useSyncThinkingState(supportsThinking, hasToggleableReasoning, setThinkingEnabled)
 
-	// Combined error toast for both chat and session errors
-	useEffect(() => {
-		const error = chatError || sessionsError
-		if (error) {
-			toast.error(error.message || t('knowledge.requestFailed'))
-		}
-	}, [chatError, sessionsError, t])
+	useErrorToasts(chatError, sessionsError, t)
 
-	useEffect(() => {
-		if (typeof window === 'undefined') return
-		localStorage.setItem(
-			SIDEBAR_COLLAPSED_STORAGE_KEY,
-			isHistoryCollapsed ? 'true' : 'false'
-		)
-	}, [isHistoryCollapsed])
+	useSyncSidebarCollapsed(isHistoryCollapsed)
 
 	useEffect(() => {
 		if (!selectedChatId) {
 			loadedChatIdRef.current = null
-			autoCompactKeyRef.current = null
 			clearMessages()
 			return
 		}
@@ -460,46 +728,15 @@ function KnowledgePage() {
 		})
 	}, [selectedChatId, clearMessages, loadMessages, restoreFromCache])
 
-	useEffect(() => {
-		autoCompactKeyRef.current = null
-	}, [selectedChatId])
-
-	useEffect(() => {
-		if (!selectedChatId) return
-		if (!sessionContextUsage?.shouldCompact) return
-		if (isPending || isCompacting) return
-
-		const autoCompactKey = [
-			selectedChatId,
-			messages.length,
-			sessionContextUsage.tokensToCompact,
-		].join(':')
-		if (autoCompactKeyRef.current === autoCompactKey) return
-		autoCompactKeyRef.current = autoCompactKey
-
-		compactContext({
-			tokensToCompact: sessionContextUsage.tokensToCompact,
-		})
-			.then((result) => {
-				if (!result) return
-				toast.success(
-					t('knowledge.compactMessage.success', {
-						count: result.compactedCount,
-					})
-				)
-			})
-			.catch((error: unknown) => {
-				toast.error(getErrorMessage(error))
-			})
-	}, [
-		compactContext,
-		isCompacting,
-		isPending,
-		messages.length,
+	useAutoCompact({
 		selectedChatId,
 		sessionContextUsage,
+		isPending,
+		isCompacting,
+		messagesLength: messages.length,
+		compactContext,
 		t,
-	])
+	})
 
 	useEffect(() => {
 		if (isSessionsLoading || selectedChatId) return
@@ -529,13 +766,13 @@ function KnowledgePage() {
 	// Handlers
 	const handleModelChange = useCallback(
 		(modelId: string, providerId?: string) => {
-			const matchedProviderId =
-				providerId ??
-				catalogModels.find((m) => m.id === modelId)?.providerId ??
+			const matched =
+				providerId ||
+				catalogModels.find((m) => m.id === modelId)?.providerId ||
 				selectedProvider
-			setSelectedProvider(matchedProviderId)
+			setSelectedProvider(matched)
 			setSelectedModel(modelId)
-			saveLastUsed(matchedProviderId, modelId)
+			saveLastUsed(matched, modelId)
 		},
 		[catalogModels, selectedProvider, saveLastUsed]
 	)
@@ -617,6 +854,59 @@ function KnowledgePage() {
 			})
 	}, [compactContext, isCompacting, isPending, sessionContextUsage, t])
 
+	const handleImageSubmit = useCallback(
+		async (prompt: string) => {
+			if (!(selectedChatId && activeApiKey)) return
+
+			const userMessageId = `user-img-${Date.now()}`
+			const userMessage: KnowledgeChatMessage = {
+				id: userMessageId,
+				role: 'user',
+				content: prompt,
+				parts: [{ type: 'text' as const, text: prompt }],
+				timestamp: new Date(),
+			}
+
+			setMessages((prev) => [...prev, userMessage])
+
+			const images = await generateImage({
+				provider: apiProviderId,
+				apiKey: activeApiKey,
+				baseUrl: activeBaseUrl,
+				model: selectedModel,
+				prompt,
+			})
+
+			if (images) {
+				const assistantMessageId = `asst-img-${Date.now()}`
+				const fileParts = images.map((img) => ({
+					type: 'file' as const,
+					mediaType: img.mediaType,
+					url: `data:${img.mediaType};base64,${img.base64}`,
+				}))
+
+				const assistantMessage: KnowledgeChatMessage = {
+					id: assistantMessageId,
+					role: 'assistant',
+					content: '',
+					parts: fileParts,
+					timestamp: new Date(),
+				}
+
+				setMessages((prev) => [...prev, assistantMessage])
+			}
+		},
+		[
+			selectedChatId,
+			activeApiKey,
+			apiProviderId,
+			activeBaseUrl,
+			selectedModel,
+			generateImage,
+			setMessages,
+		]
+	)
+
 	const handleSubmit = useCallback(
 		(message: PromptInputMessage) => {
 			const trimmedText = message.text.trim()
@@ -628,13 +918,21 @@ function KnowledgePage() {
 				return
 			}
 
+			mention.close()
+			setInputValue('')
+			setAttachedNotes([])
+
+			if (isImageMode) {
+				handleImageSubmit(trimmedText).catch((error: unknown) => {
+					toast.error(getErrorMessage(error))
+				})
+				return
+			}
+
 			const promptText = trimmedText || t('knowledge.attachmentFallback')
 			const noteEntryIds = attachedNotes.map((n) => n.id)
 			const mentionTitles = attachedNotes.map((n) => n.title)
 
-			mention.close()
-			setInputValue('')
-			setAttachedNotes([])
 			sendMessage({
 				text: promptText,
 				files: message.files,
@@ -646,6 +944,8 @@ function KnowledgePage() {
 			isPending,
 			selectedChatId,
 			selectedProvider,
+			isImageMode,
+			handleImageSubmit,
 			sendMessage,
 			t,
 			attachedNotes,
@@ -661,9 +961,22 @@ function KnowledgePage() {
 				return
 			}
 			setInputValue('')
+			if (isImageMode) {
+				handleImageSubmit(suggestion).catch((error: unknown) => {
+					toast.error(getErrorMessage(error))
+				})
+				return
+			}
 			sendMessage({ text: suggestion })
 		},
-		[isPending, selectedChatId, selectedProvider, sendMessage]
+		[
+			isPending,
+			selectedChatId,
+			selectedProvider,
+			isImageMode,
+			handleImageSubmit,
+			sendMessage,
+		]
 	)
 
 	const handleOpenWebSearchPanel = useCallback<WebSearchPanelOpenHandler>((data) => {
@@ -671,20 +984,14 @@ function KnowledgePage() {
 		setWebSearchPanelOpen(true)
 	}, [])
 
-	const showWaiting = useMemo(() => {
-		if (!isPending) return false
-		const hasStreamingContent = (p: { type: string }) =>
-			p.type === 'reasoning' || p.type.startsWith('tool-')
-		return !messages.some(
-			(m) =>
-				m.isStreaming &&
-				(m.content.length > 0 ||
-					(m.thinking?.length ?? 0) > 0 ||
-					(m.parts ?? []).some(hasStreamingContent))
-		)
-	}, [isPending, messages])
+	const showWaiting = useMemo(
+		() => computeShowWaiting(isPending, messages),
+		[isPending, messages]
+	)
 
 	const isInputDisabled = isPending || !hasApiKey || !selectedChatId
+	const inputPlaceholder = resolveInputPlaceholder(t, hasApiKey, isImageMode)
+
 	const contextPopoverDetails = useMemo(
 		() => buildContextPopoverDetails(sessionContextUsage, selectedModel),
 		[sessionContextUsage, selectedModel]
@@ -765,48 +1072,16 @@ function KnowledgePage() {
 
 				<div className="flex min-h-0 flex-1 flex-col divide-y overflow-hidden">
 					<Conversation>
-						<ConversationContent className="gap-4 p-4">
-							{messages.length > 0 ? (
-								<>
-									{sessionContextUsage ? (
-										<ContextCompactBanner
-											contextUsage={sessionContextUsage}
-											isCompacting={isCompacting}
-											onCompact={handleCompactNow}
-										/>
-									) : null}
-									{messages.map((message) => (
-										<Fragment key={message.id}>
-											{message.compactInfo ? (
-												<CompactMessage
-													compactInfo={message.compactInfo}
-													summary={message.content}
-												/>
-											) : (
-												<ChatMessageItem
-													message={message}
-													onOpenWebSearchPanel={handleOpenWebSearchPanel}
-													onToolApprovalResponse={addToolApprovalResponse}
-													thinkingEnabled={thinkingEnabled}
-												/>
-											)}
-										</Fragment>
-									))}
-									{showWaiting ? <WaitingIndicator /> : null}
-								</>
-							) : (
-								<ConversationEmptyState
-									description={t('knowledge.emptyState.description')}
-									icon={
-										<HugeiconsIcon
-											className="size-12 text-muted-foreground/50"
-											icon={AiBrain01Icon}
-										/>
-									}
-									title={t('knowledge.emptyState.title')}
-								/>
-							)}
-						</ConversationContent>
+						<ChatConversationContent
+							addToolApprovalResponse={addToolApprovalResponse}
+							handleCompactNow={handleCompactNow}
+							handleOpenWebSearchPanel={handleOpenWebSearchPanel}
+							isCompacting={isCompacting}
+							messages={messages}
+							sessionContextUsage={sessionContextUsage}
+							showWaiting={showWaiting}
+							thinkingEnabled={thinkingEnabled}
+						/>
 						<ConversationScrollButton />
 					</Conversation>
 
@@ -853,11 +1128,7 @@ function KnowledgePage() {
 									<PromptInputTextarea
 										disabled={isInputDisabled}
 										onChange={handleTextareaChange}
-										placeholder={
-											hasApiKey
-												? t('knowledge.inputPlaceholder')
-												: t('knowledge.configureApiKeyFirst')
-										}
+										placeholder={inputPlaceholder}
 										ref={textareaRef}
 										value={inputValue}
 									/>
@@ -886,13 +1157,23 @@ function KnowledgePage() {
 											value={selectedModel}
 										/>
 
-										<WebSearchToggle
-											disabled={isPending}
-											enabled={webSearchEnabled}
-											onToggle={setWebSearchEnabled}
-										/>
+										{!isImageMode && (
+											<WebSearchToggle
+												disabled={isPending}
+												enabled={webSearchEnabled}
+												onToggle={setWebSearchEnabled}
+											/>
+										)}
 
-										{supportsThinking ? (
+										{!isImageMode && (
+											<ImageGenerationToggle
+												disabled={isPending}
+												enabled={imageGenerationEnabled}
+												onToggle={setImageGenerationEnabled}
+											/>
+										)}
+
+										{!isImageMode && supportsThinking ? (
 											<ThinkingToggle
 												hasToggleableReasoning={hasToggleableReasoning}
 												onToggle={setThinkingEnabled}
@@ -912,11 +1193,13 @@ function KnowledgePage() {
 									</PromptInputTools>
 
 									<div className="flex items-center gap-1">
-										<ContextUsagePopover
-											contextPopoverDetails={contextPopoverDetails}
-											selectedModel={selectedModel}
-											sessionContextUsage={sessionContextUsage}
-										/>
+										{!isImageMode && (
+											<ContextUsagePopover
+												contextPopoverDetails={contextPopoverDetails}
+												selectedModel={selectedModel}
+												sessionContextUsage={sessionContextUsage}
+											/>
+										)}
 
 										<PromptInputSubmit
 											aria-label={t('knowledge.send')}

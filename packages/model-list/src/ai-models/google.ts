@@ -1,4 +1,5 @@
-import type { AIChatModelCard } from '../types'
+import type { ModelParamsSchema } from '../standard-parameters'
+import type { AIChatModelCard, AIImageModelCard } from '../types'
 
 /**
  * gemini implicit caching not extra cost
@@ -606,6 +607,177 @@ const googleChatModels: AIChatModelCard[] = [
 	},
 ]
 
-export const allModels = [...googleChatModels]
+const nanoBanana2ParamsSchema: ModelParamsSchema = {
+	aspectRatio: {
+		default: '1:1',
+		enum: [
+			'1:1',
+			'1:4',
+			'1:8',
+			'2:3',
+			'3:2',
+			'3:4',
+			'4:1',
+			'4:3',
+			'4:5',
+			'5:4',
+			'8:1',
+			'9:16',
+			'16:9',
+			'21:9',
+		],
+	},
+	imageUrls: { default: [] },
+	prompt: { default: '' },
+	resolution: {
+		default: '1K',
+		enum: ['512px', '1K', '2K', '4K'],
+	},
+}
+
+const nanoBananaProParamsSchema: ModelParamsSchema = {
+	aspectRatio: {
+		default: '1:1',
+		enum: ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'],
+	},
+	imageUrls: { default: [] },
+	prompt: { default: '' },
+	resolution: {
+		default: '1K',
+		enum: ['1K', '2K', '4K'],
+	},
+}
+
+const nanoBananaParamsSchema: ModelParamsSchema = {
+	aspectRatio: {
+		default: '1:1',
+		enum: ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'],
+	},
+	imageUrls: { default: [] },
+	prompt: { default: '' },
+}
+
+const googleImageModels: AIImageModelCard[] = [
+	{
+		description:
+			"Imagen 4.0 Generate is Google's latest image generation model, producing high-quality images with exceptional detail and photorealism.",
+		displayName: 'Imagen 4.0 Generate',
+		enabled: true,
+		id: 'imagen-4.0-generate-001',
+		pricing: {
+			approximatePricePerImage: 0.04,
+			units: [
+				{
+					name: 'imageGeneration',
+					rate: 0.04,
+					strategy: 'fixed',
+					unit: 'image',
+				},
+			],
+		},
+		resolutions: ['1024x1024', '1536x1024', '1024x1536'],
+		type: 'image',
+	},
+	{
+		description:
+			'Nano Banana 2 (Gemini 3.1 Flash Image Preview) is the high-efficiency image generation model optimized for speed and high-volume developer use cases. Supports up to 4K resolution, 14 reference images, Google Search grounding, and advanced text rendering.',
+		displayName: 'Nano Banana 2 (Gemini 3.1 Flash Image)',
+		enabled: true,
+		id: 'gemini-3.1-flash-image-preview',
+		parameters: nanoBanana2ParamsSchema,
+		pricing: {
+			units: [
+				{ name: 'textInput', rate: 0.1, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'textOutput', rate: 0.4, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'imageInput', rate: 0.1, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'imageOutput', rate: 0.4, strategy: 'fixed', unit: 'millionTokens' },
+			],
+		},
+		resolutions: [
+			'512x512',
+			'1024x1024',
+			'2048x2048',
+			'4096x4096',
+			'1376x768',
+			'2752x1536',
+			'5504x3072',
+			'768x1376',
+			'1536x2752',
+			'3072x5504',
+		],
+		type: 'image',
+	},
+	{
+		description:
+			'Nano Banana Pro (Gemini 3 Pro Image Preview) is designed for professional asset production, utilizing advanced reasoning ("Thinking") to follow complex instructions and render high-fidelity text. Supports up to 4K resolution and Google Search grounding.',
+		displayName: 'Nano Banana Pro (Gemini 3 Pro Image)',
+		enabled: true,
+		id: 'gemini-3-pro-image-preview',
+		parameters: nanoBananaProParamsSchema,
+		pricing: {
+			units: [
+				{
+					name: 'textInput',
+					strategy: 'tiered',
+					tiers: [
+						{ rate: 1.25, upTo: 200_000 },
+						{ rate: 2.5, upTo: 'infinity' },
+					],
+					unit: 'millionTokens',
+				},
+				{
+					name: 'textOutput',
+					strategy: 'tiered',
+					tiers: [
+						{ rate: 10, upTo: 200_000 },
+						{ rate: 15, upTo: 'infinity' },
+					],
+					unit: 'millionTokens',
+				},
+			],
+		},
+		resolutions: [
+			'1024x1024',
+			'2048x2048',
+			'4096x4096',
+			'1376x768',
+			'2752x1536',
+			'5504x3072',
+			'768x1376',
+			'1536x2752',
+			'3072x5504',
+		],
+		type: 'image',
+	},
+	{
+		description:
+			'Nano Banana (Gemini 2.5 Flash Image) is designed for speed and efficiency, optimized for high-volume, low-latency image generation tasks at 1K resolution.',
+		displayName: 'Nano Banana (Gemini 2.5 Flash Image)',
+		id: 'gemini-2.5-flash-image',
+		parameters: nanoBananaParamsSchema,
+		pricing: {
+			units: [
+				{ name: 'textInput', rate: 0.1, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'textOutput', rate: 0.4, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'imageInput', rate: 0.1, strategy: 'fixed', unit: 'millionTokens' },
+				{ name: 'imageOutput', rate: 0.4, strategy: 'fixed', unit: 'millionTokens' },
+			],
+		},
+		resolutions: [
+			'1024x1024',
+			'1344x768',
+			'768x1344',
+			'1248x832',
+			'832x1248',
+			'1184x864',
+			'864x1184',
+			'1152x896',
+			'896x1152',
+		],
+		type: 'image',
+	},
+]
+
+export const allModels = [...googleChatModels, ...googleImageModels]
 
 export default allModels

@@ -30,6 +30,7 @@ export type ModelSelectorOption = {
 	id: string
 	name: string
 	iconSrc?: string
+	type?: string
 }
 
 export type ModelSelectorGroup = {
@@ -172,12 +173,15 @@ export const ModelSelectorName = ({
 // Utility Functions
 // ============================================================================
 
+const DEFAULT_MODEL_TYPES = ['chat', 'image']
+
 /**
  * Convert catalog data to ModelSelector format (using enabled models only)
  */
 export function createModelSelectorGroups(
 	providers: CatalogProvider[],
-	models: CatalogModel[]
+	models: CatalogModel[],
+	modelTypes: string[] = DEFAULT_MODEL_TYPES
 ): ModelSelectorGroup[] {
 	const enabledProviders = providers.filter((p) => p.enabled)
 	const groups: ModelSelectorGroup[] = []
@@ -185,7 +189,9 @@ export function createModelSelectorGroups(
 	for (const provider of enabledProviders) {
 		const providerModels = models.filter(
 			(model) =>
-				model.providerId === provider.id && model.enabled && model.type === 'chat'
+				model.providerId === provider.id &&
+				model.enabled &&
+				modelTypes.includes(model.type)
 		)
 
 		if (providerModels.length > 0) {
@@ -196,6 +202,7 @@ export function createModelSelectorGroups(
 					id: model.id,
 					name: model.displayName || model.id,
 					iconSrc: provider.logo,
+					type: model.type,
 				})),
 			})
 		}
@@ -311,6 +318,11 @@ export function ModelSelector({
 					<ModelSelectorName className="truncate">
 						{selected?.option.name ?? placeholder}
 					</ModelSelectorName>
+					{selected?.option.type === 'image' && (
+						<span className="shrink-0 rounded-full bg-violet-100 px-1.5 py-0.5 font-medium text-[10px] text-violet-700 leading-none dark:bg-violet-900/40 dark:text-violet-300">
+							Image
+						</span>
+					)}
 				</span>
 				<HugeiconsIcon
 					className="size-4 shrink-0 text-muted-foreground"
@@ -409,6 +421,11 @@ const ModelSelectorOptionItem = memo(function ModelSelectorOptionItem({
 			<span className="flex min-w-0 flex-1 items-center gap-2">
 				<span className="truncate">{option.name}</span>
 				<span className="shrink-0 text-muted-foreground text-xs">{option.id}</span>
+				{option.type === 'image' && (
+					<span className="shrink-0 rounded-full bg-violet-100 px-1.5 py-0.5 font-medium text-[10px] text-violet-700 leading-none dark:bg-violet-900/40 dark:text-violet-300">
+						Image
+					</span>
+				)}
 			</span>
 		</CommandItem>
 	)

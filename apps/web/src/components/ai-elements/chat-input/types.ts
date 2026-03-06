@@ -51,6 +51,8 @@ export type ChatInputProps = {
 	// Thinking/reasoning toggle
 	thinkingEnabled?: boolean
 	onThinkingToggle?: (enabled: boolean) => void
+	/** Whether the selected model is an image generation model */
+	isImageMode?: boolean
 	// Note attachment props (controlled)
 	attachedNotes?: AttachedNote[]
 	onAddNoteAttachment?: (note: AttachedNote) => void

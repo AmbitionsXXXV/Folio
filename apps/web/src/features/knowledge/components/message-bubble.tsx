@@ -34,7 +34,9 @@ import {
 import { cn } from '@/lib/utils'
 import type { ChatMessage, CitationSource } from '../types'
 import { formatCost, formatTokenCount } from '../utils'
+import { GeneratedImagesGrid } from './generated-image'
 import {
+	extractGeneratedImagesFromTools,
 	extractWebSearchData,
 	isDisplayWeatherPart,
 	isStockPricePart,
@@ -183,6 +185,49 @@ const AssistantMessageContent = memo(
 // Message Bubble Component
 // ============================================================================
 
+function extractGeneratedImages(parts: MessagePart[]) {
+	const fileParts = parts.filter(isImageFilePart).map((part) => ({
+		url: part.url,
+		mediaType: part.mediaType,
+	}))
+	const toolImages = extractGeneratedImagesFromTools(parts)
+	return [...fileParts, ...toolImages]
+}
+
+function hasToolCardPart(parts: MessagePart[]) {
+	return parts.some(
+		(part) =>
+			isDisplayWeatherPart(part) || isStockPricePart(part) || isStockTrendPart(part)
+	)
+}
+
+function deriveBubbleState(message: ChatMessage) {
+	const isUser = message.role === 'user'
+	const messageParts = message.parts ?? []
+	const hasAssistantContent = message.content.length > 0
+	const sources = messageParts.filter(isSourceUrlPart)
+	const webSearchData = isUser ? null : extractWebSearchData(messageParts)
+	const generatedImages = isUser ? [] : extractGeneratedImages(messageParts)
+	const hasToolCards = !isUser && hasToolCardPart(messageParts)
+	const shouldRender =
+		isUser ||
+		hasAssistantContent ||
+		hasToolCards ||
+		webSearchData !== null ||
+		generatedImages.length > 0
+
+	return {
+		isUser,
+		messageParts,
+		hasAssistantContent,
+		sources,
+		webSearchData,
+		generatedImages,
+		hasToolCards,
+		shouldRender,
+	}
+}
+
 type MessageBubbleProps = {
 	message: ChatMessage
 	onRegenerate?: () => void
@@ -193,43 +238,38 @@ export const MessageBubble = memo(function MessageBubble({
 	onRegenerate,
 }: MessageBubbleProps) {
 	const { t } = useTranslation()
-	const isUser = message.role === 'user'
+	const state = deriveBubbleState(message)
 	const isMessageStreaming = Boolean(message.isStreaming)
-	const hasAssistantContent = message.content.length > 0
-	const messageParts = message.parts ?? []
-	const sources = messageParts.filter(isSourceUrlPart)
-	const hasSources = sources.length > 0
-	const webSearchData = isUser ? null : extractWebSearchData(messageParts)
-	const hasToolCards =
-		!isUser &&
-		messageParts.some(
-			(part) =>
-				isDisplayWeatherPart(part) ||
-				isStockPricePart(part) ||
-				isStockTrendPart(part)
-		)
-	const shouldRenderBubble =
-		isUser || hasAssistantContent || hasToolCards || webSearchData !== null
 
-	// Pre-compute derived values
 	const outputTokens = formatTokenCount(message.usage?.outputTokens)
 	const costDisplay = formatCost(message.usage?.costUSD)
 	const showFooter = !isMessageStreaming
-	const showActions = !isUser && hasAssistantContent
+	const showActions = !state.isUser && state.hasAssistantContent
 
 	const handleCopy = useCallback(() => {
-		if (!hasAssistantContent) return
+		if (!state.hasAssistantContent) return
 		if (!navigator.clipboard?.writeText) return
 		navigator.clipboard.writeText(message.content)
-	}, [hasAssistantContent, message.content])
+	}, [state.hasAssistantContent, message.content])
 
 	const handleRegenerate = useCallback(() => {
 		onRegenerate?.()
 	}, [onRegenerate])
 
-	if (!shouldRenderBubble) {
+	if (!state.shouldRender) {
 		return null
 	}
+
+	const {
+		isUser,
+		sources,
+		webSearchData,
+		generatedImages,
+		hasToolCards,
+		messageParts,
+	} = state
+	const hasSources = sources.length > 0
+	const hasGeneratedImages = generatedImages.length > 0
 
 	return (
 		<Message from={message.role}>
@@ -243,7 +283,6 @@ export const MessageBubble = memo(function MessageBubble({
 						: 'border border-border/60 bg-card/80 text-card-foreground backdrop-blur-sm'
 				)}
 			>
-				{/* Sources */}
 				{!isUser && hasSources ? (
 					<Sources>
 						<SourcesTrigger count={sources.length} />
@@ -259,7 +298,6 @@ export const MessageBubble = memo(function MessageBubble({
 					</Sources>
 				) : null}
 
-				{/* Main content */}
 				{isUser ? (
 					<UserMessageContent
 						content={message.content}
@@ -269,7 +307,7 @@ export const MessageBubble = memo(function MessageBubble({
 				{!isUser && webSearchData ? (
 					<WebSearchToolCard webSearchData={webSearchData} />
 				) : null}
-				{!isUser && hasAssistantContent ? (
+				{!isUser && state.hasAssistantContent ? (
 					<AssistantMessageContent
 						citations={message.citations}
 						content={message.content}
@@ -277,7 +315,10 @@ export const MessageBubble = memo(function MessageBubble({
 					/>
 				) : null}
 
-				{/* Tool UI cards for assistant messages (excludes web search) */}
+				{hasGeneratedImages ? (
+					<GeneratedImagesGrid images={generatedImages} messageId={message.id} />
+				) : null}
+
 				{!isUser && hasToolCards ? (
 					<div className="mt-2 grid gap-2">
 						{messageParts.map((part) => {
@@ -305,7 +346,6 @@ export const MessageBubble = memo(function MessageBubble({
 					</div>
 				) : null}
 
-				{/* Footer: timestamp, token count and cost */}
 				{showFooter ? (
 					<MessageFooter
 						costDisplay={costDisplay}
@@ -315,7 +355,6 @@ export const MessageBubble = memo(function MessageBubble({
 					/>
 				) : null}
 
-				{/* Message actions */}
 				{showActions ? (
 					<MessageActions className="mt-2 justify-end">
 						<MessageAction
@@ -344,6 +383,26 @@ export const MessageBubble = memo(function MessageBubble({
 })
 
 type MessagePart = NonNullable<ChatMessage['parts']>[number]
+
+type ImageFilePart = MessagePart & {
+	type: 'file'
+	mediaType: string
+	url: string
+}
+
+function isImageFilePart(part: MessagePart): part is ImageFilePart {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		part.type === 'file' &&
+		'mediaType' in part &&
+		typeof part.mediaType === 'string' &&
+		part.mediaType.startsWith('image/') &&
+		'url' in part &&
+		typeof part.url === 'string'
+	)
+}
 
 type SourceUrlPart = MessagePart & {
 	type: 'source-url'

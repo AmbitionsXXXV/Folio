@@ -11,7 +11,9 @@ import {
 import {
 	createVercelAiChatModel,
 	createVercelAiEmbeddingModel,
+	createVercelAiImageModel,
 } from '@folionote/ai/vercel-ai'
+import { createImageGenerationTool } from '@folionote/ai-tools/image-generation/tools'
 import type { NoteToolContext } from '@folionote/ai-tools/note/types'
 import { isTavilyConfigured } from '@folionote/ai-tools/web-search/api'
 import { createContext } from '@folionote/api/context'
@@ -21,6 +23,7 @@ import {
 	streamText as aiStreamText,
 	convertToModelMessages,
 	createIdGenerator,
+	generateImage,
 	type ModelMessage,
 	type UIMessage,
 } from 'ai'
@@ -96,6 +99,8 @@ type AiStreamRequestBody = {
 	enableReasoning?: boolean
 	/** Optional: Enable web search tool */
 	enableWebSearch?: boolean
+	/** Optional: Enable image generation tool */
+	enableImageGeneration?: boolean
 }
 
 type AiCompactRequestBody = {
@@ -918,14 +923,25 @@ export function registerAiStreamRoute(app: App) {
 		return null
 	}
 
-	function resolveTools(
-		shouldEnableTools: boolean,
+	function resolveTools(options: {
+		shouldEnableTools: boolean
 		shouldEnableWebSearch: boolean
-	): typeof aiTools | Omit<typeof aiTools, 'webSearch' | 'webFetch'> | undefined {
+		imageGenerationTool?: ReturnType<typeof createImageGenerationTool>
+	}) {
+		const { shouldEnableTools, shouldEnableWebSearch, imageGenerationTool } = options
 		if (!shouldEnableTools) return undefined
-		if (shouldEnableWebSearch) return aiTools
-		const { webSearch: _ws, webFetch: _wf, ...rest } = aiTools
-		return rest
+
+		const baseTools = shouldEnableWebSearch
+			? aiTools
+			: (() => {
+					const { webSearch: _ws, webFetch: _wf, ...rest } = aiTools
+					return rest
+				})()
+
+		if (imageGenerationTool) {
+			return { ...baseTools, generateImage: imageGenerationTool }
+		}
+		return baseTools
 	}
 
 	app.post('/api/ai/stream', async (c) => {
@@ -945,6 +961,7 @@ export function registerAiStreamRoute(app: App) {
 			ragTopK,
 			enableReasoning,
 			enableWebSearch,
+			enableImageGeneration,
 		} = body
 
 		const validationError = validateStreamRequest(body)
@@ -1005,8 +1022,27 @@ export function registerAiStreamRoute(app: App) {
 			)
 			const shouldEnableTools = providerSupports(validProvider, 'function_calling')
 			const shouldEnableWebSearch = Boolean(enableWebSearch) && isTavilyConfigured()
+			const shouldEnableImageGeneration =
+				Boolean(enableImageGeneration) &&
+				providerSupports(validProvider, 'image_generation')
 
-			const tools = resolveTools(shouldEnableTools, shouldEnableWebSearch)
+			let imageGenerationTool:
+				| ReturnType<typeof createImageGenerationTool>
+				| undefined
+			if (shouldEnableImageGeneration) {
+				try {
+					const imageModel = createVercelAiImageModel(credential)
+					imageGenerationTool = createImageGenerationTool(imageModel)
+				} catch {
+					log.warn(`Image generation not available for provider ${validProvider}`)
+				}
+			}
+
+			const tools = resolveTools({
+				shouldEnableTools,
+				shouldEnableWebSearch,
+				imageGenerationTool,
+			})
 
 			const result = aiStreamText({
 				model: aiModel,
@@ -1057,4 +1093,96 @@ export function registerAiStreamRoute(app: App) {
 			return c.json({ error: errorMessage }, 500)
 		}
 	})
+
+	// =========================================================================
+	// POST /api/ai/generate-image — Dedicated image generation via ImageModelV3
+	// =========================================================================
+
+	app.post('/api/ai/generate-image', async (c) => {
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
+
+		const body = await c.req.json<{
+			provider: string
+			apiKey: string
+			baseUrl?: string
+			model?: string
+			prompt: string
+			n?: number
+			size?: string
+			aspectRatio?: string
+		}>()
+
+		const { provider, apiKey, baseUrl, model, prompt, n, size, aspectRatio } = body
+
+		if (!provider) return c.json({ error: 'Missing required field: provider' }, 400)
+		if (!apiKey) return c.json({ error: 'Missing required field: apiKey' }, 400)
+		if (!prompt) return c.json({ error: 'Missing required field: prompt' }, 400)
+		if (!isValidProvider(provider)) {
+			return c.json({ error: `Unsupported provider: ${provider}` }, 400)
+		}
+
+		const validProvider = provider as AiProvider
+		const credential = buildCredential(validProvider, apiKey, baseUrl, model)
+
+		try {
+			const imageModel = createVercelAiImageModel(credential, { model })
+			const result = await generateImage({
+				model: imageModel,
+				prompt,
+				n: n ?? 1,
+				size: size as `${number}x${number}` | undefined,
+				aspectRatio: aspectRatio as `${number}:${number}` | undefined,
+			})
+
+			const images = result.images.map((img) => ({
+				base64: img.base64,
+				mediaType: img.mediaType,
+			}))
+
+			return c.json({ images, warnings: result.warnings })
+		} catch (error: unknown) {
+			log.error('Image generation error:', error)
+
+			const statusCode = extractApiErrorStatus(error) ?? 500
+			const errorMessage = extractApiErrorMessage(error)
+
+			return c.json({ error: errorMessage }, statusCode as 500)
+		}
+	})
+}
+
+function extractApiErrorStatus(error: unknown): number | undefined {
+	if (
+		error &&
+		typeof error === 'object' &&
+		'statusCode' in error &&
+		typeof error.statusCode === 'number'
+	) {
+		return error.statusCode
+	}
+	if (error && typeof error === 'object' && 'cause' in error) {
+		return extractApiErrorStatus(error.cause)
+	}
+	return undefined
+}
+
+const API_ERROR_MESSAGES: Record<number, string> = {
+	401: 'API key is invalid or expired. Please check your credentials.',
+	403: 'Access denied. Your API key does not have permission for this model.',
+	429: 'API quota exceeded or rate limited. Please wait and try again, or check your billing plan.',
+	500: 'The AI provider returned an internal error. Please try again later.',
+	503: 'The AI service is temporarily unavailable. Please try again later.',
+}
+
+function extractApiErrorMessage(error: unknown): string {
+	const statusCode = extractApiErrorStatus(error)
+	const friendlyMessage = statusCode ? API_ERROR_MESSAGES[statusCode] : undefined
+	if (friendlyMessage) {
+		return friendlyMessage
+	}
+	if (error instanceof Error) {
+		return error.message
+	}
+	return 'An unexpected error occurred during image generation.'
 }

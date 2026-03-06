@@ -12,6 +12,7 @@ import { Shimmer } from '@/components/ai-elements/shimmer'
 import type { ToolApprovalHandler } from '@/components/ai-elements/tool-approval'
 import { Message, MessageContent, MessageResponse } from '@/components/chat-message'
 import type { KnowledgeChatMessage } from '@/hooks/use-knowledge-chat'
+import { GeneratedImagesGrid } from './generated-image'
 import type { ToolMessagePart } from './tool-calls'
 import {
 	getToolKey,
@@ -187,12 +188,136 @@ type ChatMessageItemProps = {
 	onOpenWebSearchPanel?: WebSearchPanelOpenHandler
 }
 
+function renderProcessSegment(
+	segment: ProcessSegment,
+	thinkingEnabled: boolean,
+	isStreaming: boolean,
+	messageId: string,
+	onToolApprovalResponse?: ToolApprovalHandler
+) {
+	if (segment.kind === 'reasoning' && thinkingEnabled) {
+		return (
+			<Message from="assistant" key={`reason-${segment.index}`}>
+				<Reasoning
+					className="mb-0"
+					defaultOpen={isStreaming}
+					isStreaming={isStreaming}
+				>
+					<ReasoningTrigger />
+					<ReasoningContent>{segment.text}</ReasoningContent>
+				</Reasoning>
+			</Message>
+		)
+	}
+	if (segment.kind === 'tool') {
+		return (
+			<Message from="assistant" key={`tool-${segment.index}`}>
+				<ToolCalls
+					className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
+					isStreaming={isStreaming}
+					messageId={messageId}
+					onToolApprovalResponse={onToolApprovalResponse}
+					tools={segment.tools}
+				/>
+			</Message>
+		)
+	}
+	return null
+}
+
+const ContentSection = memo(function ContentSection({
+	message,
+	webSearchData,
+	generatedImages,
+	onOpenWebSearchPanel,
+}: {
+	message: KnowledgeChatMessage
+	webSearchData: ReturnType<typeof extractWebSearchData> | null
+	generatedImages: Array<{ url: string; mediaType: string }>
+	onOpenWebSearchPanel?: WebSearchPanelOpenHandler
+}) {
+	const showReferences =
+		webSearchData && !webSearchData.isLoading && webSearchData.results.length > 0
+
+	return (
+		<Message from={message.role === 'assistant' ? 'assistant' : message.role}>
+			<MessageContent>
+				{webSearchData ? (
+					<WebSearchToolCard
+						onOpenPanel={onOpenWebSearchPanel}
+						webSearchData={webSearchData}
+					/>
+				) : null}
+				{message.content ? (
+					<MessageResponse>{message.content}</MessageResponse>
+				) : null}
+				{generatedImages.length > 0 ? (
+					<GeneratedImagesGrid images={generatedImages} messageId={message.id} />
+				) : null}
+				{showReferences ? (
+					<WebSearchReferences
+						onViewAll={
+							onOpenWebSearchPanel
+								? () =>
+										onOpenWebSearchPanel({
+											query: webSearchData.query,
+											results: webSearchData.results,
+										})
+								: undefined
+						}
+						results={webSearchData.results}
+					/>
+				) : null}
+			</MessageContent>
+		</Message>
+	)
+})
+
+const ToolCardsSection = memo(function ToolCardsSection({
+	messageId,
+	parts,
+}: {
+	messageId: string
+	parts: ToolMessagePart[]
+}) {
+	return (
+		<Message from="assistant">
+			<MessageContent>
+				<div className="grid gap-2">
+					{parts.map((part) => {
+						const toolKey = getToolKey(messageId, part)
+						if (isDisplayWeatherPart(part)) {
+							return <WeatherToolCard key={`weather-${toolKey}`} part={part} />
+						}
+						if (isStockPricePart(part)) {
+							return <StockToolCard key={`stock-${toolKey}`} part={part} />
+						}
+						if (isStockTrendPart(part)) {
+							return (
+								<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
+							)
+						}
+						return null
+					})}
+				</div>
+			</MessageContent>
+		</Message>
+	)
+})
+
+function extractAssistantImages(parts: ToolMessagePart[]) {
+	return parts
+		.filter(isImageFilePart)
+		.map((p) => ({ url: p.url, mediaType: p.mediaType }))
+}
+
 export const ChatMessageItem = memo(function ChatMessageItem({
 	message,
 	thinkingEnabled,
 	onToolApprovalResponse,
 	onOpenWebSearchPanel,
 }: ChatMessageItemProps) {
+	const isAssistant = message.role === 'assistant'
 	const parts = message.parts ?? []
 	const isMessageStreaming = Boolean(message.isStreaming)
 
@@ -204,104 +329,62 @@ export const ChatMessageItem = memo(function ChatMessageItem({
 	)
 
 	const webSearchData = useMemo(
-		() => (message.role === 'assistant' ? extractWebSearchData(parts) : null),
-		[message.role, parts]
+		() => (isAssistant ? extractWebSearchData(parts) : null),
+		[isAssistant, parts]
 	)
 
-	const hasProcessSegments =
-		message.role === 'assistant' && processSegments.length > 0
-	const hasToolCards = message.role === 'assistant' && toolCardParts.length > 0
+	const generatedImages = useMemo(
+		() => (isAssistant ? extractAssistantImages(parts) : []),
+		[isAssistant, parts]
+	)
+
+	const hasProcessSegments = isAssistant && processSegments.length > 0
+	const hasToolCards = isAssistant && toolCardParts.length > 0
+	const hasContentSection =
+		Boolean(message.content) || webSearchData !== null || generatedImages.length > 0
 
 	return (
 		<>
 			{hasProcessSegments
-				? processSegments.map((segment) => {
-						if (segment.kind === 'reasoning' && thinkingEnabled) {
-							return (
-								<Message from="assistant" key={`reason-${segment.index}`}>
-									<Reasoning
-										className="mb-0"
-										defaultOpen={isMessageStreaming}
-										isStreaming={isMessageStreaming}
-									>
-										<ReasoningTrigger />
-										<ReasoningContent>{segment.text}</ReasoningContent>
-									</Reasoning>
-								</Message>
-							)
-						}
-						if (segment.kind === 'tool') {
-							return (
-								<Message from="assistant" key={`tool-${segment.index}`}>
-									<ToolCalls
-										className="fade-in-0 slide-in-from-top-2 animate-in duration-200 ease-out motion-reduce:animate-none"
-										isStreaming={isMessageStreaming}
-										messageId={message.id}
-										onToolApprovalResponse={onToolApprovalResponse}
-										tools={segment.tools}
-									/>
-								</Message>
-							)
-						}
-						return null
-					})
+				? processSegments.map((segment) =>
+						renderProcessSegment(
+							segment,
+							thinkingEnabled,
+							isMessageStreaming,
+							message.id,
+							onToolApprovalResponse
+						)
+					)
 				: null}
 
-			{message.content || webSearchData ? (
-				<Message from={message.role === 'assistant' ? 'assistant' : message.role}>
-					<MessageContent>
-						{webSearchData ? (
-							<WebSearchToolCard
-								onOpenPanel={onOpenWebSearchPanel}
-								webSearchData={webSearchData}
-							/>
-						) : null}
-						{message.content ? (
-							<MessageResponse>{message.content}</MessageResponse>
-						) : null}
-						{webSearchData &&
-						!webSearchData.isLoading &&
-						webSearchData.results.length > 0 ? (
-							<WebSearchReferences
-								onViewAll={
-									onOpenWebSearchPanel
-										? () =>
-												onOpenWebSearchPanel({
-													query: webSearchData.query,
-													results: webSearchData.results,
-												})
-										: undefined
-								}
-								results={webSearchData.results}
-							/>
-						) : null}
-					</MessageContent>
-				</Message>
+			{hasContentSection ? (
+				<ContentSection
+					generatedImages={generatedImages}
+					message={message}
+					onOpenWebSearchPanel={onOpenWebSearchPanel}
+					webSearchData={webSearchData}
+				/>
 			) : null}
 
 			{hasToolCards ? (
-				<Message from="assistant">
-					<MessageContent>
-						<div className="grid gap-2">
-							{toolCardParts.map((part) => {
-								const toolKey = getToolKey(message.id, part)
-								if (isDisplayWeatherPart(part)) {
-									return <WeatherToolCard key={`weather-${toolKey}`} part={part} />
-								}
-								if (isStockPricePart(part)) {
-									return <StockToolCard key={`stock-${toolKey}`} part={part} />
-								}
-								if (isStockTrendPart(part)) {
-									return (
-										<StockTrendToolCard key={`stock-trend-${toolKey}`} part={part} />
-									)
-								}
-								return null
-							})}
-						</div>
-					</MessageContent>
-				</Message>
+				<ToolCardsSection messageId={message.id} parts={toolCardParts} />
 			) : null}
 		</>
 	)
 })
+
+type PartWithFile = { type: 'file'; mediaType: string; url: string }
+
+function isImageFilePart(part: ToolMessagePart): part is PartWithFile {
+	return (
+		Boolean(part) &&
+		typeof part === 'object' &&
+		'type' in part &&
+		part.type === 'file' &&
+		'mediaType' in part &&
+		typeof part.mediaType === 'string' &&
+		part.mediaType.startsWith('image/') &&
+		'url' in part &&
+		typeof part.url === 'string'
+	)
+}

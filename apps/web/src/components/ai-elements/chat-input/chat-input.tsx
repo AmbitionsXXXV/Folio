@@ -171,6 +171,7 @@ export function ChatInput({
 	catalogModels,
 	thinkingEnabled = false,
 	onThinkingToggle,
+	isImageMode = false,
 	attachedNotes = [],
 	onAddNoteAttachment,
 	onRemoveNoteAttachment,
@@ -183,10 +184,7 @@ export function ChatInput({
 
 	const providerModels = useMemo(() => {
 		return catalogModels.filter(
-			(model) =>
-				model.providerId === selectedProvider &&
-				model.enabled &&
-				model.type === 'chat'
+			(model) => model.providerId === selectedProvider && model.enabled
 		)
 	}, [catalogModels, selectedProvider])
 
@@ -330,7 +328,12 @@ export function ChatInput({
 	)
 
 	const resolvedPlaceholder = hasApiKey
-		? placeholder || t('knowledge.inputPlaceholder')
+		? placeholder ||
+			(isImageMode
+				? t('knowledge.imagePromptPlaceholder', {
+						defaultValue: 'Describe the image you want to create\u2026',
+					})
+				: t('knowledge.inputPlaceholder'))
 		: t('knowledge.configureApiKeyFirst')
 
 	return (
@@ -392,8 +395,8 @@ export function ChatInput({
 							value={selectedModel}
 						/>
 
-						{/* Thinking Toggle */}
-						{supportsThinking && onThinkingToggle && (
+						{/* Thinking Toggle (hidden in image mode) */}
+						{!isImageMode && supportsThinking && onThinkingToggle && (
 							<Tooltip>
 								<TooltipTrigger
 									aria-label={t('knowledge.toggleThinking')}
@@ -425,8 +428,8 @@ export function ChatInput({
 					</PromptInputTools>
 
 					<div className="flex items-center gap-1">
-						{/* Context Usage */}
-						{contextUsage && contextUsage.usedTokens > 0 && (
+						{/* Context Usage (hidden in image mode) */}
+						{!isImageMode && contextUsage && contextUsage.usedTokens > 0 && (
 							<Context
 								maxTokens={contextUsage.maxTokens}
 								modelId={contextUsage.modelId}

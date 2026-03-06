@@ -76,6 +76,8 @@ export type KnowledgeChatConfig = {
 	enableReasoning?: boolean
 	/** Enable web search tool */
 	enableWebSearch?: boolean
+	/** Enable image generation tool */
+	enableImageGeneration?: boolean
 	/** Called after one full stream finishes successfully */
 	onMessageComplete?: (chatId: string) => void | Promise<void>
 }
@@ -185,6 +187,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		noteEntryIds: defaultNoteEntryIds = [],
 		enableReasoning = false,
 		enableWebSearch = false,
+		enableImageGeneration = false,
 		onMessageComplete,
 	} = config
 
@@ -196,6 +199,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		model,
 		enableReasoning,
 		enableWebSearch,
+		enableImageGeneration,
 	})
 	configRef.current = {
 		provider,
@@ -204,6 +208,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		model,
 		enableReasoning,
 		enableWebSearch,
+		enableImageGeneration,
 	}
 
 	// Track current request's note IDs (can be overridden per-message)
@@ -262,6 +267,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 									: undefined,
 							enableReasoning: currentConfig.enableReasoning,
 							enableWebSearch: currentConfig.enableWebSearch,
+							enableImageGeneration: currentConfig.enableImageGeneration,
 						},
 					}
 				},
@@ -490,6 +496,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		restoreFromCache,
 		compactContext,
 		stop,
+		setMessages: setUIMessages,
 
 		// Tool approval
 		addToolApprovalResponse,

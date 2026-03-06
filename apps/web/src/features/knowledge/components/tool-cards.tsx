@@ -81,6 +81,51 @@ export function isWebSearchPart(part: UIMessagePart): boolean {
 	return part.type === 'tool-webSearch'
 }
 
+export function isGenerateImagePart(part: UIMessagePart): boolean {
+	return part.type === 'tool-generateImage'
+}
+
+type GeneratedImageFromTool = {
+	url: string
+	mediaType: string
+}
+
+function parseImageFromRecord(img: unknown): GeneratedImageFromTool | null {
+	if (!isRecord(img)) return null
+	if (typeof img.base64 !== 'string' || typeof img.mediaType !== 'string')
+		return null
+
+	return {
+		url: `data:${img.mediaType};base64,${img.base64}`,
+		mediaType: img.mediaType,
+	}
+}
+
+function extractImagesFromPart(part: UIMessagePart): GeneratedImageFromTool[] {
+	if (!isGenerateImagePart(part)) return []
+
+	const state =
+		'state' in part && typeof part.state === 'string' ? part.state : undefined
+	if (state !== 'output-available') return []
+
+	const output = 'output' in part ? part.output : undefined
+	if (!(isRecord(output) && Array.isArray(output.images))) return []
+
+	const parsed = output.images.map(parseImageFromRecord)
+	return parsed.filter((img): img is GeneratedImageFromTool => img !== null)
+}
+
+/**
+ * Extract generated images from tool-generateImage parts.
+ * Converts base64 image data from tool results into data URLs
+ * compatible with GeneratedImagesGrid.
+ */
+export function extractGeneratedImagesFromTools(
+	parts: UIMessagePart[]
+): GeneratedImageFromTool[] {
+	return parts.flatMap(extractImagesFromPart)
+}
+
 // =============================================================================
 // Parsing Helpers
 // =============================================================================
