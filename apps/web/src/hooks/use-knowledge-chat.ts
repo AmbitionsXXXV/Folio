@@ -105,6 +105,12 @@ export type CompactContextResult = {
 	compactInfo?: CompactInfo
 }
 
+type GenerateChatTitleResponse = {
+	success: boolean
+	generated: boolean
+	title: string
+}
+
 // =============================================================================
 // Message Cache (module-level, survives re-renders and component remounts)
 // =============================================================================
@@ -211,6 +217,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 	// Track mention titles by message content (since we don't have ID until after send)
 	const mentionTitlesMapRef = useRef<Map<string, string[]>>(new Map())
+	const resolvedTitleChatIdsRef = useRef<Set<string>>(new Set())
 
 	// State for last chatId returned from server
 	const [serverChatId, setServerChatId] = useState<string>(chatId)
@@ -321,20 +328,6 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 		}
 	}, [chatId, serverChatId])
 
-	useEffect(() => {
-		const previousStatus = previousStatusRef.current
-		const hadActiveStream =
-			previousStatus === 'submitted' || previousStatus === 'streaming'
-
-		if (status === 'ready' && hadActiveStream && onMessageComplete && serverChatId) {
-			Promise.resolve(onMessageComplete(serverChatId)).catch(() => {
-				// Ignore callback errors to avoid breaking the chat flow.
-			})
-		}
-
-		previousStatusRef.current = status
-	}, [status, onMessageComplete, serverChatId])
-
 	// Send a message with optional note attachments
 	const sendMessage = useCallback(
 		(options: SendMessageOptions) => {
@@ -373,6 +366,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 	const resetChat = useCallback(
 		(newChatId: string) => {
 			setServerChatId(newChatId)
+			resolvedTitleChatIdsRef.current.delete(newChatId)
 			clearMessages()
 		},
 		[clearMessages]
@@ -415,15 +409,93 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
 
 			const data = (await response.json()) as {
 				chatId: string
+				title: string
 				messages: UIMessage[]
 			}
 
 			setUIMessages(data.messages)
 			setServerChatId(data.chatId)
 			setCachedMessages(targetChatId, data.messages)
+			if (data.title.trim()) {
+				resolvedTitleChatIdsRef.current.add(targetChatId)
+			}
 		},
 		[clearMessages, setUIMessages]
 	)
+
+	const generateChatTitleIfNeeded = useCallback(
+		async (targetChatId: string, targetMessages: UIMessage[]): Promise<void> => {
+			if (resolvedTitleChatIdsRef.current.has(targetChatId)) {
+				return
+			}
+			if (targetMessages.length === 0) {
+				return
+			}
+
+			const currentConfig = configRef.current
+			const response = await fetch(
+				`${getServerUrl()}/api/ai/chat/${targetChatId}/title`,
+				{
+					method: 'POST',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						provider: currentConfig.provider,
+						apiKey: currentConfig.apiKey,
+						baseUrl: currentConfig.baseUrl?.trim() || undefined,
+						model: currentConfig.model.trim() || undefined,
+						messages: targetMessages,
+					}),
+				}
+			)
+
+			if (!response.ok) {
+				throw new Error(`Failed to generate chat title: ${response.status}`)
+			}
+
+			const data = (await response.json()) as GenerateChatTitleResponse
+			if (data.title.trim()) {
+				resolvedTitleChatIdsRef.current.add(targetChatId)
+			}
+		},
+		[]
+	)
+
+	useEffect(() => {
+		const previousStatus = previousStatusRef.current
+		const hadActiveStream =
+			previousStatus === 'submitted' || previousStatus === 'streaming'
+
+		if (status === 'ready' && hadActiveStream && serverChatId) {
+			const handlePostStreamSideEffects = async () => {
+				try {
+					await generateChatTitleIfNeeded(serverChatId, uiMessages)
+				} catch {
+					// Ignore title generation errors to avoid breaking the chat flow.
+				}
+
+				if (!onMessageComplete) {
+					return
+				}
+
+				Promise.resolve(onMessageComplete(serverChatId)).catch(() => {
+					// Ignore callback errors to avoid breaking the chat flow.
+				})
+			}
+
+			handlePostStreamSideEffects().catch(() => undefined)
+		}
+
+		previousStatusRef.current = status
+	}, [
+		status,
+		onMessageComplete,
+		serverChatId,
+		uiMessages,
+		generateChatTitleIfNeeded,
+	])
 
 	const compactContext = useCallback(
 		async (
