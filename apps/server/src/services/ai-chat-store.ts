@@ -159,7 +159,10 @@ function extractPreview(messages: UIMessage[]): string {
 /**
  * Generate title from first user message if not provided
  */
-function generateTitle(messages: UIMessage[], providedTitle?: string): string {
+export function generateTitle(
+	messages: UIMessage[],
+	providedTitle?: string
+): string {
 	if (providedTitle?.trim()) return providedTitle
 
 	const firstUserMsg = messages.find((m) => m.role === 'user')
@@ -170,6 +173,15 @@ function generateTitle(messages: UIMessage[], providedTitle?: string): string {
 
 	if (text.length <= 50) return text
 	return `${text.slice(0, 50)}…`
+}
+
+function firstNonEmptyTitle(...candidates: Array<string | undefined>): string {
+	for (const candidate of candidates) {
+		if (candidate?.trim()) {
+			return candidate
+		}
+	}
+	return ''
 }
 
 /**
@@ -722,7 +734,7 @@ export async function saveChat(input: SaveChatInput): Promise<void> {
 		const session: ChatSession = {
 			userId,
 			chatId,
-			title: providedTitle ?? existing?.title ?? title,
+			title: firstNonEmptyTitle(providedTitle, existing?.title, title),
 			messages,
 			messageCount: messages.length,
 			lastMessagePreview: preview,
@@ -764,7 +776,7 @@ export async function saveChat(input: SaveChatInput): Promise<void> {
 		await db
 			.update(aiChatSessions)
 			.set({
-				title: providedTitle ?? existing[0]?.title ?? title,
+				title: firstNonEmptyTitle(providedTitle, existing[0]?.title, title),
 				messagesJson: JSON.stringify(messages),
 				messageCount: messages.length,
 				lastMessagePreview: preview,
@@ -1038,4 +1050,47 @@ export async function touchChat(userId: string, chatId: string): Promise<void> {
 			log.warn('Failed to invalidate Redis cache:', err)
 		}
 	}
+}
+
+/**
+ * Update the stored title for a chat session.
+ *
+ * @returns true if the session exists and the title was updated
+ */
+export async function updateChatTitle(
+	userId: string,
+	chatId: string,
+	title: string
+): Promise<boolean> {
+	const normalizedTitle = title.trim()
+	if (!normalizedTitle) {
+		return false
+	}
+
+	if (useMemoryStore) {
+		const session = memoryStore.get(`${userId}:${chatId}`)
+		if (!session) {
+			return false
+		}
+		session.title = normalizedTitle
+		session.updatedAt = new Date()
+		return true
+	}
+
+	const result = await db
+		.update(aiChatSessions)
+		.set({
+			title: normalizedTitle,
+			updatedAt: new Date(),
+		})
+		.where(and(eq(aiChatSessions.id, chatId), eq(aiChatSessions.userId, userId)))
+		.returning({ id: aiChatSessions.id })
+
+	const updated = result.length > 0
+	if (!updated) {
+		return false
+	}
+
+	await invalidateChatCache(userId, chatId)
+	return true
 }

@@ -363,6 +363,19 @@ Done:
 增强 Knowledge 输入区 Context 悬浮卡片信息密度，新增 remaining、model、status、source 四项详情，保留既有 token 分项与总成本展示。
 补齐三语种文案并更新上下文压缩文档，确保 UI 文案与行为说明一致可追溯。
 
+### 2.18 Chat Session 自动标题生成
+
+- [x] 更新 `apps/server/src/services/ai-chat-store.ts` 修复空标题会话首次发送后无法回填标题的问题
+- [x] 新增 `apps/server/src/services/chat-title-generator.ts`，按会话消息自动总结并生成短标题
+- [x] 更新 `apps/server/src/routes/ai-stream.ts` 新增 `POST /api/ai/chat/:chatId/title` 接口
+- [x] 更新 `apps/web/src/hooks/use-knowledge-chat.ts` 在流式消息结束后自动触发标题生成，再刷新会话列表
+- [x] 新增 `apps/server/__tests__/chat-title-generator.test.ts` 与 `apps/server/__tests__/ai-chat-store.test.ts` 回归用例
+- [x] 新增 `docs/chat-title-auto-generation.md` 记录触发条件、接口与验证方式
+
+Done:
+修复空会话首次发送后标题被空字符串锁死的问题，并新增会话级自动标题生成能力。
+前端在流结束后自动请求标题生成接口，服务端基于当前 session 文本总结出更短、更稳定的 chat title。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

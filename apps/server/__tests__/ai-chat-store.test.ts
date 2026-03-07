@@ -259,6 +259,27 @@ describe('ai-chat-store', () => {
 			expect(session?.messageCount).toBe(2)
 			expect(session?.lastMessagePreview).toBe('Hi there! How can I help you?')
 		})
+
+		it('replaces a blank stored title with the generated fallback title', async () => {
+			await createChat({ userId: testUserId, chatId: testChatId })
+
+			const messages: UIMessage[] = [
+				createTestMessage(
+					'msg-1',
+					'user',
+					'How do I optimize TanStack Query cache keys?'
+				),
+				createTestMessage(
+					'msg-2',
+					'assistant',
+					'Keep keys stable and use array segments for filters.'
+				),
+			]
+			await saveChat({ userId: testUserId, chatId: testChatId, messages })
+
+			const session = await loadChat(testUserId, testChatId)
+			expect(session?.title).toBe('How do I optimize TanStack Query cache keys?')
+		})
 	})
 
 	describe('deleteChat', () => {
