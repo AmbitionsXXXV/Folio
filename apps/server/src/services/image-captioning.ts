@@ -14,6 +14,9 @@ import { z } from 'zod'
 const log = createLogger({ prefix: 'image-captioning' })
 
 const DEFAULT_MAX_BATCH_COUNT = 3
+const TRUE_ENV_VALUES = new Set(['1', 'true', 'yes', 'on'])
+const SUPPORTED_PUBLIC_IMAGE_PROTOCOLS = new Set(['http:', 'https:'])
+const TRAILING_SLASHES_REGEX = /\/+$/
 
 const ImageCaptionSchema = z.object({
 	description: z
@@ -68,6 +71,11 @@ export type EnsureAttachmentImageCaptionResult = {
 	generatedAt: Date
 }
 
+export function isImageCaptionEnvFallbackEnabled(): boolean {
+	const rawValue = process.env.IMAGE_CAPTION_ALLOW_ENV_FALLBACK?.trim().toLowerCase()
+	return rawValue ? TRUE_ENV_VALUES.has(rawValue) : false
+}
+
 function resolveEnvVisionCredential(): DecryptedCredential | null {
 	if (process.env.OPENAI_API_KEY) {
 		return {
@@ -116,9 +124,35 @@ function resolveCaptionCredential(
 	return resolveEnvVisionCredential()
 }
 
-function getAttachmentPublicUrl(storageKey: string): string {
+function buildAttachmentPublicBaseUrl(): URL {
 	const s3Config = getS3Config()
-	return `${s3Config.publicUrl}/${STORAGE_BUCKETS.ATTACHMENTS}/${storageKey}`
+	const normalizedPublicUrl = s3Config.publicUrl.replace(TRAILING_SLASHES_REGEX, '')
+	const baseUrl = new URL(`${normalizedPublicUrl}/${STORAGE_BUCKETS.ATTACHMENTS}/`)
+
+	if (!SUPPORTED_PUBLIC_IMAGE_PROTOCOLS.has(baseUrl.protocol)) {
+		throw new Error('Attachment public URL must use http:// or https://')
+	}
+
+	if (baseUrl.username || baseUrl.password) {
+		throw new Error('Attachment public URL must not include embedded credentials')
+	}
+
+	return baseUrl
+}
+
+function getAttachmentPublicUrl(storageKey: string): string {
+	const baseUrl = buildAttachmentPublicBaseUrl()
+	const encodedStorageKey = storageKey
+		.split('/')
+		.filter((segment) => segment.length > 0)
+		.map((segment) => encodeURIComponent(segment))
+		.join('/')
+
+	if (!encodedStorageKey) {
+		throw new Error('Attachment storage key is required')
+	}
+
+	return new URL(encodedStorageKey, baseUrl).toString()
 }
 
 function buildCaptionPrompt(noteTitle?: string, filename?: string): string {

@@ -68,7 +68,7 @@
 {
   "attachmentId": "string",
   "provider": "openai",
-  "apiKey": "optional when using env fallback",
+  "apiKey": "required",
   "baseUrl": "optional",
   "model": "optional",
   "force": false
@@ -78,7 +78,7 @@
 说明：
 
 - 传入 `provider + apiKey` 时，使用该凭证生成描述。
-- 不传时，尝试使用服务端环境变量中的默认 Vision 凭证。
+- 手动接口不再回退到服务端环境变量，避免任意已登录用户直接消耗平台侧 AI 配额。
 
 ### 内部异步触发接口
 
@@ -105,12 +105,19 @@
 
 - `IMAGE_CAPTION_INTERNAL_TOKEN`: 内部触发接口鉴权 token
 - `IMAGE_CAPTION_INTERNAL_URL`: 内部接口完整 URL（未设置时回退 `http://127.0.0.1:${PORT}/api/image/caption/internal`）
+- `IMAGE_CAPTION_ALLOW_ENV_FALLBACK`: 是否允许内部异步流程回退到服务端平台凭证，默认 `false`
 
-现有 AI 环境变量可作为 fallback Vision 凭证来源：
+仅当 `IMAGE_CAPTION_ALLOW_ENV_FALLBACK=true` 时，以下平台凭证才会被内部图片描述流程使用：
 
 - `OPENAI_API_KEY`
 - `GOOGLE_GENERATIVE_AI_API_KEY`
 - `ANTHROPIC_API_KEY`
+
+## 安全策略
+
+1. 手动 `POST /api/image/caption` 必须显式提供 `provider + apiKey`，不允许默认回退到平台凭证。
+2. 内部异步触发与 RAG 补偿流程默认不使用平台凭证；只有在服务端显式开启 `IMAGE_CAPTION_ALLOW_ENV_FALLBACK=true` 时才会启用。
+3. 图片 URL 来源固定为 `S3_PUBLIC_URL + /attachments/...`，当前部署使用 Supabase 提供的公共对象存储地址；因此不要把高敏感图片放入 `attachments` 公共桶。
 
 ## 测试覆盖
 

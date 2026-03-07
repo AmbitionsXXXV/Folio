@@ -1,7 +1,10 @@
 import type { AiProvider, DecryptedCredential } from '@folionote/ai'
 import { createVercelAiImageModel } from '@folionote/ai/vercel-ai'
 import { generateImage } from 'ai'
-import { ensureAttachmentImageCaption } from '../../services/image-captioning'
+import {
+	ensureAttachmentImageCaption,
+	isImageCaptionEnvFallbackEnabled,
+} from '../../services/image-captioning'
 import type { App } from '../../types'
 import {
 	buildCredential,
@@ -30,19 +33,24 @@ export function registerImageRoutes(app: App) {
 		if (hasProviderOrApiKey && !(body.provider && body.apiKey)) {
 			return c.json({ error: 'provider and apiKey must be provided together' }, 400)
 		}
-
-		let credential: DecryptedCredential | undefined
-		if (body.provider && body.apiKey) {
-			if (!isValidProvider(body.provider)) {
-				return c.json({ error: `Unsupported provider: ${body.provider}` }, 400)
-			}
-			credential = buildCredential(
-				body.provider,
-				body.apiKey,
-				body.baseUrl,
-				body.model
+		if (!(body.provider && body.apiKey)) {
+			return c.json(
+				{
+					error: 'provider and apiKey are required for manual caption generation',
+				},
+				400
 			)
 		}
+
+		if (!isValidProvider(body.provider)) {
+			return c.json({ error: `Unsupported provider: ${body.provider}` }, 400)
+		}
+		const credential: DecryptedCredential = buildCredential(
+			body.provider,
+			body.apiKey,
+			body.baseUrl,
+			body.model
+		)
 
 		const result = await ensureAttachmentImageCaption({
 			userId: auth.userId,
@@ -50,7 +58,7 @@ export function registerImageRoutes(app: App) {
 			credential,
 			model: body.model,
 			force: body.force ?? false,
-			allowEnvFallback: credential === undefined,
+			allowEnvFallback: false,
 		})
 
 		return c.json({
@@ -86,7 +94,7 @@ export function registerImageRoutes(app: App) {
 			attachmentId: body.attachmentId,
 			model: body.model,
 			force: body.force ?? false,
-			allowEnvFallback: true,
+			allowEnvFallback: isImageCaptionEnvFallbackEnabled(),
 		})
 
 		return c.json({

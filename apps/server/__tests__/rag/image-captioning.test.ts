@@ -75,6 +75,7 @@ vi.mock('drizzle-orm', () => ({
 import {
 	ensureAttachmentImageCaption,
 	ensureEntryImageCaptions,
+	isImageCaptionEnvFallbackEnabled,
 } from '../../src/services/image-captioning'
 
 function createSelectChain(result: unknown[]) {
@@ -101,6 +102,8 @@ const credential = {
 describe('image-captioning service', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		process.env.IMAGE_CAPTION_ALLOW_ENV_FALLBACK = undefined
+		process.env.OPENAI_API_KEY = undefined
 		mockProviderSupports.mockReturnValue(true)
 		mockCreateVercelAiChatModel.mockReturnValue({ modelId: 'openai/gpt-4o-mini' })
 		mockGenerateText.mockResolvedValue({
@@ -123,6 +126,16 @@ describe('image-captioning service', () => {
 
 		expect(result).toBeNull()
 		expect(mockGenerateText).not.toHaveBeenCalled()
+	})
+
+	it('enables environment fallback only when explicitly opted in', () => {
+		expect(isImageCaptionEnvFallbackEnabled()).toBe(false)
+
+		process.env.IMAGE_CAPTION_ALLOW_ENV_FALLBACK = 'true'
+		expect(isImageCaptionEnvFallbackEnabled()).toBe(true)
+
+		process.env.IMAGE_CAPTION_ALLOW_ENV_FALLBACK = '0'
+		expect(isImageCaptionEnvFallbackEnabled()).toBe(false)
 	})
 
 	it('generates caption and persists description fields', async () => {
@@ -156,6 +169,10 @@ describe('image-captioning service', () => {
 		expect(result?.description).toContain('dashboard')
 		expect(result?.modelId).toBe('openai/gpt-4o-mini')
 		expect(mockGenerateText).toHaveBeenCalledTimes(1)
+		const toolCall = mockGenerateText.mock.calls[0]?.[0]
+		expect(toolCall?.messages?.[0]?.content?.[0]?.image?.toString()).toBe(
+			'https://storage.example.com/object/public/attachments/user-1/entries/entry-1/chart.png'
+		)
 		expect(set).toHaveBeenCalledWith(
 			expect.objectContaining({
 				description:
@@ -199,5 +216,40 @@ describe('image-captioning service', () => {
 
 		expect(generatedCount).toBe(1)
 		expect(mockGenerateText).toHaveBeenCalledTimes(1)
+	})
+
+	it('uses environment credential fallback only when allowed and configured', async () => {
+		process.env.OPENAI_API_KEY = 'platform-openai-key'
+		mockDb.select
+			.mockReturnValueOnce(
+				createSelectChain([
+					{
+						id: 'attachment-1',
+						entryId: 'entry-1',
+						filename: 'chart.png',
+						mimeType: 'image/png',
+						storageKey: 'user-1/entries/entry-1/chart.png',
+						description: null,
+					},
+				])
+			)
+			.mockReturnValueOnce(createSelectChain([{ title: 'Weekly Review' }]))
+
+		mockUpdateChain()
+
+		const result = await ensureAttachmentImageCaption({
+			userId: 'user-1',
+			attachmentId: 'attachment-1',
+			allowEnvFallback: true,
+		})
+
+		expect(result?.modelId).toBe('openai/gpt-4o-mini')
+		expect(mockCreateVercelAiChatModel).toHaveBeenCalledWith(
+			expect.objectContaining({
+				apiKey: 'platform-openai-key',
+				provider: 'openai',
+			}),
+			{ model: undefined }
+		)
 	})
 })

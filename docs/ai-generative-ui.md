@@ -24,6 +24,12 @@ Generative UI uses AI SDK tool calling to render structured cards alongside assi
 6. 股票历史走势查询不支持未来日期；请求包含未来日期时，服务端会返回提示信息，引导用户提供过去的日期范围。
 7. 系统提示会注入当前日期（ YYYY-MM-DD ），用于判断历史 / 未来区间，避免模型使用训练时间线拒绝请求。
 
+## 工具安全约束
+
+1. note 写操作（create / update / delete）全部要求用户审批后才会真正执行。
+2. `webFetch` 仅允许访问公网 `http(s)` 目标；回环、本机、私网、link-local 与跳转到这些地址的重定向都会被服务端拒绝。
+3. 图片描述手动接口必须提供用户自己的 `provider + apiKey`；平台侧 AI 凭证回退仅允许内部异步流程在显式配置后启用。
+
 ## UI Rendering
 
 1. Preserve `UIMessage.parts` in `apps/web/src/hooks/use-knowledge-chat.ts`.

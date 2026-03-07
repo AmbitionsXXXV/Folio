@@ -150,7 +150,7 @@ export async function prepareNoteContext(
 			entryIds: allNoteIds,
 			credential: captionOptions?.credential,
 			model: captionOptions?.model,
-			allowEnvFallback: true,
+			allowEnvFallback: false,
 		})
 
 		if (generatedCount > 0) {

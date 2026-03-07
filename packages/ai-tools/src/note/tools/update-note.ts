@@ -55,6 +55,7 @@ export const updateNote = tool({
 	description: 'Update an existing note by ID',
 	strict: true,
 	inputSchema: UpdateNoteInputSchema,
+	needsApproval: true,
 	execute: async (
 		{ id, title, content, isInbox, isStarred, isPinned },
 		{ experimental_context, abortSignal }

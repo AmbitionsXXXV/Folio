@@ -113,6 +113,12 @@ beforeEach(() => {
 })
 
 describe('note tools', () => {
+	it('requires approval for all mutating note tools', () => {
+		expect(createNote.needsApproval).toBe(true)
+		expect(updateNote.needsApproval).toBe(true)
+		expect(deleteNote.needsApproval).toBe(true)
+	})
+
 	it('createNote stores contentJson and contentText from plain text', async () => {
 		const { values } = mockInsertReturning([
 			{ id: SAMPLE_NOTE_ID, title: SAMPLE_TITLE, isInbox: true },
