@@ -35,8 +35,10 @@ import {
 	loadChatMessages,
 	saveChat,
 	touchChat,
+	updateChatTitle,
 } from '../services/ai-chat-store'
 import { aiTools } from '../services/ai-tools'
+import { generateChatTitle } from '../services/chat-title-generator'
 import {
 	ensureAttachmentImageCaption,
 	ensureEntryImageCaptions,
@@ -107,6 +109,14 @@ type AiCompactRequestBody = {
 	messages?: UIMessage[]
 	keepRecentCount?: number
 	tokensToCompact?: number
+}
+
+type AiGenerateTitleRequestBody = {
+	provider: string
+	apiKey: string
+	baseUrl?: string
+	model?: string
+	messages?: UIMessage[]
 }
 
 type CaptionImageRequestBody = {
@@ -782,6 +792,118 @@ export function registerAiStreamRoute(app: App) {
 		// Best-effort cleanup: returns success even if not deleted
 		const deleted = await deleteEmptyChat(auth.userId, chatId)
 		return c.json({ success: true, deleted })
+	})
+
+	function validateGenerateTitleRequest(
+		body: AiGenerateTitleRequestBody
+	): { error: string; status: 400 } | null {
+		if (!(body.provider && body.apiKey)) {
+			return { error: 'Missing required fields', status: 400 }
+		}
+		if (!isValidProvider(body.provider)) {
+			return {
+				error: `Unsupported provider: ${body.provider}`,
+				status: 400,
+			}
+		}
+		return null
+	}
+
+	async function resolveTitleGenerationMessages(input: {
+		userId: string
+		chatId: string
+		requestMessages?: UIMessage[]
+	}): Promise<UIMessage[]> {
+		if (input.requestMessages && input.requestMessages.length > 0) {
+			return input.requestMessages
+		}
+		return await loadChatMessages(input.userId, input.chatId)
+	}
+
+	async function executeGenerateChatTitle(input: {
+		userId: string
+		chatId: string
+		body: AiGenerateTitleRequestBody
+	}): Promise<{ generated: boolean; title: string }> {
+		const messages = await resolveTitleGenerationMessages({
+			userId: input.userId,
+			chatId: input.chatId,
+			requestMessages: input.body.messages,
+		})
+
+		if (messages.length === 0) {
+			const existingSession = await loadChat(input.userId, input.chatId)
+			return {
+				generated: false,
+				title: existingSession?.title ?? '',
+			}
+		}
+
+		await saveChat({
+			userId: input.userId,
+			chatId: input.chatId,
+			messages,
+		})
+
+		const session = await loadChat(input.userId, input.chatId)
+		const currentTitle = session?.title ?? ''
+		const credential = buildCredential(
+			input.body.provider as AiProvider,
+			input.body.apiKey,
+			input.body.baseUrl,
+			input.body.model
+		)
+		const generatedTitle = await generateChatTitle({
+			credential,
+			currentTitle,
+			messages,
+			model: input.body.model,
+		})
+
+		if (!generatedTitle || generatedTitle === currentTitle) {
+			return {
+				generated: false,
+				title: currentTitle,
+			}
+		}
+
+		await updateChatTitle(input.userId, input.chatId, generatedTitle)
+		return {
+			generated: true,
+			title: generatedTitle,
+		}
+	}
+
+	app.post('/api/ai/chat/:chatId/title', async (c) => {
+		const auth = await getAuthenticatedUser(c)
+		if (!auth) return c.json({ error: 'Unauthorized' }, 401)
+
+		const chatId = c.req.param('chatId')
+		if (!chatId) return c.json({ error: 'Missing chatId' }, 400)
+
+		const body = await c.req.json<AiGenerateTitleRequestBody>()
+		const validationError = validateGenerateTitleRequest(body)
+		if (validationError) {
+			return c.json({ error: validationError.error }, validationError.status)
+		}
+
+		try {
+			const result = await executeGenerateChatTitle({
+				userId: auth.userId,
+				chatId,
+				body,
+			})
+
+			return c.json({
+				success: true,
+				generated: result.generated,
+				title: result.title,
+			})
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+			log.error('Generate title error:', error)
+			return c.json({ error: errorMessage }, 500)
+		}
 	})
 
 	app.post('/api/ai/compact', async (c) => {
