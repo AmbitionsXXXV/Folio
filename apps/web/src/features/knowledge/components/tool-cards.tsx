@@ -1,20 +1,23 @@
-import {
-	StockCard,
-	type StockChangeTone,
-	type StockDataPoint,
-	type StockPriceInput,
-	type StockPriceOutput,
-	StockTrendCard,
-	type StockTrendInput,
-	type StockTrendOutput,
-	type TemperatureUnit,
-	WeatherCard,
-	type WeatherToolInput,
-	type WeatherToolOutput,
-	WebSearchCompactBar,
-	type WebSearchResult,
-	type WebSearchToolOutput,
-} from '@folionote/ai-tools'
+import { StockCard, StockTrendCard } from '@folionote/ai-tools/stock/components'
+import type {
+	StockChangeTone,
+	StockDataPoint,
+	StockPriceInput,
+	StockPriceOutput,
+	StockTrendInput,
+	StockTrendOutput,
+} from '@folionote/ai-tools/stock/types'
+import { WeatherCard } from '@folionote/ai-tools/weather/components'
+import type {
+	TemperatureUnit,
+	WeatherToolInput,
+	WeatherToolOutput,
+} from '@folionote/ai-tools/weather/types'
+import { WebSearchCompactBar } from '@folionote/ai-tools/web-search/components'
+import type {
+	WebSearchResult,
+	WebSearchToolOutput,
+} from '@folionote/ai-tools/web-search/types'
 import type { UIMessage } from 'ai'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
