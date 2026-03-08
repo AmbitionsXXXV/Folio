@@ -115,12 +115,69 @@ BETTER_AUTH_URL=https://your-domain.com
 # CORS
 CORS_ORIGIN=https://your-frontend-domain.com
 
+# Storage / image captioning
+S3_ENDPOINT=your_supabase_s3_endpoint
+S3_ACCESS_KEY=your_s3_access_key
+S3_SECRET_KEY=your_s3_secret_key
+S3_REGION=your_s3_region
+S3_PUBLIC_URL=your_supabase_public_object_base_url
+
+IMAGE_CAPTION_INTERNAL_TOKEN=your_random_caption_token
+IMAGE_CAPTION_INTERNAL_URL=https://api.your-domain.com/api/image/caption/internal
+IMAGE_CAPTION_ALLOW_ENV_FALLBACK=false
+
+# Optional platform-side AI fallback for internal caption jobs
+OPENAI_API_KEY=
+GOOGLE_GENERATIVE_AI_API_KEY=
+ANTHROPIC_API_KEY=
+
 # 其他环境变量...
 EOF
 
 # 保护环境变量文件
 chmod 600 /opt/folio/server/shared/.env
 ```
+
+### 4.1 生成 `IMAGE_CAPTION_INTERNAL_TOKEN`
+
+推荐生成一个至少 32 字节的随机 token，专门给内部图片描述接口使用。
+
+```bash
+openssl rand -hex 32
+```
+
+或：
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+把输出结果写入：
+
+```env
+IMAGE_CAPTION_INTERNAL_TOKEN=这里替换成随机 token
+```
+
+### 4.2 这几个图片描述相关环境变量分别做什么
+
+| 变量 | 作用 | 是否推荐生产显式配置 |
+| --- | --- | --- |
+| `IMAGE_CAPTION_INTERNAL_TOKEN` | 保护 `POST /api/image/caption/internal`，防止伪造内部调用 | 是 |
+| `IMAGE_CAPTION_INTERNAL_URL` | 指定服务端上传后异步触发图片描述时，要请求的完整内部地址 | 是 |
+| `IMAGE_CAPTION_ALLOW_ENV_FALLBACK` | 是否允许内部图片描述流程在无用户 BYOK 时使用平台侧 AI key | 是，默认建议 `false` |
+
+如果你使用的是单机单进程部署，且应用就监听在本机端口，也可以不配 `IMAGE_CAPTION_INTERNAL_URL`，让代码自动回退到：
+
+```text
+http://127.0.0.1:${PORT}/api/image/caption/internal
+```
+
+但在下面这些场景里，建议一定显式配置：
+
+1. Docker / 容器编排
+2. 反向代理或网关转发
+3. 多实例部署
+4. 应用实际监听地址不等于 `127.0.0.1:${PORT}`
 
 ### 5. 配置防火墙（推荐）
 

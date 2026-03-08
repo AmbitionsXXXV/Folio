@@ -31,6 +31,47 @@
 
 失败不会影响上传主流程。
 
+#### 文件与参数传递链路
+
+上传后的图片描述流程并不会把二进制文件直接塞进内部接口请求体，而是分成两段传递：
+
+1. Web / Native 端先调用 `storage.uploadAttachment` 上传文件。
+2. 服务端把文件写入 Supabase 的 `attachments` 公共桶，并在数据库 `attachments` 表写入一条元数据：
+   - `id`
+   - `userId`
+   - `entryId`
+   - `filename`
+   - `mimeType`
+   - `storageKey`
+3. 上传接口返回：
+   - `id`：附件 ID
+   - `publicUrl`：公开对象 URL
+   - `path`：存储路径
+4. 随后服务端异步调用 `POST /api/image/caption/internal`，只传递轻量参数：
+
+```json
+{
+  "userId": "string",
+  "attachmentId": "string",
+  "model": "optional",
+  "force": false
+}
+```
+
+5. 内部 caption 服务再根据 `attachmentId + userId` 回查数据库，取出 `storageKey / mimeType / filename / entryId`。
+6. 最终由服务端拼出：
+
+```text
+${S3_PUBLIC_URL}/attachments/${storageKey}
+```
+
+7. 这个公开 URL 会作为 `image` 消息片段传给 Vision 模型读取，而不是把图片二进制继续通过内部 JSON 请求体转发。
+
+因此，内部接口只负责“传递附件标识”，真正的图片内容读取发生在：
+
+- Supabase 公共对象 URL
+- 第三方 Vision 模型读取该 URL 的阶段
+
 ### 2. 按需补偿
 
 在 `prepareNoteContext` 中，RAG 拿到候选笔记后，会调用批量补偿逻辑：
@@ -112,6 +153,53 @@
 - `OPENAI_API_KEY`
 - `GOOGLE_GENERATIVE_AI_API_KEY`
 - `ANTHROPIC_API_KEY`
+
+### `IMAGE_CAPTION_INTERNAL_TOKEN` 如何生成
+
+推荐使用高熵随机字符串，至少 32 字节。
+
+#### 方式 1：OpenSSL
+
+```bash
+openssl rand -hex 32
+```
+
+输出示例：
+
+```text
+8c7c3e7e2ce3a1df4f5d2d8a9f0b4c8f9f1b1a25d78f3fb4c5ad6c8a7f6e2d11
+```
+
+#### 方式 2：Node.js
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+#### 方式 3：Python
+
+```bash
+python3 - <<'PY'
+import secrets
+print(secrets.token_hex(32))
+PY
+```
+
+### 推荐配置示例
+
+```env
+IMAGE_CAPTION_INTERNAL_TOKEN=替换成你生成的随机 token
+IMAGE_CAPTION_INTERNAL_URL=https://api.example.com/api/image/caption/internal
+IMAGE_CAPTION_ALLOW_ENV_FALLBACK=false
+```
+
+本地单进程开发时，也可以不配 `IMAGE_CAPTION_INTERNAL_URL`，让服务端自动回退到：
+
+```text
+http://127.0.0.1:${PORT}/api/image/caption/internal
+```
+
+但生产环境更推荐显式配置完整 URL，避免容器网络、反向代理或多实例场景下的地址歧义。
 
 ## 安全策略
 

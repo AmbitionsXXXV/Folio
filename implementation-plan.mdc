@@ -387,6 +387,10 @@ Done:
 为 `webFetch` 增加 SSRF 防护，阻断回环、本机、私网、link-local 与跳转到这些地址的重定向请求。
 统一 note 写工具审批策略，并将图片描述平台凭证回退改为显式 opt-in，同时补充环境变量与存储安全说明。
 
+Done:
+补充图片描述链路文档，明确“文件本体走 Supabase 公共对象 URL、内部接口只传 attachmentId/userId”的参数流转方式。
+补充 `IMAGE_CAPTION_INTERNAL_TOKEN` 生成命令与生产部署配置示例，便于直接落地运维配置。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）
