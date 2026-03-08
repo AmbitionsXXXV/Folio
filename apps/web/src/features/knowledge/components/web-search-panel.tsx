@@ -1,4 +1,4 @@
-import type { WebSearchResult } from '@folionote/ai-tools'
+import type { WebSearchResult } from '@folionote/ai-tools/web-search/types'
 import {
 	Sheet,
 	SheetContent,

@@ -376,6 +376,21 @@ Done:
 修复空会话首次发送后标题被空字符串锁死的问题，并新增会话级自动标题生成能力。
 前端在流结束后自动请求标题生成接口，服务端基于当前 session 文本总结出更短、更稳定的 chat title。
 
+### 2.19 AI 工具与图片描述安全加固
+
+- [x] 为 `webFetch` 增加公网目标校验、私网 / 回环拦截与逐跳重定向校验
+- [x] 为 note 的 create / update / delete 写操作统一增加审批要求
+- [x] 收紧图片描述平台凭证回退策略：手动接口强制 BYOK，内部回退改为显式环境变量开关
+- [x] 更新相关测试与文档
+
+Done:
+为 `webFetch` 增加 SSRF 防护，阻断回环、本机、私网、link-local 与跳转到这些地址的重定向请求。
+统一 note 写工具审批策略，并将图片描述平台凭证回退改为显式 opt-in，同时补充环境变量与存储安全说明。
+
+Done:
+补充图片描述链路文档，明确“文件本体走 Supabase 公共对象 URL、内部接口只传 attachmentId/userId”的参数流转方式。
+补充 `IMAGE_CAPTION_INTERNAL_TOKEN` 生成命令与生产部署配置示例，便于直接落地运维配置。
+
 ---
 
 ## Phase 3: AI Summarize Entry（后续实现）

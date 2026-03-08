@@ -54,6 +54,7 @@ export const createNote = tool({
 	description: 'Create a new note in the user library or inbox',
 	strict: true,
 	inputSchema: CreateNoteInputSchema,
+	needsApproval: true,
 	execute: async (
 		{ title, content, isInbox },
 		{ experimental_context, abortSignal }

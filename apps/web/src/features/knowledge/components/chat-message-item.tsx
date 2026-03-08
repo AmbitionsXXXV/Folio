@@ -1,4 +1,4 @@
-import type { WebSearchResult } from '@folionote/ai-tools'
+import type { WebSearchResult } from '@folionote/ai-tools/web-search/types'
 import { getFaviconUrl, getHostname } from '@folionote/utils'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

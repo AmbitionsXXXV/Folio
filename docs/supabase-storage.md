@@ -377,6 +377,12 @@ All methods use the same upload pipeline: client-side validation → oRPC `stora
 - Upload: 20 requests per minute per user
 - Delete: 20 requests per minute per user
 
+### AI 图片描述注意事项
+
+1. `attachments` 桶当前用于公开对象 URL 访问，图片描述与 Vision 上下文会复用该公开 URL。
+2. 如果启用了 `IMAGE_CAPTION_ALLOW_ENV_FALLBACK=true`，服务端内部流程可以使用平台侧 AI 凭证为附件自动生成描述。
+3. 因为对象 URL 与第三方模型读取链路都可能涉及外部访问，所以不要把高敏感图片放入 `attachments` 公共桶。
+
 ## Future Enhancements
 
 - [ ] Image optimization and thumbnails
