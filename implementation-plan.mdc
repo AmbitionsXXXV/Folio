@@ -439,5 +439,5 @@ MVP 采用前端内置题库，先验证“打字练习 + 语法分析 + 词库�
 - [x] 更新 i18n 文案（en-US / zh-CN / ja-JP）
 
 Done:
-补充 `apps/web/__tests__/japanese-typing.test.ts`，覆盖核心工具层行为，避免 MVP 只有界面没有验证。
+补充 `apps/web/__tests__/japanese-typing.test.tsx`，覆盖核心工具层行为，避免 MVP 只有界面没有验证。
 新增根目录 `doc` 文档与三语种文案，便于后续继续扩展真实题库与持久化词表。
