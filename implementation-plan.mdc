@@ -408,3 +408,36 @@ Done:
 ## Phase 5: AI Usage / Token 记录（后续实现）
 
 > 待 Phase 4 完成后再展开
+
+---
+
+## Phase 6: 日语打字练习 MVP
+
+### 6.1 在 `/review` 增加模式切换与 URL 状态
+
+- [x] 为 `apps/web/src/routes/_app/review.tsx` 增加 `mode` search param
+- [x] 保留原有间隔复习流程，并新增 “日语打字练习” 模式入口
+
+Done:
+在 `/review` 路由增加 `mode=spaced | jp-typing`，让练习模式可通过 URL 深链访问。
+保留既有间隔复习状态机，并将新练习模式挂到同一路由中，减少导航与后端改动。
+
+### 6.2 落地前端自包含的日语打字练习面板
+
+- [x] 新增前端练习数据与 romaji 比对工具
+- [x] 新增语法分析、本题词汇、已获取词库三个面板
+- [x] 支持正确提交后自动收录词汇并进入下一题
+
+Done:
+新增 `japanese-typing-practice` 组件、练习数据与输入规范化 / 前缀匹配 / 词库去重逻辑。
+MVP 采用前端内置题库，先验证“打字练习 + 语法分析 + 词库获取”的闭环体验，不引入数据库改动。
+
+### 6.3 补充测试与文档
+
+- [x] 新增 Web 端单测覆盖 romaji 规范化、输入匹配与词库去重
+- [x] 新增 `doc/japanese-typing-practice-mvp.md` 记录 MVP 范围与后续建议
+- [x] 更新 i18n 文案（en-US / zh-CN / ja-JP）
+
+Done:
+补充 `apps/web/__tests__/japanese-typing.test.tsx`，覆盖核心工具层行为，避免 MVP 只有界面没有验证。
+新增根目录 `doc` 文档与三语种文案，便于后续继续扩展真实题库与持久化词表。

@@ -331,7 +331,42 @@
     },
     "snoozed": "Snoozed until {{preset}}",
     "snoozeFailed": "Failed to snooze",
-    "statsStreak": "Streak"
+    "statsStreak": "Streak",
+    "modes": {
+      "spaced": "Spaced Review",
+      "japaneseTyping": "Japanese Typing"
+    },
+    "japaneseTyping": {
+      "title": "Japanese Typing Practice",
+      "description": "Type the romaji, then review the sentence through grammar notes and vocabulary cards.",
+      "progressBadge": "Sentence {{current}} / {{total}}",
+      "accuracyBadge": "Accuracy {{value}}%",
+      "bankBadge": "{{count}} words unlocked",
+      "statsCompleted": "Completed",
+      "statsAccuracy": "Accuracy",
+      "statsMistakes": "Mistakes",
+      "statsUnlockedWords": "Unlocked Words",
+      "promptLabel": "Practice goal",
+      "translationLabel": "Meaning",
+      "answerLabel": "Type the matching romaji",
+      "answerPlaceholder": "For example: watashi wa mainichi nihongo o benkyou shimasu",
+      "answerHelp": "Spaces and letter case are ignored. Press Enter to submit.",
+      "submit": "Submit answer",
+      "next": "Next sentence",
+      "finish": "View summary",
+      "restart": "Restart",
+      "correct": "Correct input",
+      "incorrect": "Try once more",
+      "expectedAnswer": "Expected answer",
+      "autoCollected": "The sentence vocabulary has been added to your word bank.",
+      "grammarTitle": "Grammar Analysis",
+      "vocabularyTitle": "Sentence Vocabulary",
+      "bankTitle": "Unlocked Word Bank",
+      "bankDescription": "Core words are collected and deduplicated after each completed sentence.",
+      "bankEmpty": "Complete one sentence first and the word bank will start filling up automatically.",
+      "completedTitle": "Practice Complete",
+      "completedDescription": "You finished {{count}} sentences and unlocked {{vocabularyCount}} core words."
+    }
   },
   "activity": {
     "goodMorning": "Good morning, {{name}}",

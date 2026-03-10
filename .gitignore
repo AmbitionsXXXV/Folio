@@ -36,6 +36,9 @@ lerna-debug.log*
 # Turbo
 .turbo
 
+# Vercel build output
+.vercel
+
 .alchemy
 
 # Testing

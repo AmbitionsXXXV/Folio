@@ -386,7 +386,42 @@
     },
     "snoozed": "已延后至{{preset}}",
     "snoozeFailed": "延后失败",
-    "statsStreak": "连续天数"
+    "statsStreak": "连续天数",
+    "modes": {
+      "spaced": "间隔复习",
+      "japaneseTyping": "日语打字练习"
+    },
+    "japaneseTyping": {
+      "title": "日语打字练习",
+      "description": "先输入罗马音，再结合语法点和词汇卡片理解整句。",
+      "progressBadge": "第 {{current}} / {{total}} 题",
+      "accuracyBadge": "准确率 {{value}}%",
+      "bankBadge": "已收录 {{count}} 词",
+      "statsCompleted": "已完成",
+      "statsAccuracy": "准确率",
+      "statsMistakes": "错误次数",
+      "statsUnlockedWords": "已收录词汇",
+      "promptLabel": "练习目标",
+      "translationLabel": "句子意思",
+      "answerLabel": "输入对应罗马音",
+      "answerPlaceholder": "例如：watashi wa mainichi nihongo o benkyou shimasu",
+      "answerHelp": "支持忽略空格和大小写，按 Enter 提交。",
+      "submit": "提交答案",
+      "next": "下一题",
+      "finish": "查看总结",
+      "restart": "重新开始",
+      "correct": "输入正确",
+      "incorrect": "再试一次",
+      "expectedAnswer": "参考答案",
+      "autoCollected": "本题词汇已自动加入右侧词库。",
+      "grammarTitle": "语法分析",
+      "vocabularyTitle": "本题词汇",
+      "bankTitle": "已获取词库",
+      "bankDescription": "完成题目后，核心词汇会自动去重收录。",
+      "bankEmpty": "先完成一题，词库会从已完成句子中自动提取。",
+      "completedTitle": "本轮练习完成",
+      "completedDescription": "你已完成 {{count}} 题，并累计收录 {{vocabularyCount}} 个核心词汇。"
+    }
   },
   "activity": {
     "goodMorning": "早上好，{{name}}",
