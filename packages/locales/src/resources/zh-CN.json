@@ -420,7 +420,19 @@
       "bankDescription": "完成题目后，核心词汇会自动去重收录。",
       "bankEmpty": "先完成一题，词库会从已完成句子中自动提取。",
       "completedTitle": "本轮练习完成",
-      "completedDescription": "你已完成 {{count}} 题，并累计收录 {{vocabularyCount}} 个核心词汇。"
+      "completedDescription": "你已完成 {{count}} 题，并累计收录 {{vocabularyCount}} 个核心词汇。",
+      "posTagging": "词性标注",
+      "posTaggingDescription": "为句子中的每个词标注词性颜色",
+      "posCategories": {
+        "noun": "名词",
+        "pronoun": "代词",
+        "verb": "动词",
+        "adjective": "形容词",
+        "adverb": "副词",
+        "particle": "助词",
+        "auxiliary": "助动词",
+        "expression": "表达"
+      }
     }
   },
   "activity": {

@@ -318,7 +318,19 @@
       "bankDescription": "文を完了するたびに、重要語彙が重複なく収録されます。",
       "bankEmpty": "まず 1 文完了すると、単語帳が自動的にたまり始めます。",
       "completedTitle": "練習が完了しました",
-      "completedDescription": "{{count}} 文を完了し、{{vocabularyCount}} 個の重要語彙を収録しました。"
+      "completedDescription": "{{count}} 文を完了し、{{vocabularyCount}} 個の重要語彙を収録しました。",
+      "posTagging": "品詞タグ",
+      "posTaggingDescription": "文中の各単語を品詞ごとに色分けします",
+      "posCategories": {
+        "noun": "名詞",
+        "pronoun": "代名詞",
+        "verb": "動詞",
+        "adjective": "形容詞",
+        "adverb": "副詞",
+        "particle": "助詞",
+        "auxiliary": "助動詞",
+        "expression": "表現"
+      }
     }
   },
   "activity": {

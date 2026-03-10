@@ -30,14 +30,15 @@ function AppLayout() {
 			<SidebarInset>
 				<MobileHeader />
 
-				<main
+				<div
 					className="flex-1 overflow-y-auto overscroll-contain scroll-smooth"
 					id="main-content"
+					role="main"
 				>
 					<div className="animate-fade-in-scale">
 						<Outlet />
 					</div>
-				</main>
+				</div>
 			</SidebarInset>
 		</SidebarProvider>
 	)

@@ -1,5 +1,5 @@
-export { RatingButtons } from './rating-buttons'
 export { JapaneseTypingPractice } from './japanese-typing-practice'
+export { RatingButtons } from './rating-buttons'
 export { ReviewCard } from './review-card'
 export { ReviewDashboard } from './review-dashboard'
 export { ReviewEmptyState } from './review-empty-state'

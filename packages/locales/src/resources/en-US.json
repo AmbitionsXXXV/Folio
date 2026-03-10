@@ -365,7 +365,19 @@
       "bankDescription": "Core words are collected and deduplicated after each completed sentence.",
       "bankEmpty": "Complete one sentence first and the word bank will start filling up automatically.",
       "completedTitle": "Practice Complete",
-      "completedDescription": "You finished {{count}} sentences and unlocked {{vocabularyCount}} core words."
+      "completedDescription": "You finished {{count}} sentences and unlocked {{vocabularyCount}} core words.",
+      "posTagging": "POS Tagging",
+      "posTaggingDescription": "Color-code each word in the sentence by its part of speech",
+      "posCategories": {
+        "noun": "Noun",
+        "pronoun": "Pronoun",
+        "verb": "Verb",
+        "adjective": "Adjective",
+        "adverb": "Adverb",
+        "particle": "Particle",
+        "auxiliary": "Auxiliary",
+        "expression": "Expression"
+      }
     }
   },
   "activity": {
