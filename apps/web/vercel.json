@@ -1,0 +1,3 @@
+{
+  "buildCommand": "NITRO_PRESET=vercel pnpm run build"
+}

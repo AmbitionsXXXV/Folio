@@ -1,0 +1,3 @@
+{
+  "buildCommand": "rm -rf .vercel/output && NITRO_PRESET=vercel pnpm --dir apps/web build && mkdir -p .vercel && cp -R apps/web/.vercel/output .vercel/output"
+}
