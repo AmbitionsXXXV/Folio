@@ -34,8 +34,14 @@ export function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
 
 	return (
 		<div className="container relative mx-auto max-w-5xl px-4 py-8">
-			<div className="pointer-events-none absolute top-0 right-0 size-80 translate-x-1/3 -translate-y-1/4 rounded-full bg-linear-to-br from-primary/6 via-purple-500/4 to-transparent blur-3xl" />
-			<div className="pointer-events-none absolute bottom-0 left-0 size-64 -translate-x-1/4 translate-y-1/4 rounded-full bg-linear-to-tr from-blue-500/4 via-cyan-500/3 to-transparent blur-3xl" />
+			<div
+				aria-hidden="true"
+				className="pointer-events-none absolute top-0 right-0 hidden size-80 translate-x-1/3 -translate-y-1/4 rounded-full bg-linear-to-br from-primary/6 via-purple-500/4 to-transparent blur-3xl sm:block"
+			/>
+			<div
+				aria-hidden="true"
+				className="pointer-events-none absolute bottom-0 left-0 hidden size-64 -translate-x-1/4 translate-y-1/4 rounded-full bg-linear-to-tr from-blue-500/4 via-cyan-500/3 to-transparent blur-3xl sm:block"
+			/>
 
 			<motion.div
 				animate={{ opacity: 1, y: 0 }}
@@ -87,8 +93,17 @@ export function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
 							}}
 						>
 							<Card
-								className="group cursor-pointer border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-200 hover:scale-[1.01] hover:border-primary/20 hover:shadow-lg"
+								aria-label={t(labelKey)}
+								className="group cursor-pointer border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-200 hover:scale-[1.01] hover:border-primary/20 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 								onClick={() => onStartReview(key)}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault()
+										onStartReview(key)
+									}
+								}}
+								role="button"
+								tabIndex={0}
 							>
 								<CardHeader className="pb-2">
 									<div className="flex items-center justify-between">
@@ -99,6 +114,7 @@ export function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
 											<CardTitle className="text-base">{t(labelKey)}</CardTitle>
 										</div>
 										<HugeiconsIcon
+											aria-hidden="true"
 											className="size-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5"
 											icon={ArrowRight01Icon}
 										/>

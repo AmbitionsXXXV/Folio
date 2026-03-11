@@ -2,6 +2,7 @@ import { Button } from '@folionote/ui/button'
 import { Skeleton } from '@folionote/ui/skeleton'
 import { RefreshIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { useHotkey } from '@tanstack/react-hotkeys'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +19,13 @@ import { ReviewCard } from './review-card'
 import { ReviewEmptyState } from './review-empty-state'
 import { ReviewProgressBar } from './review-progress-bar'
 import { ReviewSessionHeader } from './review-session-header'
+
+const RATING_HOTKEYS = {
+	'1': 'again',
+	'2': 'hard',
+	'3': 'good',
+	'4': 'easy',
+} as const satisfies Record<string, Rating>
 
 /**
  * ReviewSession - Main review session component
@@ -134,6 +142,38 @@ export function ReviewSession({
 		[queueData?.items, currentIndex, snoozeMutation]
 	)
 
+	const isMutating = markReviewedMutation.isPending || snoozeMutation.isPending
+
+	useHotkey('1', (event) => {
+		if (isMutating) return
+		event.preventDefault()
+		handleRate(RATING_HOTKEYS['1'])
+	})
+
+	useHotkey('2', (event) => {
+		if (isMutating) return
+		event.preventDefault()
+		handleRate(RATING_HOTKEYS['2'])
+	})
+
+	useHotkey('3', (event) => {
+		if (isMutating) return
+		event.preventDefault()
+		handleRate(RATING_HOTKEYS['3'])
+	})
+
+	useHotkey('4', (event) => {
+		if (isMutating) return
+		event.preventDefault()
+		handleRate(RATING_HOTKEYS['4'])
+	})
+
+	useHotkey('Enter', (event) => {
+		if (isMutating) return
+		event.preventDefault()
+		handleSkip()
+	})
+
 	const items = queueData?.items ?? []
 	const currentEntry = items[currentIndex] as Entry | undefined
 	const totalInQueue = items.length
@@ -189,7 +229,7 @@ export function ReviewSession({
 			{!(isLoadingQueue || isQueueError) && currentEntry ? (
 				<ReviewCard
 					entry={currentEntry}
-					isLoading={markReviewedMutation.isPending || snoozeMutation.isPending}
+					isLoading={isMutating}
 					onRate={handleRate}
 					onSkip={handleSkip}
 					onSnooze={handleSnooze}

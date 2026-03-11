@@ -331,6 +331,12 @@
     },
     "snoozed": "Snoozed until {{preset}}",
     "snoozeFailed": "Failed to snooze",
+    "progressLabel": "Review progress",
+    "snoozeOptions": "Snooze options",
+    "endReviewLabel": "End review session",
+    "backLabel": "Back to review dashboard",
+    "rateAs": "Rate as {{rating}} ({{key}})",
+    "skipLabel": "Skip this entry",
     "statsStreak": "Streak",
     "modes": {
       "spaced": "Spaced Review",

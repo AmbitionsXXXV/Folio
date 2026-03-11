@@ -386,6 +386,12 @@
     },
     "snoozed": "已延后至{{preset}}",
     "snoozeFailed": "延后失败",
+    "progressLabel": "复习进度",
+    "snoozeOptions": "延后选项",
+    "endReviewLabel": "结束复习会话",
+    "backLabel": "返回复习面板",
+    "rateAs": "评为{{rating}}（{{key}}）",
+    "skipLabel": "跳过此条目",
     "statsStreak": "连续天数",
     "modes": {
       "spaced": "间隔复习",

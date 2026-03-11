@@ -22,11 +22,17 @@ export function ReviewSessionHeader({
 					{ruleLabel} {t('review.reviewSession')}
 				</h2>
 				<p className="text-muted-foreground text-sm">
-					{currentIndex + 1} / {totalInQueue} ·{' '}
-					{t('review.reviewedTodayCount', { count: reviewedToday })}
+					<span className="tabular-nums">
+						{currentIndex + 1} / {totalInQueue}
+					</span>{' '}
+					· {t('review.reviewedTodayCount', { count: reviewedToday })}
 				</p>
 			</div>
-			<Button onClick={onStop} variant="outline">
+			<Button
+				aria-label={t('review.endReviewLabel')}
+				onClick={onStop}
+				variant="outline"
+			>
 				{t('review.endReview')}
 			</Button>
 		</div>

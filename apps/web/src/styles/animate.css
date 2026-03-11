@@ -60,3 +60,15 @@
 .delay-400 {
 	animation-delay: 400ms;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-fade-in,
+	.animate-fade-in-scale {
+		opacity: 1;
+		animation: none;
+	}
+
+	.animate-float {
+		animation: none;
+	}
+}

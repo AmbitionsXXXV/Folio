@@ -284,6 +284,12 @@
     },
     "snoozed": "{{preset}}まで延期しました",
     "snoozeFailed": "延期に失敗しました",
+    "progressLabel": "復習の進捗",
+    "snoozeOptions": "延期オプション",
+    "endReviewLabel": "復習セッションを終了",
+    "backLabel": "復習ダッシュボードに戻る",
+    "rateAs": "{{rating}}と評価（{{key}}）",
+    "skipLabel": "このエントリをスキップ",
     "statsStreak": "連続日数",
     "modes": {
       "spaced": "間隔復習",

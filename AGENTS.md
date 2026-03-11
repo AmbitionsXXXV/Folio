@@ -283,3 +283,17 @@ pnpm dev:web
 - `pnpm install` will fail if `CI` env is not set, because `lefthook install` conflicts with Cursor's git hooks path. Use `CI=true pnpm install` in Cloud VMs.
 - One pre-existing test failure exists in `apps/web/__tests__/message-list.test.tsx` (expects "Tool Calls" text that doesn't render). This is not environment-related.
 - Standard commands are documented in `CLAUDE.md` (lint, test, build, type-check).
+
+## Learned Preferences
+
+- In React 19 (`@types/react` 19.x), `FormEvent` is deprecated — use `SubmitEvent` for `onSubmit`, `ChangeEvent` for `onChange`, `InputEvent` for `onInput`
+- When adding new user-facing text, update all i18n language files (zh-CN, en-US, ja-JP) in the same change
+- Japanese typing practice is a standalone full-screen route (`/jp-typing`), not nested under sidebar layout or the review route
+- Japanese input matching priority: match kana (假名) first, then fall back to romaji (ローマ字)
+- Background colors and component styles must use system design tokens — no hardcoded color values
+- New features should reference a specific baseline commit and follow the implementation plan step by step
+- Data field access from API responses needs null-checks and fallbacks for structural changes (e.g. `formatDate(updatedAt)` must tolerate missing/changed fields)
+- Moonshot/Kimi K2.5 model ID is `kimi-k2.5` (dot separator), not `kimi-k2-5-thinking` (hyphenated)
+- `heroui-native` rc.2+ resolves peer dependency warnings in the native app
+- Use `@tanstack/react-hotkeys` for keyboard shortcut support in web components
+- Page animations and transitions should integrate with system design tokens via the animate/extract skills

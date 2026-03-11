@@ -21,6 +21,7 @@ export function SnoozeDropdown({ onSnooze, disabled }: SnoozeDropdownProps) {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
+					aria-label={t('review.snoozeOptions')}
 					className="text-muted-foreground"
 					disabled={disabled}
 					size="sm"

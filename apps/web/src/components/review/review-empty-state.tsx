@@ -26,7 +26,7 @@ export function ReviewEmptyState({
 			/>
 			<p className="mb-2 font-medium text-lg">{t('review.greatJob')}</p>
 			<p className="mb-4 text-muted-foreground">{message}</p>
-			<Button onClick={onStop} variant="outline">
+			<Button aria-label={t('review.backLabel')} onClick={onStop} variant="outline">
 				{t('common.back')}
 			</Button>
 		</div>

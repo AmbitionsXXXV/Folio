@@ -25,7 +25,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useHotkey } from '@tanstack/react-hotkeys'
 import {
-	type FormEvent,
+	type SubmitEvent,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -127,7 +127,7 @@ export function JapaneseTypingPractice() {
 		inputRef.current?.focus()
 	}, [currentExerciseIndex, feedbackState])
 
-	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault()
 
 		if (!currentExercise) return

@@ -15,7 +15,6 @@ export const Route = createFileRoute('/jp-typing')({
 	},
 	component: JpTypingPage,
 })
-
 function JpTypingPage() {
 	return <JapaneseTypingPractice />
 }
