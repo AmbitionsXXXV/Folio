@@ -5,7 +5,6 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
 const SHIKIJS_RE = /^@shikijs\//
 const FOLIONOTE_DB_RE = /^@folionote\/db$/
@@ -60,7 +59,6 @@ function resolveManualChunk(id: string): string | undefined {
 export default defineConfig(({ command, isSsrBuild }) => ({
 	plugins: [
 		...(command === 'serve' ? [devtools()] : []),
-		tsconfigPaths(),
 		tailwindcss(),
 		tanstackStart(),
 		nitro({
@@ -87,6 +85,7 @@ export default defineConfig(({ command, isSsrBuild }) => ({
 		viteReact(),
 	],
 	resolve: {
+		tsconfigPaths: true,
 		alias: [
 			{
 				find: FOLIONOTE_DB_RE,

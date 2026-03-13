@@ -57,21 +57,21 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
     "@changesets/cli": "^2.30.0",
-    "@commitlint/cli": "^20.4.3",
-    "@commitlint/config-conventional": "^20.4.3",
+    "@commitlint/cli": "^20.4.4",
+    "@commitlint/config-conventional": "^20.4.4",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "conventional-changelog-conventionalcommits": "^9.3.0",
     "cz-git": "^1.12.0",
     "fast-glob": "^3.3.3",
-    "lefthook": "^2.1.3",
-    "turbo": "^2.8.15",
+    "lefthook": "^2.1.4",
+    "turbo": "^2.8.16",
     "typescript": "catalog:",
-    "ultracite": "^7.2.5",
+    "ultracite": "^7.3.0",
     "vitest": "catalog:"
   },
-  "packageManager": "pnpm@10.31.0+sha512.e3927388bfaa8078ceb79b748ffc1e8274e84d75163e67bc22e06c0d3aed43dd153151cbf11d7f8301ff4acb98c68bdc5cadf6989532801ffafe3b3e4a63c268",
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
   "pnpm": {
     "overrides": {
       "drizzle-orm": "^0.45.1"
