@@ -42,10 +42,16 @@ export function getStoredApiEnvironment(): ApiEnvironment {
  * Get the server URL based on environment configuration
  */
 export function getServerUrl(): string {
-  // In production, always use the env var if available
   const isProduction = import.meta.env.MODE === "production"
-  if (isProduction && import.meta.env.VITE_SERVER_URL) {
-    return import.meta.env.VITE_SERVER_URL as string
+
+  // In production always target the real API. Prefer the build-time
+  // VITE_SERVER_URL, but fall back to the production API URL rather than
+  // localhost: `.env.production` is gitignored, so VITE_SERVER_URL is absent in
+  // Vercel/CI builds, and SSR has no window/localStorage to fall back on. The
+  // old localhost fallback made the auth client call http://localhost:3000
+  // during SSR, which threw an HTTPError and 500'd the page.
+  if (isProduction) {
+    return (import.meta.env.VITE_SERVER_URL as string) || DEFAULT_CONFIG.remote
   }
 
   // In development, use stored environment preference
