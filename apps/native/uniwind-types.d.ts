@@ -7,6 +7,11 @@
 // on ViewProps/TextProps, so it also covers react-native-reanimated's Animated.*.
 /// <reference types="uniwind/types" />
 
+// The Uniwind CSS entry (global.css) is imported for its side effects. Declare
+// the module so that side-effect import type-checks on Linux/CI; Expo's web
+// types only cover it on macOS.
+declare module "*.css" {}
+
 declare module "uniwind" {
   export interface UniwindConfig {
     themes: readonly ["light", "dark"]
