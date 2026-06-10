@@ -32,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@v1
@@ -58,7 +58,7 @@ jobs:
           cp apps/server/ecosystem.config.cjs deploy-package/ 2>/dev/null || true
 
       - name: Upload deployment package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deploy-package
           path: deploy-package
@@ -71,7 +71,7 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - name: Checkout (for ecosystem config and Caddyfile)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             apps/server/ecosystem.config.cjs
@@ -79,7 +79,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Download deployment package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: deploy-package
           path: deploy-package
