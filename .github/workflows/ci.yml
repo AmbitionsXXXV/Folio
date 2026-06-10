@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
     paths:
       - "apps/server/**"
+      - "apps/native/**"
       - "packages/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/ci.yml"
@@ -12,9 +13,11 @@ on:
     branches: [main]
     paths:
       - "apps/server/**"
+      - "apps/native/**"
       - "packages/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/ci.yml"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
