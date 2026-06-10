@@ -2,7 +2,6 @@ import { Badge } from "@folionote/ui/badge"
 import { Button } from "@folionote/ui/button"
 import { Separator } from "@folionote/ui/separator"
 import {
-  AiBrain01Icon,
   AiChat02Icon,
   ArrowRight02Icon,
   BookOpen01Icon,
@@ -20,7 +19,9 @@ import {
 import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { createFileRoute, Link, redirect } from "@tanstack/react-router"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { motion, useReducedMotion } from "motion/react"
+import type { ReactNode } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { getUser } from "@/functions/get-user"
@@ -35,6 +36,113 @@ export const Route = createFileRoute("/")({
     }
   }
 })
+
+const INFINITE = Number.POSITIVE_INFINITY
+
+// Brand 3D objects shipped in /public/img — tactile, glossy, on-brand.
+const OBJECT_BOOK = "/img/note.png"
+const OBJECT_LENS = "/img/zoom.png"
+const OBJECT_BOOKMARK = "/img/bookmark.png"
+
+// ---------------------------------------------------------------------------
+// Motion primitives
+// ---------------------------------------------------------------------------
+
+// Springy scroll-reveal. Falls back to a plain, fully-visible element when the
+// visitor prefers reduced motion.
+function Reveal({
+  children,
+  className,
+  delay = 0,
+  y = 28
+}: {
+  children: ReactNode
+  className?: string
+  delay?: number
+  y?: number
+}) {
+  const reduced = useReducedMotion()
+
+  return (
+    <motion.div
+      className={className}
+      initial={reduced ? false : { opacity: 0, y }}
+      transition={{ type: "spring", stiffness: 120, damping: 18, delay }}
+      viewport={{ once: true, margin: "-80px" }}
+      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// A floating, gently-bouncing 3D brand object that pops in with a spring.
+function FloatObject({
+  src,
+  alt,
+  className,
+  floatDistance = 16,
+  floatDuration = 6,
+  delay = 0,
+  spin = 0
+}: {
+  src: string
+  alt: string
+  className?: string
+  floatDistance?: number
+  floatDuration?: number
+  delay?: number
+  spin?: number
+}) {
+  const reduced = useReducedMotion()
+
+  return (
+    <motion.div
+      animate={
+        reduced
+          ? undefined
+          : { y: [0, -floatDistance, 0], rotate: [0, spin, 0] }
+      }
+      className={className}
+      transition={{
+        duration: floatDuration,
+        repeat: INFINITE,
+        ease: "easeInOut",
+        delay
+      }}
+    >
+      <motion.img
+        alt={alt}
+        className="size-full drop-shadow-[0_24px_40px_rgba(91,33,182,0.28)] select-none"
+        draggable={false}
+        initial={reduced ? false : { opacity: 0, scale: 0.6 }}
+        loading="lazy"
+        src={src}
+        transition={{ type: "spring", stiffness: 140, damping: 12, delay }}
+        viewport={{ once: true }}
+        whileHover={reduced ? undefined : { scale: 1.08, rotate: spin ? 0 : 4 }}
+        whileInView={reduced ? undefined : { opacity: 1, scale: 1 }}
+      />
+    </motion.div>
+  )
+}
+
+// Organic, blurred violet/pink blob used as soft background decoration.
+function Blob({
+  className,
+  shape = "47% 53% 60% 40% / 50% 45% 55% 50%"
+}: {
+  className?: string
+  shape?: string
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn("pointer-events-none absolute blur-3xl", className)}
+      style={{ borderRadius: shape }}
+    />
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Navbar
@@ -53,14 +161,19 @@ function LandingNavbar() {
   return (
     <nav
       className={cn(
-        "fixed top-4 right-4 left-4 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-6 py-3 transition-all duration-300",
+        "fixed top-4 right-4 left-4 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-full px-5 py-2.5 transition-all duration-300",
         scrolled
-          ? "border border-border/50 bg-white/80 shadow-lg backdrop-blur-xl dark:bg-card/80"
-          : "bg-transparent"
+          ? "border border-border/60 bg-background/80 shadow-lg backdrop-blur-xl"
+          : "border border-transparent bg-transparent"
       )}
     >
       <Link className="flex cursor-pointer items-center gap-2.5" to="/">
-        <img alt="FolioNote" className="size-8" src="/svg/icon.svg" />
+        <motion.img
+          alt="FolioNote"
+          className="size-9"
+          src="/svg/icon.svg"
+          whileHover={{ rotate: -8, scale: 1.08 }}
+        />
         <span className="font-display text-lg font-semibold tracking-tight">
           FolioNote
         </span>
@@ -87,14 +200,18 @@ function LandingNavbar() {
         </a>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <Link to="/login">
-          <Button className="cursor-pointer" size="sm" variant="ghost">
+          <Button
+            className="cursor-pointer rounded-full"
+            size="sm"
+            variant="ghost"
+          >
             {t("auth.signIn", "Sign In")}
           </Button>
         </Link>
         <Link to="/register">
-          <Button className="cursor-pointer gap-1.5" size="sm">
+          <Button className="cursor-pointer gap-1.5 rounded-full px-5">
             {t("landing.nav.getStarted", "Get Started")}
             <HugeiconsIcon className="size-4" icon={ArrowRight02Icon} />
           </Button>
@@ -110,135 +227,199 @@ function LandingNavbar() {
 
 function HeroSection() {
   const { t } = useTranslation()
+  const reduced = useReducedMotion()
 
   return (
-    <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
-      {/* Decorative gradient orbs */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 size-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute top-20 -right-40 size-[400px] rounded-full bg-purple-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 -left-40 size-[400px] rounded-full bg-violet-400/8 blur-3xl" />
+    <section className="relative flex min-h-dvh flex-col justify-start overflow-hidden pt-32 pb-20 md:justify-center md:pt-36 md:pb-28">
+      {/* Organic violet → pink blobs */}
+      <Blob className="-top-32 left-1/4 size-[460px] bg-primary/25" />
+      <Blob
+        className="top-10 right-0 size-[380px] bg-fuchsia-400/20"
+        shape="60% 40% 30% 70% / 60% 30% 70% 40%"
+      />
+      <Blob
+        className="bottom-0 left-0 size-[320px] bg-violet-400/15"
+        shape="40% 60% 55% 45% / 55% 50% 50% 45%"
+      />
 
-      <div className="relative mx-auto max-w-6xl px-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge
-            className="animate-fade-in mb-6 gap-1.5 px-3 py-1"
-            variant="secondary"
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 lg:grid-cols-[1.05fr_0.95fr]">
+        {/* Copy */}
+        <div className="text-center lg:text-left">
+          <motion.div
+            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+            initial={reduced ? false : { opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 120, damping: 18 }}
           >
-            <HugeiconsIcon className="size-3.5" icon={MagicWand01Icon} />
-            {t("landing.hero.badge", "Your personal learning companion")}
-          </Badge>
+            <Badge
+              className="mb-6 gap-1.5 rounded-full px-3 py-1"
+              variant="secondary"
+            >
+              <HugeiconsIcon className="size-3.5" icon={MagicWand01Icon} />
+              {t("landing.hero.badge", "Your personal learning companion")}
+            </Badge>
+          </motion.div>
 
-          <h1 className="animate-fade-in font-display text-4xl leading-tight font-bold tracking-tight delay-100 md:text-6xl md:leading-tight">
-            {t("landing.hero.titleLine1", "Capture, Organize &")}{" "}
-            <span className="bg-linear-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              {t("landing.hero.titleHighlight", "Remember")}
+          <motion.h1
+            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+            className="font-display text-[2.75rem] leading-[1.05] font-bold tracking-tight md:text-6xl"
+            initial={reduced ? false : { opacity: 0, y: 24 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 18,
+              delay: 0.08
+            }}
+          >
+            {t("landing.hero.titleLine1", "Capture, organize &")}{" "}
+            <span className="relative inline-block font-script font-normal text-primary">
+              {t("landing.hero.titleHighlight", "remember")}
+              <motion.svg
+                aria-hidden="true"
+                className="absolute -bottom-2 left-0 w-full text-accent-foreground/40"
+                fill="none"
+                initial={reduced ? false : { pathLength: 0 }}
+                preserveAspectRatio="none"
+                transition={{ duration: 0.9, delay: 0.6, ease: "easeInOut" }}
+                viewBox="0 0 200 12"
+                whileInView={reduced ? undefined : { pathLength: 1 }}
+              >
+                <motion.path
+                  d="M2 8C40 3 80 3 120 6C150 8 180 7 198 4"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="3"
+                />
+              </motion.svg>
             </span>{" "}
-            {t("landing.hero.titleLine2", "Everything You Learn")}
-          </h1>
+            {t("landing.hero.titleLine2", "everything you learn")}
+          </motion.h1>
 
-          <p className="animate-fade-in mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground delay-200 md:text-xl">
+          <motion.p
+            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+            className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl lg:mx-0"
+            initial={reduced ? false : { opacity: 0, y: 24 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 18,
+              delay: 0.16
+            }}
+          >
             {t(
               "landing.hero.subtitle",
-              "FolioNote helps you build a personal knowledge base with smart note-taking, spaced repetition, and AI-powered insights — so nothing you learn is ever lost."
+              "A warm, playful home for your notes. Capture ideas in a flash, let AI connect the dots, and let spaced review make them stick — so nothing you learn slips away."
             )}
-          </p>
+          </motion.p>
 
-          <div className="animate-fade-in mt-10 flex flex-wrap items-center justify-center gap-4 delay-300">
+          <motion.div
+            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+            className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+            initial={reduced ? false : { opacity: 0, y: 24 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 18,
+              delay: 0.24
+            }}
+          >
             <Link to="/register">
-              <Button className="cursor-pointer gap-2 px-6 text-base" size="lg">
-                {t("landing.hero.cta", "Start Learning for Free")}
-                <HugeiconsIcon className="size-5" icon={ArrowRight02Icon} />
-              </Button>
+              <motion.span
+                className="inline-block"
+                whileHover={reduced ? undefined : { scale: 1.04 }}
+                whileTap={reduced ? undefined : { scale: 0.97 }}
+              >
+                <Button className="h-12 cursor-pointer gap-2 rounded-full px-7 text-base shadow-lg shadow-primary/20">
+                  {t("landing.hero.cta", "Start learning — free")}
+                  <HugeiconsIcon className="size-5" icon={ArrowRight02Icon} />
+                </Button>
+              </motion.span>
             </Link>
             <a href="#features">
-              <Button
-                className="cursor-pointer gap-2 px-6 text-base"
-                size="lg"
-                variant="outline"
+              <motion.span
+                className="inline-block"
+                whileHover={reduced ? undefined : { scale: 1.04 }}
+                whileTap={reduced ? undefined : { scale: 0.97 }}
               >
-                {t("landing.hero.ctaSecondary", "See How It Works")}
-              </Button>
+                <Button
+                  className="h-12 cursor-pointer gap-2 rounded-full px-7 text-base"
+                  variant="outline"
+                >
+                  {t("landing.hero.ctaSecondary", "Take the tour")}
+                </Button>
+              </motion.span>
             </a>
-          </div>
+          </motion.div>
+
+          {/* Leckerli stat strip */}
+          <motion.div
+            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+            className="mt-10 flex items-center justify-center gap-7 lg:justify-start"
+            initial={reduced ? false : { opacity: 0, y: 24 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 18,
+              delay: 0.32
+            }}
+          >
+            <HeroStat
+              label={t("landing.hero.statPlatforms", "Platforms")}
+              value="3"
+            />
+            <Separator className="h-9" orientation="vertical" />
+            <HeroStat
+              label={t("landing.hero.statFreeLabel", "To start")}
+              value={t("landing.hero.statFreeValue", "Free")}
+            />
+            <Separator className="h-9" orientation="vertical" />
+            <HeroStat
+              label={t("landing.hero.statYoursLabel", "Yours")}
+              value="100%"
+            />
+          </motion.div>
         </div>
 
-        {/* Hero product mockup */}
-        <div className="animate-fade-in relative mx-auto mt-16 max-w-4xl delay-400">
-          <div className="rounded-2xl border border-border/50 bg-card/60 p-3 shadow-2xl backdrop-blur-sm">
-            <div className="rounded-xl border border-border/30 bg-card p-6">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  <div className="size-3 rounded-full bg-red-400/60" />
-                  <div className="size-3 rounded-full bg-yellow-400/60" />
-                  <div className="size-3 rounded-full bg-green-400/60" />
-                </div>
-                <div className="flex-1 rounded-lg bg-muted/50 px-4 py-1.5 text-center text-xs text-muted-foreground">
-                  https://web.folionote.xyz/
-                </div>
-              </div>
-              <div className="grid gap-3 md:grid-cols-3">
-                <MockCard
-                  color="from-violet-500/10 to-purple-500/10"
-                  icon={PencilEdit02Icon}
-                  label={t("landing.hero.mockCapture", "Quick Capture")}
-                  lines={3}
-                />
-                <MockCard
-                  color="from-blue-500/10 to-indigo-500/10"
-                  icon={AiBrain01Icon}
-                  label={t("landing.hero.mockAI", "AI Insights")}
-                  lines={4}
-                />
-                <MockCard
-                  color="from-amber-500/10 to-orange-500/10"
-                  icon={Calendar03Icon}
-                  label={t("landing.hero.mockReview", "Spaced Review")}
-                  lines={2}
-                />
-              </div>
-            </div>
-          </div>
+        {/* Floating 3D object cluster */}
+        <div className="relative mx-auto h-[340px] w-full max-w-md md:h-[440px]">
+          <FloatObject
+            alt={t(
+              "landing.hero.objectBook",
+              "A notebook full of what you've learned"
+            )}
+            className="absolute top-6 left-1/2 size-56 -translate-x-1/2 md:size-72"
+            floatDistance={18}
+            floatDuration={6.5}
+            src={OBJECT_BOOK}
+          />
+          <FloatObject
+            alt={t("landing.hero.objectSearch", "Search across everything")}
+            className="absolute top-0 right-2 size-24 md:size-28"
+            delay={0.3}
+            floatDistance={14}
+            floatDuration={5}
+            spin={-6}
+            src={OBJECT_LENS}
+          />
+          <FloatObject
+            alt={t("landing.hero.objectBookmark", "Save what matters")}
+            className="absolute bottom-2 left-0 size-20 md:size-24"
+            delay={0.5}
+            floatDistance={12}
+            floatDuration={5.5}
+            spin={6}
+            src={OBJECT_BOOKMARK}
+          />
         </div>
       </div>
     </section>
   )
 }
 
-function MockCard({
-  icon,
-  label,
-  lines,
-  color
-}: {
-  icon: IconSvgElement
-  label: string
-  lines: number
-  color: string
-}) {
+function HeroStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-card/50 p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <div
-          className={cn(
-            "flex size-8 items-center justify-center rounded-lg bg-linear-to-br",
-            color
-          )}
-        >
-          <HugeiconsIcon className="size-4 text-foreground/70" icon={icon} />
-        </div>
-        <span className="text-sm font-medium">{label}</span>
-      </div>
-      <div className="space-y-2">
-        {Array.from({ length: lines }, (_, i) => (
-          <div
-            className={cn(
-              "h-2 rounded-full bg-muted/60",
-              i === lines - 1 ? "w-3/5" : "w-full"
-            )}
-            key={`line-${i.toString()}`}
-          />
-        ))}
-      </div>
+    <div className="text-center lg:text-left">
+      <p className="font-number text-3xl text-primary md:text-4xl">{value}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
     </div>
   )
 }
@@ -263,54 +444,54 @@ function FeaturesSection() {
       title: t("landing.features.capture.title", "Quick Capture"),
       description: t(
         "landing.features.capture.desc",
-        "Capture ideas, notes, and learnings instantly with a rich text editor. Tag, categorize, and organize effortlessly."
+        "Catch ideas the moment they strike with a rich, distraction-free editor. Tag and organize without breaking your flow."
       ),
-      gradient: "from-violet-500/15 to-purple-500/15"
+      gradient: "from-primary/20 to-fuchsia-400/20"
     },
     {
       icon: Calendar03Icon,
       title: t("landing.features.review.title", "Spaced Repetition"),
       description: t(
         "landing.features.review.desc",
-        "Never forget what you learn. Our smart review system schedules optimal times to revisit your notes."
+        "Never forget what you learn. A friendly review schedule resurfaces your notes at exactly the right moment."
       ),
-      gradient: "from-amber-500/15 to-orange-500/15"
+      gradient: "from-violet-400/20 to-primary/20"
     },
     {
       icon: AiChat02Icon,
       title: t("landing.features.ai.title", "AI Knowledge Assistant"),
       description: t(
         "landing.features.ai.desc",
-        "Chat with your notes. Ask questions, get summaries, and discover connections across your entire knowledge base."
+        "Chat with your notes. Ask questions, get summaries, and uncover connections across your whole knowledge base."
       ),
-      gradient: "from-emerald-500/15 to-teal-500/15"
+      gradient: "from-fuchsia-400/20 to-pink-400/20"
     },
     {
       icon: Search01Icon,
       title: t("landing.features.search.title", "Powerful Search"),
       description: t(
         "landing.features.search.desc",
-        "Find anything in seconds with full-text search, filters, and AI-powered semantic search across all your entries."
+        "Find anything in seconds with full-text and AI-powered semantic search across every entry you've ever made."
       ),
-      gradient: "from-blue-500/15 to-indigo-500/15"
+      gradient: "from-primary/20 to-violet-400/20"
     },
     {
       icon: Tag01Icon,
       title: t("landing.features.tags.title", "Smart Organization"),
       description: t(
         "landing.features.tags.desc",
-        "Organize with tags, collections, and sources. Build a personal taxonomy that grows with your knowledge."
+        "Tags, collections, and sources that grow into a personal taxonomy — structure that feels effortless."
       ),
-      gradient: "from-rose-500/15 to-pink-500/15"
+      gradient: "from-pink-400/20 to-fuchsia-400/20"
     },
     {
       icon: GridViewIcon,
       title: t("landing.features.graph.title", "Knowledge Graph"),
       description: t(
         "landing.features.graph.desc",
-        "Visualize connections between your notes. Discover hidden relationships and see the big picture of your learning."
+        "Watch your notes link up. Explore hidden relationships and see the big picture of everything you know."
       ),
-      gradient: "from-cyan-500/15 to-sky-500/15"
+      gradient: "from-violet-400/20 to-fuchsia-400/20"
     }
   ]
 
@@ -321,121 +502,17 @@ function FeaturesSection() {
           badge={t("landing.features.badge", "Core Features")}
           description={t(
             "landing.features.description",
-            "Everything you need to capture, organize, and retain knowledge — all in one place."
+            "Everything you need to capture, organize, and actually retain what you learn — in one playful place."
           )}
           title={t("landing.features.title", "Built for Lifelong Learners")}
         />
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <FeatureCard feature={feature} key={feature.title} />
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function FeatureCard({ feature }: { feature: FeatureItem }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const visible = useIntersectionFade(ref)
-
-  return (
-    <div
-      className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:shadow-lg",
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      )}
-      ref={ref}
-      style={{ transitionDelay: "100ms" }}
-    >
-      <div
-        className={cn(
-          "absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-          feature.gradient
-        )}
-      />
-      <div className="relative">
-        <div
-          className={cn(
-            "mb-4 flex size-12 items-center justify-center rounded-xl bg-linear-to-br transition-transform duration-300 group-hover:scale-110",
-            feature.gradient
-          )}
-        >
-          <HugeiconsIcon
-            className="size-6 text-foreground/80"
-            icon={feature.icon}
-          />
-        </div>
-        <h3 className="mb-2 font-display text-lg font-semibold">
-          {feature.title}
-        </h3>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {feature.description}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// How It Works
-// ---------------------------------------------------------------------------
-
-function HowItWorksSection() {
-  const { t } = useTranslation()
-
-  const steps = [
-    {
-      number: "1",
-      title: t("landing.howItWorks.step1.title", "Capture"),
-      description: t(
-        "landing.howItWorks.step1.desc",
-        "Jot down ideas, highlights, or learnings as they come. Use the rich editor, quick capture, or paste from anywhere."
-      ),
-      icon: PencilEdit02Icon
-    },
-    {
-      number: "2",
-      title: t("landing.howItWorks.step2.title", "Organize"),
-      description: t(
-        "landing.howItWorks.step2.desc",
-        "Tag your entries, add sources, and let AI help you categorize. Your notes become a structured knowledge base."
-      ),
-      icon: InboxIcon
-    },
-    {
-      number: "3",
-      title: t("landing.howItWorks.step3.title", "Remember"),
-      description: t(
-        "landing.howItWorks.step3.desc",
-        "Spaced repetition surfaces the right notes at the right time. Review, strengthen, and truly retain what you learn."
-      ),
-      icon: BookOpen01Icon
-    }
-  ]
-
-  return (
-    <section className="relative py-20 md:py-28" id="how-it-works">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent via-muted/30 to-transparent" />
-
-      <div className="relative mx-auto max-w-6xl px-6">
-        <SectionHeader
-          badge={t("landing.howItWorks.badge", "Simple Process")}
-          description={t(
-            "landing.howItWorks.description",
-            "Three simple steps to build a knowledge system that works for you."
-          )}
-          title={t("landing.howItWorks.title", "How It Works")}
-        />
-
-        <div className="mt-14 grid gap-8 md:grid-cols-3">
-          {steps.map((step, index) => (
-            <StepCard
-              index={index}
-              isLast={index === steps.length - 1}
-              key={step.number}
-              step={step}
+          {features.map((feature, index) => (
+            <FeatureCard
+              delay={(index % 3) * 0.08}
+              feature={feature}
+              key={feature.title}
             />
           ))}
         </div>
@@ -444,48 +521,149 @@ function HowItWorksSection() {
   )
 }
 
-function StepCard({
-  step,
-  index,
-  isLast
+function FeatureCard({
+  feature,
+  delay
 }: {
-  step: {
-    number: string
-    title: string
-    description: string
-    icon: IconSvgElement
-  }
-  index: number
-  isLast: boolean
+  feature: FeatureItem
+  delay: number
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const visible = useIntersectionFade(ref)
+  const reduced = useReducedMotion()
 
   return (
-    <div
-      className={cn(
-        "relative text-center transition-all duration-500",
-        visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
-      )}
-      ref={ref}
-      style={{ transitionDelay: `${index * 150}ms` }}
-    >
-      {/* Connector line */}
-      {!isLast && (
-        <div className="pointer-events-none absolute top-10 left-[calc(50%+40px)] hidden h-px w-[calc(100%-80px)] bg-linear-to-r from-border to-transparent md:block" />
-      )}
+    <Reveal delay={delay}>
+      <motion.div
+        className="group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur-sm transition-colors hover:border-primary/40"
+        whileHover={reduced ? undefined : { y: -6, scale: 1.015 }}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+            feature.gradient
+          )}
+        />
+        <div className="relative">
+          <motion.div
+            className={cn(
+              "mb-4 flex size-14 items-center justify-center rounded-2xl bg-linear-to-br",
+              feature.gradient
+            )}
+            whileHover={reduced ? undefined : { rotate: -8, scale: 1.1 }}
+          >
+            <HugeiconsIcon
+              className="size-7 text-primary"
+              icon={feature.icon}
+            />
+          </motion.div>
+          <h3 className="mb-2 font-display text-xl font-semibold">
+            {feature.title}
+          </h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {feature.description}
+          </p>
+        </div>
+      </motion.div>
+    </Reveal>
+  )
+}
 
-      <div className="relative mx-auto mb-5 flex size-20 items-center justify-center rounded-2xl border border-border/50 bg-card/80 shadow-sm backdrop-blur-sm">
-        <span className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full bg-primary font-number text-sm font-bold text-primary-foreground">
+// ---------------------------------------------------------------------------
+// How It Works
+// ---------------------------------------------------------------------------
+
+interface StepItem {
+  number: string
+  title: string
+  description: string
+  icon: IconSvgElement
+  object: string
+}
+
+function HowItWorksSection() {
+  const { t } = useTranslation()
+
+  const steps: StepItem[] = [
+    {
+      number: "1",
+      title: t("landing.howItWorks.step1.title", "Capture"),
+      description: t(
+        "landing.howItWorks.step1.desc",
+        "Jot ideas, highlights, and learnings as they come. Rich editor, quick capture, paste from anywhere."
+      ),
+      icon: PencilEdit02Icon,
+      object: OBJECT_BOOK
+    },
+    {
+      number: "2",
+      title: t("landing.howItWorks.step2.title", "Organize"),
+      description: t(
+        "landing.howItWorks.step2.desc",
+        "Tag your entries, add sources, and let AI help categorize. Your notes become a living knowledge base."
+      ),
+      icon: InboxIcon,
+      object: OBJECT_BOOKMARK
+    },
+    {
+      number: "3",
+      title: t("landing.howItWorks.step3.title", "Remember"),
+      description: t(
+        "landing.howItWorks.step3.desc",
+        "Spaced review surfaces the right notes at the right time. Revisit, strengthen, and truly retain."
+      ),
+      icon: BookOpen01Icon,
+      object: OBJECT_LENS
+    }
+  ]
+
+  return (
+    <section className="relative py-20 md:py-28" id="how-it-works">
+      <Blob className="top-1/2 left-1/2 size-[520px] -translate-x-1/2 -translate-y-1/2 bg-primary/8" />
+
+      <div className="relative mx-auto max-w-6xl px-6">
+        <SectionHeader
+          badge={t("landing.howItWorks.badge", "Simple Process")}
+          description={t(
+            "landing.howItWorks.description",
+            "Three playful steps to a knowledge system that finally works for you."
+          )}
+          title={t("landing.howItWorks.title", "How It Works")}
+        />
+
+        <div className="mt-16 grid gap-10 md:grid-cols-3">
+          {steps.map((step, index) => (
+            <StepCard delay={index * 0.12} key={step.number} step={step} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function StepCard({ step, delay }: { step: StepItem; delay: number }) {
+  const reduced = useReducedMotion()
+
+  return (
+    <Reveal className="text-center" delay={delay}>
+      <motion.div
+        className="relative mx-auto mb-6 flex size-28 items-center justify-center"
+        whileHover={reduced ? undefined : { scale: 1.06 }}
+      >
+        <div className="absolute inset-0 rounded-[42%_58%_55%_45%/55%_45%_55%_45%] bg-linear-to-br from-primary/15 to-fuchsia-400/15" />
+        <img
+          alt=""
+          aria-hidden="true"
+          className="size-20 drop-shadow-[0_16px_28px_rgba(91,33,182,0.25)]"
+          src={step.object}
+        />
+        <span className="absolute -top-1 -right-1 flex size-9 items-center justify-center rounded-full bg-primary font-number text-base text-primary-foreground shadow-md">
           {step.number}
         </span>
-        <HugeiconsIcon className="size-8 text-primary" icon={step.icon} />
-      </div>
+      </motion.div>
       <h3 className="mb-2 font-display text-xl font-semibold">{step.title}</h3>
       <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
         {step.description}
       </p>
-    </div>
+    </Reveal>
   )
 }
 
@@ -503,23 +681,22 @@ function ShowcaseSection() {
           badge={t("landing.showcase.badge", "Product Tour")}
           description={t(
             "landing.showcase.description",
-            "Powerful tools designed to make learning stick."
+            "Delightful tools designed to make learning stick."
           )}
           title={t(
             "landing.showcase.title",
-            "Everything You Need, Nothing You Don\u2019t"
+            "Everything You Need, Nothing You Don’t"
           )}
         />
 
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* Large card - AI Chat */}
           <BentoCard
             className="lg:col-span-2"
+            delay={0}
             description={t(
               "landing.showcase.ai.desc",
-              "Have a conversation with your knowledge base. Ask questions, get summaries, and discover insights you never knew existed."
+              "Have a conversation with your knowledge base. Ask questions, get summaries, and discover insights you never knew were there."
             )}
-            gradient="from-emerald-500/10 to-teal-500/10"
             icon={AiChat02Icon}
             title={t("landing.showcase.ai.title", "AI-Powered Chat")}
           >
@@ -535,19 +712,18 @@ function ShowcaseSection() {
                 isAi
                 text={t(
                   "landing.showcase.ai.aiMsg",
-                  "Based on your 3 entries from last week, you explored useEffect cleanup, custom hooks patterns, and..."
+                  "From your 3 entries last week: useEffect cleanup, custom hook patterns, and the rules of hooks…"
                 )}
               />
             </div>
           </BentoCard>
 
-          {/* Knowledge Graph */}
           <BentoCard
+            delay={0.08}
             description={t(
               "landing.showcase.graph.desc",
-              "See how your notes connect. Explore topics and discover hidden relationships."
+              "See how your notes connect. Explore topics and uncover hidden relationships."
             )}
-            gradient="from-cyan-500/10 to-sky-500/10"
             icon={GridViewIcon}
             title={t("landing.showcase.graph.title", "Knowledge Graph")}
           >
@@ -556,26 +732,25 @@ function ShowcaseSection() {
             </div>
           </BentoCard>
 
-          {/* Spaced Review */}
           <BentoCard
+            delay={0.16}
             description={t(
               "landing.showcase.review.desc",
-              "Science-backed review scheduling to help you remember what matters most."
+              "Science-backed review scheduling that helps you remember what matters most."
             )}
-            gradient="from-amber-500/10 to-orange-500/10"
             icon={Calendar03Icon}
             title={t("landing.showcase.review.title", "Spaced Repetition")}
           >
             <div className="mt-4 flex gap-2">
-              {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, i) => (
+              {REVIEW_DAYS.map((day, i) => (
                 <div className="flex-1 text-center" key={day}>
                   <div
                     className={cn(
-                      "mx-auto mb-1 flex size-8 items-center justify-center rounded-lg font-medium text-xs",
-                      i < 3 &&
-                        "bg-green-500/15 text-green-600 dark:text-green-400",
-                      i === 3 && "bg-primary/15 text-primary",
-                      i > 3 && "bg-muted/50 text-muted-foreground"
+                      "mx-auto mb-1 flex size-8 items-center justify-center rounded-xl font-medium text-xs",
+                      i < 3 && "bg-primary/20 text-primary",
+                      i === 3 &&
+                        "bg-fuchsia-400/25 text-fuchsia-600 dark:text-fuchsia-300",
+                      i > 3 && "bg-muted/60 text-muted-foreground"
                     )}
                   >
                     {i < 3 ? (
@@ -593,22 +768,21 @@ function ShowcaseSection() {
             </div>
           </BentoCard>
 
-          {/* Rich Editor */}
           <BentoCard
             className="lg:col-span-2"
+            delay={0.24}
             description={t(
               "landing.showcase.editor.desc",
-              "A beautiful, distraction-free editor with markdown, code blocks, and rich media support."
+              "A beautiful, distraction-free editor with markdown, code blocks, and rich media."
             )}
-            gradient="from-violet-500/10 to-purple-500/10"
             icon={PencilEdit02Icon}
             title={t("landing.showcase.editor.title", "Rich Text Editor")}
           >
-            <div className="mt-4 rounded-lg border border-border/30 bg-card/50 p-4">
-              <div className="mb-3 flex gap-2 border-b border-border/30 pb-3">
-                {["B", "I", "U", "H1", "H2", "</>"].map((btn) => (
+            <div className="mt-4 rounded-2xl border border-border/40 bg-background/60 p-4">
+              <div className="mb-3 flex gap-2 border-b border-border/40 pb-3">
+                {EDITOR_TOOLS.map((btn) => (
                   <div
-                    className="flex size-7 items-center justify-center rounded bg-muted/40 font-mono text-xs text-muted-foreground"
+                    className="flex size-7 items-center justify-center rounded-lg bg-muted/50 font-mono text-xs text-muted-foreground"
                     key={btn}
                   >
                     {btn}
@@ -616,9 +790,15 @@ function ShowcaseSection() {
                 ))}
               </div>
               <div className="space-y-2">
-                <div className="h-2.5 w-4/5 rounded-full bg-foreground/10" />
-                <div className="h-2.5 w-full rounded-full bg-foreground/8" />
-                <div className="h-2.5 w-3/5 rounded-full bg-foreground/6" />
+                {EDITOR_LINES.map((line) => (
+                  <div
+                    className={cn(
+                      "h-2.5 rounded-full bg-primary/15",
+                      line.width
+                    )}
+                    key={line.id}
+                  />
+                ))}
               </div>
             </div>
           </BentoCard>
@@ -628,49 +808,49 @@ function ShowcaseSection() {
   )
 }
 
+const REVIEW_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const
+const EDITOR_TOOLS = ["B", "I", "U", "H1", "H2", "</>"] as const
+const EDITOR_LINES = [
+  { id: "a", width: "w-4/5" },
+  { id: "b", width: "w-full" },
+  { id: "c", width: "w-3/5" }
+] as const
+
 function BentoCard({
   icon,
   title,
   description,
-  gradient,
   className,
+  delay,
   children
 }: {
   icon: IconSvgElement
   title: string
   description: string
-  gradient: string
   className?: string
-  children?: React.ReactNode
+  delay: number
+  children?: ReactNode
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const visible = useIntersectionFade(ref)
+  const reduced = useReducedMotion()
 
   return (
-    <div
-      className={cn(
-        "group overflow-hidden rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-sm transition-all duration-300 hover:border-primary/20 hover:shadow-lg",
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-        className
-      )}
-      ref={ref}
-    >
-      <div className="mb-3 flex items-center gap-3">
-        <div
-          className={cn(
-            "flex size-10 items-center justify-center rounded-xl bg-linear-to-br",
-            gradient
-          )}
-        >
-          <HugeiconsIcon className="size-5 text-foreground/80" icon={icon} />
+    <Reveal className={className} delay={delay}>
+      <motion.div
+        className="group h-full overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur-sm transition-colors hover:border-primary/30"
+        whileHover={reduced ? undefined : { y: -4 }}
+      >
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-primary/20 to-fuchsia-400/20">
+            <HugeiconsIcon className="size-5 text-primary" icon={icon} />
+          </div>
+          <h3 className="font-display text-lg font-semibold">{title}</h3>
         </div>
-        <h3 className="font-display text-lg font-semibold">{title}</h3>
-      </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-      {children}
-    </div>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+        {children}
+      </motion.div>
+    </Reveal>
   )
 }
 
@@ -681,7 +861,7 @@ function ChatBubble({ text, isAi }: { text: string; isAi: boolean }) {
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
           isAi
-            ? "rounded-tl-sm bg-muted/60 text-foreground"
+            ? "rounded-tl-sm bg-muted/70 text-foreground"
             : "rounded-tr-sm bg-primary/15 text-foreground"
         )}
       >
@@ -692,21 +872,6 @@ function ChatBubble({ text, isAi }: { text: string; isAi: boolean }) {
 }
 
 function GraphMock() {
-  const nodes = [
-    { x: 50, y: 30, size: 10, label: "React" },
-    { x: 25, y: 60, size: 8, label: "Hooks" },
-    { x: 75, y: 55, size: 9, label: "State" },
-    { x: 40, y: 85, size: 7, label: "Effects" },
-    { x: 70, y: 80, size: 6, label: "Memo" }
-  ]
-  const edges: [number, number][] = [
-    [0, 1],
-    [0, 2],
-    [1, 3],
-    [2, 4],
-    [1, 2]
-  ]
-
   return (
     <svg
       aria-label="Knowledge graph visualization"
@@ -715,9 +880,9 @@ function GraphMock() {
       role="img"
       viewBox="0 0 100 100"
     >
-      {edges.map(([from, to]) => {
-        const a = nodes.at(from)
-        const b = nodes.at(to)
+      {GRAPH_EDGES.map(([from, to]) => {
+        const a = GRAPH_NODES.at(from)
+        const b = GRAPH_NODES.at(to)
         if (!(a && b)) {
           return null
         }
@@ -725,7 +890,7 @@ function GraphMock() {
           <line
             key={`${from}-${to}`}
             stroke="currentColor"
-            strokeOpacity="0.2"
+            strokeOpacity="0.25"
             strokeWidth="0.5"
             x1={a.x}
             x2={b.x}
@@ -734,20 +899,20 @@ function GraphMock() {
           />
         )
       })}
-      {nodes.map((node) => (
+      {GRAPH_NODES.map((node) => (
         <g key={node.label}>
           <circle
             cx={node.x}
             cy={node.y}
             fill="currentColor"
-            fillOpacity="0.15"
+            fillOpacity="0.18"
             r={node.size}
           />
           <circle
             cx={node.x}
             cy={node.y}
             fill="currentColor"
-            fillOpacity="0.6"
+            fillOpacity="0.7"
             r={node.size * 0.4}
           />
           <text
@@ -766,14 +931,35 @@ function GraphMock() {
   )
 }
 
+const GRAPH_NODES = [
+  { x: 50, y: 30, size: 10, label: "React" },
+  { x: 25, y: 60, size: 8, label: "Hooks" },
+  { x: 75, y: 55, size: 9, label: "State" },
+  { x: 40, y: 85, size: 7, label: "Effects" },
+  { x: 70, y: 80, size: 6, label: "Memo" }
+] as const
+const GRAPH_EDGES: [number, number][] = [
+  [0, 1],
+  [0, 2],
+  [1, 3],
+  [2, 4],
+  [1, 2]
+]
+
 // ---------------------------------------------------------------------------
-// Stats / Social Proof
+// Stats
 // ---------------------------------------------------------------------------
+
+interface StatItem {
+  value: string
+  label: string
+  icon: IconSvgElement
+}
 
 function StatsSection() {
   const { t } = useTranslation()
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       value: "6+",
       label: t("landing.stats.features", "Core Features"),
@@ -798,12 +984,12 @@ function StatsSection() {
 
   return (
     <section className="relative py-20 md:py-28">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent via-muted/30 to-transparent" />
+      <Blob className="top-1/2 left-1/2 size-[460px] -translate-x-1/2 -translate-y-1/2 bg-fuchsia-400/8" />
 
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <StatCard key={stat.label} stat={stat} />
+          {stats.map((stat, index) => (
+            <StatCard delay={(index % 4) * 0.08} key={stat.label} stat={stat} />
           ))}
         </div>
       </div>
@@ -811,30 +997,22 @@ function StatsSection() {
   )
 }
 
-function StatCard({
-  stat
-}: {
-  stat: { value: string; label: string; icon: IconSvgElement }
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const visible = useIntersectionFade(ref)
+function StatCard({ stat, delay }: { stat: StatItem; delay: number }) {
+  const reduced = useReducedMotion()
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-border/50 bg-card/50 p-6 text-center backdrop-blur-sm transition-all duration-500",
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      )}
-      ref={ref}
-    >
-      <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10">
-        <HugeiconsIcon className="size-6 text-primary" icon={stat.icon} />
-      </div>
-      <p className="font-display text-3xl font-bold tabular-nums">
-        {stat.value}
-      </p>
-      <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-    </div>
+    <Reveal delay={delay}>
+      <motion.div
+        className="rounded-3xl border border-border/60 bg-card/70 p-6 text-center shadow-sm backdrop-blur-sm"
+        whileHover={reduced ? undefined : { y: -4, scale: 1.02 }}
+      >
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/15">
+          <HugeiconsIcon className="size-6 text-primary" icon={stat.icon} />
+        </div>
+        <p className="font-number text-4xl text-primary">{stat.value}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+      </motion.div>
+    </Reveal>
   )
 }
 
@@ -844,37 +1022,60 @@ function StatCard({
 
 function FinalCTASection() {
   const { t } = useTranslation()
+  const reduced = useReducedMotion()
 
   return (
     <section className="relative py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card/50 p-10 text-center backdrop-blur-sm md:p-16">
-          <div className="pointer-events-none absolute -top-20 left-1/2 size-[400px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-          <div className="pointer-events-none absolute -right-20 -bottom-20 size-[300px] rounded-full bg-purple-400/10 blur-3xl" />
+        <Reveal>
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-card/70 px-6 py-14 text-center shadow-lg backdrop-blur-sm md:px-16 md:py-20">
+            <Blob className="-top-24 left-1/3 size-[420px] bg-primary/20" />
+            <Blob
+              className="-right-16 -bottom-24 size-[320px] bg-fuchsia-400/20"
+              shape="60% 40% 30% 70% / 60% 30% 70% 40%"
+            />
 
-          <div className="relative">
-            <h2 className="font-display text-3xl font-bold md:text-4xl">
-              {t("landing.cta.title", "Ready to Build Your Knowledge System?")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              {t(
-                "landing.cta.description",
-                "Join learners who use FolioNote to capture, organize, and remember everything they learn."
-              )}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link to="/register">
-                <Button
-                  className="cursor-pointer gap-2 px-8 text-base"
-                  size="lg"
-                >
-                  {t("landing.cta.button", "Get Started for Free")}
-                  <HugeiconsIcon className="size-5" icon={ArrowRight02Icon} />
-                </Button>
-              </Link>
+            <FloatObject
+              alt=""
+              className="mx-auto mb-6 size-24 md:size-28"
+              floatDistance={14}
+              src={OBJECT_BOOK}
+            />
+
+            <div className="relative">
+              <h2 className="font-display text-3xl font-bold md:text-5xl">
+                {t("landing.cta.title", "Ready to build your")}{" "}
+                <span className="font-script font-normal text-primary">
+                  {t("landing.cta.titleAccent", "knowledge system")}
+                </span>
+                ?
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
+                {t(
+                  "landing.cta.description",
+                  "Join the learners using FolioNote to capture, organize, and remember everything they learn."
+                )}
+              </p>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+                <Link to="/register">
+                  <motion.span
+                    className="inline-block"
+                    whileHover={reduced ? undefined : { scale: 1.04 }}
+                    whileTap={reduced ? undefined : { scale: 0.97 }}
+                  >
+                    <Button className="h-12 cursor-pointer gap-2 rounded-full px-8 text-base shadow-lg shadow-primary/20">
+                      {t("landing.cta.button", "Get started for free")}
+                      <HugeiconsIcon
+                        className="size-5"
+                        icon={ArrowRight02Icon}
+                      />
+                    </Button>
+                  </motion.span>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -886,9 +1087,10 @@ function FinalCTASection() {
 
 function LandingFooter() {
   const { t } = useTranslation()
+  const year = new Date().getFullYear()
 
   return (
-    <footer className="border-t border-border/50 py-10">
+    <footer className="border-t border-border/60 py-10">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-2.5">
@@ -898,7 +1100,7 @@ function LandingFooter() {
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
             <a
               className="cursor-pointer transition-colors hover:text-foreground"
               href="#features"
@@ -929,9 +1131,7 @@ function LandingFooter() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            {t("landing.footer.copyright", "\u00A9 {{year}} FolioNote", {
-              year: new Date().getFullYear()
-            })}
+            {t("landing.footer.copyright", "© {{year}} FolioNote", { year })}
           </p>
         </div>
       </div>
@@ -940,7 +1140,7 @@ function LandingFooter() {
 }
 
 // ---------------------------------------------------------------------------
-// Shared Components & Hooks
+// Shared
 // ---------------------------------------------------------------------------
 
 function SectionHeader({
@@ -952,18 +1152,9 @@ function SectionHeader({
   title: string
   description: string
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const visible = useIntersectionFade(ref)
-
   return (
-    <div
-      className={cn(
-        "mx-auto max-w-2xl text-center transition-all duration-500",
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      )}
-      ref={ref}
-    >
-      <Badge className="mb-4 px-3 py-1" variant="secondary">
+    <Reveal className="mx-auto max-w-2xl text-center">
+      <Badge className="mb-4 rounded-full px-3 py-1" variant="secondary">
         {badge}
       </Badge>
       <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
@@ -972,41 +1163,8 @@ function SectionHeader({
       <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
         {description}
       </p>
-    </div>
+    </Reveal>
   )
-}
-
-function useIntersectionFade(ref: React.RefObject<HTMLElement | null>) {
-  const [visible, setVisible] = useState(false)
-
-  const callback = useCallback((entries: IntersectionObserverEntry[]) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        setVisible(true)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) {
-      return
-    }
-
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches
-    if (prefersReduced) {
-      setVisible(true)
-      return
-    }
-
-    const observer = new IntersectionObserver(callback, { threshold: 0.15 })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [ref, callback])
-
-  return visible
 }
 
 // ---------------------------------------------------------------------------
