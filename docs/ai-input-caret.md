@@ -27,7 +27,7 @@ ChatInput 支持两种附件类型，均采用受控模式：
 
 ```tsx
 <ChatInput
-  attachedNotes={[{ id: '1', title: 'Note Title' }]}
+  attachedNotes={[{ id: "1", title: "Note Title" }]}
   onRemoveNoteAttachment={(noteId) => handleRemoveNote(noteId)}
   // ...其他 props
 />
@@ -39,7 +39,15 @@ ChatInput 支持两种附件类型，均采用受控模式：
 
 ```tsx
 <ChatInput
-  attachedFiles={[{ id: '1', type: 'file', url: '...', mediaType: 'image/png', filename: 'screenshot.png' }]}
+  attachedFiles={[
+    {
+      id: "1",
+      type: "file",
+      url: "...",
+      mediaType: "image/png",
+      filename: "screenshot.png"
+    }
+  ]}
   onRemoveFileAttachment={(fileId) => handleRemoveFile(fileId)}
   // ...其他 props
 />

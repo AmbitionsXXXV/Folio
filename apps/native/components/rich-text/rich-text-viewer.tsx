@@ -1,17 +1,17 @@
-'use dom'
+"use dom"
 
-import type { JSONContent } from '@tiptap/core'
-import { EditorContent, useEditor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { cn } from 'heroui-native'
-import { useEffect } from 'react'
+import type { JSONContent } from "@tiptap/core"
+import { EditorContent, useEditor } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import { cn } from "heroui-native"
+import { useEffect } from "react"
 
-type RichTextViewerProps = {
-	dom?: import('expo/dom').DOMProps
-	/** ProseMirror JSON content string */
-	content: string
-	/** Dark mode */
-	isDark?: boolean
+interface RichTextViewerProps {
+  dom?: import("expo/dom").DOMProps
+  /** ProseMirror JSON content string */
+  content: string
+  /** Dark mode */
+  isDark?: boolean
 }
 
 /**
@@ -19,77 +19,77 @@ type RichTextViewerProps = {
  * Renders ProseMirror JSON content in a WebView.
  */
 export default function RichTextViewer({
-	content,
-	isDark = false,
+  content,
+  isDark = false
 }: RichTextViewerProps) {
-	const editor = useEditor({
-		extensions: [
-			StarterKit.configure({
-				heading: {
-					levels: [1, 2, 3],
-				},
-			}),
-		],
-		content: parseContent(content),
-		editable: false,
-		immediatelyRender: false,
-	})
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3]
+        }
+      })
+    ],
+    content: parseContent(content),
+    editable: false,
+    immediatelyRender: false
+  })
 
-	// Update content when it changes
-	useEffect(() => {
-		if (editor && content) {
-			const parsed = parseContent(content)
-			editor.commands.setContent(parsed)
-		}
-	}, [content, editor])
+  // Update content when it changes
+  useEffect(() => {
+    if (editor && content) {
+      const parsed = parseContent(content)
+      editor.commands.setContent(parsed)
+    }
+  }, [content, editor])
 
-	return (
-		<div className={cn('rich-text-viewer', isDark ? 'dark' : '')}>
-			<style>{getStyles(isDark)}</style>
-			<EditorContent editor={editor} />
-		</div>
-	)
+  return (
+    <div className={cn("rich-text-viewer", isDark ? "dark" : "")}>
+      <style>{getStyles(isDark)}</style>
+      <EditorContent editor={editor} />
+    </div>
+  )
 }
 
 /**
  * Parse content string to JSONContent
  */
 function parseContent(content: string): string | JSONContent {
-	if (!content) {
-		return ''
-	}
+  if (!content) {
+    return ""
+  }
 
-	try {
-		return JSON.parse(content) as JSONContent
-	} catch {
-		// If JSON parse fails, treat as HTML
-		return content
-	}
+  try {
+    return JSON.parse(content) as JSONContent
+  } catch {
+    // If JSON parse fails, treat as HTML
+    return content
+  }
 }
 
 /**
  * Get CSS styles for the viewer
  */
 function getStyles(isDark: boolean): string {
-	const colors = isDark
-		? {
-				background: '#1a1614',
-				foreground: '#e8e4e1',
-				muted: '#a3a3a3',
-				primary: '#a78bfa',
-				border: '#3f3f46',
-				codeBackground: '#0d1117',
-			}
-		: {
-				background: '#ffffff',
-				foreground: '#1f2937',
-				muted: '#6b7280',
-				primary: '#8b5cf6',
-				border: '#e5e7eb',
-				codeBackground: '#f3f4f6',
-			}
+  const colors = isDark
+    ? {
+        background: "#1a1614",
+        foreground: "#e8e4e1",
+        muted: "#a3a3a3",
+        primary: "#a78bfa",
+        border: "#3f3f46",
+        codeBackground: "#0d1117"
+      }
+    : {
+        background: "#ffffff",
+        foreground: "#1f2937",
+        muted: "#6b7280",
+        primary: "#8b5cf6",
+        border: "#e5e7eb",
+        codeBackground: "#f3f4f6"
+      }
 
-	return `
+  return `
     * {
       box-sizing: border-box;
       margin: 0;

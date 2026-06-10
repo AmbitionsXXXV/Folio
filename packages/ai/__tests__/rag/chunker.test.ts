@@ -1,66 +1,68 @@
-import { describe, expect, it } from 'vitest'
-import { splitEntryContent } from '../../src/rag/chunker'
+import { describe, expect, it } from "vite-plus/test"
 
-describe('splitEntryContent', () => {
-	it('returns empty array for blank input', async () => {
-		const result = await splitEntryContent('Title', '')
-		expect(result).toEqual([])
+import { splitEntryContent } from "../../src/rag/chunker"
 
-		const whitespaceResult = await splitEntryContent('Title', '   ')
-		expect(whitespaceResult).toEqual([])
-	})
+describe("splitEntryContent", () => {
+  it("returns empty array for blank input", async () => {
+    const result = await splitEntryContent("Title", "")
+    expect(result).toEqual([])
 
-	it('returns single chunk for short content', async () => {
-		const result = await splitEntryContent('My Note', 'Short content here.')
-		expect(result).toHaveLength(1)
-		expect(result.at(0)?.chunkIndex).toBe(0)
-		expect(result.at(0)?.content).toBe('# My Note\n\nShort content here.')
-		expect(result.at(0)?.metadata).toEqual({ isFullContent: true })
-	})
+    const whitespaceResult = await splitEntryContent("Title", "   ")
+    expect(whitespaceResult).toEqual([])
+  })
 
-	it('prefixes each chunk with title', async () => {
-		const longContent = 'A'.repeat(1000)
-		const result = await splitEntryContent('Test Title', longContent)
-		for (const chunk of result) {
-			expect(chunk.content.startsWith('# Test Title\n\n')).toBe(true)
-		}
-	})
+  it("returns single chunk for short content", async () => {
+    const result = await splitEntryContent("My Note", "Short content here.")
+    expect(result).toHaveLength(1)
+    expect(result.at(0)?.chunkIndex).toBe(0)
+    expect(result.at(0)?.content).toBe("# My Note\n\nShort content here.")
+    expect(result.at(0)?.metadata).toEqual({ isFullContent: true })
+  })
 
-	it('handles empty title gracefully', async () => {
-		const result = await splitEntryContent('', 'Short text')
-		expect(result.at(0)?.content).toBe('Short text')
-	})
+  it("prefixes each chunk with title", async () => {
+    const longContent = "A".repeat(1000)
+    const result = await splitEntryContent("Test Title", longContent)
+    for (const chunk of result) {
+      expect(chunk.content.startsWith("# Test Title\n\n")).toBe(true)
+    }
+  })
 
-	it('splits long content into multiple chunks', async () => {
-		const paragraphs = Array.from(
-			{ length: 20 },
-			(_, i) => `Paragraph ${i + 1}: ${'Lorem ipsum dolor sit amet. '.repeat(5)}`
-		).join('\n\n')
+  it("handles empty title gracefully", async () => {
+    const result = await splitEntryContent("", "Short text")
+    expect(result.at(0)?.content).toBe("Short text")
+  })
 
-		const result = await splitEntryContent('Long Note', paragraphs)
-		expect(result.length).toBeGreaterThan(1)
+  it("splits long content into multiple chunks", async () => {
+    const paragraphs = Array.from(
+      { length: 20 },
+      (_, i) =>
+        `Paragraph ${i + 1}: ${"Lorem ipsum dolor sit amet. ".repeat(5)}`
+    ).join("\n\n")
 
-		for (let i = 0; i < result.length; i++) {
-			expect(result.at(i)?.chunkIndex).toBe(i)
-		}
-	})
+    const result = await splitEntryContent("Long Note", paragraphs)
+    expect(result.length).toBeGreaterThan(1)
 
-	it('respects custom chunk size', async () => {
-		const content = 'Word '.repeat(200)
-		const small = await splitEntryContent('T', content, { chunkSize: 100 })
-		const large = await splitEntryContent('T', content, { chunkSize: 2000 })
-		expect(small.length).toBeGreaterThan(large.length)
-	})
+    for (let i = 0; i < result.length; i++) {
+      expect(result.at(i)?.chunkIndex).toBe(i)
+    }
+  })
 
-	it('handles Chinese text with proper separators', async () => {
-		const zhContent = Array.from(
-			{ length: 30 },
-			(_, i) =>
-				`第${i + 1}段：这是一段中文文本，用于测试分块功能。每段文本都有一定长度，确保能够触发分块逻辑。`
-		).join('\n\n')
+  it("respects custom chunk size", async () => {
+    const content = "Word ".repeat(200)
+    const small = await splitEntryContent("T", content, { chunkSize: 100 })
+    const large = await splitEntryContent("T", content, { chunkSize: 2000 })
+    expect(small.length).toBeGreaterThan(large.length)
+  })
 
-		const result = await splitEntryContent('中文笔记', zhContent)
-		expect(result.length).toBeGreaterThan(1)
-		expect(result.at(0)?.content).toContain('# 中文笔记')
-	})
+  it("handles Chinese text with proper separators", async () => {
+    const zhContent = Array.from(
+      { length: 30 },
+      (_, i) =>
+        `第${i + 1}段：这是一段中文文本，用于测试分块功能。每段文本都有一定长度，确保能够触发分块逻辑。`
+    ).join("\n\n")
+
+    const result = await splitEntryContent("中文笔记", zhContent)
+    expect(result.length).toBeGreaterThan(1)
+    expect(result.at(0)?.content).toContain("# 中文笔记")
+  })
 })

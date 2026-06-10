@@ -1,30 +1,30 @@
 /**
  * Time unit types for i18n
  */
-export type TimeUnit = 'second' | 'minute' | 'hour' | 'day'
+export type TimeUnit = "second" | "minute" | "hour" | "day"
 
 /**
  * Formatted time result with value and unit
  */
 export interface FormattedTime {
-	unit: TimeUnit
-	value: number
+  unit: TimeUnit
+  value: number
 }
 
 /**
  * Time formatting options
  */
 export interface FormatTimeOptions {
-	/**
-	 * Maximum unit to use (e.g., 'hour' will not convert to days)
-	 * @default 'day'
-	 */
-	maxUnit?: TimeUnit
-	/**
-	 * Whether to use precise values (e.g., 1.5 hours) or round up
-	 * @default false - rounds up to nearest integer
-	 */
-	precise?: boolean
+  /**
+   * Maximum unit to use (e.g., 'hour' will not convert to days)
+   * @default 'day'
+   */
+  maxUnit?: TimeUnit
+  /**
+   * Whether to use precise values (e.g., 1.5 hours) or round up
+   * @default false - rounds up to nearest integer
+   */
+  precise?: boolean
 }
 
 /**
@@ -43,33 +43,33 @@ export interface FormatTimeOptions {
  * ```
  */
 export function formatTime(
-	seconds: number,
-	options: FormatTimeOptions = {}
+  seconds: number,
+  options: FormatTimeOptions = {}
 ): FormattedTime {
-	const { precise = false, maxUnit = 'day' } = options
+  const { precise = false, maxUnit = "day" } = options
 
-	// Order matters: check from largest to smallest unit
-	const units: Array<{ threshold: number; unit: TimeUnit; divisor: number }> = [
-		{ threshold: 86_400, unit: 'day', divisor: 86_400 }, // 24 * 60 * 60
-		{ threshold: 3600, unit: 'hour', divisor: 3600 }, // 60 * 60
-		{ threshold: 60, unit: 'minute', divisor: 60 },
-		{ threshold: 0, unit: 'second', divisor: 1 },
-	]
+  // Order matters: check from largest to smallest unit
+  const units: { threshold: number; unit: TimeUnit; divisor: number }[] = [
+    { threshold: 86_400, unit: "day", divisor: 86_400 }, // 24 * 60 * 60
+    { threshold: 3600, unit: "hour", divisor: 3600 }, // 60 * 60
+    { threshold: 60, unit: "minute", divisor: 60 },
+    { threshold: 0, unit: "second", divisor: 1 }
+  ]
 
-	// Filter units based on maxUnit
-	const maxUnitIndex = units.findIndex((u) => u.unit === maxUnit)
-	const allowedUnits = units.slice(maxUnitIndex)
+  // Filter units based on maxUnit
+  const maxUnitIndex = units.findIndex((u) => u.unit === maxUnit)
+  const allowedUnits = units.slice(maxUnitIndex)
 
-	// Find the appropriate unit
-	for (const { threshold, unit, divisor } of allowedUnits) {
-		if (seconds >= threshold) {
-			const value = precise ? seconds / divisor : Math.ceil(seconds / divisor)
-			return { value, unit }
-		}
-	}
+  // Find the appropriate unit
+  for (const { threshold, unit, divisor } of allowedUnits) {
+    if (seconds >= threshold) {
+      const value = precise ? seconds / divisor : Math.ceil(seconds / divisor)
+      return { value, unit }
+    }
+  }
 
-	// Fallback to seconds
-	return { value: seconds, unit: 'second' }
+  // Fallback to seconds
+  return { value: seconds, unit: "second" }
 }
 
 /**
@@ -77,7 +77,7 @@ export function formatTime(
  * @deprecated Use formatTime instead
  */
 export function formatRateLimitTime(seconds: number): FormattedTime {
-	return formatTime(seconds, { maxUnit: 'hour' })
+  return formatTime(seconds, { maxUnit: "hour" })
 }
 
 /**
@@ -93,8 +93,8 @@ export function formatRateLimitTime(seconds: number): FormattedTime {
  * getTimeUnitKey('minute', 'common') // 'common.timeUnit.minute'
  * ```
  */
-export function getTimeUnitKey(unit: TimeUnit, namespace = 'avatar'): string {
-	return `${namespace}.timeUnit.${unit}`
+export function getTimeUnitKey(unit: TimeUnit, namespace = "avatar"): string {
+  return `${namespace}.timeUnit.${unit}`
 }
 
 /**
@@ -112,16 +112,16 @@ export function getTimeUnitKey(unit: TimeUnit, namespace = 'avatar'): string {
  * ```
  */
 export function formatTimeWithI18n(
-	seconds: number,
-	t: (key: string) => string,
-	options: FormatTimeOptions & { namespace?: string } = {}
+  seconds: number,
+  t: (key: string) => string,
+  options: FormatTimeOptions & { namespace?: string } = {}
 ): { value: number; unit: string } {
-	const { namespace = 'avatar', ...formatOptions } = options
-	const { value, unit } = formatTime(seconds, formatOptions)
-	return {
-		value,
-		unit: t(getTimeUnitKey(unit, namespace)),
-	}
+  const { namespace = "avatar", ...formatOptions } = options
+  const { value, unit } = formatTime(seconds, formatOptions)
+  return {
+    value,
+    unit: t(getTimeUnitKey(unit, namespace))
+  }
 }
 
 /**
@@ -137,21 +137,21 @@ export function formatTimeWithI18n(
  * ```
  */
 export function getTzOffset(): number {
-	return -new Date().getTimezoneOffset()
+  return -new Date().getTimezoneOffset()
 }
 
 /**
  * Greeting key type for i18n
  */
-export type GreetingKey = 'goodMorning' | 'goodAfternoon' | 'goodEvening'
+export type GreetingKey = "goodMorning" | "goodAfternoon" | "goodEvening"
 
 /**
  * Simple greeting key type for i18n (without name parameter)
  */
 export type SimpleGreetingKey =
-	| 'goodMorningSimple'
-	| 'goodAfternoonSimple'
-	| 'goodEveningSimple'
+  | "goodMorningSimple"
+  | "goodAfternoonSimple"
+  | "goodEveningSimple"
 
 /**
  * Get greeting key based on current hour
@@ -166,10 +166,14 @@ export type SimpleGreetingKey =
  * ```
  */
 export function getGreetingKey(): GreetingKey {
-	const hour = new Date().getHours()
-	if (hour < 12) return 'goodMorning'
-	if (hour < 18) return 'goodAfternoon'
-	return 'goodEvening'
+  const hour = new Date().getHours()
+  if (hour < 12) {
+    return "goodMorning"
+  }
+  if (hour < 18) {
+    return "goodAfternoon"
+  }
+  return "goodEvening"
 }
 
 /**
@@ -185,8 +189,12 @@ export function getGreetingKey(): GreetingKey {
  * ```
  */
 export function getSimpleGreetingKey(): SimpleGreetingKey {
-	const hour = new Date().getHours()
-	if (hour < 12) return 'goodMorningSimple'
-	if (hour < 18) return 'goodAfternoonSimple'
-	return 'goodEveningSimple'
+  const hour = new Date().getHours()
+  if (hour < 12) {
+    return "goodMorningSimple"
+  }
+  if (hour < 18) {
+    return "goodAfternoonSimple"
+  }
+  return "goodEveningSimple"
 }

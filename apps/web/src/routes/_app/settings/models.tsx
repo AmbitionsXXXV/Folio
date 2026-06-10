@@ -1,414 +1,419 @@
+import { DEFAULT_MODEL_PROVIDER_LIST, MODEL_TYPES } from "@folionote/model-list"
+import type { ModelType } from "@folionote/model-list"
+import { Button } from "@folionote/ui/button"
+import { Input } from "@folionote/ui/input"
 import {
-	DEFAULT_MODEL_PROVIDER_LIST,
-	MODEL_TYPES,
-	type ModelType,
-} from '@folionote/model-list'
-import { Button } from '@folionote/ui/button'
-import { Input } from '@folionote/ui/input'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@folionote/ui/select"
+import { Skeleton } from "@folionote/ui/skeleton"
+import { Switch } from "@folionote/ui/switch"
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@folionote/ui/select'
-import { Skeleton } from '@folionote/ui/skeleton'
-import { Switch } from '@folionote/ui/switch'
-import { Cancel01Icon, Key01Icon, Search01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { createFileRoute } from '@tanstack/react-router'
-import { useCallback, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { ModelProviderCard } from '@/components/settings/model-provider-card'
-import {
-	type CatalogModel,
-	type CatalogProvider,
-	useAiModelCatalog,
-	useSetModelEnabled,
-	useSetProviderEnabled,
-} from '@/hooks/use-ai-model-catalog'
-import {
-	type ModelProviderConfig,
-	useModelProviderConfig,
-} from '@/hooks/use-model-provider-config'
+  Cancel01Icon,
+  Key01Icon,
+  Search01Icon
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { createFileRoute } from "@tanstack/react-router"
+import { useCallback, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 
-export const Route = createFileRoute('/_app/settings/models')({
-	component: ModelsSettingsPage,
+import { ModelProviderCard } from "@/components/settings/model-provider-card"
+import {
+  useAiModelCatalog,
+  useSetModelEnabled,
+  useSetProviderEnabled
+} from "@/hooks/use-ai-model-catalog"
+import type {
+  CatalogModel,
+  CatalogProvider
+} from "@/hooks/use-ai-model-catalog"
+import { useModelProviderConfig } from "@/hooks/use-model-provider-config"
+import type { ModelProviderConfig } from "@/hooks/use-model-provider-config"
+
+export const Route = createFileRoute("/_app/settings/models")({
+  component: ModelsSettingsPage
 })
 
 function ModelsSettingsPage() {
-	const { t } = useTranslation()
-	const {
-		config,
-		isLoaded,
-		getProviderConfig,
-		updateProviderConfig,
-		removeProviderConfig,
-		setDefaultProvider,
-	} = useModelProviderConfig()
+  const { t } = useTranslation()
+  const {
+    config,
+    isLoaded,
+    getProviderConfig,
+    updateProviderConfig,
+    removeProviderConfig,
+    setDefaultProvider
+  } = useModelProviderConfig()
 
-	const {
-		providers: catalogProviders,
-		models: catalogModels,
-		isLoading: isCatalogLoading,
-	} = useAiModelCatalog()
-	const setModelEnabled = useSetModelEnabled()
-	const setProviderEnabled = useSetProviderEnabled()
+  const {
+    providers: catalogProviders,
+    models: catalogModels,
+    isLoading: isCatalogLoading
+  } = useAiModelCatalog()
+  const setModelEnabled = useSetModelEnabled()
+  const setProviderEnabled = useSetProviderEnabled()
 
-	const [searchQuery, setSearchQuery] = useState('')
-	const [typeFilter, setTypeFilter] = useState<ModelType | 'all'>('all')
+  const [searchQuery, setSearchQuery] = useState("")
+  const [typeFilter, setTypeFilter] = useState<ModelType | "all">("all")
 
-	const handleConfigure = useCallback(
-		(providerId: string, providerConfig: ModelProviderConfig) => {
-			updateProviderConfig(providerId, providerConfig)
-		},
-		[updateProviderConfig]
-	)
+  const handleConfigure = useCallback(
+    (providerId: string, providerConfig: ModelProviderConfig) => {
+      updateProviderConfig(providerId, providerConfig)
+    },
+    [updateProviderConfig]
+  )
 
-	const handleRemove = useCallback(
-		(providerId: string) => {
-			removeProviderConfig(providerId)
-		},
-		[removeProviderConfig]
-	)
+  const handleRemove = useCallback(
+    (providerId: string) => {
+      removeProviderConfig(providerId)
+    },
+    [removeProviderConfig]
+  )
 
-	const handleSetDefault = useCallback(
-		(providerId: string) => {
-			setDefaultProvider(providerId)
-		},
-		[setDefaultProvider]
-	)
+  const handleSetDefault = useCallback(
+    (providerId: string) => {
+      setDefaultProvider(providerId)
+    },
+    [setDefaultProvider]
+  )
 
-	const handleToggleModel = useCallback(
-		(model: CatalogModel) => {
-			setModelEnabled.mutate({
-				providerId: model.providerId,
-				id: model.id,
-				type: model.type as ModelType,
-				enabled: !model.enabled,
-			})
-		},
-		[setModelEnabled]
-	)
+  const handleToggleModel = useCallback(
+    (model: CatalogModel) => {
+      setModelEnabled.mutate({
+        providerId: model.providerId,
+        id: model.id,
+        type: model.type as ModelType,
+        enabled: !model.enabled
+      })
+    },
+    [setModelEnabled]
+  )
 
-	const handleToggleProvider = useCallback(
-		(provider: CatalogProvider) => {
-			setProviderEnabled.mutate({
-				providerId: provider.id,
-				enabled: !provider.enabled,
-			})
-		},
-		[setProviderEnabled]
-	)
+  const handleToggleProvider = useCallback(
+    (provider: CatalogProvider) => {
+      setProviderEnabled.mutate({
+        providerId: provider.id,
+        enabled: !provider.enabled
+      })
+    },
+    [setProviderEnabled]
+  )
 
-	const filteredModels = useMemo(() => {
-		let result = catalogModels
+  const filteredModels = useMemo(() => {
+    let result = catalogModels
 
-		if (typeFilter !== 'all') {
-			result = result.filter((m) => m.type === typeFilter)
-		}
+    if (typeFilter !== "all") {
+      result = result.filter((m) => m.type === typeFilter)
+    }
 
-		if (searchQuery.trim()) {
-			const query = searchQuery.toLowerCase().trim()
-			result = result.filter(
-				(m) =>
-					m.displayName.toLowerCase().includes(query) ||
-					m.id.toLowerCase().includes(query) ||
-					m.providerId.toLowerCase().includes(query)
-			)
-		}
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      result = result.filter(
+        (m) =>
+          m.displayName.toLowerCase().includes(query) ||
+          m.id.toLowerCase().includes(query) ||
+          m.providerId.toLowerCase().includes(query)
+      )
+    }
 
-		return result
-	}, [catalogModels, typeFilter, searchQuery])
+    return result
+  }, [catalogModels, typeFilter, searchQuery])
 
-	const modelsByProvider = useMemo(() => {
-		const grouped = new Map<string, CatalogModel[]>()
-		for (const model of filteredModels) {
-			const existing = grouped.get(model.providerId) || []
-			existing.push(model)
-			grouped.set(model.providerId, existing)
-		}
-		return grouped
-	}, [filteredModels])
+  const modelsByProvider = useMemo(() => {
+    const grouped = new Map<string, CatalogModel[]>()
+    for (const model of filteredModels) {
+      const existing = grouped.get(model.providerId) || []
+      existing.push(model)
+      grouped.set(model.providerId, existing)
+    }
+    return grouped
+  }, [filteredModels])
 
-	const getProviderInfo = useCallback(
-		(providerId: string): CatalogProvider => {
-			return (
-				catalogProviders.find((p) => p.id === providerId) || {
-					id: providerId,
-					name: providerId,
-					enabled: false,
-				}
-			)
-		},
-		[catalogProviders]
-	)
+  const getProviderInfo = useCallback(
+    (providerId: string): CatalogProvider =>
+      catalogProviders.find((p) => p.id === providerId) || {
+        id: providerId,
+        name: providerId,
+        enabled: false
+      },
+    [catalogProviders]
+  )
 
-	const enabledCount = catalogModels.filter((m) => m.enabled).length
-	const totalCount = catalogModels.length
+  const enabledCount = catalogModels.filter((m) => m.enabled).length
+  const totalCount = catalogModels.length
 
-	return (
-		<div className="mx-auto max-w-2xl px-4 py-8 md:px-8 md:py-10">
-			{/* Header */}
-			<div className="mb-8">
-				<h1 className="font-bold text-xl md:text-2xl">
-					{t('settings.models.title')}
-				</h1>
-				<p className="mt-1 text-muted-foreground text-sm">
-					{t('settings.models.description')}
-				</p>
-			</div>
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-8 md:px-8 md:py-10">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-xl font-bold md:text-2xl">
+          {t("settings.models.title")}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("settings.models.description")}
+        </p>
+      </div>
 
-			{/* BYOK callout */}
-			<div className="mb-6 flex items-start gap-3 rounded-lg border border-border/60 bg-muted/30 p-4">
-				<HugeiconsIcon
-					className="mt-0.5 size-5 shrink-0 text-primary"
-					icon={Key01Icon}
-				/>
-				<div className="flex-1">
-					<p className="font-medium text-sm">{t('settings.models.byokTitle')}</p>
-					<p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">
-						{t('settings.models.byokDescription')}
-					</p>
-				</div>
-			</div>
+      {/* BYOK callout */}
+      <div className="mb-6 flex items-start gap-3 rounded-lg border border-border/60 bg-muted/30 p-4">
+        <HugeiconsIcon
+          className="mt-0.5 size-5 shrink-0 text-primary"
+          icon={Key01Icon}
+        />
+        <div className="flex-1">
+          <p className="text-sm font-medium">
+            {t("settings.models.byokTitle")}
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+            {t("settings.models.byokDescription")}
+          </p>
+        </div>
+      </div>
 
-			{/* Provider Cards */}
-			<div className="space-y-3">
-				{isLoaded ? (
-					DEFAULT_MODEL_PROVIDER_LIST.map((provider) => (
-						<ModelProviderCard
-							config={getProviderConfig(provider.id)}
-							isDefault={config.defaultProvider === provider.id}
-							key={provider.id}
-							onConfigure={handleConfigure}
-							onRemove={handleRemove}
-							onSetDefault={handleSetDefault}
-							provider={provider}
-						/>
-					))
-				) : (
-					<div className="space-y-3">
-						{[1, 2, 3, 4].map((i) => (
-							<Skeleton className="h-20 w-full rounded-xl" key={i} />
-						))}
-					</div>
-				)}
-			</div>
+      {/* Provider Cards */}
+      <div className="space-y-3">
+        {isLoaded ? (
+          DEFAULT_MODEL_PROVIDER_LIST.map((provider) => (
+            <ModelProviderCard
+              config={getProviderConfig(provider.id)}
+              isDefault={config.defaultProvider === provider.id}
+              key={provider.id}
+              onConfigure={handleConfigure}
+              onRemove={handleRemove}
+              onSetDefault={handleSetDefault}
+              provider={provider}
+            />
+          ))
+        ) : (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton className="h-20 w-full rounded-xl" key={i} />
+            ))}
+          </div>
+        )}
+      </div>
 
-			{/* Model List */}
-			<div className="mt-10">
-				<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex items-center gap-2 text-muted-foreground text-sm">
-						<span>
-							{t('settings.models.modelList.enabledCount', {
-								count: enabledCount,
-							})}
-						</span>
-						<span className="text-muted-foreground/30">/</span>
-						<span>
-							{t('settings.models.modelList.totalCount', {
-								count: totalCount,
-							})}
-						</span>
-					</div>
+      {/* Model List */}
+      <div className="mt-10">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {t("settings.models.modelList.enabledCount", {
+                count: enabledCount
+              })}
+            </span>
+            <span className="text-muted-foreground/30">/</span>
+            <span>
+              {t("settings.models.modelList.totalCount", {
+                count: totalCount
+              })}
+            </span>
+          </div>
 
-					<div className="flex items-center gap-2">
-						<Select
-							onValueChange={(value) => setTypeFilter(value as ModelType | 'all')}
-							value={typeFilter}
-						>
-							<SelectTrigger className="h-8 w-[120px]">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">
-									{t('settings.models.modelList.allTypes')}
-								</SelectItem>
-								{MODEL_TYPES.map((type) => (
-									<SelectItem key={type} value={type}>
-										{t(`settings.models.modelList.type.${type}`)}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+          <div className="flex items-center gap-2">
+            <Select
+              onValueChange={(value) =>
+                setTypeFilter(value as ModelType | "all")
+              }
+              value={typeFilter}
+            >
+              <SelectTrigger className="h-8 w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("settings.models.modelList.allTypes")}
+                </SelectItem>
+                {MODEL_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {t(`settings.models.modelList.type.${type}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-						<div className="relative">
-							<HugeiconsIcon
-								className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-								icon={Search01Icon}
-							/>
-							<Input
-								className="h-8 w-[180px] pr-7 pl-8 text-sm"
-								onChange={(e) => setSearchQuery(e.target.value)}
-								placeholder={t('settings.models.modelList.searchPlaceholder')}
-								value={searchQuery}
-							/>
-							{searchQuery && (
-								<Button
-									className="absolute top-1/2 right-1 size-5 -translate-y-1/2"
-									onClick={() => setSearchQuery('')}
-									size="icon"
-									variant="ghost"
-								>
-									<HugeiconsIcon className="size-3" icon={Cancel01Icon} />
-								</Button>
-							)}
-						</div>
-					</div>
-				</div>
+            <div className="relative">
+              <HugeiconsIcon
+                className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+                icon={Search01Icon}
+              />
+              <Input
+                className="h-8 w-[180px] pr-7 pl-8 text-sm"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("settings.models.modelList.searchPlaceholder")}
+                value={searchQuery}
+              />
+              {searchQuery && (
+                <Button
+                  className="absolute top-1/2 right-1 size-5 -translate-y-1/2"
+                  onClick={() => setSearchQuery("")}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <HugeiconsIcon className="size-3" icon={Cancel01Icon} />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
 
-				<div className="divide-y rounded-lg border bg-card">
-					<ModelListContent
-						filteredModels={filteredModels}
-						getProviderInfo={getProviderInfo}
-						isCatalogLoading={isCatalogLoading}
-						modelsByProvider={modelsByProvider}
-						onToggleModel={handleToggleModel}
-						onToggleProvider={handleToggleProvider}
-						t={t}
-					/>
-				</div>
-			</div>
+        <div className="divide-y rounded-lg border bg-card">
+          <ModelListContent
+            filteredModels={filteredModels}
+            getProviderInfo={getProviderInfo}
+            isCatalogLoading={isCatalogLoading}
+            modelsByProvider={modelsByProvider}
+            onToggleModel={handleToggleModel}
+            onToggleProvider={handleToggleProvider}
+            t={t}
+          />
+        </div>
+      </div>
 
-			<div className="h-8" />
-		</div>
-	)
+      <div className="h-8" />
+    </div>
+  )
 }
 
 function ModelListContent({
-	isCatalogLoading,
-	filteredModels,
-	modelsByProvider,
-	getProviderInfo,
-	onToggleModel,
-	onToggleProvider,
-	t,
+  isCatalogLoading,
+  filteredModels,
+  modelsByProvider,
+  getProviderInfo,
+  onToggleModel,
+  onToggleProvider,
+  t
 }: {
-	isCatalogLoading: boolean
-	filteredModels: CatalogModel[]
-	modelsByProvider: Map<string, CatalogModel[]>
-	getProviderInfo: (id: string) => CatalogProvider
-	onToggleModel: (model: CatalogModel) => void
-	onToggleProvider: (provider: CatalogProvider) => void
-	t: ReturnType<typeof useTranslation>['t']
+  isCatalogLoading: boolean
+  filteredModels: CatalogModel[]
+  modelsByProvider: Map<string, CatalogModel[]>
+  getProviderInfo: (id: string) => CatalogProvider
+  onToggleModel: (model: CatalogModel) => void
+  onToggleProvider: (provider: CatalogProvider) => void
+  t: ReturnType<typeof useTranslation>["t"]
 }) {
-	if (isCatalogLoading) {
-		return (
-			<div className="space-y-2 p-4">
-				{[1, 2, 3, 4, 5].map((i) => (
-					<Skeleton className="h-12 w-full" key={i} />
-				))}
-			</div>
-		)
-	}
+  if (isCatalogLoading) {
+    return (
+      <div className="space-y-2 p-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton className="h-12 w-full" key={i} />
+        ))}
+      </div>
+    )
+  }
 
-	if (filteredModels.length === 0) {
-		return (
-			<div className="p-8 text-center text-muted-foreground text-sm">
-				{t('settings.models.modelList.noResults')}
-			</div>
-		)
-	}
+  if (filteredModels.length === 0) {
+    return (
+      <div className="p-8 text-center text-sm text-muted-foreground">
+        {t("settings.models.modelList.noResults")}
+      </div>
+    )
+  }
 
-	return (
-		<>
-			{Array.from(modelsByProvider.entries()).map(([providerId, models]) => (
-				<ModelProviderGroup
-					getProviderInfo={getProviderInfo}
-					key={providerId}
-					models={models}
-					onToggleModel={onToggleModel}
-					onToggleProvider={onToggleProvider}
-					providerId={providerId}
-					t={t}
-				/>
-			))}
-		</>
-	)
+  return (
+    <>
+      {[...modelsByProvider.entries()].map(([providerId, models]) => (
+        <ModelProviderGroup
+          getProviderInfo={getProviderInfo}
+          key={providerId}
+          models={models}
+          onToggleModel={onToggleModel}
+          onToggleProvider={onToggleProvider}
+          providerId={providerId}
+          t={t}
+        />
+      ))}
+    </>
+  )
 }
 
 function ModelProviderGroup({
-	providerId,
-	models,
-	getProviderInfo,
-	onToggleModel,
-	onToggleProvider,
-	t,
+  providerId,
+  models,
+  getProviderInfo,
+  onToggleModel,
+  onToggleProvider,
+  t
 }: {
-	providerId: string
-	models: CatalogModel[]
-	getProviderInfo: (id: string) => CatalogProvider
-	onToggleModel: (model: CatalogModel) => void
-	onToggleProvider: (provider: CatalogProvider) => void
-	t: ReturnType<typeof useTranslation>['t']
+  providerId: string
+  models: CatalogModel[]
+  getProviderInfo: (id: string) => CatalogProvider
+  onToggleModel: (model: CatalogModel) => void
+  onToggleProvider: (provider: CatalogProvider) => void
+  t: ReturnType<typeof useTranslation>["t"]
 }) {
-	const provider = getProviderInfo(providerId)
+  const provider = getProviderInfo(providerId)
 
-	return (
-		<div>
-			<div className="flex items-center justify-between bg-muted/20 px-4 py-2">
-				<div className="flex items-center gap-2">
-					{provider.logo && (
-						<img
-							alt={provider.name}
-							className="size-4 rounded-sm object-contain dark:brightness-0 dark:invert"
-							src={provider.logo}
-						/>
-					)}
-					<span className="font-medium text-sm">{provider.name}</span>
-					<span className="text-muted-foreground text-xs">({models.length})</span>
-				</div>
-				<Switch
-					aria-label={t('settings.models.modelList.toggleProvider', {
-						provider: provider.name,
-					})}
-					checked={provider.enabled}
-					onCheckedChange={() => onToggleProvider(provider)}
-				/>
-			</div>
+  return (
+    <div>
+      <div className="flex items-center justify-between bg-muted/20 px-4 py-2">
+        <div className="flex items-center gap-2">
+          {provider.logo && (
+            <img
+              alt={provider.name}
+              className="size-4 rounded-sm object-contain dark:brightness-0 dark:invert"
+              src={provider.logo}
+            />
+          )}
+          <span className="text-sm font-medium">{provider.name}</span>
+          <span className="text-xs text-muted-foreground">
+            ({models.length})
+          </span>
+        </div>
+        <Switch
+          aria-label={t("settings.models.modelList.toggleProvider", {
+            provider: provider.name
+          })}
+          checked={provider.enabled}
+          onCheckedChange={() => onToggleProvider(provider)}
+        />
+      </div>
 
-			<div className="divide-y divide-border/50">
-				{models.map((model) => (
-					<ModelRow
-						key={`${model.providerId}-${model.id}-${model.type}`}
-						model={model}
-						onToggle={onToggleModel}
-						t={t}
-					/>
-				))}
-			</div>
-		</div>
-	)
+      <div className="divide-y divide-border/50">
+        {models.map((model) => (
+          <ModelRow
+            key={`${model.providerId}-${model.id}-${model.type}`}
+            model={model}
+            onToggle={onToggleModel}
+            t={t}
+          />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function ModelRow({
-	model,
-	onToggle,
-	t,
+  model,
+  onToggle,
+  t
 }: {
-	model: CatalogModel
-	onToggle: (model: CatalogModel) => void
-	t: ReturnType<typeof useTranslation>['t']
+  model: CatalogModel
+  onToggle: (model: CatalogModel) => void
+  t: ReturnType<typeof useTranslation>["t"]
 }) {
-	return (
-		<div className="flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-muted/10">
-			<div className="min-w-0 flex-1">
-				<div className="flex items-center gap-2">
-					<span className="truncate text-sm">{model.displayName}</span>
-					<span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-muted-foreground text-xs">
-						{t(`settings.models.modelList.type.${model.type}`)}
-					</span>
-				</div>
-				<div className="mt-0.5 truncate text-muted-foreground text-xs">
-					{model.id}
-				</div>
-			</div>
-			<Switch
-				checked={model.enabled}
-				className="ml-4 shrink-0"
-				onCheckedChange={() => onToggle(model)}
-			/>
-		</div>
-	)
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-muted/10">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm">{model.displayName}</span>
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+            {t(`settings.models.modelList.type.${model.type}`)}
+          </span>
+        </div>
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+          {model.id}
+        </div>
+      </div>
+      <Switch
+        checked={model.enabled}
+        className="ml-4 shrink-0"
+        onCheckedChange={() => onToggle(model)}
+      />
+    </div>
+  )
 }

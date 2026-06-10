@@ -6,17 +6,17 @@
 
 ## 2. 关键改动
 
-1. 会话状态管理从固定 `chatId` 改为 `useChatSessions` 驱动。  
-2. `KnowledgePage` 接入 `ChatHistoryPanel`，实现历史会话选择、新建会话、删除会话。  
-3. `useKnowledgeChat` 支持动态 `chatId` 与 `onMessageComplete`，流式完成后刷新会话列表。  
-4. 桌面端增加可折叠会话侧栏，移动端使用 `Sheet` 作为会话抽屉。  
+1. 会话状态管理从固定 `chatId` 改为 `useChatSessions` 驱动。
+2. `KnowledgePage` 接入 `ChatHistoryPanel`，实现历史会话选择、新建会话、删除会话。
+3. `useKnowledgeChat` 支持动态 `chatId` 与 `onMessageComplete`，流式完成后刷新会话列表。
+4. 桌面端增加可折叠会话侧栏，移动端使用 `Sheet` 作为会话抽屉。
 5. 会话项增加 `content-visibility` 优化长列表首屏渲染。
 
 ## 3. 性能策略（基于 Vercel React Best Practices）
 
-- `bundle-dynamic-imports`：`ChatHistoryPanel` 使用 `React.lazy` 动态加载。  
-- `bundle-preload`：在历史按钮 `hover/focus` 时预加载会话面板模块。  
-- `async-defer-await`：仅在选中会话后才拉取该会话消息，不做全量预取。  
+- `bundle-dynamic-imports`：`ChatHistoryPanel` 使用 `React.lazy` 动态加载。
+- `bundle-preload`：在历史按钮 `hover/focus` 时预加载会话面板模块。
+- `async-defer-await`：仅在选中会话后才拉取该会话消息，不做全量预取。
 - `rendering-content-visibility`：会话列表项启用内容可见性优化。
 
 ## 4. 主要文件
@@ -32,7 +32,7 @@
 // 会话为空时首次自动创建，避免进入页面无可用 chatId
 const { selectedChatId, createChat } = useChatSessions({
   autoLoad: true,
-  autoCreateIfEmpty: true,
+  autoCreateIfEmpty: true
 })
 ```
 
@@ -47,8 +47,8 @@ useEffect(() => {
 ```ts
 // 流式完成后刷新会话摘要（messageCount / preview / updatedAt）
 useKnowledgeChat({
-  chatId: selectedChatId ?? '',
-  onMessageComplete: refreshSessions,
+  chatId: selectedChatId ?? "",
+  onMessageComplete: refreshSessions
   // ...
 })
 ```
@@ -61,10 +61,10 @@ pnpm run check-types
 
 类型检查通过后，核心流程可用：
 
-- 打开 `Knowledge` 页面自动恢复最近会话。  
-- 新建会话后立即可发送消息。  
-- 删除当前会话后可自动切换到其他会话。  
-- 移动端可通过抽屉查看与切换历史。  
+- 打开 `Knowledge` 页面自动恢复最近会话。
+- 新建会话后立即可发送消息。
+- 删除当前会话后可自动切换到其他会话。
+- 移动端可通过抽屉查看与切换历史。
 
 ## 7. 圆角 Token 一致性
 

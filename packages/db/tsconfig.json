@@ -7,7 +7,6 @@
     "outDir": "dist",
     "composite": true,
     "strictNullChecks": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

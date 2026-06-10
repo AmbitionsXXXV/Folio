@@ -1,6 +1,6 @@
-export { ShareContent } from './share-content'
-export { ShareErrorPage } from './share-error-page'
-export { ShareFooter } from './share-footer'
-export { ShareHeader } from './share-header'
-export { ShareLoading } from './share-loading'
-export { SharePasswordForm } from './share-password-form'
+export { ShareContent } from "./share-content"
+export { ShareErrorPage } from "./share-error-page"
+export { ShareFooter } from "./share-footer"
+export { ShareHeader } from "./share-header"
+export { ShareLoading } from "./share-loading"
+export { SharePasswordForm } from "./share-password-form"

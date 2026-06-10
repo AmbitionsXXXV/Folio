@@ -31,15 +31,15 @@
     "tailwind-merge": "catalog:",
     "tw-animate-css": "catalog:"
   },
-  "peerDependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "tailwindcss": "catalog:"
-  },
   "devDependencies": {
     "@folionote/config": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:"
   }
 }

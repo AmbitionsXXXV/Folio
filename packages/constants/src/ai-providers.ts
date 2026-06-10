@@ -10,12 +10,12 @@
  * Order determines display order in UI components.
  */
 export const AI_PROVIDER_IDS = [
-	'openai',
-	'deepseek',
-	'gemini',
-	'claude',
-	'qwen',
-	'moonshot',
+  "openai",
+  "deepseek",
+  "gemini",
+  "claude",
+  "qwen",
+  "moonshot"
 ] as const
 
 /**

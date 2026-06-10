@@ -5,23 +5,23 @@
  * Remote API and Local SQLite based on authentication state.
  */
 
-export { createLocalDataService } from './local-data-service'
-export { createOfflineFirstDataService } from './offline-first-data-service'
-export { createRemoteDataService } from './remote-data-service'
+export { createLocalDataService } from "./local-data-service"
+export { createOfflineFirstDataService } from "./offline-first-data-service"
+export { createRemoteDataService } from "./remote-data-service"
 export type {
-	CreateEntryInput,
-	CreateSourceInput,
-	CreateTagInput,
-	DataService,
-	DueStats,
-	GetQueueInput,
-	ListEntriesInput,
-	ListSourcesInput,
-	ListTagsInput,
-	PaginatedList,
-	SnoozePreset,
-	TodayStats,
-	UpdateEntryInput,
-	UpdateSourceInput,
-	UpdateTagInput,
-} from './types'
+  CreateEntryInput,
+  CreateSourceInput,
+  CreateTagInput,
+  DataService,
+  DueStats,
+  GetQueueInput,
+  ListEntriesInput,
+  ListSourcesInput,
+  ListTagsInput,
+  PaginatedList,
+  SnoozePreset,
+  TodayStats,
+  UpdateEntryInput,
+  UpdateSourceInput,
+  UpdateTagInput
+} from "./types"

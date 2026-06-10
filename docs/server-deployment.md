@@ -160,10 +160,10 @@ IMAGE_CAPTION_INTERNAL_TOKEN=这里替换成随机 token
 
 ### 4.2 这几个图片描述相关环境变量分别做什么
 
-| 变量 | 作用 | 是否推荐生产显式配置 |
-| --- | --- | --- |
-| `IMAGE_CAPTION_INTERNAL_TOKEN` | 保护 `POST /api/image/caption/internal`，防止伪造内部调用 | 是 |
-| `IMAGE_CAPTION_INTERNAL_URL` | 指定服务端上传后异步触发图片描述时，要请求的完整内部地址 | 是 |
+| 变量                               | 作用                                                      | 是否推荐生产显式配置 |
+| ---------------------------------- | --------------------------------------------------------- | -------------------- |
+| `IMAGE_CAPTION_INTERNAL_TOKEN`     | 保护 `POST /api/image/caption/internal`，防止伪造内部调用 | 是                   |
+| `IMAGE_CAPTION_INTERNAL_URL`       | 指定服务端上传后异步触发图片描述时，要请求的完整内部地址  | 是                   |
 | `IMAGE_CAPTION_ALLOW_ENV_FALLBACK` | 是否允许内部图片描述流程在无用户 BYOK 时使用平台侧 AI key | 是，默认建议 `false` |
 
 如果你使用的是单机单进程部署，且应用就监听在本机端口，也可以不配 `IMAGE_CAPTION_INTERNAL_URL`，让代码自动回退到：
@@ -232,13 +232,13 @@ sudo systemctl reload nginx
 
 在 GitHub 仓库中配置以下 Secrets（Settings → Secrets and variables → Actions）：
 
-| Secret 名称 | 描述 | 示例 |
-| ----------- | ---- | ---- |
-| `SERVER_HOST` | 服务器 IP 或域名 | `your-server-ip-or-domain` |
-| `SSH_USER` | SSH 登录用户名 | `your-ssh-username` |
-| `SSH_PRIVATE_KEY` | SSH 私钥（完整内容） | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
-| `SERVER_URL` | 服务健康检查 URL（可选） | `http://your-server-ip:3000` |
-| `SERVER_DOMAIN` | Caddy 反向代理域名（可选） | `api.your-domain.com` |
+| Secret 名称       | 描述                       | 示例                                     |
+| ----------------- | -------------------------- | ---------------------------------------- |
+| `SERVER_HOST`     | 服务器 IP 或域名           | `your-server-ip-or-domain`               |
+| `SSH_USER`        | SSH 登录用户名             | `your-ssh-username`                      |
+| `SSH_PRIVATE_KEY` | SSH 私钥（完整内容）       | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `SERVER_URL`      | 服务健康检查 URL（可选）   | `http://your-server-ip:3000`             |
+| `SERVER_DOMAIN`   | Caddy 反向代理域名（可选） | `api.your-domain.com`                    |
 
 ### 生成 SSH 密钥对
 
@@ -316,11 +316,11 @@ pm2 reload ecosystem.config.cjs --env production
 
 当您注册域名后，需要配置 HTTPS 以确保通信安全。以下提供三种主流方案供选择：
 
-| 方案 | 优点 | 缺点 | 推荐场景 |
-| ---- | ---- | ---- | -------- |
-| **Nginx + Certbot** | 功能强大、生态成熟、文档丰富 | 配置相对复杂 | 需要精细控制、已有 Nginx 经验 |
-| **Caddy** | 自动 HTTPS、配置极简、零配置证书 | 生态相对较小 | 快速部署、追求简洁 |
-| **Cloudflare** | CDN 加速、DDoS 防护、无需服务器配置 | 需要更改 DNS | 需要 CDN、全球加速 |
+| 方案                | 优点                                | 缺点         | 推荐场景                      |
+| ------------------- | ----------------------------------- | ------------ | ----------------------------- |
+| **Nginx + Certbot** | 功能强大、生态成熟、文档丰富        | 配置相对复杂 | 需要精细控制、已有 Nginx 经验 |
+| **Caddy**           | 自动 HTTPS、配置极简、零配置证书    | 生态相对较小 | 快速部署、追求简洁            |
+| **Cloudflare**      | CDN 加速、DDoS 防护、无需服务器配置 | 需要更改 DNS | 需要 CDN、全球加速            |
 
 ### 方案一：Nginx + Certbot（Let's Encrypt）
 
@@ -502,15 +502,15 @@ sudo apt install caddy
         health_uri /health
         health_interval 30s
     }
-    
+
     encode gzip zstd
-    
+
     header {
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
         Referrer-Policy strict-origin-when-cross-origin
     }
-    
+
     log {
         output file /var/log/caddy/folio-server.log
         format json
@@ -616,9 +616,9 @@ sudo journalctl -u caddy -f
 
 在 Cloudflare 面板中添加 DNS 记录：
 
-| 类型 | 名称 | 内容 | 代理状态 |
-| ---- | ---- | ---- | -------- |
-| A | api | 你的服务器 IP | 已代理（橙色云朵） |
+| 类型 | 名称 | 内容          | 代理状态           |
+| ---- | ---- | ------------- | ------------------ |
+| A    | api  | 你的服务器 IP | 已代理（橙色云朵） |
 
 #### 3. 配置 SSL/TLS
 
@@ -769,17 +769,17 @@ real_ip_header CF-Connecting-IP;
 
 #### 详细对比
 
-| 特性 | Nginx + Certbot | Caddy | Cloudflare |
-| ---- | --------------- | ----- | ---------- |
-| 配置复杂度 | 中等 | 极低 | 低 |
-| 自动证书管理 | 需要配置 | 自动 | 自动 |
-| 性能 | 最高 | 高 | 高（有 CDN） |
-| 内存占用 | 低 | 低 | N/A |
-| WebSocket 支持 | 需要配置 | 自动 | 支持 |
-| 负载均衡 | 支持 | 支持 | 支持 |
-| CDN/缓存 | 需要额外配置 | 需要额外配置 | 内置 |
-| DDoS 防护 | 需要额外方案 | 需要额外方案 | 内置 |
-| 学习曲线 | 陡峭 | 平缓 | 平缓 |
+| 特性           | Nginx + Certbot | Caddy        | Cloudflare   |
+| -------------- | --------------- | ------------ | ------------ |
+| 配置复杂度     | 中等            | 极低         | 低           |
+| 自动证书管理   | 需要配置        | 自动         | 自动         |
+| 性能           | 最高            | 高           | 高（有 CDN） |
+| 内存占用       | 低              | 低           | N/A          |
+| WebSocket 支持 | 需要配置        | 自动         | 支持         |
+| 负载均衡       | 支持            | 支持         | 支持         |
+| CDN/缓存       | 需要额外配置    | 需要额外配置 | 内置         |
+| DDoS 防护      | 需要额外方案    | 需要额外方案 | 内置         |
+| 学习曲线       | 陡峭            | 平缓         | 平缓         |
 
 #### 混合方案
 

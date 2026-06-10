@@ -92,12 +92,12 @@ pnpm changeset:status
 
 ## 常用命令
 
-| 命令                    | 说明                           |
-| ----------------------- | ------------------------------ |
-| `pnpm changeset`        | 创建新的 changeset             |
-| `pnpm changeset:status` | 查看待处理的变更               |
-| `pnpm run version`      | 更新版本号（消费 changeset）   |
-| `pnpm run version:tag`  | 更新版本号并创建 Git tags      |
+| 命令                    | 说明                         |
+| ----------------------- | ---------------------------- |
+| `pnpm changeset`        | 创建新的 changeset           |
+| `pnpm changeset:status` | 查看待处理的变更             |
+| `pnpm run version`      | 更新版本号（消费 changeset） |
+| `pnpm run version:tag`  | 更新版本号并创建 Git tags    |
 
 ## 配置说明
 
@@ -105,7 +105,10 @@ pnpm changeset:status
 
 ```json
 {
-  "changelog": ["@changesets/changelog-github", { "repo": "jiantianjianghui/folio" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "jiantianjianghui/folio" }
+  ],
   "commit": false,
   "fixed": [
     [

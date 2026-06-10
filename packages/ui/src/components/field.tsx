@@ -1,230 +1,238 @@
-import { Label } from '@folionote/ui/label'
-import { Separator } from '@folionote/ui/separator'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { useMemo } from 'react'
-import { cn } from '@/lib/utils'
+import { Label } from "@folionote/ui/label"
+import { Separator } from "@folionote/ui/separator"
+import { cva } from "class-variance-authority"
+import type { VariantProps } from "class-variance-authority"
+import { useMemo } from "react"
 
-function FieldSet({ className, ...props }: React.ComponentProps<'fieldset'>) {
-	return (
-		<fieldset
-			className={cn('etc-field-set flex flex-col', className)}
-			data-slot="field-set"
-			{...props}
-		/>
-	)
+import { cn } from "@/lib/utils"
+
+function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
+  return (
+    <fieldset
+      className={cn("etc-field-set flex flex-col", className)}
+      data-slot="field-set"
+      {...props}
+    />
+  )
 }
 
 function FieldLegend({
-	className,
-	variant = 'legend',
-	...props
-}: React.ComponentProps<'legend'> & { variant?: 'legend' | 'label' }) {
-	return (
-		<legend
-			className={cn('etc-field-legend', className)}
-			data-slot="field-legend"
-			data-variant={variant}
-			{...props}
-		/>
-	)
+  className,
+  variant = "legend",
+  ...props
+}: React.ComponentProps<"legend"> & { variant?: "legend" | "label" }) {
+  return (
+    <legend
+      className={cn("etc-field-legend", className)}
+      data-slot="field-legend"
+      data-variant={variant}
+      {...props}
+    />
+  )
 }
 
-function FieldGroup({ className, ...props }: React.ComponentProps<'div'>) {
-	return (
-		<div
-			className={cn(
-				'etc-field-group group/field-group @container/field-group flex w-full flex-col',
-				className
-			)}
-			data-slot="field-group"
-			{...props}
-		/>
-	)
+function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "etc-field-group group/field-group @container/field-group flex w-full flex-col",
+        className
+      )}
+      data-slot="field-group"
+      {...props}
+    />
+  )
 }
 
-const fieldVariants = cva('etc-field group/field flex w-full', {
-	variants: {
-		orientation: {
-			vertical:
-				'etc-field-orientation-vertical flex-col [&>*]:w-full [&>.sr-only]:w-auto',
-			horizontal:
-				'etc-field-orientation-horizontal flex-row items-center has-[>[data-slot=field-content]]:items-start [&>[data-slot=field-label]]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
-			responsive:
-				'etc-field-orientation-responsive @md/field-group:flex-row flex-col @md/field-group:items-center @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:[&>*]:w-auto [&>*]:w-full [&>.sr-only]:w-auto @md/field-group:[&>[data-slot=field-label]]:flex-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
-		},
-	},
-	defaultVariants: {
-		orientation: 'vertical',
-	},
+const fieldVariants = cva("etc-field group/field flex w-full", {
+  variants: {
+    orientation: {
+      vertical:
+        "etc-field-orientation-vertical flex-col [&>*]:w-full [&>.sr-only]:w-auto",
+      horizontal:
+        "etc-field-orientation-horizontal flex-row items-center has-[>[data-slot=field-content]]:items-start [&>[data-slot=field-label]]:flex-auto has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
+      responsive:
+        "etc-field-orientation-responsive @md/field-group:flex-row flex-col @md/field-group:items-center @md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:[&>*]:w-auto [&>*]:w-full [&>.sr-only]:w-auto @md/field-group:[&>[data-slot=field-label]]:flex-auto @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px"
+    }
+  },
+  defaultVariants: {
+    orientation: "vertical"
+  }
 })
 
 function Field({
-	className,
-	orientation = 'vertical',
-	...props
-}: React.ComponentProps<'div'> & VariantProps<typeof fieldVariants>) {
-	return (
-		<div
-			className={cn(fieldVariants({ orientation }), className)}
-			data-orientation={orientation}
-			data-slot="field"
-			role="group"
-			{...props}
-		/>
-	)
+  className,
+  orientation = "vertical",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+  return (
+    <div
+      className={cn(fieldVariants({ orientation }), className)}
+      data-orientation={orientation}
+      data-slot="field"
+      role="group"
+      {...props}
+    />
+  )
 }
 
-function FieldContent({ className, ...props }: React.ComponentProps<'div'>) {
-	return (
-		<div
-			className={cn(
-				'etc-field-content group/field-content flex flex-1 flex-col leading-snug',
-				className
-			)}
-			data-slot="field-content"
-			{...props}
-		/>
-	)
+function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "etc-field-content group/field-content flex flex-1 flex-col leading-snug",
+        className
+      )}
+      data-slot="field-content"
+      {...props}
+    />
+  )
 }
 
-function FieldLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
-	return (
-		<Label
-			className={cn(
-				'etc-field-label group/field-label peer/field-label flex w-fit leading-snug',
-				'has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col',
-				className
-			)}
-			data-slot="field-label"
-			{...props}
-		/>
-	)
+function FieldLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof Label>) {
+  return (
+    <Label
+      className={cn(
+        "etc-field-label group/field-label peer/field-label flex w-fit leading-snug",
+        "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",
+        className
+      )}
+      data-slot="field-label"
+      {...props}
+    />
+  )
 }
 
-function FieldTitle({ className, ...props }: React.ComponentProps<'div'>) {
-	return (
-		<div
-			className={cn(
-				'etc-field-title flex w-fit items-center leading-snug',
-				className
-			)}
-			data-slot="field-label"
-			{...props}
-		/>
-	)
+function FieldTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "etc-field-title flex w-fit items-center leading-snug",
+        className
+      )}
+      data-slot="field-label"
+      {...props}
+    />
+  )
 }
 
-function FieldDescription({ className, ...props }: React.ComponentProps<'p'>) {
-	return (
-		<p
-			className={cn(
-				'etc-field-description font-normal leading-normal group-has-data-[orientation=horizontal]/field:text-balance',
-				'nth-last-2:-mt-1 last:mt-0',
-				'[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4',
-				className
-			)}
-			data-slot="field-description"
-			{...props}
-		/>
-	)
+function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
+  return (
+    <p
+      className={cn(
+        "etc-field-description font-normal leading-normal group-has-data-[orientation=horizontal]/field:text-balance",
+        "nth-last-2:-mt-1 last:mt-0",
+        "[&>a:hover]:text-primary [&>a]:underline [&>a]:underline-offset-4",
+        className
+      )}
+      data-slot="field-description"
+      {...props}
+    />
+  )
 }
 
 function FieldSeparator({
-	children,
-	className,
-	...props
-}: React.ComponentProps<'div'> & {
-	children?: React.ReactNode
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
+  children?: React.ReactNode
 }) {
-	return (
-		<div
-			className={cn('etc-field-separator relative', className)}
-			data-content={!!children}
-			data-slot="field-separator"
-			{...props}
-		>
-			<Separator className="absolute inset-0 top-1/2" />
-			{children && (
-				<span
-					className="etc-field-separator-content relative mx-auto block w-fit bg-background"
-					data-slot="field-separator-content"
-				>
-					{children}
-				</span>
-			)}
-		</div>
-	)
+  return (
+    <div
+      className={cn("etc-field-separator relative", className)}
+      data-content={!!children}
+      data-slot="field-separator"
+      {...props}
+    >
+      <Separator className="absolute inset-0 top-1/2" />
+      {children && (
+        <span
+          className="etc-field-separator-content relative mx-auto block w-fit bg-background"
+          data-slot="field-separator-content"
+        >
+          {children}
+        </span>
+      )}
+    </div>
+  )
 }
 
 type FieldErrorItem = string | { message?: string } | undefined
 
 function FieldError({
-	className,
-	children,
-	errors,
-	...props
-}: React.ComponentProps<'div'> & {
-	errors?: FieldErrorItem[]
+  className,
+  children,
+  errors,
+  ...props
+}: React.ComponentProps<"div"> & {
+  errors?: FieldErrorItem[]
 }) {
-	const content = useMemo(() => {
-		if (children) {
-			return children
-		}
+  const content = useMemo(() => {
+    if (children) {
+      return children
+    }
 
-		if (!errors?.length) {
-			return null
-		}
+    if (!errors?.length) {
+      return null
+    }
 
-		// 统一处理字符串和对象格式的错误
-		const normalizedErrors = errors.map((error) => {
-			if (typeof error === 'string') {
-				return { message: error }
-			}
-			return error
-		})
+    // 统一处理字符串和对象格式的错误
+    const normalizedErrors = errors.map((error) => {
+      if (typeof error === "string") {
+        return { message: error }
+      }
+      return error
+    })
 
-		const uniqueErrors = [
-			...new Map(normalizedErrors.map((error) => [error?.message, error])).values(),
-		]
+    const uniqueErrors = [
+      ...new Map(
+        normalizedErrors.map((error) => [error?.message, error])
+      ).values()
+    ]
 
-		if (uniqueErrors?.length === 1) {
-			return uniqueErrors[0]?.message
-		}
+    if (uniqueErrors?.length === 1) {
+      return uniqueErrors[0]?.message
+    }
 
-		return (
-			<ul className="ml-4 flex list-disc flex-col gap-1">
-				{uniqueErrors.map(
-					(error) => error?.message && <li key={error.message}>{error.message}</li>
-				)}
-			</ul>
-		)
-	}, [children, errors])
+    return (
+      <ul className="ml-4 flex list-disc flex-col gap-1">
+        {uniqueErrors.map(
+          (error) =>
+            error?.message && <li key={error.message}>{error.message}</li>
+        )}
+      </ul>
+    )
+  }, [children, errors])
 
-	if (!content) {
-		return null
-	}
+  if (!content) {
+    return null
+  }
 
-	return (
-		<div
-			className={cn('etc-field-error font-normal', className)}
-			data-slot="field-error"
-			role="alert"
-			{...props}
-		>
-			{content}
-		</div>
-	)
+  return (
+    <div
+      className={cn("etc-field-error font-normal", className)}
+      data-slot="field-error"
+      role="alert"
+      {...props}
+    >
+      {content}
+    </div>
+  )
 }
 
 export {
-	Field,
-	FieldLabel,
-	FieldDescription,
-	FieldError,
-	FieldGroup,
-	FieldLegend,
-	FieldSeparator,
-	type FieldSet,
-	FieldContent,
-	FieldTitle,
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLegend,
+  FieldSeparator,
+  type FieldSet,
+  FieldContent,
+  FieldTitle
 }

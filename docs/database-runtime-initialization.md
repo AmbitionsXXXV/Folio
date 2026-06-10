@@ -35,4 +35,3 @@ server 运行时使用 `@folionote/db` 的默认入口 `packages/db/src/index.ts
 
 1. server 部署包默认不包含 `node_modules`，运行时出现 `Cannot find module 'drizzle-orm/node-postgres'` 通常意味着该依赖被保留成了运行时解析。
 2. web 端的 `@folionote/db` alias 只作用于 web 构建流程，不会影响 server 的 `tsdown` 产物。
-

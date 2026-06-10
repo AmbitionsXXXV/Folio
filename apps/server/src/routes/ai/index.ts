@@ -1,7 +1,7 @@
-import type { App } from '../../types'
-import { registerChatRoutes } from './chat-routes'
-import { registerImageRoutes } from './image-routes'
-import { registerStreamRoute } from './stream-route'
+import type { App } from "../../types"
+import { registerChatRoutes } from "./chat-routes"
+import { registerImageRoutes } from "./image-routes"
+import { registerStreamRoute } from "./stream-route"
 
 /**
  * Register AI streaming routes
@@ -13,7 +13,7 @@ import { registerStreamRoute } from './stream-route'
  * - toUIMessageStreamResponse for proper UIMessage format
  */
 export function registerAiStreamRoute(app: App) {
-	registerChatRoutes(app)
-	registerImageRoutes(app)
-	registerStreamRoute(app)
+  registerChatRoutes(app)
+  registerImageRoutes(app)
+  registerStreamRoute(app)
 }

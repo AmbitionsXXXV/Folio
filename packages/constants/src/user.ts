@@ -25,8 +25,10 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24
  * formatUserNo(null) // "-"
  */
 export function formatUserNo(no: number | undefined | null): string {
-	if (no === undefined || no === null) return '-'
-	return no.toString().padStart(USER_NO_PAD_LENGTH, '0')
+  if (no === undefined || no === null) {
+    return "-"
+  }
+  return no.toString().padStart(USER_NO_PAD_LENGTH, "0")
 }
 
 /**
@@ -40,9 +42,11 @@ export function formatUserNo(no: number | undefined | null): string {
  * getDaysSince(null)                   // Returns 0
  */
 export function getDaysSince(date: Date | string | undefined | null): number {
-	if (!date) return 0
-	const d = typeof date === 'string' ? new Date(date) : date
-	const now = new Date()
-	const diffTime = now.getTime() - d.getTime()
-	return Math.max(0, Math.floor(diffTime / MS_PER_DAY))
+  if (!date) {
+    return 0
+  }
+  const d = typeof date === "string" ? new Date(date) : date
+  const now = new Date()
+  const diffTime = now.getTime() - d.getTime()
+  return Math.max(0, Math.floor(diffTime / MS_PER_DAY))
 }

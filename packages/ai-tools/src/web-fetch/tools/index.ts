@@ -1,1 +1,1 @@
-export { webFetch } from './web-fetch'
+export { webFetch } from "./web-fetch"

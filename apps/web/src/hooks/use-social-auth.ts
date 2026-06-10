@@ -1,23 +1,24 @@
-import { useMutation } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
-import { authClient } from '@/lib/auth-client'
+import { useMutation } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 
-type SocialProvider = 'google' | 'github' | 'apple'
+import { authClient } from "@/lib/auth-client"
 
-type UseSocialAuthOptions = {
-	/**
-	 * The social provider to authenticate with
-	 */
-	provider: SocialProvider
-	/**
-	 * The URL to redirect to after successful authentication
-	 */
-	callbackURL: string
-	/**
-	 * Custom error message key for i18n (defaults to 'auth.signInFailed')
-	 */
-	errorMessageKey?: string
+type SocialProvider = "google" | "github" | "apple"
+
+interface UseSocialAuthOptions {
+  /**
+   * The social provider to authenticate with
+   */
+  provider: SocialProvider
+  /**
+   * The URL to redirect to after successful authentication
+   */
+  callbackURL: string
+  /**
+   * Custom error message key for i18n (defaults to 'auth.signInFailed')
+   */
+  errorMessageKey?: string
 }
 
 /**
@@ -40,23 +41,23 @@ type UseSocialAuthOptions = {
  * ```
  */
 export function useSocialAuth({
-	provider,
-	callbackURL,
-	errorMessageKey = 'auth.signInFailed',
+  provider,
+  callbackURL,
+  errorMessageKey = "auth.signInFailed"
 }: UseSocialAuthOptions) {
-	const { t } = useTranslation()
+  const { t } = useTranslation()
 
-	return useMutation({
-		mutationFn: () =>
-			authClient.signIn.social({
-				provider,
-				callbackURL,
-			}),
-		onError: (error) => {
-			toast.error(t(errorMessageKey))
-			if (import.meta.env.DEV) {
-				console.error(`[SocialAuth:${provider}] Auth error:`, error)
-			}
-		},
-	})
+  return useMutation({
+    mutationFn: () =>
+      authClient.signIn.social({
+        provider,
+        callbackURL
+      }),
+    onError: (error) => {
+      toast.error(t(errorMessageKey))
+      if (import.meta.env.DEV) {
+        console.error(`[SocialAuth:${provider}] Auth error:`, error)
+      }
+    }
+  })
 }

@@ -1,56 +1,55 @@
 import type {
-	AiFullModelCard,
-	FolioNoteDefaultAiModelListItem,
-} from '../types/ai-model'
-
-import anthropic from './anthropic'
-import deepseek from './deepseek'
-import google from './google'
-import moonshot from './moonshot'
-import openai from './openai'
-import qwen from './qwen'
-import xai from './xai'
+  AiFullModelCard,
+  FolioNoteDefaultAiModelListItem
+} from "../types/ai-model"
+import anthropic from "./anthropic"
+import deepseek from "./deepseek"
+import google from "./google"
+import moonshot from "./moonshot"
+import openai from "./openai"
+import qwen from "./qwen"
+import xai from "./xai"
 
 // Re-export individual provider models
-export { default as anthropicModels } from './anthropic'
-export { default as deepseekModels } from './deepseek'
-export { default as googleModels } from './google'
-export { default as moonshotModels } from './moonshot'
-export { default as openaiModels } from './openai'
-export { default as qwenModels } from './qwen'
-export { default as xaiModels } from './xai'
+export { default as anthropicModels } from "./anthropic"
+export { default as deepseekModels } from "./deepseek"
+export { default as googleModels } from "./google"
+export { default as moonshotModels } from "./moonshot"
+export { default as openaiModels } from "./openai"
+export { default as qwenModels } from "./qwen"
+export { default as xaiModels } from "./xai"
 
 type ModelsMap = Record<string, AiFullModelCard[]>
 
 const buildDefaultModelList = (
-	map: ModelsMap
+  map: ModelsMap
 ): FolioNoteDefaultAiModelListItem[] => {
-	let models: FolioNoteDefaultAiModelListItem[] = []
+  let models: FolioNoteDefaultAiModelListItem[] = []
 
-	for (const [provider, providerModels] of Object.entries(map)) {
-		const newModels = providerModels.map((model) => ({
-			...model,
-			abilities: model.abilities ?? {},
-			enabled: model.enabled,
-			providerId: provider,
-		}))
-		models = models.concat(newModels)
-	}
+  for (const [provider, providerModels] of Object.entries(map)) {
+    const newModels = providerModels.map((model) => ({
+      ...model,
+      abilities: model.abilities ?? {},
+      enabled: model.enabled,
+      providerId: provider
+    }))
+    models = models.concat(newModels)
+  }
 
-	return models
+  return models
 }
 
 /**
  * Default model list containing all models from all providers
  */
 export const FOLIO_DEFAULT_MODEL_LIST = buildDefaultModelList({
-	anthropic,
-	deepseek,
-	google,
-	moonshot,
-	openai,
-	qwen,
-	xai,
+  anthropic,
+  deepseek,
+  google,
+  moonshot,
+  openai,
+  qwen,
+  xai
 })
 
 export default FOLIO_DEFAULT_MODEL_LIST

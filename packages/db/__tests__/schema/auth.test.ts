@@ -1,78 +1,79 @@
-import { eq } from 'drizzle-orm'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { session, user } from '../../src/schema/auth'
-import { createTestUser } from '../fixtures/factories'
-import { db } from '../setup'
-import { cleanupDatabase } from '../utils/db-helper'
+import { eq } from "drizzle-orm"
+import { beforeEach, describe, expect, it } from "vite-plus/test"
 
-describe('Auth schema', () => {
-	beforeEach(async () => {
-		await cleanupDatabase()
-	})
+import { session, user } from "../../src/schema/auth"
+import { createTestUser } from "../fixtures/factories"
+import { db } from "../setup"
+import { cleanupDatabase } from "../utils/db-helper"
 
-	it('creates user with required fields', async () => {
-		const testUser = createTestUser()
-		await db.insert(user).values(testUser)
+describe("Auth schema", () => {
+  beforeEach(async () => {
+    await cleanupDatabase()
+  })
 
-		const result = await db.query.user.findFirst({
-			where: eq(user.id, testUser.id),
-		})
+  it("creates user with required fields", async () => {
+    const testUser = createTestUser()
+    await db.insert(user).values(testUser)
 
-		expect(result?.email).toBe(testUser.email)
-		expect(result?.name).toBe(testUser.name)
-	})
+    const result = await db.query.user.findFirst({
+      where: eq(user.id, testUser.id)
+    })
 
-	it('creates session with userId foreign key', async () => {
-		const testUser = createTestUser()
-		await db.insert(user).values(testUser)
+    expect(result?.email).toBe(testUser.email)
+    expect(result?.name).toBe(testUser.name)
+  })
 
-		const testSession = {
-			id: crypto.randomUUID(),
-			userId: testUser.id,
-			expiresAt: new Date(Date.now() + 86_400_000),
-			token: 'test-token',
-			ipAddress: '127.0.0.1',
-			userAgent: 'test-agent',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-		}
+  it("creates session with userId foreign key", async () => {
+    const testUser = createTestUser()
+    await db.insert(user).values(testUser)
 
-		await db.insert(session).values(testSession)
+    const testSession = {
+      id: crypto.randomUUID(),
+      userId: testUser.id,
+      expiresAt: new Date(Date.now() + 86_400_000),
+      token: "test-token",
+      ipAddress: "127.0.0.1",
+      userAgent: "test-agent",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
 
-		const result = await db.query.session.findFirst({
-			where: eq(session.id, testSession.id),
-			with: { user: true },
-		})
+    await db.insert(session).values(testSession)
 
-		expect(result?.userId).toBe(testUser.id)
-		expect(result?.user?.email).toBe(testUser.email)
-	})
+    const result = await db.query.session.findFirst({
+      where: eq(session.id, testSession.id),
+      with: { user: true }
+    })
 
-	it('cascades delete on user deletion', async () => {
-		const testUser = createTestUser()
-		await db.insert(user).values(testUser)
+    expect(result?.userId).toBe(testUser.id)
+    expect(result?.user?.email).toBe(testUser.email)
+  })
 
-		const testSession = {
-			id: crypto.randomUUID(),
-			userId: testUser.id,
-			expiresAt: new Date(Date.now() + 86_400_000),
-			token: 'test-token',
-			ipAddress: '127.0.0.1',
-			userAgent: 'test-agent',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-		}
+  it("cascades delete on user deletion", async () => {
+    const testUser = createTestUser()
+    await db.insert(user).values(testUser)
 
-		await db.insert(session).values(testSession)
+    const testSession = {
+      id: crypto.randomUUID(),
+      userId: testUser.id,
+      expiresAt: new Date(Date.now() + 86_400_000),
+      token: "test-token",
+      ipAddress: "127.0.0.1",
+      userAgent: "test-agent",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
 
-		// Delete user
-		await db.delete(user).where(eq(user.id, testUser.id))
+    await db.insert(session).values(testSession)
 
-		// Session should be deleted too
-		const result = await db.query.session.findFirst({
-			where: eq(session.id, testSession.id),
-		})
+    // Delete user
+    await db.delete(user).where(eq(user.id, testUser.id))
 
-		expect(result).toBeUndefined()
-	})
+    // Session should be deleted too
+    const result = await db.query.session.findFirst({
+      where: eq(session.id, testSession.id)
+    })
+
+    expect(result).toBeUndefined()
+  })
 })

@@ -1,64 +1,66 @@
-import type { ExpoConfig } from 'expo/config'
-import pkg from './package.json' assert { type: 'json' }
+import type { ExpoConfig } from "expo/config"
+
+import pkg from "./package.json"
 
 const config: ExpoConfig = {
-	owner: 'etcetera',
-	scheme: 'folio-note',
-	userInterfaceStyle: 'automatic',
-	orientation: 'default',
-	web: {
-		bundler: 'metro',
-	},
-	icon: './assets/images/icon.png',
-	name: 'FolioNote',
-	slug: 'folio-note',
-	version: pkg.version,
-	plugins: [
-		['expo-font', { fonts: ['./assets/fonts/LeckerliOne.ttf'] }],
-		'expo-router',
-		'expo-web-browser',
-		'expo-notifications',
-		'expo-localization',
-		'expo-sqlite',
-		[
-			'expo-secure-store',
-			{
-				configureAndroidBackup: true,
-				faceIDPermission:
-					'Allow $(PRODUCT_NAME) to access your Face ID biometric data.',
-			},
-		],
-		'expo-sharing'
-	],
-	experiments: {
-		typedRoutes: true,
-		reactCompiler: true,
-	},
-	ios: {
-		icon: './assets/images/icon.png',
-		bundleIdentifier: 'com.etcetera.folio-note',
-		infoPlist: {
-			ITSAppUsesNonExemptEncryption: false,
-			// 注意：不要设置 UIDesignRequiresCompatibility: true
-			// 这会禁用 iOS 26 的 Liquid Glass 效果，并且 IOS27 会被移除
-		},
-	},
-	android: {
-		package: 'com.etcetera.folio-note',
-	},
-	updates: {
-		enabled: true,
-		url: 'https://u.expo.dev/4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1',
-	},
-	extra: {
-		router: {},
-		eas: {
-			projectId: '4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1',
-		},
-	},
-	runtimeVersion: {
-		policy: 'appVersion',
-	},
+  owner: "etcetera",
+  scheme: "folio-note",
+  userInterfaceStyle: "automatic",
+  orientation: "default",
+  web: {
+    bundler: "metro"
+  },
+  icon: "./assets/images/icon.png",
+  name: "FolioNote",
+  slug: "folio-note",
+  version: pkg.version,
+  plugins: [
+    ["expo-font", { fonts: ["./assets/fonts/LeckerliOne.ttf"] }],
+    "expo-router",
+    "expo-web-browser",
+    "expo-notifications",
+    "expo-localization",
+    "expo-sqlite",
+    [
+      "expo-secure-store",
+      {
+        configureAndroidBackup: true,
+        faceIDPermission:
+          "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+      }
+    ],
+    "expo-sharing",
+    "expo-splash-screen"
+  ],
+  experiments: {
+    typedRoutes: true,
+    reactCompiler: true
+  },
+  ios: {
+    icon: "./assets/images/icon.png",
+    bundleIdentifier: "com.etcetera.folio-note",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false
+      // 注意：不要设置 UIDesignRequiresCompatibility: true
+      // 这会禁用 iOS 26 的 Liquid Glass 效果，并且 IOS27 会被移除
+    }
+  },
+  android: {
+    package: "com.etcetera.folio-note"
+  },
+  updates: {
+    enabled: true,
+    url: "https://u.expo.dev/4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1"
+  },
+  extra: {
+    router: {},
+    eas: {
+      projectId: "4a9c4ba0-2493-42f5-8c0d-8bfda5ab0dd1"
+    }
+  },
+  runtimeVersion: {
+    policy: "appVersion"
+  }
 }
 
 export default config

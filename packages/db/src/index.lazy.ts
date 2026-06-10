@@ -1,58 +1,55 @@
 // Browser-safe stub: db is server-only, accessing any property throws at runtime.
 // The type import below is erased at compile time and produces no runtime code.
-type DbType = ReturnType<typeof import('drizzle-orm/node-postgres').drizzle>
+type DbType = ReturnType<typeof import("drizzle-orm/node-postgres").drizzle>
 
 export const db = new Proxy({} as DbType, {
-	get(_target, prop) {
-		throw new Error(
-			`Cannot access db.${String(prop)} on the client. Database operations are server-only.`
-		)
-	},
+  get(_target, prop) {
+    throw new Error(
+      `Cannot access db.${String(prop)} on the client. Database operations are server-only.`
+    )
+  }
 }) as DbType
 
 export {
-	aiChatSessions,
-	aiChatSessionsRelations,
-	userAiModelSettings,
-	userAiModelSettingsRelations,
-	userAiProviderSettings,
-	userAiProviderSettingsRelations,
-} from './schema/ai'
+  aiChatSessions,
+  aiChatSessionsRelations,
+  userAiModelSettings,
+  userAiModelSettingsRelations,
+  userAiProviderSettings,
+  userAiProviderSettingsRelations
+} from "./schema/ai"
 // Re-export schema for external use
 export {
-	account,
-	accountRelations,
-	session,
-	sessionRelations,
-	user,
-	userRelations,
-	verification,
-} from './schema/auth'
+  account,
+  accountRelations,
+  session,
+  sessionRelations,
+  user,
+  userRelations,
+  verification
+} from "./schema/auth"
 export {
-	attachments,
-	attachmentsRelations,
-	dailyLogs,
-	dailyLogsRelations,
-	entries,
-	entriesRelations,
-	entryReviewState,
-	entryReviewStateRelations,
-	entryShares,
-	entrySharesRelations,
-	entrySources,
-	entrySourcesRelations,
-	entryTags,
-	entryTagsRelations,
-	reviewEvents,
-	reviewEventsRelations,
-	searchHistory,
-	searchHistoryRelations,
-	sources,
-	sourcesRelations,
-	tags,
-	tagsRelations,
-} from './schema/entries'
-export {
-	entryLinks,
-	entryLinksRelations,
-} from './schema/graph'
+  attachments,
+  attachmentsRelations,
+  dailyLogs,
+  dailyLogsRelations,
+  entries,
+  entriesRelations,
+  entryReviewState,
+  entryReviewStateRelations,
+  entryShares,
+  entrySharesRelations,
+  entrySources,
+  entrySourcesRelations,
+  entryTags,
+  entryTagsRelations,
+  reviewEvents,
+  reviewEventsRelations,
+  searchHistory,
+  searchHistoryRelations,
+  sources,
+  sourcesRelations,
+  tags,
+  tagsRelations
+} from "./schema/entries"
+export { entryLinks, entryLinksRelations } from "./schema/graph"

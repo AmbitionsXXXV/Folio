@@ -1,14 +1,14 @@
 # Ultracite Code Standards
 
-This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
+This project uses **Ultracite** lint/format rules, run through **Vite+** (`vp`) on the oxlint + oxfmt engines (configured in the root `vite.config.ts`).
 
 ## Quick Reference
 
-- **Format code**: `pnpm exec ultracite fix`
-- **Check for issues**: `pnpm exec ultracite check`
-- **Diagnose setup**: `pnpm exec ultracite doctor`
+- **Format code**: `vp fmt . --write`
+- **Check for issues**: `vp check`
+- **Auto-fix issues**: `vp check --fix`
 
-Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
+oxlint and oxfmt (the underlying Rust engines, run via Vite+) provide extremely fast linting and formatting. Most issues are automatically fixable.
 
 ---
 
@@ -110,11 +110,11 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Don't use `.only` or `.skip` in committed code
 - Keep test suites reasonably flat - avoid excessive `describe` nesting
 
-## When Biome Can't Help
+## When the linter can't help
 
-Biome's linter will catch most issues automatically. Focus your attention on:
+oxlint will catch most issues automatically. Focus your attention on:
 
-1. **Business logic correctness** - Biome can't validate your algorithms
+1. **Business logic correctness** - the linter can't validate your algorithms
 2. **Meaningful naming** - Use descriptive names for functions, variables, and types
 3. **Architecture decisions** - Component structure, data flow, and API design
 4. **Edge cases** - Handle boundary conditions and error states
@@ -123,7 +123,7 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 
 ---
 
-Most formatting and common issues are automatically fixed by Biome. Run `pnpm exec ultracite fix` before committing to ensure compliance.
+Most formatting and common issues are automatically fixed by oxfmt/oxlint. Run `vp check --fix` before committing to ensure compliance.
 
 # Web Interface Guidelines
 
@@ -140,11 +140,15 @@ Concise rules for building accessible, fast, delightful UIs Use MUST/SHOULD/NEVE
   - MUST: Mobile `<input>` font-size ≥16px or set:
 
     ```html
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
     ```
 
   - NEVER: Disable browser zoom
   - MUST: `touch-action: manipulation` to prevent double-tap zoom; set `-webkit-tap-highlight-color` to match design
+
 - Inputs & forms (behavior)
   - MUST: Hydration-safe inputs (no lost focus/value)
   - NEVER: Block paste in `<input>/<textarea>`
@@ -195,7 +199,7 @@ Concise rules for building accessible, fast, delightful UIs Use MUST/SHOULD/NEVE
 - MUST: Deliberate alignment to grid/baseline/edges/optical centers—no accidental placement
 - SHOULD: Balance icon/text lockups (stroke/weight/size/spacing/color)
 - MUST: Verify mobile, laptop, ultra-wide (simulate ultra-wide at 50% zoom)
-- MUST: Respect safe areas (use env(safe-area-inset-*))
+- MUST: Respect safe areas (use env(safe-area-inset-\*))
 - MUST: Avoid unwanted scrollbars; fix overflows
 
 ## Content & Accessibility
@@ -248,11 +252,11 @@ Concise rules for building accessible, fast, delightful UIs Use MUST/SHOULD/NEVE
 
 ### Services overview
 
-| Service | Command | Port | Notes |
-|---------|---------|------|-------|
+| Service    | Command                                         | Port | Notes                                             |
+| ---------- | ----------------------------------------------- | ---- | ------------------------------------------------- |
 | PostgreSQL | `sudo docker compose up -d` (in `packages/db/`) | 5432 | Uses `docker-compose.yml` with postgres:17-alpine |
-| API server | `pnpm dev:server` | 3000 | Hono backend; needs `DATABASE_URL` env var |
-| Web app | `pnpm dev:web` | 3001 | TanStack Start + Vite |
+| API server | `pnpm dev:server`                               | 3000 | Hono backend; needs `DATABASE_URL` env var        |
+| Web app    | `pnpm dev:web`                                  | 3001 | TanStack Start + Vite                             |
 
 ### Database setup
 
@@ -280,7 +284,7 @@ pnpm dev:web
 
 ### Gotchas
 
-- `pnpm install` will fail if `CI` env is not set, because `lefthook install` conflicts with Cursor's git hooks path. Use `CI=true pnpm install` in Cloud VMs.
+- Git hooks are managed by Vite+ (`vp config`, run via the `prepare` script) and live in `.vite-hooks/` with `core.hooksPath=.vite-hooks/_`. To skip hook setup in Cloud VMs/CI, set `VITE_GIT_HOOKS=0`.
 - One pre-existing test failure exists in `apps/web/__tests__/message-list.test.tsx` (expects "Tool Calls" text that doesn't render). This is not environment-related.
 - Standard commands are documented in `CLAUDE.md` (lint, test, build, type-check).
 
@@ -297,3 +301,5 @@ pnpm dev:web
 - `heroui-native` rc.2+ resolves peer dependency warnings in the native app
 - Use `@tanstack/react-hotkeys` for keyboard shortcut support in web components
 - Page animations and transitions should integrate with system design tokens via the animate/extract skills
+
+@RTK.md

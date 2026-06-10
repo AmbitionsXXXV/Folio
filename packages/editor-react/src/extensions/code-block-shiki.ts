@@ -1,6 +1,7 @@
-import CodeBlock from '@tiptap/extension-code-block'
-import { ReactNodeViewRenderer } from '@tiptap/react'
-import { CodeBlockShikiView } from '../components/code-block-view'
+import CodeBlock from "@tiptap/extension-code-block"
+import { ReactNodeViewRenderer } from "@tiptap/react"
+
+import { CodeBlockShikiView } from "../components/code-block-view"
 
 /**
  * Custom CodeBlock extension that uses Shiki for syntax highlighting
@@ -8,7 +9,7 @@ import { CodeBlockShikiView } from '../components/code-block-view'
  * that renders highlighted code using Shiki.
  */
 export const CodeBlockShiki = CodeBlock.extend({
-	addNodeView() {
-		return ReactNodeViewRenderer(CodeBlockShikiView)
-	},
+  addNodeView() {
+    return ReactNodeViewRenderer(CodeBlockShikiView)
+  }
 })

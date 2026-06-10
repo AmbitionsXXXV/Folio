@@ -1,1 +1,1 @@
-export { WebFetchCard } from './web-fetch-card'
+export { WebFetchCard } from "./web-fetch-card"

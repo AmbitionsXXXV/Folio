@@ -12,6 +12,11 @@
   "scripts": {
     "check-types": "tsc --noEmit"
   },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "hono": "catalog:",
+    "typescript": "catalog:"
+  },
   "peerDependencies": {
     "hono": "*"
   },
@@ -19,10 +24,5 @@
     "hono": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@folionote/config": "workspace:*",
-    "hono": "catalog:",
-    "typescript": "catalog:"
   }
 }

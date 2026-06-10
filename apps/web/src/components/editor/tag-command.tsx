@@ -1,25 +1,25 @@
-import type { SlashCommandItem } from '@folionote/editor-react'
-import type { Editor, Range } from '@tiptap/core'
+import type { SlashCommandItem } from "@folionote/editor-react"
+import type { Editor, Range } from "@tiptap/core"
 
 /**
  * Tag type definition
  */
-type Tag = {
-	id: string
-	name: string
-	color: string | null
+interface Tag {
+  id: string
+  name: string
+  color: string | null
 }
 
 /**
  * Options for creating the tag command
  */
-type CreateTagCommandOptions = {
-	/** Function to get all available tags */
-	getTags: () => Tag[]
-	/** Function to add a tag to the current entry */
-	onAddTag: (tagId: string) => void
-	/** Function to create a new tag and add it */
-	onCreateTag?: (name: string) => void
+interface CreateTagCommandOptions {
+  /** Function to get all available tags */
+  getTags: () => Tag[]
+  /** Function to add a tag to the current entry */
+  onAddTag: (tagId: string) => void
+  /** Function to create a new tag and add it */
+  onCreateTag?: (name: string) => void
 }
 
 /**
@@ -30,38 +30,38 @@ type CreateTagCommandOptions = {
  * mention extension or a custom popup.
  */
 export function createTagCommand(
-	options: CreateTagCommandOptions,
-	t: (key: string) => string
+  options: CreateTagCommandOptions,
+  t: (key: string) => string
 ): SlashCommandItem {
-	const { onAddTag, getTags } = options
+  const { onAddTag, getTags } = options
 
-	return {
-		id: 'tag',
-		title: t('editor.tagCommand.addTag'),
-		description: t('editor.tagCommand.addTagDesc'),
-		iconId: 'tag',
-		keywords: ['tag', 'label', '标签'],
-		group: 'FolioNote',
-		command: ({ editor, range }: { editor: Editor; range: Range }) => {
-			// Delete the slash command text
-			editor.chain().focus().deleteRange(range).run()
+  return {
+    id: "tag",
+    title: t("editor.tagCommand.addTag"),
+    description: t("editor.tagCommand.addTagDesc"),
+    iconId: "tag",
+    keywords: ["tag", "label", "标签"],
+    group: "FolioNote",
+    command: ({ editor, range }: { editor: Editor; range: Range }) => {
+      // Delete the slash command text
+      editor.chain().focus().deleteRange(range).run()
 
-			// Get available tags
-			const tags = getTags()
+      // Get available tags
+      const tags = getTags()
 
-			if (tags.length === 0) {
-				// No tags available, could show a toast or create dialog
-				return
-			}
+      if (tags.length === 0) {
+        // No tags available, could show a toast or create dialog
+        return
+      }
 
-			// For now, add the first tag as a simple implementation
-			// A more sophisticated implementation would show a popup to select
-			const firstTag = tags[0]
-			if (firstTag) {
-				onAddTag(firstTag.id)
-			}
-		},
-	}
+      // For now, add the first tag as a simple implementation
+      // A more sophisticated implementation would show a popup to select
+      const firstTag = tags[0]
+      if (firstTag) {
+        onAddTag(firstTag.id)
+      }
+    }
+  }
 }
 
 /**
@@ -69,25 +69,25 @@ export function createTagCommand(
  * This allows the parent component to handle tag selection UI
  */
 export function createTagCommandWithEvent(
-	t: (key: string) => string
+  t: (key: string) => string
 ): SlashCommandItem {
-	return {
-		id: 'tag-event',
-		title: t('editor.tagCommand.addTag'),
-		description: t('editor.tagCommand.addTagDesc'),
-		iconId: 'tag',
-		keywords: ['tag', 'label', '标签'],
-		group: 'FolioNote',
-		command: ({ editor, range }: { editor: Editor; range: Range }) => {
-			// Delete the slash command text
-			editor.chain().focus().deleteRange(range).run()
+  return {
+    id: "tag-event",
+    title: t("editor.tagCommand.addTag"),
+    description: t("editor.tagCommand.addTagDesc"),
+    iconId: "tag",
+    keywords: ["tag", "label", "标签"],
+    group: "FolioNote",
+    command: ({ editor, range }: { editor: Editor; range: Range }) => {
+      // Delete the slash command text
+      editor.chain().focus().deleteRange(range).run()
 
-			// Dispatch a custom event that the parent can listen to
-			const event = new CustomEvent('folio-note:open-tag-picker', {
-				bubbles: true,
-				detail: { editor },
-			})
-			document.dispatchEvent(event)
-		},
-	}
+      // Dispatch a custom event that the parent can listen to
+      const event = new CustomEvent("folio-note:open-tag-picker", {
+        bubbles: true,
+        detail: { editor }
+      })
+      document.dispatchEvent(event)
+    }
+  }
 }

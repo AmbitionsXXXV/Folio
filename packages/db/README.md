@@ -63,11 +63,11 @@ pnpm run db:stop:local
 
 The database connection uses the following environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | Primary connection string | - |
-| `SUPABASE_DB_URL` | Supabase-specific URL (fallback) | - |
-| - | Local Supabase default | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| Variable          | Description                      | Default                                                   |
+| ----------------- | -------------------------------- | --------------------------------------------------------- |
+| `DATABASE_URL`    | Primary connection string        | -                                                         |
+| `SUPABASE_DB_URL` | Supabase-specific URL (fallback) | -                                                         |
+| -                 | Local Supabase default           | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 
 ### Environment Setup
 
@@ -361,12 +361,12 @@ sudo -u postgres psql
 
 ## Comparison: Local Supabase vs Docker vs Local PostgreSQL
 
-| Feature | Local Supabase | Docker | Local PostgreSQL |
-|---------|---------------|--------|------------------|
-| Setup Complexity | Medium | Low | High |
-| Studio UI | ✅ Built-in | ❌ | ❌ |
-| Full Supabase Features | ✅ | ❌ | ❌ |
-| Resource Usage | High | Medium | Low |
-| Persistence | ✅ | ✅ | ✅ |
-| Production Parity | ✅ High | ⚠️ Medium | ⚠️ Low |
-| Recommended For | Development | Quick Testing | CI/CD |
+| Feature                | Local Supabase | Docker        | Local PostgreSQL |
+| ---------------------- | -------------- | ------------- | ---------------- |
+| Setup Complexity       | Medium         | Low           | High             |
+| Studio UI              | ✅ Built-in    | ❌            | ❌               |
+| Full Supabase Features | ✅             | ❌            | ❌               |
+| Resource Usage         | High           | Medium        | Low              |
+| Persistence            | ✅             | ✅            | ✅               |
+| Production Parity      | ✅ High        | ⚠️ Medium     | ⚠️ Low           |
+| Recommended For        | Development    | Quick Testing | CI/CD            |

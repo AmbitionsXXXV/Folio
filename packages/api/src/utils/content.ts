@@ -8,12 +8,12 @@
 /**
  * ProseMirror 文档节点类型
  */
-type ProseMirrorNode = {
-	type: string
-	content?: ProseMirrorNode[]
-	text?: string
-	marks?: Array<{ type: string; attrs?: Record<string, unknown> }>
-	attrs?: Record<string, unknown>
+interface ProseMirrorNode {
+  type: string
+  content?: ProseMirrorNode[]
+  text?: string
+  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>
+  attrs?: Record<string, unknown>
 }
 
 /**
@@ -23,64 +23,64 @@ type ProseMirrorNode = {
  * @returns 提取的纯文本内容
  */
 export function extractTextFromProseMirrorJson(
-	doc: ProseMirrorNode | string | null | undefined
+  doc: ProseMirrorNode | string | null | undefined
 ): string {
-	if (!doc) {
-		return ''
-	}
+  if (!doc) {
+    return ""
+  }
 
-	const docObj: ProseMirrorNode =
-		typeof doc === 'string' ? (JSON.parse(doc) as ProseMirrorNode) : doc
+  const docObj: ProseMirrorNode =
+    typeof doc === "string" ? (JSON.parse(doc) as ProseMirrorNode) : doc
 
-	return extractTextFromNode(docObj)
+  return extractTextFromNode(docObj)
 }
 
 /**
  * 递归从节点中提取文本
  */
 function extractTextFromNode(node: ProseMirrorNode): string {
-	// 直接文本节点
-	if (node.type === 'text' && node.text) {
-		return node.text
-	}
+  // 直接文本节点
+  if (node.type === "text" && node.text) {
+    return node.text
+  }
 
-	// 没有子节点
-	if (!node.content || node.content.length === 0) {
-		// 某些节点类型需要添加换行
-		if (isBlockNode(node.type)) {
-			return '\n'
-		}
-		return ''
-	}
+  // 没有子节点
+  if (!node.content || node.content.length === 0) {
+    // 某些节点类型需要添加换行
+    if (isBlockNode(node.type)) {
+      return "\n"
+    }
+    return ""
+  }
 
-	// 递归处理子节点
-	const texts = node.content.map(extractTextFromNode)
-	const result = texts.join('')
+  // 递归处理子节点
+  const texts = node.content.map(extractTextFromNode)
+  const result = texts.join("")
 
-	// 块级节点后添加换行
-	if (isBlockNode(node.type)) {
-		return `${result}\n`
-	}
+  // 块级节点后添加换行
+  if (isBlockNode(node.type)) {
+    return `${result}\n`
+  }
 
-	return result
+  return result
 }
 
 /**
  * 判断是否为块级节点
  */
 function isBlockNode(type: string): boolean {
-	const blockTypes = [
-		'paragraph',
-		'heading',
-		'blockquote',
-		'codeBlock',
-		'bulletList',
-		'orderedList',
-		'listItem',
-		'horizontalRule',
-		'hardBreak',
-	]
-	return blockTypes.includes(type)
+  const blockTypes = [
+    "paragraph",
+    "heading",
+    "blockquote",
+    "codeBlock",
+    "bulletList",
+    "orderedList",
+    "listItem",
+    "horizontalRule",
+    "hardBreak"
+  ]
+  return blockTypes.includes(type)
 }
 
 /**
@@ -90,30 +90,30 @@ function isBlockNode(type: string): boolean {
  * @returns 提取的纯文本内容
  */
 export function extractTextFromHtml(html: string | null | undefined): string {
-	if (!html) {
-		return ''
-	}
+  if (!html) {
+    return ""
+  }
 
-	// 简单的 HTML 标签移除（服务端无 DOM）
-	return (
-		html
-			// 替换块级标签为换行
-			.replaceAll(/<\/(p|div|h[1-6]|li|blockquote|pre)>/gi, '\n')
-			// 替换 br 为换行
-			.replaceAll(/<br\s*\/?>/gi, '\n')
-			// 移除所有其他标签
-			.replaceAll(/<[^>]*>/g, '')
-			// 解码 HTML 实体
-			.replaceAll(/&nbsp;/g, ' ')
-			.replaceAll(/&amp;/g, '&')
-			.replaceAll(/&lt;/g, '<')
-			.replaceAll(/&gt;/g, '>')
-			.replaceAll(/&quot;/g, '"')
-			.replaceAll(/&#39;/g, "'")
-			// 清理多余空白
-			.replaceAll(/\n{3,}/g, '\n\n')
-			.trim()
-	)
+  // 简单的 HTML 标签移除（服务端无 DOM）
+  return (
+    html
+      // 替换块级标签为换行
+      .replaceAll(/<\/(p|div|h[1-6]|li|blockquote|pre)>/gi, "\n")
+      // 替换 br 为换行
+      .replaceAll(/<br\s*\/?>/gi, "\n")
+      // 移除所有其他标签
+      .replaceAll(/<[^>]*>/g, "")
+      // 解码 HTML 实体
+      .replaceAll("&nbsp;", " ")
+      .replaceAll("&amp;", "&")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#39;", "'")
+      // 清理多余空白
+      .replaceAll(/\n{3,}/g, "\n\n")
+      .trim()
+  )
 }
 
 /**
@@ -124,29 +124,29 @@ export function extractTextFromHtml(html: string | null | undefined): string {
  * @returns 截断后的预览文本
  */
 export function generateContentPreview(
-	text: string | null | undefined,
-	maxLength = 200
+  text: string | null | undefined,
+  maxLength = 200
 ): string {
-	if (!text) {
-		return ''
-	}
+  if (!text) {
+    return ""
+  }
 
-	// 将换行替换为空格以便于预览
-	const normalized = text.replaceAll(/\s+/g, ' ').trim()
+  // 将换行替换为空格以便于预览
+  const normalized = text.replaceAll(/\s+/g, " ").trim()
 
-	if (normalized.length <= maxLength) {
-		return normalized
-	}
+  if (normalized.length <= maxLength) {
+    return normalized
+  }
 
-	// 尝试在单词边界截断
-	const truncated = normalized.slice(0, maxLength)
-	const lastSpace = truncated.lastIndexOf(' ')
+  // 尝试在单词边界截断
+  const truncated = normalized.slice(0, maxLength)
+  const lastSpace = truncated.lastIndexOf(" ")
 
-	if (lastSpace > maxLength * 0.8) {
-		return `${truncated.slice(0, lastSpace)}...`
-	}
+  if (lastSpace > maxLength * 0.8) {
+    return `${truncated.slice(0, lastSpace)}...`
+  }
 
-	return `${truncated}...`
+  return `${truncated}...`
 }
 
 /**
@@ -156,20 +156,23 @@ export function generateContentPreview(
  * @returns 是否为有效的 ProseMirror 文档
  */
 export function isValidProseMirrorJson(
-	json: string | object | null | undefined
+  json: string | object | null | undefined
 ): boolean {
-	if (!json) {
-		return false
-	}
+  if (!json) {
+    return false
+  }
 
-	try {
-		const doc = typeof json === 'string' ? JSON.parse(json) : json
-		return (
-			typeof doc === 'object' && doc !== null && 'type' in doc && doc.type === 'doc'
-		)
-	} catch {
-		return false
-	}
+  try {
+    const doc = typeof json === "string" ? JSON.parse(json) : json
+    return (
+      typeof doc === "object" &&
+      doc !== null &&
+      "type" in doc &&
+      doc.type === "doc"
+    )
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -178,14 +181,14 @@ export function isValidProseMirrorJson(
  * @returns 空文档的 JSON 字符串
  */
 export function createEmptyProseMirrorDoc(): string {
-	return JSON.stringify({
-		type: 'doc',
-		content: [
-			{
-				type: 'paragraph',
-			},
-		],
-	})
+  return JSON.stringify({
+    type: "doc",
+    content: [
+      {
+        type: "paragraph"
+      }
+    ]
+  })
 }
 
 /**
@@ -195,17 +198,17 @@ export function createEmptyProseMirrorDoc(): string {
  * @returns 包含 contentJson 和 contentText 的对象
  */
 export function processContentUpdate(contentJson: string | null | undefined): {
-	contentJson: string | null
-	contentText: string | null
+  contentJson: string | null
+  contentText: string | null
 } {
-	if (!contentJson) {
-		return { contentJson: null, contentText: null }
-	}
+  if (!contentJson) {
+    return { contentJson: null, contentText: null }
+  }
 
-	const contentText = extractTextFromProseMirrorJson(contentJson)
+  const contentText = extractTextFromProseMirrorJson(contentJson)
 
-	return {
-		contentJson,
-		contentText: contentText || null,
-	}
+  return {
+    contentJson,
+    contentText: contentText || null
+  }
 }

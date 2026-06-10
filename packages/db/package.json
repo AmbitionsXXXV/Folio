@@ -36,18 +36,18 @@
     "db:start:local": "./scripts/start-local-db.sh",
     "db:stop:local": "./scripts/stop-local-db.sh"
   },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "^8.19.0",
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@folionote/config": "workspace:*",
     "@types/pg": "^8.18.0",
     "drizzle-kit": "catalog:",
     "supabase": "^2.76.15",
     "typescript": "catalog:",
-    "vitest": "catalog:"
-  },
-  "dependencies": {
-    "drizzle-orm": "catalog:",
-    "pg": "^8.19.0",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
+    "vite-plus": "catalog:"
   }
 }

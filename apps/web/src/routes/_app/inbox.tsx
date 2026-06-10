@@ -1,21 +1,22 @@
-import { InboxIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
-import { EntryList } from '@/components/entry-list'
-import { QuickCapture } from '@/components/quick-capture'
-import { orpc } from '@/utils/orpc'
+import { InboxIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 
-export const Route = createFileRoute('/_app/inbox')({
-	loader: ({ context: { queryClient } }) => {
-		queryClient.ensureInfiniteQueryData({
-			queryKey: ['entries', 'inbox'],
-			queryFn: () => orpc.entries.list.call({ filter: 'inbox', limit: 20 }),
-			initialPageParam: undefined as string | undefined,
-		})
-	},
-	component: InboxPage,
+import { EntryList } from "@/components/entry-list"
+import { QuickCapture } from "@/components/quick-capture"
+import { orpc } from "@/utils/orpc"
+
+export const Route = createFileRoute("/_app/inbox")({
+  loader: ({ context: { queryClient } }) => {
+    queryClient.ensureInfiniteQueryData({
+      queryKey: ["entries", "inbox"],
+      queryFn: () => orpc.entries.list.call({ filter: "inbox", limit: 20 }),
+      initialPageParam: undefined as string | undefined
+    })
+  },
+  component: InboxPage
 })
 
 /**
@@ -24,63 +25,65 @@ export const Route = createFileRoute('/_app/inbox')({
  * @returns The page's React element containing the inbox header, QuickCapture input, and EntryList wired to infinite query state
  */
 function InboxPage() {
-	const { t } = useTranslation()
-	const {
-		data,
-		isLoading,
-		isError,
-		error,
-		hasNextPage,
-		fetchNextPage,
-		isFetchingNextPage,
-		refetch,
-	} = useInfiniteQuery({
-		queryKey: ['entries', 'inbox'],
-		queryFn: ({ pageParam }) =>
-			orpc.entries.list.call({
-				filter: 'inbox',
-				cursor: pageParam,
-				limit: 20,
-			}),
-		getNextPageParam: (lastPage) => lastPage?.nextCursor,
-		initialPageParam: undefined as string | undefined,
-	})
+  const { t } = useTranslation()
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ["entries", "inbox"],
+    queryFn: ({ pageParam }) =>
+      orpc.entries.list.call({
+        filter: "inbox",
+        cursor: pageParam,
+        limit: 20
+      }),
+    getNextPageParam: (lastPage) => lastPage?.nextCursor,
+    initialPageParam: undefined as string | undefined
+  })
 
-	// Flatten all pages into a single array with safe access
-	const entries =
-		data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
+  // Flatten all pages into a single array with safe access
+  const entries =
+    data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
 
-	return (
-		<div className="container mx-auto max-w-5xl px-4 py-8">
-			{/* Header */}
-			<div className="mb-8 flex items-center gap-3">
-				<div className="rounded-lg bg-primary/10 p-2">
-					<HugeiconsIcon className="size-6 text-primary" icon={InboxIcon} />
-				</div>
-				<div>
-					<h1 className="font-bold text-2xl">{t('entry.inbox')}</h1>
-					<p className="text-muted-foreground text-sm">{t('entry.quickCapture')}</p>
-				</div>
-			</div>
+  return (
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      {/* Header */}
+      <div className="mb-8 flex items-center gap-3">
+        <div className="rounded-lg bg-primary/10 p-2">
+          <HugeiconsIcon className="size-6 text-primary" icon={InboxIcon} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">{t("entry.inbox")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t("entry.quickCapture")}
+          </p>
+        </div>
+      </div>
 
-			{/* Quick capture */}
-			<div className="mb-8">
-				<QuickCapture placeholder={t('entry.placeholder')} />
-			</div>
+      {/* Quick capture */}
+      <div className="mb-8">
+        <QuickCapture placeholder={t("entry.placeholder")} />
+      </div>
 
-			{/* Entry list */}
-			<EntryList
-				emptyMessage={t('entry.emptyInbox')}
-				entries={entries}
-				errorMessage={
-					isError ? (error?.message ?? t('common.unknownError')) : undefined
-				}
-				hasMore={hasNextPage}
-				isLoading={isLoading}
-				isLoadingMore={isFetchingNextPage}
-				onLoadMore={() => fetchNextPage()}
-				onRetry={refetch}
-			/>
-		</div>
-	)
+      {/* Entry list */}
+      <EntryList
+        emptyMessage={t("entry.emptyInbox")}
+        entries={entries}
+        errorMessage={
+          isError ? (error?.message ?? t("common.unknownError")) : undefined
+        }
+        hasMore={hasNextPage}
+        isLoading={isLoading}
+        isLoadingMore={isFetchingNextPage}
+        onLoadMore={() => fetchNextPage()}
+        onRetry={refetch}
+      />
+    </div>
+  )
 }

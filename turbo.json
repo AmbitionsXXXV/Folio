@@ -35,19 +35,6 @@
       "cache": true,
       "inputs": ["src/resources/*.json", "scripts/check-keys.ts"]
     },
-    "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "__tests__/**", "*.test.ts", "*.spec.ts"],
-      "outputs": ["coverage/**"]
-    },
-    "test:watch": {
-      "cache": false,
-      "persistent": true
-    },
-    "test:coverage": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
-    },
     "dev": {
       "cache": false,
       "persistent": true

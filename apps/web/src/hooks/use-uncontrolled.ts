@@ -1,47 +1,47 @@
-import { useState } from 'react'
+import { useState } from "react"
 
 export interface UseUncontrolledOptions<T> {
-	/** Initial value for uncontrolled state */
-	defaultValue?: T
+  /** Initial value for uncontrolled state */
+  defaultValue?: T
 
-	/** Final value for uncontrolled state when value and defaultValue are not provided */
-	finalValue?: T
+  /** Final value for uncontrolled state when value and defaultValue are not provided */
+  finalValue?: T
 
-	/** Controlled state onChange handler */
-	onChange?: (value: T, ...payload: unknown[]) => void
-	/** Value for controlled state */
-	value?: T
+  /** Controlled state onChange handler */
+  onChange?: (value: T, ...payload: unknown[]) => void
+  /** Value for controlled state */
+  value?: T
 }
 
 export type UseUncontrolledReturnValue<T> = [
-	/** Current value */
-	T,
-	/** Handler to update the state, passes `value` and `payload` to `onChange` */
-	(value: T, ...payload: unknown[]) => void,
-	/** True if the state is controlled, false if uncontrolled */
-	boolean,
+  /** Current value */
+  T,
+  /** Handler to update the state, passes `value` and `payload` to `onChange` */
+  (value: T, ...payload: unknown[]) => void,
+  /** True if the state is controlled, false if uncontrolled */
+  boolean
 ]
 
 export function useUncontrolled<T>({
-	value,
-	defaultValue,
-	finalValue,
-	onChange = () => {
-		// No-op default handler
-	},
+  value,
+  defaultValue,
+  finalValue,
+  onChange = () => {
+    // No-op default handler
+  }
 }: UseUncontrolledOptions<T>): UseUncontrolledReturnValue<T> {
-	const [uncontrolledValue, setUncontrolledValue] = useState(
-		defaultValue !== undefined ? defaultValue : finalValue
-	)
+  const [uncontrolledValue, setUncontrolledValue] = useState(
+    defaultValue !== undefined ? defaultValue : finalValue
+  )
 
-	const handleUncontrolledChange = (val: T, ...payload: unknown[]) => {
-		setUncontrolledValue(val)
-		onChange?.(val, ...payload)
-	}
+  const handleUncontrolledChange = (val: T, ...payload: unknown[]) => {
+    setUncontrolledValue(val)
+    onChange?.(val, ...payload)
+  }
 
-	if (value !== undefined) {
-		return [value as T, onChange, true]
-	}
+  if (value !== undefined) {
+    return [value as T, onChange, true]
+  }
 
-	return [uncontrolledValue as T, handleUncontrolledChange, false]
+  return [uncontrolledValue as T, handleUncontrolledChange, false]
 }

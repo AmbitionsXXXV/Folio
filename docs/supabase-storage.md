@@ -89,12 +89,12 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', tru
 
 **Bucket Configuration:**
 
-| Setting         | Value                                               |
-| --------------- | --------------------------------------------------- |
-| Bucket Name     | `avatars`                                           |
-| Public          | Yes (for direct URL access)                         |
-| Max File Size   | 3MB (Supabase allows 50MB)                          |
-| Allowed Types   | image/jpeg, image/png, image/gif, image/webp        |
+| Setting       | Value                                        |
+| ------------- | -------------------------------------------- |
+| Bucket Name   | `avatars`                                    |
+| Public        | Yes (for direct URL access)                  |
+| Max File Size | 3MB (Supabase allows 50MB)                   |
+| Allowed Types | image/jpeg, image/png, image/gif, image/webp |
 
 ## API Endpoints
 
@@ -118,8 +118,8 @@ Upload a new avatar image.
 
 ```typescript
 {
-  imageUrl: string  // Public URL of the uploaded avatar
-  path: string      // Storage path for the file
+  imageUrl: string // Public URL of the uploaded avatar
+  path: string // Storage path for the file
 }
 ```
 
@@ -177,7 +177,7 @@ Get the current rate limit status for avatar operations.
 
 ```typescript
 {
-  action: 'upload' | 'update' | 'delete'
+  action: "upload" | "update" | "delete"
 }
 ```
 
@@ -185,7 +185,7 @@ Get the current rate limit status for avatar operations.
 
 ```typescript
 {
-  action: 'upload' | 'update' | 'delete'
+  action: "upload" | "update" | "delete"
   remaining: number
   limit: number
   resetAt: number
@@ -202,14 +202,13 @@ Get the current rate limit status for avatar operations.
 A React component for uploading and managing avatars.
 
 ```tsx
-import { AvatarUploader } from '@/components/avatar-uploader'
-
-<AvatarUploader
+import { AvatarUploader } from "@/components/avatar-uploader"
+;<AvatarUploader
   currentImageUrl={user.image}
   userName={user.name}
-  size="lg"  // 'sm' | 'md' | 'lg'
+  size="lg" // 'sm' | 'md' | 'lg'
   readonly={false}
-  onAvatarChange={(newUrl) => console.log('Avatar updated:', newUrl)}
+  onAvatarChange={(newUrl) => console.log("Avatar updated:", newUrl)}
 />
 ```
 
@@ -244,7 +243,7 @@ The `@folionote/storage` package exports these functions:
 ### Client Functions
 
 ```typescript
-import { getS3Client, resetS3Client } from '@folionote/storage'
+import { getS3Client, resetS3Client } from "@folionote/storage"
 
 // Get the S3 client
 const s3 = getS3Client()
@@ -258,27 +257,27 @@ import {
   deleteAvatar,
   deleteUserAvatars,
   validateAvatarFile,
-  getPathFromPublicUrl,
-} from '@folionote/storage'
+  getPathFromPublicUrl
+} from "@folionote/storage"
 
 // Upload an avatar
 const result = await uploadAvatar({
-  userId: 'user-id',
+  userId: "user-id",
   file: buffer,
-  contentType: 'image/png',
+  contentType: "image/png"
 })
 
 // Validate before upload
-const validation = validateAvatarFile('image/png', fileSize)
+const validation = validateAvatarFile("image/png", fileSize)
 if (!validation.valid) {
   console.error(validation.error)
 }
 
 // Delete a specific avatar
-await deleteAvatar('user-id/avatar-id.png')
+await deleteAvatar("user-id/avatar-id.png")
 
 // Delete all avatars for a user
-await deleteUserAvatars('user-id')
+await deleteUserAvatars("user-id")
 ```
 
 ### Constants
@@ -288,11 +287,11 @@ import {
   STORAGE_BUCKETS,
   ALLOWED_AVATAR_TYPES,
   MAX_AVATAR_SIZE,
-  getS3Config,
-} from '@folionote/storage'
+  getS3Config
+} from "@folionote/storage"
 
-console.log(STORAGE_BUCKETS.AVATARS)  // 'avatars'
-console.log(MAX_AVATAR_SIZE)           // 3145728 (3MB)
+console.log(STORAGE_BUCKETS.AVATARS) // 'avatars'
+console.log(MAX_AVATAR_SIZE) // 3145728 (3MB)
 ```
 
 ## Troubleshooting
@@ -356,11 +355,11 @@ For production, create it manually in the Supabase dashboard with:
 
 ### API Endpoints
 
-| Endpoint | Description |
-|---|---|
-| `storage.uploadAttachment` | Upload an image, writes metadata to `attachments` table |
-| `storage.deleteAttachment` | Soft-delete an attachment (marks `deletedAt`, removes from S3) |
-| `storage.getAttachmentConfig` | Returns allowed types and max size for client validation |
+| Endpoint                      | Description                                                    |
+| ----------------------------- | -------------------------------------------------------------- |
+| `storage.uploadAttachment`    | Upload an image, writes metadata to `attachments` table        |
+| `storage.deleteAttachment`    | Soft-delete an attachment (marks `deletedAt`, removes from S3) |
+| `storage.getAttachmentConfig` | Returns allowed types and max size for client validation       |
 
 ### Editor Integration
 

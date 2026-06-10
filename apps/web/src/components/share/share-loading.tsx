@@ -1,12 +1,12 @@
-import { Spinner } from '@folionote/ui/spinner'
+import { Spinner } from "@folionote/ui/spinner"
 
 /**
  * Loading spinner component for share pages
  */
 export function ShareLoading() {
-	return (
-		<div className="flex min-h-svh items-center justify-center">
-			<Spinner className="size-8 text-muted-foreground" />
-		</div>
-	)
+  return (
+    <div className="flex min-h-svh items-center justify-center">
+      <Spinner className="size-8 text-muted-foreground" />
+    </div>
+  )
 }

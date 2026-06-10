@@ -15,16 +15,16 @@
     "dev": "email dev --port 3030",
     "check-types": "tsc --noEmit"
   },
+  "dependencies": {
+    "@react-email/components": "^1.0.8",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
   "devDependencies": {
     "@folionote/config": "workspace:*",
     "@react-email/preview-server": "^5.1.1",
     "@types/react": "catalog:",
     "react-email": "^5.2.8",
     "typescript": "catalog:"
-  },
-  "dependencies": {
-    "@react-email/components": "^1.0.8",
-    "react": "catalog:",
-    "react-dom": "catalog:"
   }
 }

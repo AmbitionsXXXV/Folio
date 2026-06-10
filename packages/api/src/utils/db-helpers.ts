@@ -5,9 +5,11 @@
  * These helpers make error handling more explicit and composable.
  */
 
-import type { Result } from '@folionote/utils'
-import { err, fromPromise, ok } from '@folionote/utils'
-import { type AppError, internalError, notFound } from './orpc-result'
+import type { Result } from "@folionote/utils"
+import { err, fromPromise, ok } from "@folionote/utils"
+
+import { internalError, notFound } from "./orpc-result"
+import type { AppError } from "./orpc-result"
 
 /**
  * Find a single record, returning NOT_FOUND error if not found
@@ -20,21 +22,21 @@ import { type AppError, internalError, notFound } from './orpc-result'
  * return unwrapOrThrow(result)
  */
 export async function findOneOrNotFound<T>(
-	queryFn: () => Promise<T[]>,
-	errorMessage?: string
+  queryFn: () => Promise<T[]>,
+  errorMessage?: string
 ): Promise<Result<T, AppError>> {
-	const result = await fromPromise(queryFn())
+  const result = await fromPromise(queryFn())
 
-	if (!result.ok) {
-		return err(internalError(result.error.message))
-	}
+  if (!result.ok) {
+    return err(internalError(result.error.message))
+  }
 
-	const [item] = result.value
-	if (!item) {
-		return err(notFound(errorMessage))
-	}
+  const [item] = result.value
+  if (!item) {
+    return err(notFound(errorMessage))
+  }
 
-	return ok(item)
+  return ok(item)
 }
 
 /**
@@ -50,15 +52,15 @@ export async function findOneOrNotFound<T>(
  * }
  */
 export async function findOneOptional<T>(
-	queryFn: () => Promise<T[]>
+  queryFn: () => Promise<T[]>
 ): Promise<Result<T | undefined, AppError>> {
-	const result = await fromPromise(queryFn())
+  const result = await fromPromise(queryFn())
 
-	if (!result.ok) {
-		return err(internalError(result.error.message))
-	}
+  if (!result.ok) {
+    return err(internalError(result.error.message))
+  }
 
-	return ok(result.value[0])
+  return ok(result.value[0])
 }
 
 /**
@@ -71,15 +73,15 @@ export async function findOneOptional<T>(
  * )
  */
 export async function queryMany<T>(
-	queryFn: () => Promise<T[]>
+  queryFn: () => Promise<T[]>
 ): Promise<Result<T[], AppError>> {
-	const result = await fromPromise(queryFn())
+  const result = await fromPromise(queryFn())
 
-	if (!result.ok) {
-		return err(internalError(result.error.message))
-	}
+  if (!result.ok) {
+    return err(internalError(result.error.message))
+  }
 
-	return ok(result.value)
+  return ok(result.value)
 }
 
 /**
@@ -93,19 +95,19 @@ export async function queryMany<T>(
  * )
  */
 export async function mutateOne<T>(
-	queryFn: () => Promise<T[]>,
-	errorMessage?: string
+  queryFn: () => Promise<T[]>,
+  errorMessage?: string
 ): Promise<Result<T, AppError>> {
-	const result = await fromPromise(queryFn())
+  const result = await fromPromise(queryFn())
 
-	if (!result.ok) {
-		return err(internalError(result.error.message))
-	}
+  if (!result.ok) {
+    return err(internalError(result.error.message))
+  }
 
-	const [item] = result.value
-	if (!item) {
-		return err(notFound(errorMessage))
-	}
+  const [item] = result.value
+  if (!item) {
+    return err(notFound(errorMessage))
+  }
 
-	return ok(item)
+  return ok(item)
 }

@@ -9,20 +9,21 @@
  * Supabase Storage bucket names (used as S3 bucket names)
  */
 export const STORAGE_BUCKETS = {
-	AVATARS: 'avatars',
-	ATTACHMENTS: 'attachments',
+  AVATARS: "avatars",
+  ATTACHMENTS: "attachments"
 } as const
 
-export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS]
+export type StorageBucket =
+  (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS]
 
 /**
  * Allowed image MIME types for avatar uploads
  */
 export const ALLOWED_AVATAR_TYPES = [
-	'image/jpeg',
-	'image/png',
-	'image/gif',
-	'image/webp',
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp"
 ] as const
 
 export type AllowedAvatarType = (typeof ALLOWED_AVATAR_TYPES)[number]
@@ -37,15 +38,15 @@ export const MAX_AVATAR_SIZE = 3 * 1024 * 1024
  * Allowed image MIME types for entry attachments
  */
 export const ALLOWED_ATTACHMENT_IMAGE_TYPES = [
-	'image/jpeg',
-	'image/png',
-	'image/gif',
-	'image/webp',
-	'image/svg+xml',
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml"
 ] as const
 
 export type AllowedAttachmentImageType =
-	(typeof ALLOWED_ATTACHMENT_IMAGE_TYPES)[number]
+  (typeof ALLOWED_ATTACHMENT_IMAGE_TYPES)[number]
 
 /**
  * Maximum file size for attachments (10MB)

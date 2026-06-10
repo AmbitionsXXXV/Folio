@@ -1,33 +1,33 @@
-import type { SupportedLanguage } from '@folionote/locales'
-import { getI18nConfig, supportedLanguages } from '@folionote/locales'
-import * as Localization from 'expo-localization'
-import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
+import type { SupportedLanguage } from "@folionote/locales"
+import { getI18nConfig, supportedLanguages } from "@folionote/locales"
+import * as Localization from "expo-localization"
+import i18n from "i18next"
+import { initReactI18next } from "react-i18next"
 
 function getDeviceLanguage(): SupportedLanguage {
-	const locales = Localization.getLocales()
-	const deviceLocale = locales[0]?.languageTag
+  const locales = Localization.getLocales()
+  const deviceLocale = locales[0]?.languageTag
 
-	if (!deviceLocale) {
-		return 'en-US'
-	}
+  if (!deviceLocale) {
+    return "en-US"
+  }
 
-	const normalizedLocale = deviceLocale.toLowerCase()
+  const normalizedLocale = deviceLocale.toLowerCase()
 
-	if (normalizedLocale.startsWith('zh')) {
-		return 'zh-CN'
-	}
-	if (normalizedLocale.startsWith('en')) {
-		return 'en-US'
-	}
+  if (normalizedLocale.startsWith("zh")) {
+    return "zh-CN"
+  }
+  if (normalizedLocale.startsWith("en")) {
+    return "en-US"
+  }
 
-	for (const lang of supportedLanguages) {
-		if (normalizedLocale.startsWith(lang.toLowerCase().split('-')[0])) {
-			return lang
-		}
-	}
+  for (const lang of supportedLanguages) {
+    if (normalizedLocale.startsWith(lang.toLowerCase().split("-")[0])) {
+      return lang
+    }
+  }
 
-	return 'en-US'
+  return "en-US"
 }
 
 const deviceLanguage = getDeviceLanguage()

@@ -1,52 +1,53 @@
-import { describe, expect, it } from 'vitest'
-import app from '../../src/index'
+import { describe, expect, it } from "vite-plus/test"
 
-describe('CORS Integration', () => {
-	it('adds CORS headers to responses', async () => {
-		const testOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000'
-		const req = new Request('http://localhost/', {
-			method: 'GET',
-			headers: {
-				Origin: testOrigin,
-			},
-		})
+import app from "../../src/index"
 
-		const res = await app.fetch(req)
+describe("CORS Integration", () => {
+  it("adds CORS headers to responses", async () => {
+    const testOrigin = process.env.CORS_ORIGIN || "http://localhost:3000"
+    const req = new Request("http://localhost/", {
+      method: "GET",
+      headers: {
+        Origin: testOrigin
+      }
+    })
 
-		const allowOrigin = res.headers.get('Access-Control-Allow-Origin')
-		expect(allowOrigin).toBe(testOrigin)
-	})
+    const res = await app.fetch(req)
 
-	it('handles preflight OPTIONS requests', async () => {
-		const testOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000'
-		const req = new Request('http://localhost/rpc/healthCheck', {
-			method: 'OPTIONS',
-			headers: {
-				Origin: testOrigin,
-				'Access-Control-Request-Method': 'POST',
-				'Access-Control-Request-Headers': 'Content-Type',
-			},
-		})
+    const allowOrigin = res.headers.get("Access-Control-Allow-Origin")
+    expect(allowOrigin).toBe(testOrigin)
+  })
 
-		const res = await app.fetch(req)
+  it("handles preflight OPTIONS requests", async () => {
+    const testOrigin = process.env.CORS_ORIGIN || "http://localhost:3000"
+    const req = new Request("http://localhost/rpc/healthCheck", {
+      method: "OPTIONS",
+      headers: {
+        Origin: testOrigin,
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type"
+      }
+    })
 
-		expect(res.status).toBeLessThan(300)
-		const allowMethods = res.headers.get('Access-Control-Allow-Methods')
-		expect(allowMethods).toContain('POST')
-	})
+    const res = await app.fetch(req)
 
-	it('includes credentials support', async () => {
-		const testOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000'
-		const req = new Request('http://localhost/', {
-			method: 'GET',
-			headers: {
-				Origin: testOrigin,
-			},
-		})
+    expect(res.status).toBeLessThan(300)
+    const allowMethods = res.headers.get("Access-Control-Allow-Methods")
+    expect(allowMethods).toContain("POST")
+  })
 
-		const res = await app.fetch(req)
+  it("includes credentials support", async () => {
+    const testOrigin = process.env.CORS_ORIGIN || "http://localhost:3000"
+    const req = new Request("http://localhost/", {
+      method: "GET",
+      headers: {
+        Origin: testOrigin
+      }
+    })
 
-		const allowCredentials = res.headers.get('Access-Control-Allow-Credentials')
-		expect(allowCredentials).toBe('true')
-	})
+    const res = await app.fetch(req)
+
+    const allowCredentials = res.headers.get("Access-Control-Allow-Credentials")
+    expect(allowCredentials).toBe("true")
+  })
 })

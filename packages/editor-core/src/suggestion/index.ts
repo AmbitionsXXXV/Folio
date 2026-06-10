@@ -1,7 +1,7 @@
-export { createSuggestionExtension } from './create-extension'
+export { createSuggestionExtension } from "./create-extension"
 export type {
-	KeyboardHandlerRef,
-	SuggestionAdapter,
-	SuggestionExtensionOptions,
-	SuggestionState,
-} from './types'
+  KeyboardHandlerRef,
+  SuggestionAdapter,
+  SuggestionExtensionOptions,
+  SuggestionState
+} from "./types"

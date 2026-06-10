@@ -13,11 +13,11 @@
 
 ```css
 .etc-command-item {
- @apply data-[selected=true]:bg-muted;
+  @apply data-[selected=true]:bg-muted;
 }
 
 .etc-command-shortcut {
- @apply group-data-[selected=true]/command-item:text-foreground;
+  @apply group-data-[selected=true]/command-item:text-foreground;
 }
 ```
 

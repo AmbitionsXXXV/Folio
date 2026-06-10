@@ -44,12 +44,12 @@ pnpm run db:migrate
 
 ## 命令参考
 
-| 命令 | 用途 |
-|------|------|
-| `pnpm run db:push` | 开发环境快速同步 schema |
-| `pnpm run db:generate` | 生成迁移文件 |
-| `pnpm run db:migrate` | 应用迁移文件 |
-| `pnpm run db:studio` | 打开 Drizzle Studio 可视化工具 |
+| 命令                   | 用途                           |
+| ---------------------- | ------------------------------ |
+| `pnpm run db:push`     | 开发环境快速同步 schema        |
+| `pnpm run db:generate` | 生成迁移文件                   |
+| `pnpm run db:migrate`  | 应用迁移文件                   |
+| `pnpm run db:studio`   | 打开 Drizzle Studio 可视化工具 |
 
 ## 本地数据库管理
 
@@ -81,10 +81,10 @@ pnpm run db:stop:local     # 停止
 
 根据你选择的开发环境，设置对应的 `DATABASE_URL`：
 
-| 环境 | DATABASE_URL |
-|------|-------------|
-| Local Supabase | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
-| Docker | `postgresql://postgres:password@localhost:5432/folio_note` |
+| 环境             | DATABASE_URL                                               |
+| ---------------- | ---------------------------------------------------------- |
+| Local Supabase   | `postgresql://postgres:postgres@127.0.0.1:54322/postgres`  |
+| Docker           | `postgresql://postgres:password@localhost:5432/folio_note` |
 | Local PostgreSQL | `postgresql://postgres:password@localhost:5432/folio_note` |
 
 **注意**：如果不设置 `DATABASE_URL`，默认使用 Local Supabase 连接。

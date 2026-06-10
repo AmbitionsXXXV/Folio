@@ -1,5 +1,5 @@
-import 'dotenv/config'
-import { defineConfig } from 'drizzle-kit'
+import "dotenv/config"
+import { defineConfig } from "drizzle-kit"
 
 /**
  * Get database URL with fallback options
@@ -14,18 +14,18 @@ import { defineConfig } from 'drizzle-kit'
  * - Brew PostgreSQL: postgresql://postgres:password@localhost:5432/folio_note
  */
 function getDatabaseUrl(): string {
-	return (
-		process.env.DATABASE_URL ||
-		process.env.SUPABASE_DB_URL ||
-		'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
-	)
+  return (
+    process.env.DATABASE_URL ||
+    process.env.SUPABASE_DB_URL ||
+    "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+  )
 }
 
 export default defineConfig({
-	schema: './src/schema',
-	out: './src/migrations',
-	dialect: 'postgresql',
-	dbCredentials: {
-		url: getDatabaseUrl(),
-	},
+  schema: "./src/schema",
+  out: "./src/migrations",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: getDatabaseUrl()
+  }
 })

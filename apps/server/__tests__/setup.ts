@@ -5,9 +5,9 @@
 // Integration tests are excluded from the default test run in vitest.config.ts
 // To run integration tests, use: pnpm test:integration (requires running database)
 
-import { beforeAll } from 'vitest'
+import { beforeAll } from "vite-plus/test"
 
 beforeAll(() => {
-	console.log('Setting up test database...')
-	console.log('Test database ready')
+  console.log("Setting up test database...")
+  console.log("Test database ready")
 })

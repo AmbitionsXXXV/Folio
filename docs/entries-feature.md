@@ -10,11 +10,11 @@
 
 ### 数据字段
 
-| 字段 | 类型 | 描述 |
-|------|------|------|
-| content | text | HTML 格式内容（向后兼容，已弃用） |
+| 字段        | 类型 | 描述                                            |
+| ----------- | ---- | ----------------------------------------------- |
+| content     | text | HTML 格式内容（向后兼容，已弃用）               |
 | contentJson | text | ProseMirror JSON 格式（Tiptap doc），主存储格式 |
-| contentText | text | 纯文本派生字段，用于 ILIKE 搜索与摘要预览 |
+| contentText | text | 纯文本派生字段，用于 ILIKE 搜索与摘要预览       |
 
 ### 存储规则
 
@@ -38,12 +38,12 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| title | string | 否 | '' | 条目标题 |
-| content | string | 否 | '' | 条目内容（HTML，向后兼容） |
-| contentJson | string | 否 | - | 条目内容（ProseMirror JSON，推荐） |
-| isInbox | boolean | 否 | true | 是否放入收件箱 |
+| 参数        | 类型    | 必填 | 默认值 | 描述                               |
+| ----------- | ------- | ---- | ------ | ---------------------------------- |
+| title       | string  | 否   | ''     | 条目标题                           |
+| content     | string  | 否   | ''     | 条目内容（HTML，向后兼容）         |
+| contentJson | string  | 否   | -      | 条目内容（ProseMirror JSON，推荐） |
+| isInbox     | boolean | 否   | true   | 是否放入收件箱                     |
 
 **返回：** 创建的条目对象
 
@@ -53,15 +53,15 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| id | string | 是 | 条目 ID |
-| title | string | 否 | 新标题 |
-| content | string | 否 | 新内容（HTML，向后兼容） |
-| contentJson | string | 否 | 新内容（ProseMirror JSON，推荐） |
-| isInbox | boolean | 否 | 是否在收件箱 |
-| isStarred | boolean | 否 | 是否收藏 |
-| isPinned | boolean | 否 | 是否置顶 |
+| 参数        | 类型    | 必填 | 描述                             |
+| ----------- | ------- | ---- | -------------------------------- |
+| id          | string  | 是   | 条目 ID                          |
+| title       | string  | 否   | 新标题                           |
+| content     | string  | 否   | 新内容（HTML，向后兼容）         |
+| contentJson | string  | 否   | 新内容（ProseMirror JSON，推荐） |
+| isInbox     | boolean | 否   | 是否在收件箱                     |
+| isStarred   | boolean | 否   | 是否收藏                         |
+| isPinned    | boolean | 否   | 是否置顶                         |
 
 **返回：** 更新后的条目对象
 
@@ -71,9 +71,9 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| id | string | 是 | 条目 ID |
+| 参数 | 类型   | 必填 | 描述    |
+| ---- | ------ | ---- | ------- |
+| id   | string | 是   | 条目 ID |
 
 **返回：** `{ success: true }`
 
@@ -83,9 +83,9 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| id | string | 是 | 条目 ID |
+| 参数 | 类型   | 必填 | 描述    |
+| ---- | ------ | ---- | ------- |
+| id   | string | 是   | 条目 ID |
 
 **返回：** 恢复后的条目对象
 
@@ -95,9 +95,9 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| id | string | 是 | 条目 ID |
+| 参数 | 类型   | 必填 | 描述    |
+| ---- | ------ | ---- | ------- |
+| id   | string | 是   | 条目 ID |
 
 **返回：** 条目对象
 
@@ -107,12 +107,12 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| filter | enum | 否 | 'all' | 筛选类型 |
-| tagId | string | 否 | - | 按标签筛选 |
-| cursor | string | 否 | - | 分页游标 |
-| limit | number | 否 | 20 | 每页数量（1-100） |
+| 参数   | 类型   | 必填 | 默认值 | 描述              |
+| ------ | ------ | ---- | ------ | ----------------- |
+| filter | enum   | 否   | 'all'  | 筛选类型          |
+| tagId  | string | 否   | -      | 按标签筛选        |
+| cursor | string | 否   | -      | 分页游标          |
+| limit  | number | 否   | 20     | 每页数量（1-100） |
 
 **筛选类型：**
 
@@ -138,10 +138,10 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| entryId | string | 是 | 条目 ID |
-| tagId | string | 是 | 标签 ID |
+| 参数    | 类型   | 必填 | 描述    |
+| ------- | ------ | ---- | ------- |
+| entryId | string | 是   | 条目 ID |
+| tagId   | string | 是   | 标签 ID |
 
 **返回：** `{ success: true, entryTag: EntryTag }`
 
@@ -151,10 +151,10 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| entryId | string | 是 | 条目 ID |
-| tagId | string | 是 | 标签 ID |
+| 参数    | 类型   | 必填 | 描述    |
+| ------- | ------ | ---- | ------- |
+| entryId | string | 是   | 条目 ID |
+| tagId   | string | 是   | 标签 ID |
 
 **返回：** `{ success: true, deleted: boolean }`
 
@@ -164,9 +164,9 @@
 
 **输入参数：**
 
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| id | string | 是 | 条目 ID |
+| 参数 | 类型   | 必填 | 描述    |
+| ---- | ------ | ---- | ------- |
+| id   | string | 是   | 条目 ID |
 
 **返回：** `Tag[]`
 
@@ -216,14 +216,14 @@ Tiptap 富文本编辑器封装，支持：
 
 **Props：**
 
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| content | string | - | 初始内容（JSON 字符串或 HTML） |
-| contentFormat | 'json' \| 'html' | 'json' | 内容格式 |
-| onChange | (html, json) => void | - | 内容变更回调 |
-| placeholder | string | 'Write something...' | 占位符文本 |
-| editable | boolean | true | 是否可编辑 |
-| autoFocus | boolean | false | 是否自动聚焦 |
+| 属性          | 类型                 | 默认值               | 描述                           |
+| ------------- | -------------------- | -------------------- | ------------------------------ |
+| content       | string               | -                    | 初始内容（JSON 字符串或 HTML） |
+| contentFormat | 'json' \| 'html'     | 'json'               | 内容格式                       |
+| onChange      | (html, json) => void | -                    | 内容变更回调                   |
+| placeholder   | string               | 'Write something...' | 占位符文本                     |
+| editable      | boolean              | true                 | 是否可编辑                     |
+| autoFocus     | boolean              | false                | 是否自动聚焦                   |
 
 ### EntryCard
 
@@ -237,10 +237,10 @@ Tiptap 富文本编辑器封装，支持：
 
 **Props：**
 
-| 属性 | 类型 | 描述 |
-|------|------|------|
+| 属性        | 类型           | 描述                       |
+| ----------- | -------------- | -------------------------- |
 | contentText | string \| null | 纯文本内容（优先用于预览） |
-| content | string | HTML 内容（向后兼容） |
+| content     | string         | HTML 内容（向后兼容）      |
 
 ### EntryList
 
@@ -307,11 +307,11 @@ apps/web/src/
 
 位于 `packages/api/src/utils/content.ts`，提供以下函数：
 
-| 函数 | 描述 |
-|------|------|
-| `extractTextFromProseMirrorJson` | 从 ProseMirror JSON 提取纯文本 |
-| `extractTextFromHtml` | 从 HTML 提取纯文本 |
-| `generateContentPreview` | 生成截断预览文本 |
-| `isValidProseMirrorJson` | 验证 JSON 格式是否有效 |
-| `createEmptyProseMirrorDoc` | 创建空文档 |
-| `processContentUpdate` | 处理内容更新（返回 JSON 和 Text） |
+| 函数                             | 描述                              |
+| -------------------------------- | --------------------------------- |
+| `extractTextFromProseMirrorJson` | 从 ProseMirror JSON 提取纯文本    |
+| `extractTextFromHtml`            | 从 HTML 提取纯文本                |
+| `generateContentPreview`         | 生成截断预览文本                  |
+| `isValidProseMirrorJson`         | 验证 JSON 格式是否有效            |
+| `createEmptyProseMirrorDoc`      | 创建空文档                        |
+| `processContentUpdate`           | 处理内容更新（返回 JSON 和 Text） |

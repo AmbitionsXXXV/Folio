@@ -1,7 +1,7 @@
 export type {
-	CommandContext,
-	IconId,
-	SlashCommandDefinition,
-	SlashCommandItem,
-	TranslateFunction,
-} from '../types'
+  CommandContext,
+  IconId,
+  SlashCommandDefinition,
+  SlashCommandItem,
+  TranslateFunction
+} from "../types"

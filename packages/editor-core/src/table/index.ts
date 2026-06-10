@@ -1,6 +1,6 @@
 export type {
-	TableAction,
-	TableCellData,
-	TableData,
-	TableRowData,
-} from './types'
+  TableAction,
+  TableCellData,
+  TableData,
+  TableRowData
+} from "./types"

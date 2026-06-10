@@ -33,13 +33,13 @@ lear -> 匹配 "learning", "learner" 等
 
 支持以下过滤器：
 
-| 过滤器 | 描述 | 示例 |
-| --- | --- | --- |
-| 标签 | 按标签筛选条目 | 选择 "JavaScript", "React" |
-| 来源 | 按关联来源筛选 | 选择某本书或文章 |
-| 日期范围 | 按创建时间筛选 | 2024-01-01 至 2024-12-31 |
-| 收件箱 | 仅显示收件箱中的条目 | isInbox: true |
-| 星标 | 仅显示已加星标的条目 | isStarred: true |
+| 过滤器   | 描述                 | 示例                       |
+| -------- | -------------------- | -------------------------- |
+| 标签     | 按标签筛选条目       | 选择 "JavaScript", "React" |
+| 来源     | 按关联来源筛选       | 选择某本书或文章           |
+| 日期范围 | 按创建时间筛选       | 2024-01-01 至 2024-12-31   |
+| 收件箱   | 仅显示收件箱中的条目 | isInbox: true              |
+| 星标     | 仅显示已加星标的条目 | isStarred: true            |
 
 **过滤器组合逻辑：**
 
@@ -211,11 +211,10 @@ CREATE INDEX search_history_user_id_query_idx
 主搜索组件，整合所有子组件。
 
 ```tsx
-import { AdvancedSearch } from '@/components/search'
-
-<AdvancedSearch
+import { AdvancedSearch } from "@/components/search"
+;<AdvancedSearch
   initialQuery="学习"
-  initialFilters={{ tagIds: ['tag-1'] }}
+  initialFilters={{ tagIds: ["tag-1"] }}
   showHistory={true}
   showSuggestions={true}
   onSearch={(query, filters) => console.log(query, filters)}
@@ -239,9 +238,8 @@ const [filters, setFilters] = useState<SearchFiltersValue>({})
 显示当前活动的过滤器徽章。
 
 ```tsx
-import { ActiveFilterBadges } from '@/components/search/search-filters'
-
-<ActiveFilterBadges value={filters} onChange={setFilters} />
+import { ActiveFilterBadges } from "@/components/search/search-filters"
+;<ActiveFilterBadges value={filters} onChange={setFilters} />
 ```
 
 ### SearchHistory
@@ -249,9 +247,8 @@ import { ActiveFilterBadges } from '@/components/search/search-filters'
 搜索历史列表。
 
 ```tsx
-import { SearchHistory } from '@/components/search/search-history'
-
-<SearchHistory
+import { SearchHistory } from "@/components/search/search-history"
+;<SearchHistory
   onSelect={(query, filters) => handleSelect(query, filters)}
   limit={10}
 />
@@ -262,9 +259,8 @@ import { SearchHistory } from '@/components/search/search-history'
 搜索建议列表。
 
 ```tsx
-import { SearchSuggestions } from '@/components/search/search-suggestions'
-
-<SearchSuggestions
+import { SearchSuggestions } from "@/components/search/search-suggestions"
+;<SearchSuggestions
   query={inputValue}
   onSelect={(suggestion) => setQuery(suggestion)}
   limit={5}
@@ -317,15 +313,15 @@ import { SearchSuggestions } from '@/components/search/search-suggestions'
 
 搜索页面支持完整的 URL 状态持久化，刷新页面后可恢复搜索状态：
 
-| 参数 | 类型 | 描述 |
-| --- | --- | --- |
-| `q` | string | 搜索关键词 |
-| `tags` | string | 标签 ID，逗号分隔 |
-| `sources` | string | 来源 ID，逗号分隔 |
-| `from` | ISO date | 日期范围开始 |
-| `to` | ISO date | 日期范围结束 |
-| `isInbox` | "true" | 仅收件箱 |
-| `isStarred` | "true" | 仅星标 |
+| 参数        | 类型     | 描述              |
+| ----------- | -------- | ----------------- |
+| `q`         | string   | 搜索关键词        |
+| `tags`      | string   | 标签 ID，逗号分隔 |
+| `sources`   | string   | 来源 ID，逗号分隔 |
+| `from`      | ISO date | 日期范围开始      |
+| `to`        | ISO date | 日期范围结束      |
+| `isInbox`   | "true"   | 仅收件箱          |
+| `isStarred` | "true"   | 仅星标            |
 
 **示例 URL：**
 

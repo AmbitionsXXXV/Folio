@@ -1,27 +1,24 @@
 {
   "name": "server",
   "version": "0.2.20",
-  "main": "src/index.ts",
   "type": "module",
+  "main": "src/index.ts",
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
-    "dev:ai-devtools": "npx @ai-sdk/devtools",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "dev:ai-devtools": "npx @ai-sdk/devtools"
   },
   "dependencies": {
     "@ai-sdk/devtools": "^0.0.15",
     "@folionote/ai": "workspace:*",
+    "@folionote/ai-tools": "workspace:*",
     "@folionote/api": "workspace:*",
     "@folionote/auth": "workspace:*",
     "@folionote/db": "workspace:*",
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
-    "@folionote/ai-tools": "workspace:*",
     "@folionote/storage": "workspace:*",
     "@hono/node-server": "^1.19.9",
     "@orpc/openapi": "catalog:",
@@ -44,6 +41,6 @@
     "tsdown": "^0.20.3",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vite-plus": "catalog:"
   }
 }

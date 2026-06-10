@@ -1,4 +1,4 @@
-export const FETCH_FORMATS = ['text', 'markdown', 'html'] as const
+export const FETCH_FORMATS = ["text", "markdown", "html"] as const
 
 export type FetchFormat = (typeof FETCH_FORMATS)[number]
 
@@ -6,26 +6,26 @@ export type FetchFormat = (typeof FETCH_FORMATS)[number]
 // Tool Types
 // =============================================================================
 
-export type WebFetchToolInput = {
-	url: string
-	format?: FetchFormat
-	timeout?: number
+export interface WebFetchToolInput {
+  url: string
+  format?: FetchFormat
+  timeout?: number
 }
 
-export type WebFetchToolOutput = {
-	url: string
-	contentType: string
-	content: string
-	format: FetchFormat
+export interface WebFetchToolOutput {
+  url: string
+  contentType: string
+  content: string
+  format: FetchFormat
 }
 
 // =============================================================================
 // UI Component Types
 // =============================================================================
 
-export type WebFetchCardProps = {
-	url: string
-	contentType: string
-	content: string
-	className?: string
+export interface WebFetchCardProps {
+  url: string
+  contentType: string
+  content: string
+  className?: string
 }

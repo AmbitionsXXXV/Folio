@@ -1,88 +1,88 @@
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover'
-import type * as React from 'react'
+import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
+import type * as React from "react"
 
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
 
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
-	return <PopoverPrimitive.Root data-slot="popover" {...props} />
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
-	return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
+  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
 }
 
 function PopoverContent({
-	className,
-	align = 'center',
-	alignOffset = 0,
-	side = 'bottom',
-	sideOffset = 4,
-	...props
+  className,
+  align = "center",
+  alignOffset = 0,
+  side = "bottom",
+  sideOffset = 4,
+  ...props
 }: PopoverPrimitive.Popup.Props &
-	Pick<
-		PopoverPrimitive.Positioner.Props,
-		'align' | 'alignOffset' | 'side' | 'sideOffset'
-	>) {
-	return (
-		<PopoverPrimitive.Portal>
-			<PopoverPrimitive.Positioner
-				align={align}
-				alignOffset={alignOffset}
-				className="isolate z-50"
-				side={side}
-				sideOffset={sideOffset}
-			>
-				<PopoverPrimitive.Popup
-					className={cn(
-						'etc-popover-content z-50 w-72 origin-(--transform-origin) outline-hidden',
-						className
-					)}
-					data-slot="popover-content"
-					{...props}
-				/>
-			</PopoverPrimitive.Positioner>
-		</PopoverPrimitive.Portal>
-	)
+  Pick<
+    PopoverPrimitive.Positioner.Props,
+    "align" | "alignOffset" | "side" | "sideOffset"
+  >) {
+  return (
+    <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Positioner
+        align={align}
+        alignOffset={alignOffset}
+        className="isolate z-50"
+        side={side}
+        sideOffset={sideOffset}
+      >
+        <PopoverPrimitive.Popup
+          className={cn(
+            "etc-popover-content z-50 w-72 origin-(--transform-origin) outline-hidden",
+            className
+          )}
+          data-slot="popover-content"
+          {...props}
+        />
+      </PopoverPrimitive.Positioner>
+    </PopoverPrimitive.Portal>
+  )
 }
 
-function PopoverHeader({ className, ...props }: React.ComponentProps<'div'>) {
-	return (
-		<div
-			className={cn('etc-popover-header', className)}
-			data-slot="popover-header"
-			{...props}
-		/>
-	)
+function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("etc-popover-header", className)}
+      data-slot="popover-header"
+      {...props}
+    />
+  )
 }
 
 function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
-	return (
-		<PopoverPrimitive.Title
-			className={cn('etc-popover-title', className)}
-			data-slot="popover-title"
-			{...props}
-		/>
-	)
+  return (
+    <PopoverPrimitive.Title
+      className={cn("etc-popover-title", className)}
+      data-slot="popover-title"
+      {...props}
+    />
+  )
 }
 
 function PopoverDescription({
-	className,
-	...props
+  className,
+  ...props
 }: PopoverPrimitive.Description.Props) {
-	return (
-		<PopoverPrimitive.Description
-			className={cn('etc-popover-description', className)}
-			data-slot="popover-description"
-			{...props}
-		/>
-	)
+  return (
+    <PopoverPrimitive.Description
+      className={cn("etc-popover-description", className)}
+      data-slot="popover-description"
+      {...props}
+    />
+  )
 }
 
 export {
-	Popover,
-	PopoverContent,
-	PopoverDescription,
-	PopoverHeader,
-	PopoverTitle,
-	PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger
 }

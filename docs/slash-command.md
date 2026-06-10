@@ -8,24 +8,24 @@ FolioNote 编辑器实现了 Notion 风格的 Slash Command（斜杠命令）功
 
 ### 基础命令
 
-| 命令 | 描述 | 关键词 |
-|------|------|--------|
-| `/h1` | 大标题 | h1, heading1, title, 标题 |
-| `/h2` | 中标题 | h2, heading2, subtitle, 标题 |
-| `/h3` | 小标题 | h3, heading3, 标题 |
-| `/quote` | 引用块 | quote, blockquote, 引用 |
-| `/code` | 代码块（带语法高亮） | code, codeblock, 代码 |
-| `/bullet` | 无序列表 | bullet, list, unordered, 列表 |
-| `/ordered` | 有序列表 | ordered, list, numbered, 列表 |
-| `/divider` | 分割线 | divider, hr, horizontal, 分割 |
+| 命令       | 描述                 | 关键词                        |
+| ---------- | -------------------- | ----------------------------- |
+| `/h1`      | 大标题               | h1, heading1, title, 标题     |
+| `/h2`      | 中标题               | h2, heading2, subtitle, 标题  |
+| `/h3`      | 小标题               | h3, heading3, 标题            |
+| `/quote`   | 引用块               | quote, blockquote, 引用       |
+| `/code`    | 代码块（带语法高亮） | code, codeblock, 代码         |
+| `/bullet`  | 无序列表             | bullet, list, unordered, 列表 |
+| `/ordered` | 有序列表             | ordered, list, numbered, 列表 |
+| `/divider` | 分割线               | divider, hr, horizontal, 分割 |
 
 ### FolioNote 命令
 
-| 命令 | 描述 | 状态 |
-|------|------|------|
-| `/tag` | 为条目添加标签 | ✅ 已实现 |
-| `/source` | 关联来源 | 🔲 待实现 |
-| `/ref` | 插入条目引用 | 🔲 待实现 |
+| 命令      | 描述           | 状态      |
+| --------- | -------------- | --------- |
+| `/tag`    | 为条目添加标签 | ✅ 已实现 |
+| `/source` | 关联来源       | 🔲 待实现 |
+| `/ref`    | 插入条目引用   | 🔲 待实现 |
 
 ### 交互特性
 
@@ -54,16 +54,16 @@ apps/web/src/components/editor/
 基于 `@tiptap/suggestion` 实现的 Tiptap 扩展：
 
 ```typescript
-import { SlashCommand } from '@/components/editor/slash-command'
+import { SlashCommand } from "@/components/editor/slash-command"
 
 // 在编辑器中使用
 const editor = useEditor({
   extensions: [
     StarterKit,
     SlashCommand.configure({
-      commands: [...getDefaultSlashCommands(), ...customCommands],
-    }),
-  ],
+      commands: [...getDefaultSlashCommands(), ...customCommands]
+    })
+  ]
 })
 ```
 
@@ -71,12 +71,12 @@ const editor = useEditor({
 
 ```typescript
 type SlashCommandItem = {
-  title: string           // 显示标题
-  description: string     // 描述文字
-  icon: ReactNode         // 图标
-  command: (props: { editor: Editor; range: Range }) => void  // 执行函数
-  keywords?: string[]     // 搜索关键词
-  group?: string          // 分组名称
+  title: string // 显示标题
+  description: string // 描述文字
+  icon: ReactNode // 图标
+  command: (props: { editor: Editor; range: Range }) => void // 执行函数
+  keywords?: string[] // 搜索关键词
+  group?: string // 分组名称
 }
 ```
 
@@ -132,7 +132,7 @@ Slash Command 菜单样式定义在 `apps/web/src/styles/tiptap.css` 中：
 ### 基础使用
 
 ```tsx
-import { EntryEditor } from '@/components/entry-editor'
+import { EntryEditor } from "@/components/entry-editor"
 
 function MyEditor() {
   return (
@@ -148,18 +148,18 @@ function MyEditor() {
 ### 带自定义命令
 
 ```tsx
-import { EntryEditor } from '@/components/entry-editor'
-import type { SlashCommandItem } from '@/components/editor/slash-command'
+import { EntryEditor } from "@/components/entry-editor"
+import type { SlashCommandItem } from "@/components/editor/slash-command"
 
 const customCommand: SlashCommandItem = {
-  title: '自定义命令',
-  description: '执行自定义操作',
+  title: "自定义命令",
+  description: "执行自定义操作",
   icon: <span>🎯</span>,
-  keywords: ['custom'],
-  group: '自定义',
+  keywords: ["custom"],
+  group: "自定义",
   command: ({ editor, range }) => {
-    editor.chain().focus().deleteRange(range).insertContent('Hello!').run()
-  },
+    editor.chain().focus().deleteRange(range).insertContent("Hello!").run()
+  }
 }
 
 function MyEditor() {

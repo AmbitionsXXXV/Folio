@@ -1,4 +1,4 @@
-export const SEARCH_DEPTHS = ['basic', 'advanced'] as const
+export const SEARCH_DEPTHS = ["basic", "advanced"] as const
 
 export type SearchDepth = (typeof SEARCH_DEPTHS)[number]
 
@@ -6,39 +6,39 @@ export type SearchDepth = (typeof SEARCH_DEPTHS)[number]
 // Tool Types
 // =============================================================================
 
-export type WebSearchToolInput = {
-	query: string
-	maxResults?: number
-	searchDepth?: SearchDepth
+export interface WebSearchToolInput {
+  query: string
+  maxResults?: number
+  searchDepth?: SearchDepth
 }
 
-export type WebSearchResult = {
-	title: string
-	url: string
-	snippet: string
-	content?: string
+export interface WebSearchResult {
+  title: string
+  url: string
+  snippet: string
+  content?: string
 }
 
-export type WebSearchToolOutput = {
-	query: string
-	results: WebSearchResult[]
-	message?: string
+export interface WebSearchToolOutput {
+  query: string
+  results: WebSearchResult[]
+  message?: string
 }
 
 // =============================================================================
 // UI Component Types
 // =============================================================================
 
-export type WebSearchCardProps = {
-	query: string
-	results: WebSearchResult[]
-	className?: string
+export interface WebSearchCardProps {
+  query: string
+  results: WebSearchResult[]
+  className?: string
 }
 
-export type WebSearchCompactBarProps = {
-	query: string
-	resultCount: number
-	isLoading?: boolean
-	onClick?: () => void
-	className?: string
+export interface WebSearchCompactBarProps {
+  query: string
+  resultCount: number
+  isLoading?: boolean
+  onClick?: () => void
+  className?: string
 }

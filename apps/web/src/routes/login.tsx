@@ -1,14 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
-import z from 'zod'
-import SignInForm from '@/components/sign-in-form'
+import { createFileRoute } from "@tanstack/react-router"
+import z from "zod"
+
+import SignInForm from "@/components/sign-in-form"
 
 const loginSearchSchema = z.object({
-	redirect: z.string().optional(),
+  redirect: z.string().optional()
 })
 
-export const Route = createFileRoute('/login')({
-	validateSearch: loginSearchSchema,
-	component: RouteComponent,
+export const Route = createFileRoute("/login")({
+  validateSearch: loginSearchSchema,
+  component: RouteComponent
 })
 
 /**
@@ -17,5 +18,5 @@ export const Route = createFileRoute('/login')({
  * @returns The JSX element that renders the `SignInForm` component.
  */
 function RouteComponent() {
-	return <SignInForm />
+  return <SignInForm />
 }

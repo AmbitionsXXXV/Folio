@@ -15,17 +15,17 @@
  * - Native auth client (apps/native/lib/auth-client.ts)
  */
 export const USER_ADDITIONAL_FIELDS_SCHEMA = {
-	/** 用户编号，自动递增，用于展示 */
-	no: {
-		type: 'number' as const,
-		required: false as const,
-	},
+  /** 用户编号，自动递增，用于展示 */
+  no: {
+    type: "number" as const,
+    required: false as const
+  }
 } as const
 
 /**
  * Type definition for user additional fields
  */
-export type UserAdditionalFields = {
-	/** 用户编号，自动递增，用于展示 */
-	no: number | null
+export interface UserAdditionalFields {
+  /** 用户编号，自动递增，用于展示 */
+  no: number | null
 }

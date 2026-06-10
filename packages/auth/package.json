@@ -1,6 +1,7 @@
 {
   "name": "@folionote/auth",
   "version": "0.2.20",
+  "type": "module",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -9,13 +10,8 @@
       "default": "./src/*.ts"
     }
   },
-  "type": "module",
   "scripts": {
     "check-types": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@folionote/config": "workspace:*",
-    "typescript": "catalog:"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
@@ -27,5 +23,9 @@
     "react": "catalog:",
     "resend": "^6.6.0",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
   }
 }

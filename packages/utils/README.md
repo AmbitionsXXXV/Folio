@@ -25,19 +25,19 @@ Intelligent time formatting utilities with i18n integration.
 Format seconds into a human-friendly time representation.
 
 ```typescript
-import { formatTime } from '@folionote/utils'
+import { formatTime } from "@folionote/utils"
 
 // Basic usage
-formatTime(30)    // { value: 30, unit: 'second' }
-formatTime(90)    // { value: 2, unit: 'minute' }
-formatTime(3600)  // { value: 1, unit: 'hour' }
+formatTime(30) // { value: 30, unit: 'second' }
+formatTime(90) // { value: 2, unit: 'minute' }
+formatTime(3600) // { value: 1, unit: 'hour' }
 formatTime(86400) // { value: 1, unit: 'day' }
 
 // Limit maximum unit
-formatTime(86400, { maxUnit: 'hour' })  // { value: 24, unit: 'hour' }
+formatTime(86400, { maxUnit: "hour" }) // { value: 24, unit: 'hour' }
 
 // Precise values (no rounding)
-formatTime(90, { precise: true })  // { value: 1.5, unit: 'minute' }
+formatTime(90, { precise: true }) // { value: 1.5, unit: 'minute' }
 ```
 
 #### `formatTimeWithI18n(seconds, t, options?)`
@@ -66,9 +66,9 @@ function RateLimitMessage({ seconds }: { seconds: number }) {
 Backward-compatible function for rate limit formatting. Automatically limits to hours.
 
 ```typescript
-import { formatRateLimitTime } from '@folionote/utils'
+import { formatRateLimitTime } from "@folionote/utils"
 
-formatRateLimitTime(120)  // { value: 2, unit: 'minute' }
+formatRateLimitTime(120) // { value: 2, unit: 'minute' }
 formatRateLimitTime(7200) // { value: 2, unit: 'hour' }
 ```
 
@@ -77,17 +77,17 @@ formatRateLimitTime(7200) // { value: 2, unit: 'hour' }
 Get the current timezone offset in minutes. Returns a positive value for timezones ahead of UTC, negative for behind.
 
 ```typescript
-import { getTzOffset } from '@folionote/utils'
+import { getTzOffset } from "@folionote/utils"
 
-getTzOffset()  // 480 for UTC+8 (Beijing, China)
-getTzOffset()  // -300 for UTC-5 (New York, USA)
-getTzOffset()  // 0 for UTC (London, UK)
+getTzOffset() // 480 for UTC+8 (Beijing, China)
+getTzOffset() // -300 for UTC-5 (New York, USA)
+getTzOffset() // 0 for UTC (London, UK)
 ```
 
 This is useful for sending timezone-aware requests to the server:
 
 ```typescript
-import { getTzOffset } from '@folionote/utils'
+import { getTzOffset } from "@folionote/utils"
 
 // Fetch due reviews for the user's timezone
 const dueStats = await api.review.getDueStats({
@@ -98,7 +98,7 @@ const dueStats = await api.review.getDueStats({
 ## Type Definitions
 
 ```typescript
-type TimeUnit = 'second' | 'minute' | 'hour' | 'day'
+type TimeUnit = "second" | "minute" | "hour" | "day"
 
 interface FormattedTime {
   value: number
@@ -106,8 +106,8 @@ interface FormattedTime {
 }
 
 interface FormatTimeOptions {
-  precise?: boolean      // Default: false (rounds up)
-  maxUnit?: TimeUnit     // Default: 'day'
+  precise?: boolean // Default: false (rounds up)
+  maxUnit?: TimeUnit // Default: 'day'
 }
 ```
 
@@ -129,6 +129,7 @@ The time units expect the following i18n keys structure:
 ```
 
 Chinese example:
+
 ```json
 {
   "avatar": {
@@ -170,8 +171,8 @@ function AvatarUploader() {
 
 ```typescript
 const { value, unit } = formatTimeWithI18n(seconds, t, {
-  namespace: 'common',  // Uses 'common.timeUnit.minute' instead of 'avatar.timeUnit.minute'
-  maxUnit: 'hour'
+  namespace: "common", // Uses 'common.timeUnit.minute' instead of 'avatar.timeUnit.minute'
+  maxUnit: "hour"
 })
 ```
 

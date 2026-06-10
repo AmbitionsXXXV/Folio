@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis'
+import { Redis } from "@upstash/redis"
 
 /**
  * Upstash Redis client singleton
@@ -11,8 +11,8 @@ let redisClient: Redis | null = null
  * Creates a new instance if one doesn't exist
  */
 export function getRedisClient(): Redis {
-	if (!redisClient) {
-		redisClient = Redis.fromEnv()
-	}
-	return redisClient
+  if (!redisClient) {
+    redisClient = Redis.fromEnv()
+  }
+  return redisClient
 }

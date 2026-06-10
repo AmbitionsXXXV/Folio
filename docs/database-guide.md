@@ -45,13 +45,13 @@ mindmap
 
 ### 核心术语速查
 
-| 术语 | 英文 | 解释 | 例子 |
-| ------ | ------ | ------ | ------ |
-| 主键 | Primary Key | 唯一标识一条记录 | `id: "abc123"` |
+| 术语 | 英文        | 解释               | 例子                    |
+| ---- | ----------- | ------------------ | ----------------------- |
+| 主键 | Primary Key | 唯一标识一条记录   | `id: "abc123"`          |
 | 外键 | Foreign Key | 引用另一个表的主键 | `userId` 引用 `user.id` |
-| 索引 | Index | 加速查询的数据结构 | 类似书的目录 |
-| 关系 | Relation | 表与表之间的连接 | user → entries |
-| 约束 | Constraint | 数据的规则限制 | `NOT NULL`、`UNIQUE` |
+| 索引 | Index       | 加速查询的数据结构 | 类似书的目录            |
+| 关系 | Relation    | 表与表之间的连接   | user → entries          |
+| 约束 | Constraint  | 数据的规则限制     | `NOT NULL`、`UNIQUE`    |
 
 ---
 
@@ -235,9 +235,9 @@ flowchart LR
 
 ```typescript
 // entries 表中定义外键
-userId: text('user_id')
+userId: text("user_id")
   .notNull()
-  .references(() => user.id, { onDelete: 'cascade' })
+  .references(() => user.id, { onDelete: "cascade" })
 //            ↑ 引用 user 表的 id
 //                              ↑ 删除用户时，级联删除所有笔记
 ```
@@ -322,8 +322,7 @@ flowchart LR
 
 ```typescript
 // 外键可以为 null，且删除笔记时设为 null 而不是删除附件
-entryId: text('entry_id')
-  .references(() => entries.id, { onDelete: 'set null' })
+entryId: text("entry_id").references(() => entries.id, { onDelete: "set null" })
 //                                ↑ 删除笔记时，附件的 entry_id 设为 null
 ```
 
@@ -358,19 +357,17 @@ flowchart LR
 ```typescript
 // 定义表结构
 export const entries = pgTable(
-  'entries',        // 表名
+  "entries", // 表名
   {
     // 列定义
-    id: text('id').primaryKey(),                    // 主键
-    userId: text('user_id').notNull(),              // 非空
-    title: text('title').notNull().default(''),     // 带默认值
-    isInbox: boolean('is_inbox').default(true),     // 布尔类型
-    createdAt: timestamp('created_at').defaultNow(),// 时间戳
+    id: text("id").primaryKey(), // 主键
+    userId: text("user_id").notNull(), // 非空
+    title: text("title").notNull().default(""), // 带默认值
+    isInbox: boolean("is_inbox").default(true), // 布尔类型
+    createdAt: timestamp("created_at").defaultNow() // 时间戳
   },
   // 索引定义
-  (table) => [
-    index('entries_user_id_idx').on(table.userId),
-  ]
+  (table) => [index("entries_user_id_idx").on(table.userId)]
 )
 ```
 
@@ -412,12 +409,12 @@ flowchart LR
 export const entriesRelations = relations(entries, ({ one, many }) => ({
   // 一对一：每个 entry 属于一个 user
   user: one(user, {
-    fields: [entries.userId],    // entries 表的外键字段
-    references: [user.id],       // user 表的主键字段
+    fields: [entries.userId], // entries 表的外键字段
+    references: [user.id] // user 表的主键字段
   }),
   // 一对多：每个 entry 可以有多个 entryTags
   entryTags: many(entryTags),
-  attachments: many(attachments),
+  attachments: many(attachments)
 }))
 ```
 
@@ -545,9 +542,7 @@ const trashedEntries = await db.query.entries.findMany({
 })
 
 // 恢复记录
-await db.update(entries)
-  .set({ deletedAt: null })
-  .where(eq(entries.id, entryId))
+await db.update(entries).set({ deletedAt: null }).where(eq(entries.id, entryId))
 ```
 
 ---
@@ -607,7 +602,7 @@ const entryWithTags = await db.query.entries.findFirst({
   with: {
     entryTags: {
       with: {
-        tag: true  // 包含完整的 tag 信息
+        tag: true // 包含完整的 tag 信息
       }
     }
   }
@@ -662,7 +657,7 @@ const entries = await db.query.entries.findMany({
   ),
   orderBy: desc(entries.updatedAt),
   limit: pageSize,
-  offset: (page - 1) * pageSize,
+  offset: (page - 1) * pageSize
 })
 ```
 
@@ -672,26 +667,26 @@ const entries = await db.query.entries.findMany({
 
 ### Drizzle 常用方法
 
-| 方法 | 用途 | 示例 |
-| ------ | ------ | ------ |
-| `eq()` | 等于 | `eq(entries.userId, 'abc')` |
-| `ne()` | 不等于 | `ne(entries.isInbox, true)` |
-| `gt()` / `gte()` | 大于 / 大于等于 | `gt(entries.createdAt, date)` |
-| `lt()` / `lte()` | 小于 / 小于等于 | `lt(entries.createdAt, date)` |
-| `and()` | 与 | `and(cond1, cond2)` |
-| `or()` | 或 | `or(cond1, cond2)` |
-| `isNull()` | 为空 | `isNull(entries.deletedAt)` |
-| `isNotNull()` | 不为空 | `isNotNull(entries.deletedAt)` |
-| `like()` | 模糊匹配 | `like(entries.title, '%React%')` |
+| 方法             | 用途            | 示例                             |
+| ---------------- | --------------- | -------------------------------- |
+| `eq()`           | 等于            | `eq(entries.userId, 'abc')`      |
+| `ne()`           | 不等于          | `ne(entries.isInbox, true)`      |
+| `gt()` / `gte()` | 大于 / 大于等于 | `gt(entries.createdAt, date)`    |
+| `lt()` / `lte()` | 小于 / 小于等于 | `lt(entries.createdAt, date)`    |
+| `and()`          | 与              | `and(cond1, cond2)`              |
+| `or()`           | 或              | `or(cond1, cond2)`               |
+| `isNull()`       | 为空            | `isNull(entries.deletedAt)`      |
+| `isNotNull()`    | 不为空          | `isNotNull(entries.deletedAt)`   |
+| `like()`         | 模糊匹配        | `like(entries.title, '%React%')` |
 
 ### 外键删除行为
 
-| 行为 | 说明 | 使用场景 |
-| ------ | ------ | ---------- |
-| `cascade` | 级联删除 | 删除用户时删除其所有笔记 |
-| `set null` | 设为 NULL | 删除笔记时保留附件 |
-| `restrict` | 阻止删除 | 有关联数据时禁止删除 |
-| `no action` | 默认，同 restrict | - |
+| 行为        | 说明              | 使用场景                 |
+| ----------- | ----------------- | ------------------------ |
+| `cascade`   | 级联删除          | 删除用户时删除其所有笔记 |
+| `set null`  | 设为 NULL         | 删除笔记时保留附件       |
+| `restrict`  | 阻止删除          | 有关联数据时禁止删除     |
+| `no action` | 默认，同 restrict | -                        |
 
 ---
 
@@ -770,7 +765,7 @@ flowchart LR
 ### Drizzle 事务代码
 
 ```typescript
-import { db } from '@folionote/db'
+import { db } from "@folionote/db"
 
 // 创建笔记并关联标签的事务
 async function createEntryWithTags(
@@ -780,19 +775,22 @@ async function createEntryWithTags(
 ) {
   return await db.transaction(async (tx) => {
     // 1. 创建笔记
-    const [entry] = await tx.insert(entries).values({
-      id: generateId(),
-      userId,
-      title,
-    }).returning()
+    const [entry] = await tx
+      .insert(entries)
+      .values({
+        id: generateId(),
+        userId,
+        title
+      })
+      .returning()
 
     // 2. 创建标签关联
     if (tagIds.length > 0) {
       await tx.insert(entryTags).values(
-        tagIds.map(tagId => ({
+        tagIds.map((tagId) => ({
           id: generateId(),
           entryId: entry.id,
-          tagId,
+          tagId
         }))
       )
     }
@@ -826,11 +824,14 @@ flowchart TB
 
 ```typescript
 // 指定隔离级别
-await db.transaction(async (tx) => {
-  // 事务操作
-}, {
-  isolationLevel: 'serializable'  // 最高隔离级别
-})
+await db.transaction(
+  async (tx) => {
+    // 事务操作
+  },
+  {
+    isolationLevel: "serializable" // 最高隔离级别
+  }
+)
 ```
 
 ---
@@ -1034,28 +1035,28 @@ flowchart LR
 ### Drizzle + PostgreSQL 连接池
 
 ```typescript
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
+import { drizzle } from "drizzle-orm/node-postgres"
+import { Pool } from "pg"
 
 // 创建连接池
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,              // 最大连接数
-  min: 5,               // 最小连接数
-  idleTimeoutMillis: 30000,  // 空闲超时 30 秒
-  connectionTimeoutMillis: 10000,  // 获取连接超时 10 秒
+  max: 20, // 最大连接数
+  min: 5, // 最小连接数
+  idleTimeoutMillis: 30000, // 空闲超时 30 秒
+  connectionTimeoutMillis: 10000 // 获取连接超时 10 秒
 })
 
 // 使用连接池创建 Drizzle 实例
 export const db = drizzle(pool, { schema })
 
 // 监控连接池状态
-pool.on('connect', () => {
-  console.log('新连接创建')
+pool.on("connect", () => {
+  console.log("新连接创建")
 })
 
-pool.on('error', (err) => {
-  console.error('连接池错误:', err)
+pool.on("error", (err) => {
+  console.error("连接池错误:", err)
 })
 ```
 
@@ -1084,15 +1085,17 @@ function getPoolStats() {
   return {
     total: pool.totalCount,
     idle: pool.idleCount,
-    waiting: pool.waitingCount,
+    waiting: pool.waitingCount
   }
 }
 
 // 定期输出连接池状态（调试用）
 setInterval(() => {
   const stats = getPoolStats()
-  console.log(`Pool: total=${stats.total}, idle=${stats.idle}, waiting=${stats.waiting}`)
-}, 60000)  // 每分钟
+  console.log(
+    `Pool: total=${stats.total}, idle=${stats.idle}, waiting=${stats.waiting}`
+  )
+}, 60000) // 每分钟
 ```
 
 ### 不同环境的连接池策略
@@ -1256,22 +1259,22 @@ flowchart TB
 
 #### 操作类型（FOR）
 
-| 操作 | 说明 | 需要的条件 |
-| ------ | ------ | ----------- |
-| `SELECT` | 读取 | `USING` |
-| `INSERT` | 插入 | `WITH CHECK` |
-| `UPDATE` | 更新 | `USING` + `WITH CHECK` |
-| `DELETE` | 删除 | `USING` |
-| `ALL` | 所有操作 | 两者都需要 |
+| 操作     | 说明     | 需要的条件             |
+| -------- | -------- | ---------------------- |
+| `SELECT` | 读取     | `USING`                |
+| `INSERT` | 插入     | `WITH CHECK`           |
+| `UPDATE` | 更新     | `USING` + `WITH CHECK` |
+| `DELETE` | 删除     | `USING`                |
+| `ALL`    | 所有操作 | 两者都需要             |
 
 #### 目标角色（TO）
 
-| 角色 | 说明 |
-| ------ | ------ |
-| `authenticated` | 已登录用户 |
-| `anon` | 匿名用户 |
-| `service_role` | 服务端角色（绕过 RLS） |
-| `PUBLIC` | 所有角色 |
+| 角色            | 说明                   |
+| --------------- | ---------------------- |
+| `authenticated` | 已登录用户             |
+| `anon`          | 匿名用户               |
+| `service_role`  | 服务端角色（绕过 RLS） |
+| `PUBLIC`        | 所有角色               |
 
 ### 完整 RLS 配置示例
 
@@ -1439,10 +1442,10 @@ flowchart TB
 
 #### Supabase 特有函数
 
-| 函数 | 说明 |
-| ------ | ------ |
-| `auth.uid()` | 当前用户 ID（从 JWT 解析） |
-| `auth.jwt()` | 完整 JWT payload |
+| 函数          | 说明                           |
+| ------------- | ------------------------------ |
+| `auth.uid()`  | 当前用户 ID（从 JWT 解析）     |
+| `auth.jwt()`  | 完整 JWT payload               |
 | `auth.role()` | 当前角色（anon/authenticated） |
 
 ### 通过 Supabase MCP 管理 RLS
@@ -1452,8 +1455,8 @@ flowchart TB
 ```typescript
 // 1. 检查安全建议
 const advisors = await supabase.getAdvisors({
-  project_id: 'your-project-id',
-  type: 'security'
+  project_id: "your-project-id",
+  type: "security"
 })
 
 // 2. 发现问题：rls_disabled_in_public
@@ -1461,8 +1464,8 @@ const advisors = await supabase.getAdvisors({
 
 // 3. 应用迁移修复
 await supabase.applyMigration({
-  project_id: 'your-project-id',
-  name: 'enable_rls_entry_shares',
+  project_id: "your-project-id",
+  name: "enable_rls_entry_shares",
   query: `
     ALTER TABLE public.entry_shares ENABLE ROW LEVEL SECURITY;
 
@@ -1476,7 +1479,7 @@ await supabase.applyMigration({
 
 // 4. 验证修复
 const policies = await supabase.executeSql({
-  project_id: 'your-project-id',
+  project_id: "your-project-id",
   query: `
     SELECT policyname, cmd, roles
     FROM pg_policies

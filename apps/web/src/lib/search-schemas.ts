@@ -21,7 +21,7 @@
  * @see https://tanstack.com/router/latest/docs/framework/react/guide/search-params
  */
 
-import { z } from 'zod'
+import { z } from "zod"
 
 /**
  * 分页参数 schema
@@ -29,8 +29,8 @@ import { z } from 'zod'
  * - limit: 每页数量，默认 20，最大 100
  */
 export const paginationSchema = z.object({
-	page: z.number().int().positive().catch(1),
-	limit: z.number().int().min(1).max(100).catch(20),
+  page: z.number().int().positive().catch(1),
+  limit: z.number().int().min(1).max(100).catch(20)
 })
 
 export type PaginationParams = z.infer<typeof paginationSchema>
@@ -41,8 +41,8 @@ export type PaginationParams = z.infer<typeof paginationSchema>
  * - limit: 每页数量，默认 20
  */
 export const cursorPaginationSchema = z.object({
-	cursor: z.string().optional(),
-	limit: z.number().int().min(1).max(100).catch(20),
+  cursor: z.string().optional(),
+  limit: z.number().int().min(1).max(100).catch(20)
 })
 
 export type CursorPaginationParams = z.infer<typeof cursorPaginationSchema>
@@ -52,7 +52,7 @@ export type CursorPaginationParams = z.infer<typeof cursorPaginationSchema>
  * - q: 搜索关键词
  */
 export const searchQuerySchema = z.object({
-	q: z.string().catch(''),
+  q: z.string().catch("")
 })
 
 export type SearchQueryParams = z.infer<typeof searchQuerySchema>
@@ -63,8 +63,8 @@ export type SearchQueryParams = z.infer<typeof searchQuerySchema>
  * - sortOrder: 排序方向
  */
 export const sortingSchema = z.object({
-	sortBy: z.string().optional(),
-	sortOrder: z.enum(['asc', 'desc']).catch('desc'),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(["asc", "desc"]).catch("desc")
 })
 
 export type SortingParams = z.infer<typeof sortingSchema>
@@ -75,8 +75,8 @@ export type SortingParams = z.infer<typeof sortingSchema>
  * - to: 结束日期（ISO 格式）
  */
 export const dateRangeSchema = z.object({
-	from: z.iso.date().optional(),
-	to: z.iso.date().optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional()
 })
 
 export type DateRangeParams = z.infer<typeof dateRangeSchema>

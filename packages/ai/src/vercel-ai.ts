@@ -15,103 +15,105 @@
  *   dependencies into environments that only need types/constants.
  */
 
-import { createAnthropic } from '@ai-sdk/anthropic'
-import { devToolsMiddleware } from '@ai-sdk/devtools'
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { createOpenAI } from '@ai-sdk/openai'
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { createAnthropic } from "@ai-sdk/anthropic"
+import { devToolsMiddleware } from "@ai-sdk/devtools"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
+import { createOpenAI } from "@ai-sdk/openai"
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
 import type {
-	EmbeddingModelV3,
-	ImageModelV3,
-	LanguageModelV3,
-} from '@ai-sdk/provider'
-import { wrapLanguageModel } from 'ai'
-import type { DecryptedCredential } from './credentials/types'
-import { getProviderConfig } from './providers/types'
+  EmbeddingModelV3,
+  ImageModelV3,
+  LanguageModelV3
+} from "@ai-sdk/provider"
+import { wrapLanguageModel } from "ai"
+
+import type { DecryptedCredential } from "./credentials/types"
+import { getProviderConfig } from "./providers/types"
 
 /**
  * Check if DevTools should be enabled.
  * Only enable in development environment for security.
  */
-const isDevToolsEnabled = process.env.NODE_ENV !== 'production'
+const isDevToolsEnabled = process.env.NODE_ENV !== "production"
 
 const TRAILING_SLASHES_REGEX = /\/+$/
-const MODELS_PREFIX = 'models/'
+const MODELS_PREFIX = "models/"
 
-type CreateChatModelOptions = {
-	/**
-	 * Explicit model override.
-	 * If omitted, falls back to `credential.model`, then provider defaults.
-	 */
-	model?: string
+interface CreateChatModelOptions {
+  /**
+   * Explicit model override.
+   * If omitted, falls back to `credential.model`, then provider defaults.
+   */
+  model?: string
 }
 
-type CreateEmbeddingModelOptions = {
-	/**
-	 * Explicit embedding model override.
-	 * If omitted, falls back to provider defaults.
-	 */
-	model?: string
+interface CreateEmbeddingModelOptions {
+  /**
+   * Explicit embedding model override.
+   * If omitted, falls back to provider defaults.
+   */
+  model?: string
 }
 
-type CreateImageModelOptions = {
-	/**
-	 * Explicit image model override.
-	 * If omitted, falls back to provider defaults.
-	 */
-	model?: string
+interface CreateImageModelOptions {
+  /**
+   * Explicit image model override.
+   * If omitted, falls back to provider defaults.
+   */
+  model?: string
 }
 
 function resolveChatModelId(
-	credential: DecryptedCredential,
-	overrideModel?: string
+  credential: DecryptedCredential,
+  overrideModel?: string
 ): string {
-	const providerDefaults = getProviderConfig(credential.provider).defaultModels
-	const resolvedModelId = overrideModel ?? credential.model ?? providerDefaults.chat
-	if (!resolvedModelId) {
-		throw new Error(
-			`No default chat model configured for provider: ${credential.provider}`
-		)
-	}
-	return resolvedModelId
+  const providerDefaults = getProviderConfig(credential.provider).defaultModels
+  const resolvedModelId =
+    overrideModel ?? credential.model ?? providerDefaults.chat
+  if (!resolvedModelId) {
+    throw new Error(
+      `No default chat model configured for provider: ${credential.provider}`
+    )
+  }
+  return resolvedModelId
 }
 
 function resolveEmbeddingModelId(
-	credential: DecryptedCredential,
-	overrideModel?: string
+  credential: DecryptedCredential,
+  overrideModel?: string
 ): string {
-	const providerDefaults = getProviderConfig(credential.provider).defaultModels
-	const resolvedModelId = overrideModel ?? providerDefaults.embedding
-	if (!resolvedModelId) {
-		throw new Error(
-			`No default embedding model configured for provider: ${credential.provider}`
-		)
-	}
-	return resolvedModelId
+  const providerDefaults = getProviderConfig(credential.provider).defaultModels
+  const resolvedModelId = overrideModel ?? providerDefaults.embedding
+  if (!resolvedModelId) {
+    throw new Error(
+      `No default embedding model configured for provider: ${credential.provider}`
+    )
+  }
+  return resolvedModelId
 }
 
 function resolveImageModelId(
-	credential: DecryptedCredential,
-	overrideModel?: string
+  credential: DecryptedCredential,
+  overrideModel?: string
 ): string {
-	const providerDefaults = getProviderConfig(credential.provider).defaultModels
-	const resolvedModelId = overrideModel ?? providerDefaults.image
-	if (!resolvedModelId) {
-		throw new Error(
-			`No default image model configured for provider: ${credential.provider}`
-		)
-	}
-	return resolvedModelId
+  const providerDefaults = getProviderConfig(credential.provider).defaultModels
+  const resolvedModelId = overrideModel ?? providerDefaults.image
+  if (!resolvedModelId) {
+    throw new Error(
+      `No default image model configured for provider: ${credential.provider}`
+    )
+  }
+  return resolvedModelId
 }
 
 function stripModelsPrefix(modelId: string): string {
-	return modelId.startsWith(MODELS_PREFIX)
-		? modelId.slice(MODELS_PREFIX.length)
-		: modelId
+  return modelId.startsWith(MODELS_PREFIX)
+    ? modelId.slice(MODELS_PREFIX.length)
+    : modelId
 }
 
 function isGeminiOpenAiCompatibilityBaseUrl(baseUrl: string): boolean {
-	return baseUrl.replace(TRAILING_SLASHES_REGEX, '').endsWith('/openai')
+  return baseUrl.replace(TRAILING_SLASHES_REGEX, "").endsWith("/openai")
 }
 
 /**
@@ -119,13 +121,13 @@ function isGeminiOpenAiCompatibilityBaseUrl(baseUrl: string): boolean {
  * In production, returns the model unchanged.
  */
 function maybeWrapWithDevTools(model: LanguageModelV3): LanguageModelV3 {
-	if (!isDevToolsEnabled) {
-		return model
-	}
-	return wrapLanguageModel({
-		model,
-		middleware: devToolsMiddleware(),
-	})
+  if (!isDevToolsEnabled) {
+    return model
+  }
+  return wrapLanguageModel({
+    model,
+    middleware: devToolsMiddleware()
+  })
 }
 
 /**
@@ -135,73 +137,73 @@ function maybeWrapWithDevTools(model: LanguageModelV3): LanguageModelV3 {
  * for debugging and inspection. Run `npx @ai-sdk/devtools` to view interactions.
  */
 export function createVercelAiChatModel(
-	credential: DecryptedCredential,
-	options: CreateChatModelOptions = {}
+  credential: DecryptedCredential,
+  options: CreateChatModelOptions = {}
 ): LanguageModelV3 {
-	const modelId = resolveChatModelId(credential, options.model)
+  const modelId = resolveChatModelId(credential, options.model)
 
-	let model: LanguageModelV3
+  let model: LanguageModelV3
 
-	switch (credential.provider) {
-		case 'openai': {
-			const openai = createOpenAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			model = openai(modelId)
-			break
-		}
-		case 'deepseek':
-		case 'qwen': {
-			const openaiCompat = createOpenAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			model = openaiCompat.chat(modelId)
-			break
-		}
-		case 'moonshot': {
-			const moonshotai = createOpenAICompatible({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-				name: 'moonshotai',
-			})
-			model = moonshotai(modelId)
-			break
-		}
-		case 'claude': {
-			const anthropic = createAnthropic({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			model = anthropic(modelId)
-			break
-		}
-		case 'gemini': {
-			if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
-				const openaiCompatible = createOpenAI({
-					apiKey: credential.apiKey,
-					baseURL: credential.baseUrl,
-				})
-				// Gemini OpenAI-compatible baseUrl does not support /v1/responses.
-				model = openaiCompatible.chat(stripModelsPrefix(modelId))
-				break
-			}
+  switch (credential.provider) {
+    case "openai": {
+      const openai = createOpenAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      model = openai(modelId)
+      break
+    }
+    case "deepseek":
+    case "qwen": {
+      const openaiCompat = createOpenAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      model = openaiCompat.chat(modelId)
+      break
+    }
+    case "moonshot": {
+      const moonshotai = createOpenAICompatible({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl,
+        name: "moonshotai"
+      })
+      model = moonshotai(modelId)
+      break
+    }
+    case "claude": {
+      const anthropic = createAnthropic({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      model = anthropic(modelId)
+      break
+    }
+    case "gemini": {
+      if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
+        const openaiCompatible = createOpenAI({
+          apiKey: credential.apiKey,
+          baseURL: credential.baseUrl
+        })
+        // Gemini OpenAI-compatible baseUrl does not support /v1/responses.
+        model = openaiCompatible.chat(stripModelsPrefix(modelId))
+        break
+      }
 
-			const google = createGoogleGenerativeAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			model = google(stripModelsPrefix(modelId))
-			break
-		}
-		default: {
-			const unreachableProvider: never = credential.provider
-			throw new Error(`Unsupported provider: ${unreachableProvider}`)
-		}
-	}
+      const google = createGoogleGenerativeAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      model = google(stripModelsPrefix(modelId))
+      break
+    }
+    default: {
+      const unreachableProvider: never = credential.provider
+      throw new Error(`Unsupported provider: ${unreachableProvider}`)
+    }
+  }
 
-	return maybeWrapWithDevTools(model)
+  return maybeWrapWithDevTools(model)
 }
 /**
  * Create a Vercel AI SDK embedding model from decrypted BYOK credential.
@@ -210,52 +212,52 @@ export function createVercelAiChatModel(
  * - openai-compatible providers via `@ai-sdk/openai`
  */
 export function createVercelAiEmbeddingModel(
-	credential: DecryptedCredential,
-	options: CreateEmbeddingModelOptions = {}
+  credential: DecryptedCredential,
+  options: CreateEmbeddingModelOptions = {}
 ): EmbeddingModelV3 {
-	const modelId = resolveEmbeddingModelId(credential, options.model)
+  const modelId = resolveEmbeddingModelId(credential, options.model)
 
-	switch (credential.provider) {
-		case 'openai':
-		case 'deepseek':
-		case 'qwen': {
-			const openai = createOpenAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			return openai.embedding(modelId)
-		}
-		case 'moonshot': {
-			const moonshotai = createOpenAICompatible({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-				name: 'moonshotai',
-			})
-			return moonshotai.embeddingModel(modelId)
-		}
-		case 'gemini': {
-			if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
-				throw new Error(
-					'Gemini embedding is not supported via OpenAI compatible baseUrl. Use the native Gemini baseUrl instead.'
-				)
-			}
+  switch (credential.provider) {
+    case "openai":
+    case "deepseek":
+    case "qwen": {
+      const openai = createOpenAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      return openai.embedding(modelId)
+    }
+    case "moonshot": {
+      const moonshotai = createOpenAICompatible({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl,
+        name: "moonshotai"
+      })
+      return moonshotai.embeddingModel(modelId)
+    }
+    case "gemini": {
+      if (isGeminiOpenAiCompatibilityBaseUrl(credential.baseUrl)) {
+        throw new Error(
+          "Gemini embedding is not supported via OpenAI compatible baseUrl. Use the native Gemini baseUrl instead."
+        )
+      }
 
-			const google = createGoogleGenerativeAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			return google.embedding(stripModelsPrefix(modelId))
-		}
-		case 'claude': {
-			throw new Error(
-				`Embedding model not implemented for provider: ${credential.provider}`
-			)
-		}
-		default: {
-			const unreachableProvider: never = credential.provider
-			throw new Error(`Unsupported provider: ${unreachableProvider}`)
-		}
-	}
+      const google = createGoogleGenerativeAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      return google.embedding(stripModelsPrefix(modelId))
+    }
+    case "claude": {
+      throw new Error(
+        `Embedding model not implemented for provider: ${credential.provider}`
+      )
+    }
+    default: {
+      const unreachableProvider: never = credential.provider
+      throw new Error(`Unsupported provider: ${unreachableProvider}`)
+    }
+  }
 }
 
 /**
@@ -267,44 +269,44 @@ export function createVercelAiEmbeddingModel(
  * - moonshot: via `@ai-sdk/openai-compatible` `.imageModel()`
  */
 export function createVercelAiImageModel(
-	credential: DecryptedCredential,
-	options: CreateImageModelOptions = {}
+  credential: DecryptedCredential,
+  options: CreateImageModelOptions = {}
 ): ImageModelV3 {
-	const modelId = resolveImageModelId(credential, options.model)
+  const modelId = resolveImageModelId(credential, options.model)
 
-	switch (credential.provider) {
-		case 'openai': {
-			const openai = createOpenAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			return openai.image(modelId)
-		}
-		case 'gemini': {
-			const google = createGoogleGenerativeAI({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-			})
-			return google.image(stripModelsPrefix(modelId))
-		}
-		case 'moonshot': {
-			const moonshotai = createOpenAICompatible({
-				apiKey: credential.apiKey,
-				baseURL: credential.baseUrl,
-				name: 'moonshotai',
-			})
-			return moonshotai.imageModel(modelId)
-		}
-		case 'deepseek':
-		case 'qwen':
-		case 'claude': {
-			throw new Error(
-				`Image generation not supported for provider: ${credential.provider}`
-			)
-		}
-		default: {
-			const unreachableProvider: never = credential.provider
-			throw new Error(`Unsupported provider: ${unreachableProvider}`)
-		}
-	}
+  switch (credential.provider) {
+    case "openai": {
+      const openai = createOpenAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      return openai.image(modelId)
+    }
+    case "gemini": {
+      const google = createGoogleGenerativeAI({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl
+      })
+      return google.image(stripModelsPrefix(modelId))
+    }
+    case "moonshot": {
+      const moonshotai = createOpenAICompatible({
+        apiKey: credential.apiKey,
+        baseURL: credential.baseUrl,
+        name: "moonshotai"
+      })
+      return moonshotai.imageModel(modelId)
+    }
+    case "deepseek":
+    case "qwen":
+    case "claude": {
+      throw new Error(
+        `Image generation not supported for provider: ${credential.provider}`
+      )
+    }
+    default: {
+      const unreachableProvider: never = credential.provider
+      throw new Error(`Unsupported provider: ${unreachableProvider}`)
+    }
+  }
 }

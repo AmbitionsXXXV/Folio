@@ -5,8 +5,8 @@
  * These are the canonical source of truth for model types.
  */
 
-import { DEFAULT_MODEL_PROVIDER_LIST } from './model-providers'
-import { AiModelTypeSchema } from './types'
+import { DEFAULT_MODEL_PROVIDER_LIST } from "./model-providers"
+import { AiModelTypeSchema } from "./types"
 
 /**
  * All supported AI model types.
@@ -28,4 +28,4 @@ export const MODEL_PROVIDER_IDS = DEFAULT_MODEL_PROVIDER_LIST.map((p) => p.id)
 /**
  * Type for model provider IDs (derived from the provider list)
  */
-export type ModelProviderId = (typeof DEFAULT_MODEL_PROVIDER_LIST)[number]['id']
+export type ModelProviderId = (typeof DEFAULT_MODEL_PROVIDER_LIST)[number]["id"]

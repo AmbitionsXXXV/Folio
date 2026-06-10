@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router'
+import { Redirect } from "expo-router"
 
 /**
  * Default route for (tabs) group
@@ -8,5 +8,5 @@ import { Redirect } from 'expo-router'
  * while avoiding the "screens with the same name nested inside one another" warning
  */
 export default function TabsIndex() {
-	return <Redirect href="/home" />
+  return <Redirect href="/home" />
 }

@@ -1,37 +1,38 @@
-import type { ModelType } from '@folionote/model-list'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo } from 'react'
-import { orpc } from '@/utils/orpc'
+import type { ModelType } from "@folionote/model-list"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMemo } from "react"
 
-export type CatalogProvider = {
-	id: string
-	name: string
-	logo?: string
-	enabled: boolean
+import { orpc } from "@/utils/orpc"
+
+export interface CatalogProvider {
+  id: string
+  name: string
+  logo?: string
+  enabled: boolean
 }
 
-export type CatalogModel = {
-	id: string
-	providerId: string
-	type: string
-	displayName: string
-	enabled: boolean
-	/** Whether the model supports reasoning/thinking */
-	reasoning?: boolean
-	/** Model settings including extendParams */
-	settings?: {
-		extendParams?: string[]
-	}
-	/** Context window size in tokens for context tracking */
-	contextWindowTokens?: number
+export interface CatalogModel {
+  id: string
+  providerId: string
+  type: string
+  displayName: string
+  enabled: boolean
+  /** Whether the model supports reasoning/thinking */
+  reasoning?: boolean
+  /** Model settings including extendParams */
+  settings?: {
+    extendParams?: string[]
+  }
+  /** Context window size in tokens for context tracking */
+  contextWindowTokens?: number
 }
 
-export type ModelCatalog = {
-	providers: CatalogProvider[]
-	models: CatalogModel[]
+export interface ModelCatalog {
+  providers: CatalogProvider[]
+  models: CatalogModel[]
 }
 
-const MODEL_CATALOG_QUERY_KEY = ['ai', 'modelCatalog'] as const
+const MODEL_CATALOG_QUERY_KEY = ["ai", "modelCatalog"] as const
 
 /**
  * Hook to fetch and manage AI model catalog with user's enabled overrides.
@@ -41,102 +42,103 @@ const MODEL_CATALOG_QUERY_KEY = ['ai', 'modelCatalog'] as const
  * - All models from model-list with user's enabled overrides applied
  */
 export function useAiModelCatalog() {
-	const { data, isLoading, isError, error, refetch } = useQuery<ModelCatalog>({
-		queryKey: MODEL_CATALOG_QUERY_KEY,
-		queryFn: () => orpc.ai.getModelCatalog.call({}),
-		staleTime: 30_000, // Cache for 30 seconds
-	})
+  const { data, isLoading, isError, error, refetch } = useQuery<ModelCatalog>({
+    queryKey: MODEL_CATALOG_QUERY_KEY,
+    queryFn: () => orpc.ai.getModelCatalog.call({}),
+    staleTime: 30_000 // Cache for 30 seconds
+  })
 
-	const catalog: ModelCatalog = useMemo(() => {
-		if (!data) {
-			return { providers: [], models: [] }
-		}
-		return data
-	}, [data])
+  const catalog: ModelCatalog = useMemo(() => {
+    if (!data) {
+      return { providers: [], models: [] }
+    }
+    return data
+  }, [data])
 
-	return {
-		catalog,
-		providers: catalog.providers,
-		models: catalog.models,
-		isLoading,
-		isLoaded: !isLoading && !!data,
-		isError,
-		error,
-		refetch,
-	}
+  return {
+    catalog,
+    providers: catalog.providers,
+    models: catalog.models,
+    isLoading,
+    isLoaded: !isLoading && !!data,
+    isError,
+    error,
+    refetch
+  }
 }
 
-type SetModelEnabledInput = {
-	providerId: string
-	id: string
-	type: ModelType
-	enabled: boolean
+interface SetModelEnabledInput {
+  providerId: string
+  id: string
+  type: ModelType
+  enabled: boolean
 }
 
 /**
  * Hook to toggle model enabled status.
  */
 export function useSetModelEnabled() {
-	const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
-	return useMutation({
-		mutationFn: (input: SetModelEnabledInput) => orpc.ai.setModelEnabled.call(input),
-		onSuccess: () => {
-			// Invalidate model catalog cache to refresh the UI
-			queryClient.invalidateQueries({ queryKey: MODEL_CATALOG_QUERY_KEY })
-		},
-	})
+  return useMutation({
+    mutationFn: (input: SetModelEnabledInput) =>
+      orpc.ai.setModelEnabled.call(input),
+    onSuccess: () => {
+      // Invalidate model catalog cache to refresh the UI
+      queryClient.invalidateQueries({ queryKey: MODEL_CATALOG_QUERY_KEY })
+    }
+  })
 }
 
-type SetProviderEnabledInput = {
-	providerId: string
-	enabled: boolean
+interface SetProviderEnabledInput {
+  providerId: string
+  enabled: boolean
 }
 
 /**
  * Hook to toggle provider enabled status.
  */
 export function useSetProviderEnabled() {
-	const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
-	return useMutation({
-		mutationFn: (input: SetProviderEnabledInput) =>
-			orpc.ai.setProviderEnabled.call(input),
-		onSuccess: () => {
-			// Invalidate model catalog cache to refresh the UI
-			queryClient.invalidateQueries({ queryKey: MODEL_CATALOG_QUERY_KEY })
-		},
-	})
+  return useMutation({
+    mutationFn: (input: SetProviderEnabledInput) =>
+      orpc.ai.setProviderEnabled.call(input),
+    onSuccess: () => {
+      // Invalidate model catalog cache to refresh the UI
+      queryClient.invalidateQueries({ queryKey: MODEL_CATALOG_QUERY_KEY })
+    }
+  })
 }
 
 /**
  * Get enabled models of a specific type for a specific provider
  */
 export function getEnabledModels(
-	models: CatalogModel[],
-	providerId: string,
-	type: string
+  models: CatalogModel[],
+  providerId: string,
+  type: string
 ): CatalogModel[] {
-	return models.filter(
-		(m) => m.providerId === providerId && m.type === type && m.enabled
-	)
+  return models.filter(
+    (m) => m.providerId === providerId && m.type === type && m.enabled
+  )
 }
 
 /**
  * Get all enabled chat models grouped by provider
  */
 export function getEnabledChatModelsByProvider(
-	models: CatalogModel[],
-	providers: CatalogProvider[]
+  models: CatalogModel[],
+  providers: CatalogProvider[]
 ): Map<string, CatalogModel[]> {
-	const result = new Map<string, CatalogModel[]>()
+  const result = new Map<string, CatalogModel[]>()
 
-	for (const provider of providers) {
-		const providerModels = getEnabledModels(models, provider.id, 'chat')
-		if (providerModels.length > 0) {
-			result.set(provider.id, providerModels)
-		}
-	}
+  for (const provider of providers) {
+    const providerModels = getEnabledModels(models, provider.id, "chat")
+    if (providerModels.length > 0) {
+      result.set(provider.id, providerModels)
+    }
+  }
 
-	return result
+  return result
 }

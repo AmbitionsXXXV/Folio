@@ -126,6 +126,12 @@
       "sourceType": "github",
       "computedHash": "61855594bf79bc5b2665cfca3580b93840cfe645872c5a2deeaa5ad336570d5a"
     },
+    "uniwind": {
+      "source": "uni-stack/uniwind",
+      "sourceType": "github",
+      "skillPath": "skills/uniwind/SKILL.md",
+      "computedHash": "567e923666b1727621186f63c9b29fe83efb64c7962507bcd7822b926b186d2b"
+    },
     "upgrading-expo": {
       "source": "expo/skills",
       "sourceType": "github",

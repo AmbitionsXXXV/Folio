@@ -70,21 +70,21 @@ type JapaneseTypingExercise = {
 }
 
 type JapaneseSentenceToken = {
-  surface: string   // 词的表面形式，如 "私"
-  reading: string   // 假名读音，如 "わたし"
-  romaji: string    // 罗马音，如 "watashi"
+  surface: string // 词的表面形式，如 "私"
+  reading: string // 假名读音，如 "わたし"
+  romaji: string // 罗马音，如 "watashi"
   pos: JapanesePartOfSpeech
 }
 
 type JapanesePartOfSpeech =
-  | 'noun'       // 名词
-  | 'pronoun'    // 代词
-  | 'verb'       // 动词
-  | 'adjective'  // 形容词
-  | 'adverb'     // 副词
-  | 'particle'   // 助词
-  | 'auxiliary'   // 助动词
-  | 'expression' // 表达
+  | "noun" // 名词
+  | "pronoun" // 代词
+  | "verb" // 动词
+  | "adjective" // 形容词
+  | "adverb" // 副词
+  | "particle" // 助词
+  | "auxiliary" // 助动词
+  | "expression" // 表达
 ```
 
 ## 词性标注功能
@@ -100,16 +100,16 @@ type JapanesePartOfSpeech =
 
 ### 词性类别与颜色
 
-| 类别 | 英文 key | 颜色 |
-| --- | --- | --- |
-| 名词 | noun | amber |
-| 代词 | pronoun | cyan |
-| 动词 | verb | emerald |
-| 形容词 | adjective | pink |
-| 副词 | adverb | purple |
-| 助词 | particle | blue |
-| 助动词 | auxiliary | slate |
-| 表达 | expression | orange |
+| 类别   | 英文 key   | 颜色    |
+| ------ | ---------- | ------- |
+| 名词   | noun       | amber   |
+| 代词   | pronoun    | cyan    |
+| 动词   | verb       | emerald |
+| 形容词 | adjective  | pink    |
+| 副词   | adverb     | purple  |
+| 助词   | particle   | blue    |
+| 助动词 | auxiliary  | slate   |
+| 表达   | expression | orange  |
 
 ### Token 数据
 
@@ -163,25 +163,25 @@ type JapanesePartOfSpeech =
 
 ### 关键变更
 
-| 变更项 | 旧版（v1） | 新版（v2） |
-| --- | --- | --- |
-| 整体布局 | `container + Card + grid` | 全屏深色渐变背景，垂直居中 |
-| 统计面板 | 4 列 stat grid | 顶栏右侧精简显示（准确率 + 计时） |
-| 输入框 | `@folionote/ui Input` 组件 | 原生 `<input>` + 下划线风格 |
-| 语法/词汇 | 侧栏可见 Card | Sheet 弹出面板，底栏图标触发 |
-| 导航 | 仅按钮 | 底栏左右箭头 + 键盘快捷键（← →） |
-| 完成页 | Card 布局 | 同风格沉浸式暗色全屏 |
-| 计时器 | 无 | 顶栏右侧 `mm:ss` 格式 |
-| 词性标注 | 顶部 Switch | 标签区内联 Switch |
+| 变更项    | 旧版（v1）                 | 新版（v2）                        |
+| --------- | -------------------------- | --------------------------------- |
+| 整体布局  | `container + Card + grid`  | 全屏深色渐变背景，垂直居中        |
+| 统计面板  | 4 列 stat grid             | 顶栏右侧精简显示（准确率 + 计时） |
+| 输入框    | `@folionote/ui Input` 组件 | 原生 `<input>` + 下划线风格       |
+| 语法/词汇 | 侧栏可见 Card              | Sheet 弹出面板，底栏图标触发      |
+| 导航      | 仅按钮                     | 底栏左右箭头 + 键盘快捷键（← →）  |
+| 完成页    | Card 布局                  | 同风格沉浸式暗色全屏              |
+| 计时器    | 无                         | 顶栏右侧 `mm:ss` 格式             |
+| 词性标注  | 顶部 Switch                | 标签区内联 Switch                 |
 
 ### 键盘快捷键
 
-| 按键 | 功能 | 条件 |
-| --- | --- | --- |
-| `←` | 上一题 | 焦点不在输入框时 |
-| `→` | 下一题 | 焦点不在输入框且答对时 |
-| `Enter` | 下一题 | 焦点不在输入框且答对时 |
-| `Enter`（输入框内） | 提交答案 | 表单默认行为 |
+| 按键                | 功能     | 条件                   |
+| ------------------- | -------- | ---------------------- |
+| `←`                 | 上一题   | 焦点不在输入框时       |
+| `→`                 | 下一题   | 焦点不在输入框且答对时 |
+| `Enter`             | 下一题   | 焦点不在输入框且答对时 |
+| `Enter`（输入框内） | 提交答案 | 表单默认行为           |
 
 ### 新增功能
 
@@ -200,12 +200,12 @@ type JapanesePartOfSpeech =
 
 将日语打字练习从 `/_app/review?mode=jp-typing` 迁移到独立的 `/jp-typing` 根路由：
 
-| 变更项 | 旧版 | 新版 |
-| --- | --- | --- |
-| 路由 | `/_app/review?mode=jp-typing` | `/jp-typing` |
-| 布局 | 嵌套在 `_app` sidebar layout 内 | 独立全屏，无 sidebar |
-| 认证 | 继承 `_app` 的 `beforeLoad` | 独立 `beforeLoad` 检查 session |
-| 最小高度 | `min-h-[calc(100vh-4rem)]` | `min-h-svh` |
+| 变更项   | 旧版                            | 新版                           |
+| -------- | ------------------------------- | ------------------------------ |
+| 路由     | `/_app/review?mode=jp-typing`   | `/jp-typing`                   |
+| 布局     | 嵌套在 `_app` sidebar layout 内 | 独立全屏，无 sidebar           |
+| 认证     | 继承 `_app` 的 `beforeLoad`     | 独立 `beforeLoad` 检查 session |
+| 最小高度 | `min-h-[calc(100vh-4rem)]`      | `min-h-svh`                    |
 
 新增文件：`apps/web/src/routes/jp-typing.tsx`
 
@@ -215,13 +215,13 @@ type JapanesePartOfSpeech =
 
 将输入匹配从纯 romaji 升级为 **假名优先 + romaji 备用** 双模式：
 
-| 变更项 | 旧版 | 新版 |
-| --- | --- | --- |
-| 正规化 | `normalizeJapaneseTypingAnswer`（仅保留 `[a-z0-9]`） | `normalizeKanaAnswer`（保留假名/汉字）+ `normalizeRomajiAnswer`（保留 `[a-z0-9]`） |
-| 输入检测 | 无 | `isJapaneseInput`（检测输入是否包含假名/汉字） |
-| 匹配逻辑 | 固定与 `exercise.romaji` 比对 | 假名输入 → 与 `exercise.reading` 比对；romaji 输入 → 与 `exercise.romaji` 比对 |
-| 进度指示 | 固定显示 romaji 进度 | 根据当前输入类型动态切换目标 |
-| 错误提示 | 仅显示 romaji | 显示假名读音 + romaji 作为参考 |
+| 变更项   | 旧版                                                 | 新版                                                                               |
+| -------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 正规化   | `normalizeJapaneseTypingAnswer`（仅保留 `[a-z0-9]`） | `normalizeKanaAnswer`（保留假名/汉字）+ `normalizeRomajiAnswer`（保留 `[a-z0-9]`） |
+| 输入检测 | 无                                                   | `isJapaneseInput`（检测输入是否包含假名/汉字）                                     |
+| 匹配逻辑 | 固定与 `exercise.romaji` 比对                        | 假名输入 → 与 `exercise.reading` 比对；romaji 输入 → 与 `exercise.romaji` 比对     |
+| 进度指示 | 固定显示 romaji 进度                                 | 根据当前输入类型动态切换目标                                                       |
+| 错误提示 | 仅显示 romaji                                        | 显示假名读音 + romaji 作为参考                                                     |
 
 新增工具函数（`apps/web/src/lib/japanese-typing.ts`）：
 

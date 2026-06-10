@@ -1,26 +1,26 @@
-import type { SlashCommandItem } from '@folionote/editor-react'
-import type { Editor, Range } from '@tiptap/core'
+import type { SlashCommandItem } from "@folionote/editor-react"
+import type { Editor, Range } from "@tiptap/core"
 
 /**
  * Entry reference type definition
  */
-type EntryRef = {
-	id: string
-	title: string
+interface EntryRef {
+  id: string
+  title: string
 }
 
 /**
  * Options for creating the ref command
  */
-type CreateRefCommandOptions = {
-	/** Translation function */
-	t: (key: string) => string
-	/** Function to get available entries for referencing */
-	getEntries: () => EntryRef[]
-	/** Function to open entry picker dialog */
-	onOpenEntryPicker?: () => void
-	/** Current entry ID to exclude from references */
-	currentEntryId?: string
+interface CreateRefCommandOptions {
+  /** Translation function */
+  t: (key: string) => string
+  /** Function to get available entries for referencing */
+  getEntries: () => EntryRef[]
+  /** Function to open entry picker dialog */
+  onOpenEntryPicker?: () => void
+  /** Current entry ID to exclude from references */
+  currentEntryId?: string
 }
 
 /**
@@ -30,49 +30,49 @@ type CreateRefCommandOptions = {
  * by inserting clickable references to other entries.
  */
 export function createRefCommand(
-	options: CreateRefCommandOptions
+  options: CreateRefCommandOptions
 ): SlashCommandItem {
-	const { t, getEntries, onOpenEntryPicker, currentEntryId } = options
+  const { t, getEntries, onOpenEntryPicker, currentEntryId } = options
 
-	return {
-		id: 'ref',
-		title: t('editor.refCommand.refEntry'),
-		description: t('editor.refCommand.refEntryDesc'),
-		iconId: 'ref',
-		keywords: ['ref', 'reference', 'link', 'entry', '引用', '链接', '条目'],
-		group: 'FolioNote',
-		command: ({ editor, range }: { editor: Editor; range: Range }) => {
-			// Delete the slash command text
-			editor.chain().focus().deleteRange(range).run()
+  return {
+    id: "ref",
+    title: t("editor.refCommand.refEntry"),
+    description: t("editor.refCommand.refEntryDesc"),
+    iconId: "ref",
+    keywords: ["ref", "reference", "link", "entry", "引用", "链接", "条目"],
+    group: "FolioNote",
+    command: ({ editor, range }: { editor: Editor; range: Range }) => {
+      // Delete the slash command text
+      editor.chain().focus().deleteRange(range).run()
 
-			// If we have a picker callback, use it
-			if (onOpenEntryPicker) {
-				onOpenEntryPicker()
-				return
-			}
+      // If we have a picker callback, use it
+      if (onOpenEntryPicker) {
+        onOpenEntryPicker()
+        return
+      }
 
-			// Get available entries, excluding current entry
-			const allEntries = getEntries()
-			const entries = currentEntryId
-				? allEntries.filter((e) => e.id !== currentEntryId)
-				: allEntries
+      // Get available entries, excluding current entry
+      const allEntries = getEntries()
+      const entries = currentEntryId
+        ? allEntries.filter((e) => e.id !== currentEntryId)
+        : allEntries
 
-			if (entries.length === 0) {
-				// No entries available to reference
-				return
-			}
+      if (entries.length === 0) {
+        // No entries available to reference
+        return
+      }
 
-			// For simple implementation, insert a reference to the first entry
-			// A more sophisticated implementation would show a popup to select
-			const firstEntry = entries[0]
-			if (firstEntry) {
-				const title = firstEntry.title || t('editor.refCommand.untitled')
-				// Insert a clickable link to the entry
-				const linkHtml = `<a href="/entries/${firstEntry.id}" class="entry-ref" data-entry-id="${firstEntry.id}">${title}</a>`
-				editor.chain().focus().insertContent(linkHtml).run()
-			}
-		},
-	}
+      // For simple implementation, insert a reference to the first entry
+      // A more sophisticated implementation would show a popup to select
+      const firstEntry = entries[0]
+      if (firstEntry) {
+        const title = firstEntry.title || t("editor.refCommand.untitled")
+        // Insert a clickable link to the entry
+        const linkHtml = `<a href="/entries/${firstEntry.id}" class="entry-ref" data-entry-id="${firstEntry.id}">${title}</a>`
+        editor.chain().focus().insertContent(linkHtml).run()
+      }
+    }
+  }
 }
 
 // Store editor instance for later use when inserting entry ref
@@ -82,7 +82,7 @@ let currentEditor: Editor | null = null
  * Get the current editor instance (set by the ref command)
  */
 export function getCurrentEditor(): Editor | null {
-	return currentEditor
+  return currentEditor
 }
 
 /**
@@ -90,30 +90,30 @@ export function getCurrentEditor(): Editor | null {
  * This allows the parent component to handle entry selection UI
  */
 export function createRefCommandWithEvent(
-	t: (key: string) => string
+  t: (key: string) => string
 ): SlashCommandItem {
-	return {
-		id: 'ref-event',
-		title: t('editor.refCommand.refEntry'),
-		description: t('editor.refCommand.refEntryDesc'),
-		iconId: 'ref',
-		keywords: ['ref', 'reference', 'link', 'entry', '引用', '链接', '条目'],
-		group: 'FolioNote',
-		command: ({ editor, range }: { editor: Editor; range: Range }) => {
-			// Delete the slash command text
-			editor.chain().focus().deleteRange(range).run()
+  return {
+    id: "ref-event",
+    title: t("editor.refCommand.refEntry"),
+    description: t("editor.refCommand.refEntryDesc"),
+    iconId: "ref",
+    keywords: ["ref", "reference", "link", "entry", "引用", "链接", "条目"],
+    group: "FolioNote",
+    command: ({ editor, range }: { editor: Editor; range: Range }) => {
+      // Delete the slash command text
+      editor.chain().focus().deleteRange(range).run()
 
-			// Store editor instance for later use
-			currentEditor = editor
+      // Store editor instance for later use
+      currentEditor = editor
 
-			// Dispatch a custom event that the parent can listen to
-			const event = new CustomEvent('folio-note:open-entry-picker', {
-				bubbles: true,
-				detail: { editor },
-			})
-			document.dispatchEvent(event)
-		},
-	}
+      // Dispatch a custom event that the parent can listen to
+      const event = new CustomEvent("folio-note:open-entry-picker", {
+        bubbles: true,
+        detail: { editor }
+      })
+      document.dispatchEvent(event)
+    }
+  }
 }
 
 /**
@@ -121,12 +121,12 @@ export function createRefCommandWithEvent(
  * Helper function to be called after user selects an entry
  */
 export function insertEntryRef(
-	editor: Editor,
-	entry: EntryRef,
-	t: (key: string) => string
+  editor: Editor,
+  entry: EntryRef,
+  t: (key: string) => string
 ): void {
-	const title = entry.title || t('editor.refCommand.untitled')
-	const linkHtml = `<a href="/entries/${entry.id}" class="entry-ref" data-entry-id="${entry.id}">${title}</a> `
+  const title = entry.title || t("editor.refCommand.untitled")
+  const linkHtml = `<a href="/entries/${entry.id}" class="entry-ref" data-entry-id="${entry.id}">${title}</a> `
 
-	editor.chain().focus().insertContent(linkHtml).run()
+  editor.chain().focus().insertContent(linkHtml).run()
 }

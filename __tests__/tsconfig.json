@@ -2,7 +2,6 @@
   "extends": "../packages/config/tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@folionote/test-utils": ["./utils/index"],
       "@folionote/test-utils/*": ["./utils/*"]

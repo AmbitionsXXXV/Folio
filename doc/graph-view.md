@@ -57,12 +57,12 @@ Graph View 是 FolioNote 的拓扑感知知识图谱页面，基于 `@xyflow/rea
 
 **四种边类型的视觉区分**：
 
-| 类型 | 含义 | 样式 |
-|---|---|---|
-| `ref` | 编辑器中通过 `/ref` 命令引用 | 实线 + 箭头，主题色 |
-| `manual` | 在图谱中手动拖拽连线 | 实线，灰色 |
-| `shared-tag` | 两个笔记共享相同标签（推断） | 短虚线，灰色 |
-| `shared-source` | 两个笔记共享相同来源（推断） | 长虚线，灰色 |
+| 类型            | 含义                         | 样式                |
+| --------------- | ---------------------------- | ------------------- |
+| `ref`           | 编辑器中通过 `/ref` 命令引用 | 实线 + 箭头，主题色 |
+| `manual`        | 在图谱中手动拖拽连线         | 实线，灰色          |
+| `shared-tag`    | 两个笔记共享相同标签（推断） | 短虚线，灰色        |
+| `shared-source` | 两个笔记共享相同来源（推断） | 长虚线，灰色        |
 
 ### 4. Add link / Done（添加链接）
 
@@ -162,20 +162,20 @@ created_at      : timestamp
 
 ### API 端点（oRPC）
 
-| 过程 | 说明 |
-|---|---|
-| `graph.getGraph` | 获取全量图谱（支持 tagId / sourceId / includeInferred 筛选） |
-| `graph.getNeighbors` | BFS 获取指定笔记的邻居（1-3 跳深度） |
-| `graph.addManualLink` | 手动建立两个笔记之间的链接 |
-| `graph.removeLink` | 删除一条链接 |
-| `graph.getGraphStats` | 获取图谱统计（节点数、边数、孤立节点数、连接度 Top 5） |
+| 过程                  | 说明                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| `graph.getGraph`      | 获取全量图谱（支持 tagId / sourceId / includeInferred 筛选） |
+| `graph.getNeighbors`  | BFS 获取指定笔记的邻居（1-3 跳深度）                         |
+| `graph.addManualLink` | 手动建立两个笔记之间的链接                                   |
+| `graph.removeLink`    | 删除一条链接                                                 |
+| `graph.getGraphStats` | 获取图谱统计（节点数、边数、孤立节点数、连接度 Top 5）       |
 
 ---
 
 ## URL 参数
 
-| 参数 | 说明 | 示例 |
-|---|---|---|
+| 参数    | 说明           | 示例                  |
+| ------- | -------------- | --------------------- |
 | `tagId` | 按标签筛选图谱 | `/graph?tagId=abc123` |
 
 ---

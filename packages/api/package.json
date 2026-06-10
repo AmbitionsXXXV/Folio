@@ -1,6 +1,7 @@
 {
   "name": "@folionote/api",
   "version": "0.2.20",
+  "type": "module",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -9,13 +10,8 @@
       "default": "./src/*.ts"
     }
   },
-  "type": "module",
   "scripts": {
     "check-types": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@folionote/config": "workspace:*",
-    "typescript": "catalog:"
   },
   "dependencies": {
     "@folionote/ai": "workspace:*",
@@ -38,5 +34,9 @@
     "hono": "catalog:",
     "nanoid": "catalog:",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@folionote/config": "workspace:*",
+    "typescript": "catalog:"
   }
 }

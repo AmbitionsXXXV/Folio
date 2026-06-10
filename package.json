@@ -5,17 +5,18 @@
   "scripts": {
     "clean": "bun tools/clean.js",
     "clean:all": "bun tools/clean.js && pnpm store prune",
-    "check": "ultracite check",
-    "check:fix": "ultracite fix",
+    "check": "vp check",
+    "check:fix": "vp check --fix",
+    "fmt": "vp fmt . --write",
     "dev": "turbo dev",
     "build": "turbo build",
     "check-types": "turbo check-types",
-    "test": "turbo test",
-    "test:watch": "turbo test:watch",
-    "test:coverage": "turbo test:coverage",
-    "test:server": "turbo -F server test",
-    "test:api": "turbo -F @folionote/api test",
-    "test:db": "turbo -F @folionote/db test",
+    "test": "vp test",
+    "test:watch": "vp test watch",
+    "test:coverage": "vp test --coverage",
+    "test:server": "vp test --project server",
+    "test:api": "vp test packages/api",
+    "test:db": "vp test packages/db",
     "check-keys": "turbo -F @folionote/locales check-keys",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
@@ -46,35 +47,31 @@
     "changeset:status": "changeset status",
     "version": "changeset version",
     "version:tag": "changeset version && changeset tag",
-    "postinstall": "if [ -z \"$CI\" ]; then lefthook install; fi"
+    "prepare": "vp config"
   },
   "dependencies": {
     "dotenv": "catalog:",
     "prosemirror-state": "^1.4.4",
-    "prosemirror-view": "^1.41.6",
+    "prosemirror-view": "^1.41.8",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.6",
-    "@changesets/cli": "^2.30.0",
-    "@commitlint/cli": "^20.4.4",
-    "@commitlint/config-conventional": "^20.4.4",
+    "@changesets/cli": "^2.31.0",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
-    "@vitest/ui": "catalog:",
-    "conventional-changelog-conventionalcommits": "^9.3.0",
-    "cz-git": "^1.12.0",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "cz-git": "^1.13.1",
     "fast-glob": "^3.3.3",
-    "lefthook": "^2.1.4",
-    "turbo": "^2.8.16",
+    "turbo": "^2.9.17",
     "typescript": "catalog:",
-    "ultracite": "^7.3.0",
-    "vitest": "catalog:"
+    "ultracite": "^7.8.3",
+    "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "packageManager": "pnpm@11.5.2",
   "pnpm": {
     "overrides": {
-      "drizzle-orm": "^0.45.1"
+      "drizzle-orm": "^0.45.2"
     }
   }
 }

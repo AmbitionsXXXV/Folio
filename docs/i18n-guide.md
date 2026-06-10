@@ -36,15 +36,15 @@ Web 端会：
 ### Web 端
 
 ```tsx
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from "react-i18next"
 
 function MyComponent() {
   const { t } = useTranslation()
-  
+
   return (
     <div>
-      <h1>{t('auth.signIn')}</h1>
-      <p>{t('common.loading')}</p>
+      <h1>{t("auth.signIn")}</h1>
+      <p>{t("common.loading")}</p>
     </div>
   )
 }
@@ -53,13 +53,13 @@ function MyComponent() {
 ### Native 端（Expo）
 
 ```tsx
-import { useTranslation } from 'react-i18next'
-import { Text } from 'react-native'
+import { useTranslation } from "react-i18next"
+import { Text } from "react-native"
 
 function MyScreen() {
   const { t } = useTranslation()
-  
-  return <Text>{t('auth.welcome')}</Text>
+
+  return <Text>{t("auth.welcome")}</Text>
 }
 ```
 
@@ -76,8 +76,8 @@ Context 会自动解析请求头中的语言偏好：
 // 在 API 处理中使用 context.locale
 const requireAuth = o.middleware(({ context, next }) => {
   if (!context.session?.user) {
-    throw new ORPCError('UNAUTHORIZED', {
-      message: getLocalizedErrorMessage('unauthorized', context.locale),
+    throw new ORPCError("UNAUTHORIZED", {
+      message: getLocalizedErrorMessage("unauthorized", context.locale)
     })
   }
   // ...
@@ -88,15 +88,15 @@ const requireAuth = o.middleware(({ context, next }) => {
 
 语言资源按命名空间组织：
 
-| 命名空间 | 用途 |
-|---------|------|
+| 命名空间 | 用途                               |
+| -------- | ---------------------------------- |
 | `common` | 通用 UI 文案（保存、取消、加载等） |
-| `auth` | 认证相关（登录、注册、密码等） |
-| `entry` | 条目相关（标题、内容、收件箱等） |
-| `tag` | 标签相关 |
-| `source` | 来源相关 |
-| `review` | 复习相关 |
-| `error` | 错误信息 |
+| `auth`   | 认证相关（登录、注册、密码等）     |
+| `entry`  | 条目相关（标题、内容、收件箱等）   |
+| `tag`    | 标签相关                           |
+| `source` | 来源相关                           |
+| `review` | 复习相关                           |
+| `error`  | 错误信息                           |
 
 ### Key 命名规范
 
@@ -115,21 +115,21 @@ const requireAuth = o.middleware(({ context, next }) => {
 ### Web 端
 
 ```ts
-import { i18n } from '@/lib/i18n'
+import { i18n } from "@/lib/i18n"
 
 // 切换到中文
-i18n.changeLanguage('zh-CN')
+i18n.changeLanguage("zh-CN")
 
 // 切换到英文
-i18n.changeLanguage('en-US')
+i18n.changeLanguage("en-US")
 ```
 
 ### Native 端
 
 ```ts
-import { i18n } from '@/lib/i18n'
+import { i18n } from "@/lib/i18n"
 
-i18n.changeLanguage('zh-CN')
+i18n.changeLanguage("zh-CN")
 ```
 
 ## 客户端请求设置语言
@@ -137,12 +137,11 @@ i18n.changeLanguage('zh-CN')
 在发送 API 请求时，可以通过 `X-Locale` 或 `Accept-Language` 头指定语言：
 
 ```ts
-fetch('/rpc/someEndpoint', {
+fetch("/rpc/someEndpoint", {
   headers: {
-    'X-Locale': 'zh-CN',
+    "X-Locale": "zh-CN",
     // 或
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-  },
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8"
+  }
 })
 ```
-

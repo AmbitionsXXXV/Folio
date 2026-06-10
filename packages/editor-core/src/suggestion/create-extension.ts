@@ -1,6 +1,7 @@
-import { Extension } from '@tiptap/core'
-import Suggestion from '@tiptap/suggestion'
-import type { SuggestionExtensionOptions, SuggestionState } from './types'
+import { Extension } from "@tiptap/core"
+import Suggestion from "@tiptap/suggestion"
+
+import type { SuggestionExtensionOptions, SuggestionState } from "./types"
 
 /**
  * Create a suggestion extension with platform-specific UI adapter
@@ -19,68 +20,66 @@ import type { SuggestionExtensionOptions, SuggestionState } from './types'
  * ```
  */
 export function createSuggestionExtension<T>(
-	options: SuggestionExtensionOptions<T>
+  options: SuggestionExtensionOptions<T>
 ) {
-	const {
-		char = '/',
-		startOfLine = false,
-		decorationClass = 'suggestion',
-		items,
-		adapter,
-		command,
-	} = options
+  const {
+    char = "/",
+    startOfLine = false,
+    decorationClass = "suggestion",
+    items,
+    adapter,
+    command
+  } = options
 
-	return Extension.create({
-		name: 'suggestion',
+  return Extension.create({
+    name: "suggestion",
 
-		addProseMirrorPlugins() {
-			return [
-				Suggestion({
-					editor: this.editor,
-					char,
-					startOfLine,
-					decorationClass,
-					items: ({ query }) => items({ query, editor: this.editor }),
-					command: ({ editor, range, props }) => {
-						command({ editor, range, props })
-					},
-					render: () => {
-						return {
-							onStart: (props) => {
-								const state: SuggestionState<T> = {
-									items: props.items as T[],
-									query: props.query,
-									clientRect: props.clientRect ?? null,
-									command: (item: T) => props.command(item),
-									editor: props.editor,
-									range: props.range,
-								}
-								adapter.onStart(state)
-							},
+    addProseMirrorPlugins() {
+      return [
+        Suggestion({
+          editor: this.editor,
+          char,
+          startOfLine,
+          decorationClass,
+          items: ({ query }) => items({ query, editor: this.editor }),
+          command: ({ editor, range, props }) => {
+            command({ editor, range, props })
+          },
+          render: () => ({
+            onStart: (props) => {
+              const state: SuggestionState<T> = {
+                items: props.items as T[],
+                query: props.query,
+                clientRect: props.clientRect ?? null,
+                command: (item: T) => props.command(item),
+                editor: props.editor,
+                range: props.range
+              }
+              adapter.onStart(state)
+            },
 
-							onUpdate: (props) => {
-								const state: SuggestionState<T> = {
-									items: props.items as T[],
-									query: props.query,
-									clientRect: props.clientRect ?? null,
-									command: (item: T) => props.command(item),
-									editor: props.editor,
-									range: props.range,
-								}
-								adapter.onUpdate(state)
-							},
+            onUpdate: (props) => {
+              const state: SuggestionState<T> = {
+                items: props.items as T[],
+                query: props.query,
+                clientRect: props.clientRect ?? null,
+                command: (item: T) => props.command(item),
+                editor: props.editor,
+                range: props.range
+              }
+              adapter.onUpdate(state)
+            },
 
-							onKeyDown: (props) => {
-								return adapter.onKeyDown(props.event)
-							},
+            onKeyDown: (props) => {
+              return adapter.onKeyDown(props.event)
+            },
 
-							onExit: () => {
-								adapter.onExit()
-							},
-						}
-					},
-				}),
-			]
-		},
-	})
+            onExit: () => {
+              adapter.onExit()
+            }
+          })
+        })
+      ]
+    }
+  })
 }

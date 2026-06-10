@@ -1,1 +1,1 @@
-export { aiTools } from '@folionote/ai-tools/tools'
+export { aiTools } from "@folionote/ai-tools/tools"

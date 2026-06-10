@@ -49,56 +49,56 @@ export const KNOWLEDGE_CHAT_SYSTEM_PROMPT = `You are a knowledgeable assistant t
 - searchNotes: Search notes in the user library`
 
 /** Note data structure for prompt building */
-export type NoteContext = {
-	id: string
-	title: string
-	contentText: string
-	images?: NoteImageContext[]
+export interface NoteContext {
+  id: string
+  title: string
+  contentText: string
+  images?: NoteImageContext[]
 }
 
 /** Image data attached to a note */
-export type NoteImageContext = {
-	url: string
-	description?: string
-	mimeType: string
+export interface NoteImageContext {
+  url: string
+  description?: string
+  mimeType: string
 }
 
 /** Input for building knowledge chat prompt */
-export type BuildKnowledgeChatPromptInput = {
-	/** User's question/prompt */
-	userPrompt: string
-	/** Current date in YYYY-MM-DD format (local runtime) */
-	currentDate?: string
-	/** Notes explicitly attached by user via @ mention */
-	attachedNotes?: NoteContext[]
-	/** Notes retrieved via FTS/RAG */
-	retrievedNotes?: NoteContext[]
-	/** Maximum chars for total context (for testing) */
-	maxTotalContextChars?: number
-	/** Maximum chars per single note (for testing) */
-	maxSingleNoteChars?: number
+export interface BuildKnowledgeChatPromptInput {
+  /** User's question/prompt */
+  userPrompt: string
+  /** Current date in YYYY-MM-DD format (local runtime) */
+  currentDate?: string
+  /** Notes explicitly attached by user via @ mention */
+  attachedNotes?: NoteContext[]
+  /** Notes retrieved via FTS/RAG */
+  retrievedNotes?: NoteContext[]
+  /** Maximum chars for total context (for testing) */
+  maxTotalContextChars?: number
+  /** Maximum chars per single note (for testing) */
+  maxSingleNoteChars?: number
 }
 
 /** Output from building knowledge chat prompt */
-export type BuildKnowledgeChatPromptResult = {
-	/** Final assembled prompt string */
-	prompt: string
-	/** Count of attached notes included */
-	attachedNotesCount: number
-	/** Count of retrieved notes included */
-	retrievedNotesCount: number
-	/** Whether any content was truncated */
-	wasTruncated: boolean
+export interface BuildKnowledgeChatPromptResult {
+  /** Final assembled prompt string */
+  prompt: string
+  /** Count of attached notes included */
+  attachedNotesCount: number
+  /** Count of retrieved notes included */
+  retrievedNotesCount: number
+  /** Whether any content was truncated */
+  wasTruncated: boolean
 }
 
 /**
  * Truncate text to a maximum character count, adding ellipsis if truncated
  */
 function truncateText(text: string, maxChars: number): string {
-	if (text.length <= maxChars) {
-		return text
-	}
-	return `${text.slice(0, maxChars - 3)}...`
+  if (text.length <= maxChars) {
+    return text
+  }
+  return `${text.slice(0, maxChars - 3)}...`
 }
 
 const MAX_IMAGES_PER_NOTE_IN_PROMPT = 5
@@ -107,24 +107,24 @@ const MAX_IMAGES_PER_NOTE_IN_PROMPT = 5
  * Format a note for inclusion in the prompt
  */
 function formatNoteForPrompt(note: NoteContext, maxChars: number): string {
-	const truncatedContent = truncateText(note.contentText, maxChars)
-	const sections = [`### ${note.title}`, '', truncatedContent]
+  const truncatedContent = truncateText(note.contentText, maxChars)
+  const sections = [`### ${note.title}`, "", truncatedContent]
 
-	if (note.images && note.images.length > 0) {
-		sections.push('', '**Images in this note:**')
-		const promptImages = note.images.slice(0, MAX_IMAGES_PER_NOTE_IN_PROMPT)
-		for (const [index, image] of promptImages.entries()) {
-			const description =
-				image?.description?.trim() || 'Image present (description unavailable).'
-			sections.push(`- Image ${index + 1}: ${description}`)
-		}
-		if (note.images.length > MAX_IMAGES_PER_NOTE_IN_PROMPT) {
-			const extraCount = note.images.length - MAX_IMAGES_PER_NOTE_IN_PROMPT
-			sections.push(`- ... and ${extraCount} more image(s)`)
-		}
-	}
+  if (note.images && note.images.length > 0) {
+    sections.push("", "**Images in this note:**")
+    const promptImages = note.images.slice(0, MAX_IMAGES_PER_NOTE_IN_PROMPT)
+    for (const [index, image] of promptImages.entries()) {
+      const description =
+        image?.description?.trim() || "Image present (description unavailable)."
+      sections.push(`- Image ${index + 1}: ${description}`)
+    }
+    if (note.images.length > MAX_IMAGES_PER_NOTE_IN_PROMPT) {
+      const extraCount = note.images.length - MAX_IMAGES_PER_NOTE_IN_PROMPT
+      sections.push(`- ... and ${extraCount} more image(s)`)
+    }
+  }
 
-	return sections.join('\n')
+  return sections.join("\n")
 }
 
 /** Minimum chars required for useful note content */
@@ -133,10 +133,10 @@ const MIN_USEFUL_CONTENT_CHARS = 200
 const NOTE_FORMAT_OVERHEAD = 50
 
 /** State for processing notes within budget */
-type NoteBudgetState = {
-	usedChars: number
-	wasTruncated: boolean
-	included: string[]
+interface NoteBudgetState {
+  usedChars: number
+  wasTruncated: boolean
+  included: string[]
 }
 
 /**
@@ -144,189 +144,195 @@ type NoteBudgetState = {
  * Returns whether to continue processing more notes
  */
 function processNoteWithinBudget(
-	note: NoteContext,
-	state: NoteBudgetState,
-	maxTotalChars: number,
-	maxSingleChars: number
+  note: NoteContext,
+  state: NoteBudgetState,
+  maxTotalChars: number,
+  maxSingleChars: number
 ): boolean {
-	const formatted = formatNoteForPrompt(note, maxSingleChars)
-	const formattedChars = formatted.length
+  const formatted = formatNoteForPrompt(note, maxSingleChars)
+  const formattedChars = formatted.length
 
-	// Check if note fits within remaining budget
-	if (state.usedChars + formattedChars <= maxTotalChars) {
-		if (note.contentText.length > maxSingleChars) {
-			state.wasTruncated = true
-		}
-		state.included.push(formatted)
-		state.usedChars += formattedChars
-		return true
-	}
+  // Check if note fits within remaining budget
+  if (state.usedChars + formattedChars <= maxTotalChars) {
+    if (note.contentText.length > maxSingleChars) {
+      state.wasTruncated = true
+    }
+    state.included.push(formatted)
+    state.usedChars += formattedChars
+    return true
+  }
 
-	// Try to fit with remaining budget
-	const remaining = maxTotalChars - state.usedChars
-	if (remaining > MIN_USEFUL_CONTENT_CHARS) {
-		const truncatedFormatted = formatNoteForPrompt(
-			note,
-			remaining - NOTE_FORMAT_OVERHEAD
-		)
-		state.included.push(truncatedFormatted)
-		state.wasTruncated = true
-	}
-	return false
+  // Try to fit with remaining budget
+  const remaining = maxTotalChars - state.usedChars
+  if (remaining > MIN_USEFUL_CONTENT_CHARS) {
+    const truncatedFormatted = formatNoteForPrompt(
+      note,
+      remaining - NOTE_FORMAT_OVERHEAD
+    )
+    state.included.push(truncatedFormatted)
+    state.wasTruncated = true
+  }
+  return false
 }
 
 /**
  * Process a list of notes within budget constraints
  */
 function processNotesWithinBudget(
-	notes: NoteContext[],
-	state: NoteBudgetState,
-	maxTotalChars: number,
-	maxSingleChars: number
+  notes: NoteContext[],
+  state: NoteBudgetState,
+  maxTotalChars: number,
+  maxSingleChars: number
 ): void {
-	for (const note of notes) {
-		const shouldContinue = processNoteWithinBudget(
-			note,
-			state,
-			maxTotalChars,
-			maxSingleChars
-		)
-		if (!shouldContinue) break
-	}
+  for (const note of notes) {
+    const shouldContinue = processNoteWithinBudget(
+      note,
+      state,
+      maxTotalChars,
+      maxSingleChars
+    )
+    if (!shouldContinue) {
+      break
+    }
+  }
 }
 
 /**
  * Assemble note context sections (without user question)
  */
 function assembleNoteContextSections(
-	attachedFormatted: string[],
-	retrievedFormatted: string[]
+  attachedFormatted: string[],
+  retrievedFormatted: string[]
 ): string[] {
-	const sections: string[] = []
+  const sections: string[] = []
 
-	if (attachedFormatted.length > 0) {
-		sections.push(`## Attached Notes (User Selected)
+  if (attachedFormatted.length > 0) {
+    sections.push(`## Attached Notes (User Selected)
 
-${attachedFormatted.join('\n\n---\n\n')}`)
-	}
+${attachedFormatted.join("\n\n---\n\n")}`)
+  }
 
-	if (retrievedFormatted.length > 0) {
-		sections.push(`## Related Notes (Retrieved)
+  if (retrievedFormatted.length > 0) {
+    sections.push(`## Related Notes (Retrieved)
 
-${retrievedFormatted.join('\n\n---\n\n')}`)
-	}
+${retrievedFormatted.join("\n\n---\n\n")}`)
+  }
 
-	return sections
+  return sections
 }
 
 /**
  * Assemble current date section (optional)
  */
 function assembleCurrentDateSection(currentDate?: string): string[] {
-	if (!currentDate) return []
-	return [
-		`## Current Date
+  if (!currentDate) {
+    return []
+  }
+  return [
+    `## Current Date
 
-${currentDate}`,
-	]
+${currentDate}`
+  ]
 }
 
 /**
  * Build the final prompt from sections (for single-turn mode)
  */
 function assembleFinalPrompt(
-	userPrompt: string,
-	attachedFormatted: string[],
-	retrievedFormatted: string[],
-	currentDate?: string
+  userPrompt: string,
+  attachedFormatted: string[],
+  retrievedFormatted: string[],
+  currentDate?: string
 ): string {
-	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
+  const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
 
-	sections.push(...assembleCurrentDateSection(currentDate))
-	sections.push(
-		...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
-	)
+  sections.push(...assembleCurrentDateSection(currentDate))
+  sections.push(
+    ...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
+  )
 
-	sections.push(`## User Question
+  sections.push(`## User Question
 
 ${userPrompt}`)
 
-	return sections.join('\n\n')
+  return sections.join("\n\n")
 }
 
 /**
  * Build system prompt only (for conversation mode where messages carry user questions)
  */
 function assembleSystemPrompt(
-	attachedFormatted: string[],
-	retrievedFormatted: string[],
-	currentDate?: string
+  attachedFormatted: string[],
+  retrievedFormatted: string[],
+  currentDate?: string
 ): string {
-	const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
+  const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
 
-	sections.push(...assembleCurrentDateSection(currentDate))
-	sections.push(
-		...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
-	)
+  sections.push(...assembleCurrentDateSection(currentDate))
+  sections.push(
+    ...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
+  )
 
-	return sections.join('\n\n')
+  return sections.join("\n\n")
 }
 
 /**
  * Build the knowledge chat prompt with system instructions, note context, and user input
  */
 export function buildKnowledgeChatPrompt(
-	input: BuildKnowledgeChatPromptInput
+  input: BuildKnowledgeChatPromptInput
 ): BuildKnowledgeChatPromptResult {
-	const maxTotalChars = input.maxTotalContextChars ?? MAX_TOTAL_CONTEXT_CHARS
-	const maxSingleChars = input.maxSingleNoteChars ?? MAX_SINGLE_NOTE_CHARS
+  const maxTotalChars = input.maxTotalContextChars ?? MAX_TOTAL_CONTEXT_CHARS
+  const maxSingleChars = input.maxSingleNoteChars ?? MAX_SINGLE_NOTE_CHARS
 
-	const attachedNotes = input.attachedNotes ?? []
-	const retrievedNotes = input.retrievedNotes ?? []
+  const attachedNotes = input.attachedNotes ?? []
+  const retrievedNotes = input.retrievedNotes ?? []
 
-	// Track which note IDs are attached to avoid duplicates in retrieved
-	const attachedIds = new Set(attachedNotes.map((n) => n.id))
-	const uniqueRetrievedNotes = retrievedNotes.filter((n) => !attachedIds.has(n.id))
+  // Track which note IDs are attached to avoid duplicates in retrieved
+  const attachedIds = new Set(attachedNotes.map((n) => n.id))
+  const uniqueRetrievedNotes = retrievedNotes.filter(
+    (n) => !attachedIds.has(n.id)
+  )
 
-	// Process attached notes first (user explicitly selected these)
-	const attachedState: NoteBudgetState = {
-		usedChars: 0,
-		wasTruncated: false,
-		included: [],
-	}
-	processNotesWithinBudget(
-		attachedNotes,
-		attachedState,
-		maxTotalChars,
-		maxSingleChars
-	)
+  // Process attached notes first (user explicitly selected these)
+  const attachedState: NoteBudgetState = {
+    usedChars: 0,
+    wasTruncated: false,
+    included: []
+  }
+  processNotesWithinBudget(
+    attachedNotes,
+    attachedState,
+    maxTotalChars,
+    maxSingleChars
+  )
 
-	// Process retrieved notes with remaining budget
-	const retrievedState: NoteBudgetState = {
-		usedChars: attachedState.usedChars,
-		wasTruncated: attachedState.wasTruncated,
-		included: [],
-	}
-	processNotesWithinBudget(
-		uniqueRetrievedNotes,
-		retrievedState,
-		maxTotalChars,
-		maxSingleChars
-	)
+  // Process retrieved notes with remaining budget
+  const retrievedState: NoteBudgetState = {
+    usedChars: attachedState.usedChars,
+    wasTruncated: attachedState.wasTruncated,
+    included: []
+  }
+  processNotesWithinBudget(
+    uniqueRetrievedNotes,
+    retrievedState,
+    maxTotalChars,
+    maxSingleChars
+  )
 
-	const prompt = assembleFinalPrompt(
-		input.userPrompt,
-		attachedState.included,
-		retrievedState.included,
-		input.currentDate
-	)
+  const prompt = assembleFinalPrompt(
+    input.userPrompt,
+    attachedState.included,
+    retrievedState.included,
+    input.currentDate
+  )
 
-	return {
-		prompt,
-		attachedNotesCount: attachedState.included.length,
-		retrievedNotesCount: retrievedState.included.length,
-		wasTruncated: retrievedState.wasTruncated,
-	}
+  return {
+    prompt,
+    attachedNotesCount: attachedState.included.length,
+    retrievedNotesCount: retrievedState.included.length,
+    wasTruncated: retrievedState.wasTruncated
+  }
 }
 
 /** Default RAG top-k value */
@@ -337,29 +343,29 @@ export const DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K = DEFAULT_RAG_TOP_K
 // ============================================================================
 
 /** Input for building knowledge chat system prompt (conversation mode) */
-export type BuildKnowledgeChatSystemPromptInput = {
-	/** Notes explicitly attached by user via @ mention */
-	attachedNotes?: NoteContext[]
-	/** Notes retrieved via FTS/RAG */
-	retrievedNotes?: NoteContext[]
-	/** Current date in YYYY-MM-DD format (local runtime) */
-	currentDate?: string
-	/** Maximum chars for total context (for testing) */
-	maxTotalContextChars?: number
-	/** Maximum chars per single note (for testing) */
-	maxSingleNoteChars?: number
+export interface BuildKnowledgeChatSystemPromptInput {
+  /** Notes explicitly attached by user via @ mention */
+  attachedNotes?: NoteContext[]
+  /** Notes retrieved via FTS/RAG */
+  retrievedNotes?: NoteContext[]
+  /** Current date in YYYY-MM-DD format (local runtime) */
+  currentDate?: string
+  /** Maximum chars for total context (for testing) */
+  maxTotalContextChars?: number
+  /** Maximum chars per single note (for testing) */
+  maxSingleNoteChars?: number
 }
 
 /** Output from building knowledge chat system prompt */
-export type BuildKnowledgeChatSystemPromptResult = {
-	/** System prompt string (without user question) */
-	systemPrompt: string
-	/** Count of attached notes included */
-	attachedNotesCount: number
-	/** Count of retrieved notes included */
-	retrievedNotesCount: number
-	/** Whether any content was truncated */
-	wasTruncated: boolean
+export interface BuildKnowledgeChatSystemPromptResult {
+  /** System prompt string (without user question) */
+  systemPrompt: string
+  /** Count of attached notes included */
+  attachedNotesCount: number
+  /** Count of retrieved notes included */
+  retrievedNotesCount: number
+  /** Whether any content was truncated */
+  wasTruncated: boolean
 }
 
 /**
@@ -369,54 +375,56 @@ export type BuildKnowledgeChatSystemPromptResult = {
  * Use this when the user question is already in the `messages` array.
  */
 export function buildKnowledgeChatSystemPrompt(
-	input: BuildKnowledgeChatSystemPromptInput
+  input: BuildKnowledgeChatSystemPromptInput
 ): BuildKnowledgeChatSystemPromptResult {
-	const maxTotalChars = input.maxTotalContextChars ?? MAX_TOTAL_CONTEXT_CHARS
-	const maxSingleChars = input.maxSingleNoteChars ?? MAX_SINGLE_NOTE_CHARS
+  const maxTotalChars = input.maxTotalContextChars ?? MAX_TOTAL_CONTEXT_CHARS
+  const maxSingleChars = input.maxSingleNoteChars ?? MAX_SINGLE_NOTE_CHARS
 
-	const attachedNotes = input.attachedNotes ?? []
-	const retrievedNotes = input.retrievedNotes ?? []
+  const attachedNotes = input.attachedNotes ?? []
+  const retrievedNotes = input.retrievedNotes ?? []
 
-	// Track which note IDs are attached to avoid duplicates in retrieved
-	const attachedIds = new Set(attachedNotes.map((n) => n.id))
-	const uniqueRetrievedNotes = retrievedNotes.filter((n) => !attachedIds.has(n.id))
+  // Track which note IDs are attached to avoid duplicates in retrieved
+  const attachedIds = new Set(attachedNotes.map((n) => n.id))
+  const uniqueRetrievedNotes = retrievedNotes.filter(
+    (n) => !attachedIds.has(n.id)
+  )
 
-	// Process attached notes first (user explicitly selected these)
-	const attachedState: NoteBudgetState = {
-		usedChars: 0,
-		wasTruncated: false,
-		included: [],
-	}
-	processNotesWithinBudget(
-		attachedNotes,
-		attachedState,
-		maxTotalChars,
-		maxSingleChars
-	)
+  // Process attached notes first (user explicitly selected these)
+  const attachedState: NoteBudgetState = {
+    usedChars: 0,
+    wasTruncated: false,
+    included: []
+  }
+  processNotesWithinBudget(
+    attachedNotes,
+    attachedState,
+    maxTotalChars,
+    maxSingleChars
+  )
 
-	// Process retrieved notes with remaining budget
-	const retrievedState: NoteBudgetState = {
-		usedChars: attachedState.usedChars,
-		wasTruncated: attachedState.wasTruncated,
-		included: [],
-	}
-	processNotesWithinBudget(
-		uniqueRetrievedNotes,
-		retrievedState,
-		maxTotalChars,
-		maxSingleChars
-	)
+  // Process retrieved notes with remaining budget
+  const retrievedState: NoteBudgetState = {
+    usedChars: attachedState.usedChars,
+    wasTruncated: attachedState.wasTruncated,
+    included: []
+  }
+  processNotesWithinBudget(
+    uniqueRetrievedNotes,
+    retrievedState,
+    maxTotalChars,
+    maxSingleChars
+  )
 
-	const systemPrompt = assembleSystemPrompt(
-		attachedState.included,
-		retrievedState.included,
-		input.currentDate
-	)
+  const systemPrompt = assembleSystemPrompt(
+    attachedState.included,
+    retrievedState.included,
+    input.currentDate
+  )
 
-	return {
-		systemPrompt,
-		attachedNotesCount: attachedState.included.length,
-		retrievedNotesCount: retrievedState.included.length,
-		wasTruncated: retrievedState.wasTruncated,
-	}
+  return {
+    systemPrompt,
+    attachedNotesCount: attachedState.included.length,
+    retrievedNotesCount: retrievedState.included.length,
+    wasTruncated: retrievedState.wasTruncated
+  }
 }

@@ -104,7 +104,7 @@ const { status, save } = useAutoSave({
   onSave: async (data) => {
     await api.updateEntry(data)
   },
-  debounceMs: 1000,
+  debounceMs: 1000
 })
 
 const handleChange = (content: string) => {
@@ -272,17 +272,20 @@ TOC 样式参考 fumadocs UI（`packages/ui/src/components/toc/index.tsx`、`pac
 ### 使用示例
 
 ```tsx
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { TableOfContents } from '@/components/table-of-contents'
-import { useTocPosition } from '@/hooks/use-toc-position'
-import { parseTocFromContent, assignHeadingIds } from '@/lib/toc'
+import { useEffect, useMemo, useRef, useState } from "react"
+import { TableOfContents } from "@/components/table-of-contents"
+import { useTocPosition } from "@/hooks/use-toc-position"
+import { parseTocFromContent, assignHeadingIds } from "@/lib/toc"
 
 function MyPage() {
   const contentRef = useRef<HTMLDivElement>(null)
   const [tocPosition] = useTocPosition()
   const [tocRenderKey, setTocRenderKey] = useState(0)
   // parseTocFromContent 返回 TOCItemType[] 格式，兼容 fumadocs-core/toc
-  const tocItems = useMemo(() => parseTocFromContent(contentJson), [contentJson])
+  const tocItems = useMemo(
+    () => parseTocFromContent(contentJson),
+    [contentJson]
+  )
 
   // TipTap 可能延迟把 heading 渲染进 DOM（例如 immediatelyRender: false），
   // 所以需要在 heading 出现后再触发一次 TOC remount，确保 IntersectionObserver 能 observe 到元素。
@@ -296,7 +299,7 @@ function MyPage() {
       assignHeadingIds(container, tocItems)
 
       const hasAnyObservedHeading = tocItems.some((item) => {
-        const id = item.url.split('#')[1] ?? item.url.slice(1)
+        const id = item.url.split("#")[1] ?? item.url.slice(1)
         if (!id) return false
         const element = document.getElementById(id)
         return element !== null && container.contains(element)
@@ -311,7 +314,7 @@ function MyPage() {
       return hasAnyObservedHeading
     }
 
-    if (typeof MutationObserver === 'undefined') {
+    if (typeof MutationObserver === "undefined") {
       assignAndMaybeRemount()
       return
     }
@@ -330,14 +333,20 @@ function MyPage() {
 
   return (
     <div className="flex">
-      {hasToc && tocPosition === 'left' && (
-        <TableOfContents key={tocRenderKey} items={tocItems} position={tocPosition} />
+      {hasToc && tocPosition === "left" && (
+        <TableOfContents
+          key={tocRenderKey}
+          items={tocItems}
+          position={tocPosition}
+        />
       )}
-      <main ref={contentRef}>
-        {/* content */}
-      </main>
-      {hasToc && tocPosition === 'right' && (
-        <TableOfContents key={tocRenderKey} items={tocItems} position={tocPosition} />
+      <main ref={contentRef}>{/* content */}</main>
+      {hasToc && tocPosition === "right" && (
+        <TableOfContents
+          key={tocRenderKey}
+          items={tocItems}
+          position={tocPosition}
+        />
       )}
     </div>
   )

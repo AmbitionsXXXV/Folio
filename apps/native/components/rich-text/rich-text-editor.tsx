@@ -1,29 +1,29 @@
-'use dom'
+"use dom"
 
-import { CustomLink, PasteHandler } from '@folionote/editor-core'
-import type { JSONContent } from '@tiptap/core'
-import Placeholder from '@tiptap/extension-placeholder'
-import { EditorContent, useEditor } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { cn } from 'heroui-native'
-import { useCallback, useEffect, useRef } from 'react'
+import { CustomLink, PasteHandler } from "@folionote/editor-core"
+import type { JSONContent } from "@tiptap/core"
+import Placeholder from "@tiptap/extension-placeholder"
+import { EditorContent, useEditor } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import { cn } from "heroui-native"
+import { useCallback, useEffect, useRef } from "react"
 
-type RichTextEditorProps = {
-	dom?: import('expo/dom').DOMProps
-	/** ProseMirror JSON content string */
-	content: string
-	/** Placeholder text */
-	placeholder?: string
-	/** Dark mode */
-	isDark?: boolean
-	/** Whether the editor is editable */
-	editable?: boolean
-	/** Auto focus on mount */
-	autoFocus?: boolean
-	/** Called when content changes (throttled) - returns JSON string */
-	onChange?: (json: string, text: string) => Promise<void>
-	/** Called when save is requested */
-	onSave?: () => Promise<void>
+interface RichTextEditorProps {
+  dom?: import("expo/dom").DOMProps
+  /** ProseMirror JSON content string */
+  content: string
+  /** Placeholder text */
+  placeholder?: string
+  /** Dark mode */
+  isDark?: boolean
+  /** Whether the editor is editable */
+  editable?: boolean
+  /** Auto focus on mount */
+  autoFocus?: boolean
+  /** Called when content changes (throttled) - returns JSON string */
+  onChange?: (json: string, text: string) => Promise<void>
+  /** Called when save is requested */
+  onSave?: () => Promise<void>
 }
 
 /**
@@ -34,163 +34,163 @@ type RichTextEditorProps = {
  * Uses @folionote/editor-core for shared extensions (Link, PasteHandler).
  */
 export default function RichTextEditor({
-	content,
-	placeholder = 'Write something...',
-	isDark = false,
-	editable = true,
-	autoFocus = false,
-	onChange,
-	onSave,
+  content,
+  placeholder = "Write something...",
+  isDark = false,
+  editable = true,
+  autoFocus = false,
+  onChange,
+  onSave
 }: RichTextEditorProps) {
-	const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-	const isInternalUpdateRef = useRef(false)
+  const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isInternalUpdateRef = useRef(false)
 
-	const editor = useEditor({
-		extensions: [
-			StarterKit.configure({
-				heading: {
-					levels: [1, 2, 3],
-				},
-			}),
-			// Use shared Link extension from editor-core
-			CustomLink,
-			// Use shared PasteHandler from editor-core
-			PasteHandler.configure({
-				strategy: 'preserve',
-			}),
-			Placeholder.configure({
-				placeholder,
-				emptyEditorClass: 'is-editor-empty',
-			}),
-		],
-		content: parseContent(content),
-		editable,
-		immediatelyRender: false,
-		editorProps: {
-			attributes: {
-				class: 'prose-editor',
-			},
-		},
-		onUpdate: ({ editor: editorInstance }) => {
-			if (onChange) {
-				// Throttle onChange callback
-				if (throttleRef.current) {
-					clearTimeout(throttleRef.current)
-				}
-				throttleRef.current = setTimeout(() => {
-					isInternalUpdateRef.current = true
-					const json = JSON.stringify(editorInstance.getJSON())
-					const text = editorInstance.getText()
-					onChange(json, text)
-				}, 300)
-			}
-		},
-	})
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3]
+        }
+      }),
+      // Use shared Link extension from editor-core
+      CustomLink,
+      // Use shared PasteHandler from editor-core
+      PasteHandler.configure({
+        strategy: "preserve"
+      }),
+      Placeholder.configure({
+        placeholder,
+        emptyEditorClass: "is-editor-empty"
+      })
+    ],
+    content: parseContent(content),
+    editable,
+    immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        class: "prose-editor"
+      }
+    },
+    onUpdate: ({ editor: editorInstance }) => {
+      if (onChange) {
+        // Throttle onChange callback
+        if (throttleRef.current) {
+          clearTimeout(throttleRef.current)
+        }
+        throttleRef.current = setTimeout(() => {
+          isInternalUpdateRef.current = true
+          const json = JSON.stringify(editorInstance.getJSON())
+          const text = editorInstance.getText()
+          onChange(json, text)
+        }, 300)
+      }
+    }
+  })
 
-	// Auto-focus when requested
-	useEffect(() => {
-		if (autoFocus && editor) {
-			editor.commands.focus('end')
-		}
-	}, [autoFocus, editor])
+  // Auto-focus when requested
+  useEffect(() => {
+    if (autoFocus && editor) {
+      editor.commands.focus("end")
+    }
+  }, [autoFocus, editor])
 
-	// Update content when it changes externally
-	useEffect(() => {
-		if (!editor) {
-			return
-		}
+  // Update content when it changes externally
+  useEffect(() => {
+    if (!editor) {
+      return
+    }
 
-		// Skip if this is an internal update
-		if (isInternalUpdateRef.current) {
-			isInternalUpdateRef.current = false
-			return
-		}
+    // Skip if this is an internal update
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false
+      return
+    }
 
-		// Only update when editor is not focused
-		if (editor.isFocused) {
-			return
-		}
+    // Only update when editor is not focused
+    if (editor.isFocused) {
+      return
+    }
 
-		const currentJson = JSON.stringify(editor.getJSON())
-		if (content !== currentJson) {
-			const parsed = parseContent(content)
-			editor.commands.setContent(parsed)
-		}
-	}, [content, editor])
+    const currentJson = JSON.stringify(editor.getJSON())
+    if (content !== currentJson) {
+      const parsed = parseContent(content)
+      editor.commands.setContent(parsed)
+    }
+  }, [content, editor])
 
-	// Cleanup throttle on unmount
-	useEffect(
-		() => () => {
-			if (throttleRef.current) {
-				clearTimeout(throttleRef.current)
-			}
-		},
-		[]
-	)
+  // Cleanup throttle on unmount
+  useEffect(
+    () => () => {
+      if (throttleRef.current) {
+        clearTimeout(throttleRef.current)
+      }
+    },
+    []
+  )
 
-	// Handle keyboard shortcuts
-	const handleKeyDown = useCallback(
-		(event: React.KeyboardEvent) => {
-			// Cmd/Ctrl + S to save
-			if ((event.metaKey || event.ctrlKey) && event.key === 's') {
-				event.preventDefault()
-				onSave?.()
-			}
-		},
-		[onSave]
-	)
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      // Cmd/Ctrl + S to save
+      if ((event.metaKey || event.ctrlKey) && event.key === "s") {
+        event.preventDefault()
+        onSave?.()
+      }
+    },
+    [onSave]
+  )
 
-	return (
-		<div className={cn('rich-text-editor', isDark ? 'dark' : '')}>
-			<style>{getStyles(isDark)}</style>
-			<EditorContent editor={editor} onKeyDown={handleKeyDown} />
-		</div>
-	)
+  return (
+    <div className={cn("rich-text-editor", isDark ? "dark" : "")}>
+      <style>{getStyles(isDark)}</style>
+      <EditorContent editor={editor} onKeyDown={handleKeyDown} />
+    </div>
+  )
 }
 
 /**
  * Parse content string to JSONContent
  */
 function parseContent(content: string): string | JSONContent {
-	if (!content) {
-		return ''
-	}
+  if (!content) {
+    return ""
+  }
 
-	try {
-		return JSON.parse(content) as JSONContent
-	} catch {
-		// If JSON parse fails, treat as HTML
-		return content
-	}
+  try {
+    return JSON.parse(content) as JSONContent
+  } catch {
+    // If JSON parse fails, treat as HTML
+    return content
+  }
 }
 
 /**
  * Get CSS styles for the editor
  */
 function getStyles(isDark: boolean): string {
-	const colors = isDark
-		? {
-				background: '#1a1614',
-				foreground: '#e8e4e1',
-				muted: '#a3a3a3',
-				mutedForeground: '#9ca3af',
-				primary: '#a78bfa',
-				border: '#3f3f46',
-				codeBackground: '#0d1117',
-				selection: 'rgba(167, 139, 250, 0.3)',
-			}
-		: {
-				background: '#ffffff',
-				foreground: '#1f2937',
-				muted: '#f3f4f6',
-				mutedForeground: '#6b7280',
-				primary: '#8b5cf6',
-				border: '#e5e7eb',
-				codeBackground: '#f3f4f6',
-				selection: 'rgba(139, 92, 246, 0.2)',
-			}
+  const colors = isDark
+    ? {
+        background: "#1a1614",
+        foreground: "#e8e4e1",
+        muted: "#a3a3a3",
+        mutedForeground: "#9ca3af",
+        primary: "#a78bfa",
+        border: "#3f3f46",
+        codeBackground: "#0d1117",
+        selection: "rgba(167, 139, 250, 0.3)"
+      }
+    : {
+        background: "#ffffff",
+        foreground: "#1f2937",
+        muted: "#f3f4f6",
+        mutedForeground: "#6b7280",
+        primary: "#8b5cf6",
+        border: "#e5e7eb",
+        codeBackground: "#f3f4f6",
+        selection: "rgba(139, 92, 246, 0.2)"
+      }
 
-	return `
+  return `
     * {
       box-sizing: border-box;
       margin: 0;
@@ -308,7 +308,7 @@ function getStyles(isDark: boolean): string {
       padding: 0;
       font-size: 0.875rem;
       line-height: 1.5;
-      color: ${isDark ? '#e6edf3' : colors.foreground};
+      color: ${isDark ? "#e6edf3" : colors.foreground};
     }
 
     .ProseMirror hr {

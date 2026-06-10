@@ -1,4 +1,5 @@
-import { type ZodError, z } from 'zod'
+import { z } from "zod"
+import type { ZodError } from "zod"
 
 /**
  * Zod 表单错误处理工具
@@ -19,10 +20,10 @@ export type FlatFieldErrors = Record<string, string[]>
  * 扁平化错误结构，适合表单字段展示
  */
 export interface FlattenedError {
-	/** 字段级别的错误 */
-	fieldErrors: FlatFieldErrors
-	/** 表单级别的错误（非字段特定） */
-	formErrors: string[]
+  /** 字段级别的错误 */
+  fieldErrors: FlatFieldErrors
+  /** 表单级别的错误（非字段特定） */
+  formErrors: string[]
 }
 
 /**
@@ -40,11 +41,11 @@ export interface FlattenedError {
  * ```
  */
 export function flattenFormErrors(error: ZodError): FlattenedError {
-	const flattened = z.flattenError(error)
-	return {
-		formErrors: flattened.formErrors,
-		fieldErrors: flattened.fieldErrors as FlatFieldErrors,
-	}
+  const flattened = z.flattenError(error)
+  return {
+    formErrors: flattened.formErrors,
+    fieldErrors: flattened.fieldErrors as FlatFieldErrors
+  }
 }
 
 /**
@@ -58,25 +59,30 @@ export function flattenFormErrors(error: ZodError): FlattenedError {
  * ```
  */
 export function getFieldError(
-	errors: FlattenedError,
-	field: string
+  errors: FlattenedError,
+  field: string
 ): string | undefined {
-	return errors.fieldErrors[field]?.[0]
+  return errors.fieldErrors[field]?.[0]
 }
 
 /**
  * 获取指定字段的所有错误消息
  * 适用于：需要显示多条错误的场景
  */
-export function getFieldErrors(errors: FlattenedError, field: string): string[] {
-	return errors.fieldErrors[field] ?? []
+export function getFieldErrors(
+  errors: FlattenedError,
+  field: string
+): string[] {
+  return errors.fieldErrors[field] ?? []
 }
 
 /**
  * 检查是否有任何字段错误
  */
 export function hasFieldErrors(errors: FlattenedError): boolean {
-	return Object.keys(errors.fieldErrors).length > 0 || errors.formErrors.length > 0
+  return (
+    Object.keys(errors.fieldErrors).length > 0 || errors.formErrors.length > 0
+  )
 }
 
 /**
@@ -90,7 +96,7 @@ export function hasFieldErrors(errors: FlattenedError): boolean {
  * ```
  */
 export function treeifyFormErrors(error: ZodError) {
-	return z.treeifyError(error)
+  return z.treeifyError(error)
 }
 
 /**
@@ -106,7 +112,7 @@ export function treeifyFormErrors(error: ZodError) {
  * ```
  */
 export function prettifyFormErrors(error: ZodError): string {
-	return z.prettifyError(error)
+  return z.prettifyError(error)
 }
 
 /**
@@ -114,9 +120,9 @@ export function prettifyFormErrors(error: ZodError): string {
  * 生产环境下不输出
  */
 export function logFormErrors(error: ZodError, context?: string): void {
-	if (import.meta.env.DEV) {
-		const prefix = context ? `[${context}] ` : ''
-		console.warn(`${prefix}Form validation failed:`)
-		console.warn(prettifyFormErrors(error))
-	}
+  if (import.meta.env.DEV) {
+    const prefix = context ? `[${context}] ` : ""
+    console.warn(`${prefix}Form validation failed:`)
+    console.warn(prettifyFormErrors(error))
+  }
 }
