@@ -1,6 +1,7 @@
 import { Badge } from "@folionote/ui/badge"
 import { Button } from "@folionote/ui/button"
 import { Separator } from "@folionote/ui/separator"
+import { useGSAP } from "@gsap/react"
 import {
   AiChat02Icon,
   ArrowRight02Icon,
@@ -19,13 +20,19 @@ import {
 import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { createFileRoute, Link, redirect } from "@tanstack/react-router"
-import { motion, useReducedMotion } from "motion/react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import Lenis from "lenis"
+
+import "lenis/dist/lenis.css"
 import type { ReactNode } from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 
 import { getUser } from "@/functions/get-user"
 import { cn } from "@/lib/utils"
+
+gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -37,97 +44,86 @@ export const Route = createFileRoute("/")({
   }
 })
 
-const INFINITE = Number.POSITIVE_INFINITY
+// Obsidian-glossy brand objects (chroma-keyed transparent PNGs).
+const OBJ = {
+  note: "/img/3d/note.webp",
+  lens: "/img/3d/lens.webp",
+  bookmark: "/img/3d/bookmark.webp",
+  brain: "/img/3d/brain.webp",
+  calendar: "/img/3d/calendar.webp",
+  graph: "/img/3d/graph.webp",
+  tag: "/img/3d/tag.webp",
+  sparkle: "/img/3d/sparkle.webp"
+} as const
 
-// Brand 3D objects shipped in /public/img — tactile, glossy, on-brand.
-const OBJECT_BOOK = "/img/note.png"
-const OBJECT_LENS = "/img/zoom.png"
-const OBJECT_BOOKMARK = "/img/bookmark.png"
+// Warm, obsidian-tinted floating shadow for the 3D objects.
+const OBJ_SHADOW = "drop-shadow-[0_30px_46px_rgba(28,20,10,0.34)]"
 
 // ---------------------------------------------------------------------------
-// Motion primitives
+// Primitives
 // ---------------------------------------------------------------------------
 
-// Springy scroll-reveal. Falls back to a plain, fully-visible element when the
-// visitor prefers reduced motion.
-function Reveal({
-  children,
-  className,
-  delay = 0,
-  y = 28
-}: {
-  children: ReactNode
-  className?: string
-  delay?: number
-  y?: number
-}) {
-  const reduced = useReducedMotion()
-
-  return (
-    <motion.div
-      className={className}
-      initial={reduced ? false : { opacity: 0, y }}
-      transition={{ type: "spring", stiffness: 120, damping: 18, delay }}
-      viewport={{ once: true, margin: "-80px" }}
-      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-// A floating, gently-bouncing 3D brand object that pops in with a spring.
-function FloatObject({
+// A glossy brand object. When `float` is set, the outer node is marked for
+// hero parallax and the inner node for the idle float animation.
+function Obj({
   src,
-  alt,
+  alt = "",
   className,
-  floatDistance = 16,
-  floatDuration = 6,
-  delay = 0,
-  spin = 0
+  float = false,
+  depth
 }: {
   src: string
-  alt: string
+  alt?: string
   className?: string
-  floatDistance?: number
-  floatDuration?: number
-  delay?: number
-  spin?: number
+  float?: boolean
+  depth?: number
 }) {
-  const reduced = useReducedMotion()
-
+  const img = (
+    <img
+      alt={alt}
+      aria-hidden={alt ? undefined : "true"}
+      className={cn("size-full select-none", OBJ_SHADOW)}
+      draggable={false}
+      loading="lazy"
+      src={src}
+    />
+  )
+  if (!float) {
+    return <div className={className}>{img}</div>
+  }
   return (
-    <motion.div
-      animate={
-        reduced
-          ? undefined
-          : { y: [0, -floatDistance, 0], rotate: [0, spin, 0] }
-      }
-      className={className}
-      transition={{
-        duration: floatDuration,
-        repeat: INFINITE,
-        ease: "easeInOut",
-        delay
-      }}
+    <div
+      className={cn("will-change-transform", className)}
+      data-depth={depth ?? 1}
+      data-parallax=""
     >
-      <motion.img
-        alt={alt}
-        className="size-full drop-shadow-[0_24px_40px_rgba(91,33,182,0.28)] select-none"
-        draggable={false}
-        initial={reduced ? false : { opacity: 0, scale: 0.6 }}
-        loading="lazy"
-        src={src}
-        transition={{ type: "spring", stiffness: 140, damping: 12, delay }}
-        viewport={{ once: true }}
-        whileHover={reduced ? undefined : { scale: 1.08, rotate: spin ? 0 : 4 }}
-        whileInView={reduced ? undefined : { opacity: 1, scale: 1 }}
-      />
-    </motion.div>
+      <div className="will-change-transform" data-float="">
+        {img}
+      </div>
+    </div>
   )
 }
 
-// Organic, blurred violet/pink blob used as soft background decoration.
+// Soft radial amber glow placed behind hero/CTA objects.
+function Halo({
+  className,
+  ...rest
+}: {
+  className?: string
+} & Record<`data-${string}`, string>) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute rounded-full bg-primary/25 blur-3xl",
+        className
+      )}
+      {...rest}
+    />
+  )
+}
+
+// Organic blurred decorative blob.
 function Blob({
   className,
   shape = "47% 53% 60% 40% / 50% 45% 55% 50%"
@@ -144,35 +140,112 @@ function Blob({
   )
 }
 
+// Counts a numeric value up when scrolled into view (static if non-numeric or
+// reduced-motion). Keeps the rendered value for SSR / no-JS.
+function CountUp({ value, className }: { value: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useGSAP(
+    () => {
+      const el = ref.current
+      const match = value.match(/^(\D*)(\d+(?:\.\d+)?)(.*)$/)
+      if (!(el && match)) {
+        return
+      }
+      const prefix = match[1] ?? ""
+      const digits = match[2] ?? ""
+      const suffix = match[3] ?? ""
+      const target = Number.parseFloat(digits)
+      const counter = { v: 0 }
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        el.textContent = `${prefix}0${suffix}`
+        gsap.to(counter, {
+          v: target,
+          duration: 1.6,
+          ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "top 88%", once: true },
+          onUpdate: () => {
+            el.textContent = `${prefix}${Math.round(counter.v)}${suffix}`
+          }
+        })
+      })
+    },
+    { scope: ref }
+  )
+
+  return (
+    <span className={className} ref={ref}>
+      {value}
+    </span>
+  )
+}
+
+// Magnetic wrapper: nudges children toward the pointer for tactile CTAs.
+function useMagnetic<T extends HTMLElement>(strength = 0.4) {
+  const ref = useRef<T>(null)
+  useGSAP(
+    (_context, contextSafe) => {
+      const el = ref.current
+      if (!(el && contextSafe)) {
+        return
+      }
+      const mm = gsap.matchMedia()
+      mm.add(
+        "(prefers-reduced-motion: no-preference) and (pointer: fine)",
+        () => {
+          const xTo = gsap.quickTo(el, "x", { duration: 0.5, ease: "power3" })
+          const yTo = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3" })
+          const onMove = contextSafe((event: PointerEvent) => {
+            const rect = el.getBoundingClientRect()
+            xTo((event.clientX - (rect.left + rect.width / 2)) * strength)
+            yTo((event.clientY - (rect.top + rect.height / 2)) * strength)
+          })
+          const onLeave = contextSafe(() => {
+            xTo(0)
+            yTo(0)
+          })
+          el.addEventListener("pointermove", onMove)
+          el.addEventListener("pointerleave", onLeave)
+          return () => {
+            el.removeEventListener("pointermove", onMove)
+            el.removeEventListener("pointerleave", onLeave)
+          }
+        }
+      )
+    },
+    { scope: ref }
+  )
+  return ref
+}
+
 // ---------------------------------------------------------------------------
 // Navbar
 // ---------------------------------------------------------------------------
 
 function LandingNavbar() {
   const { t } = useTranslation()
-  const [scrolled, setScrolled] = useState(false)
+  const navRef = useRef<HTMLElement>(null)
 
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20)
-    window.addEventListener("scroll", handler, { passive: true })
-    return () => window.removeEventListener("scroll", handler)
-  }, [])
+  useGSAP(() => {
+    ScrollTrigger.create({
+      start: 24,
+      end: "max",
+      onToggle: (self) =>
+        navRef.current?.toggleAttribute("data-scrolled", self.isActive)
+    })
+  })
 
   return (
     <nav
-      className={cn(
-        "fixed top-4 right-4 left-4 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-full px-5 py-2.5 transition-all duration-300",
-        scrolled
-          ? "border border-border/60 bg-background/80 shadow-lg backdrop-blur-xl"
-          : "border border-transparent bg-transparent"
-      )}
+      className="fixed top-4 right-4 left-4 z-50 mx-auto flex max-w-6xl items-center justify-between rounded-full border border-transparent px-5 py-2.5 transition-all duration-300 data-[scrolled]:border-border/60 data-[scrolled]:bg-background/75 data-[scrolled]:shadow-lg data-[scrolled]:backdrop-blur-xl"
+      ref={navRef}
     >
       <Link className="flex cursor-pointer items-center gap-2.5" to="/">
-        <motion.img
+        <img
           alt="FolioNote"
-          className="size-9"
+          className="size-9 transition-transform duration-300 hover:scale-110 hover:-rotate-6"
           src="/svg/icon.svg"
-          whileHover={{ rotate: -8, scale: 1.08 }}
         />
         <span className="font-display text-lg font-semibold tracking-tight">
           FolioNote
@@ -227,140 +300,207 @@ function LandingNavbar() {
 
 function HeroSection() {
   const { t } = useTranslation()
-  const reduced = useReducedMotion()
+  const root = useRef<HTMLElement>(null)
+
+  useGSAP(
+    (_context, contextSafe) => {
+      const mm = gsap.matchMedia()
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({
+          defaults: { ease: "power3.out", duration: 0.9 }
+        })
+        tl.from("[data-hero-rise]", { y: 28, autoAlpha: 0, stagger: 0.1 })
+
+        const underline = root.current?.querySelector<SVGPathElement>(
+          "[data-hero-underline] path"
+        )
+        if (underline) {
+          const len = underline.getTotalLength()
+          gsap.set(underline, { strokeDasharray: len, strokeDashoffset: len })
+          tl.to(
+            underline,
+            { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut" },
+            "-=0.35"
+          )
+        }
+
+        tl.from(
+          "[data-parallax]",
+          {
+            autoAlpha: 0,
+            scale: 0.6,
+            y: 40,
+            stagger: 0.12,
+            duration: 1,
+            ease: "back.out(1.5)"
+          },
+          "-=0.8"
+        )
+
+        // Idle float + gentle spin per object
+        for (const el of gsap.utils.toArray<HTMLElement>(
+          "[data-float]",
+          root.current
+        )) {
+          gsap.to(el, {
+            y: gsap.utils.random(-14, -24),
+            duration: gsap.utils.random(3, 4.6),
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: gsap.utils.random(0, 1)
+          })
+          gsap.to(el, {
+            rotation: gsap.utils.random(-6, 6),
+            duration: gsap.utils.random(4.5, 6.5),
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+          })
+        }
+
+        // Scroll parallax: objects drift up at depth-scaled rates
+        for (const el of gsap.utils.toArray<HTMLElement>(
+          "[data-parallax]",
+          root.current
+        )) {
+          const depth = Number.parseFloat(el.dataset.depth ?? "1")
+          gsap.to(el, {
+            yPercent: -16 * depth,
+            ease: "none",
+            scrollTrigger: {
+              trigger: root.current,
+              start: "top top",
+              end: "bottom top",
+              scrub: true
+            }
+          })
+        }
+
+        // Copy gently lifts away on scroll
+        gsap.to("[data-hero-copy]", {
+          yPercent: -8,
+          autoAlpha: 0.4,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top top",
+            end: "bottom 40%",
+            scrub: true
+          }
+        })
+
+        // Pointer parallax for the object cluster
+        const items = gsap.utils.toArray<HTMLElement>(
+          "[data-parallax]",
+          root.current
+        )
+        const setters = items.map((el) => ({
+          x: gsap.quickTo(el, "x", { duration: 0.7, ease: "power3" }),
+          depth: Number.parseFloat(el.dataset.depth ?? "1")
+        }))
+        const onMove = contextSafe?.((event: PointerEvent) => {
+          const dx = (event.clientX - window.innerWidth / 2) / window.innerWidth
+          for (const s of setters) {
+            s.x(dx * 52 * s.depth)
+          }
+        })
+        if (onMove) {
+          window.addEventListener("pointermove", onMove)
+          return () => window.removeEventListener("pointermove", onMove)
+        }
+      })
+    },
+    { scope: root }
+  )
 
   return (
-    <section className="relative flex min-h-dvh flex-col justify-start overflow-hidden pt-32 pb-20 md:justify-center md:pt-36 md:pb-28">
-      {/* Organic violet → pink blobs */}
-      <Blob className="-top-32 left-1/4 size-[460px] bg-primary/25" />
+    <section
+      className="relative flex min-h-dvh flex-col justify-start overflow-hidden pt-32 pb-20 md:justify-center md:pt-36 md:pb-28"
+      ref={root}
+    >
+      <Blob className="-top-32 left-1/4 size-[460px] bg-primary/20" />
       <Blob
-        className="top-10 right-0 size-[380px] bg-fuchsia-400/20"
+        className="top-10 right-0 size-[380px] bg-amber-300/15"
         shape="60% 40% 30% 70% / 60% 30% 70% 40%"
       />
       <Blob
-        className="bottom-0 left-0 size-[320px] bg-violet-400/15"
+        className="bottom-0 left-0 size-[320px] bg-primary/10"
         shape="40% 60% 55% 45% / 55% 50% 50% 45%"
       />
 
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 lg:grid-cols-[1.05fr_0.95fr]">
         {/* Copy */}
-        <div className="text-center lg:text-left">
-          <motion.div
-            animate={reduced ? undefined : { opacity: 1, y: 0 }}
-            initial={reduced ? false : { opacity: 0, y: 20 }}
-            transition={{ type: "spring", stiffness: 120, damping: 18 }}
+        <div className="text-center lg:text-left" data-hero-copy="">
+          <Badge
+            className="mb-6 gap-1.5 rounded-full px-3 py-1"
+            data-hero-rise=""
+            variant="secondary"
           >
-            <Badge
-              className="mb-6 gap-1.5 rounded-full px-3 py-1"
-              variant="secondary"
-            >
-              <HugeiconsIcon className="size-3.5" icon={MagicWand01Icon} />
-              {t("landing.hero.badge", "Your personal learning companion")}
-            </Badge>
-          </motion.div>
+            <HugeiconsIcon className="size-3.5" icon={MagicWand01Icon} />
+            {t("landing.hero.badge", "Your personal learning companion")}
+          </Badge>
 
-          <motion.h1
-            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+          <h1
             className="font-display text-[2.75rem] leading-[1.05] font-bold tracking-tight md:text-6xl"
-            initial={reduced ? false : { opacity: 0, y: 24 }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 18,
-              delay: 0.08
-            }}
+            data-hero-rise=""
           >
             {t("landing.hero.titleLine1", "Capture, organize &")}{" "}
             <span className="relative inline-block font-script font-normal text-primary">
               {t("landing.hero.titleHighlight", "remember")}
-              <motion.svg
+              <svg
                 aria-hidden="true"
-                className="absolute -bottom-2 left-0 w-full text-accent-foreground/40"
+                className="absolute -bottom-2 left-0 w-full text-primary/50"
+                data-hero-underline=""
                 fill="none"
-                initial={reduced ? false : { pathLength: 0 }}
                 preserveAspectRatio="none"
-                transition={{ duration: 0.9, delay: 0.6, ease: "easeInOut" }}
                 viewBox="0 0 200 12"
-                whileInView={reduced ? undefined : { pathLength: 1 }}
               >
-                <motion.path
+                <path
                   d="M2 8C40 3 80 3 120 6C150 8 180 7 198 4"
                   stroke="currentColor"
                   strokeLinecap="round"
                   strokeWidth="3"
                 />
-              </motion.svg>
+              </svg>
             </span>{" "}
             {t("landing.hero.titleLine2", "everything you learn")}
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+          <p
             className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl lg:mx-0"
-            initial={reduced ? false : { opacity: 0, y: 24 }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 18,
-              delay: 0.16
-            }}
+            data-hero-rise=""
           >
             {t(
               "landing.hero.subtitle",
               "A warm, playful home for your notes. Capture ideas in a flash, let AI connect the dots, and let spaced review make them stick — so nothing you learn slips away."
             )}
-          </motion.p>
+          </p>
 
-          <motion.div
-            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+          <div
             className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-            initial={reduced ? false : { opacity: 0, y: 24 }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 18,
-              delay: 0.24
-            }}
+            data-hero-rise=""
           >
             <Link to="/register">
-              <motion.span
-                className="inline-block"
-                whileHover={reduced ? undefined : { scale: 1.04 }}
-                whileTap={reduced ? undefined : { scale: 0.97 }}
-              >
-                <Button className="h-12 cursor-pointer gap-2 rounded-full px-7 text-base shadow-lg shadow-primary/20">
-                  {t("landing.hero.cta", "Start learning — free")}
-                  <HugeiconsIcon className="size-5" icon={ArrowRight02Icon} />
-                </Button>
-              </motion.span>
+              <Button className="h-12 cursor-pointer gap-2 rounded-full px-7 text-base shadow-lg shadow-primary/25 transition-transform hover:scale-[1.04] active:scale-[0.97]">
+                {t("landing.hero.cta", "Start learning — free")}
+                <HugeiconsIcon className="size-5" icon={ArrowRight02Icon} />
+              </Button>
             </Link>
             <a href="#features">
-              <motion.span
-                className="inline-block"
-                whileHover={reduced ? undefined : { scale: 1.04 }}
-                whileTap={reduced ? undefined : { scale: 0.97 }}
+              <Button
+                className="h-12 cursor-pointer gap-2 rounded-full px-7 text-base transition-transform hover:scale-[1.04] active:scale-[0.97]"
+                variant="outline"
               >
-                <Button
-                  className="h-12 cursor-pointer gap-2 rounded-full px-7 text-base"
-                  variant="outline"
-                >
-                  {t("landing.hero.ctaSecondary", "Take the tour")}
-                </Button>
-              </motion.span>
+                {t("landing.hero.ctaSecondary", "Take the tour")}
+              </Button>
             </a>
-          </motion.div>
+          </div>
 
-          {/* Leckerli stat strip */}
-          <motion.div
-            animate={reduced ? undefined : { opacity: 1, y: 0 }}
+          <div
             className="mt-10 flex items-center justify-center gap-7 lg:justify-start"
-            initial={reduced ? false : { opacity: 0, y: 24 }}
-            transition={{
-              type: "spring",
-              stiffness: 120,
-              damping: 18,
-              delay: 0.32
-            }}
+            data-hero-rise=""
           >
             <HeroStat
               label={t("landing.hero.statPlatforms", "Platforms")}
@@ -376,38 +516,41 @@ function HeroSection() {
               label={t("landing.hero.statYoursLabel", "Yours")}
               value="100%"
             />
-          </motion.div>
+          </div>
         </div>
 
-        {/* Floating 3D object cluster */}
-        <div className="relative mx-auto h-[340px] w-full max-w-md md:h-[440px]">
-          <FloatObject
+        {/* Floating obsidian object cluster */}
+        <div className="relative mx-auto h-[360px] w-full max-w-md md:h-[460px]">
+          <Halo className="top-1/2 left-1/2 size-72 -translate-x-1/2 -translate-y-1/2" />
+          <Obj
             alt={t(
               "landing.hero.objectBook",
               "A notebook full of what you've learned"
             )}
             className="absolute top-6 left-1/2 size-56 -translate-x-1/2 md:size-72"
-            floatDistance={18}
-            floatDuration={6.5}
-            src={OBJECT_BOOK}
+            depth={1.6}
+            float
+            src={OBJ.note}
           />
-          <FloatObject
+          <Obj
             alt={t("landing.hero.objectSearch", "Search across everything")}
             className="absolute top-0 right-2 size-24 md:size-28"
-            delay={0.3}
-            floatDistance={14}
-            floatDuration={5}
-            spin={-6}
-            src={OBJECT_LENS}
+            depth={2.4}
+            float
+            src={OBJ.lens}
           />
-          <FloatObject
+          <Obj
             alt={t("landing.hero.objectBookmark", "Save what matters")}
             className="absolute bottom-2 left-0 size-20 md:size-24"
-            delay={0.5}
-            floatDistance={12}
-            floatDuration={5.5}
-            spin={6}
-            src={OBJECT_BOOKMARK}
+            depth={2.1}
+            float
+            src={OBJ.bookmark}
+          />
+          <Obj
+            className="absolute right-6 bottom-10 size-14 md:size-16"
+            depth={3}
+            float
+            src={OBJ.sparkle}
           />
         </div>
       </div>
@@ -418,7 +561,9 @@ function HeroSection() {
 function HeroStat({ value, label }: { value: string; label: string }) {
   return (
     <div className="text-center lg:text-left">
-      <p className="font-number text-3xl text-primary md:text-4xl">{value}</p>
+      <p className="font-number text-3xl text-primary md:text-4xl">
+        <CountUp value={value} />
+      </p>
       <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
     </div>
   )
@@ -437,6 +582,7 @@ interface FeatureItem {
 
 function FeaturesSection() {
   const { t } = useTranslation()
+  const root = useRef<HTMLElement>(null)
 
   const features: FeatureItem[] = [
     {
@@ -446,7 +592,7 @@ function FeaturesSection() {
         "landing.features.capture.desc",
         "Catch ideas the moment they strike with a rich, distraction-free editor. Tag and organize without breaking your flow."
       ),
-      gradient: "from-primary/20 to-fuchsia-400/20"
+      gradient: "from-primary/25 to-amber-300/10"
     },
     {
       icon: Calendar03Icon,
@@ -455,7 +601,7 @@ function FeaturesSection() {
         "landing.features.review.desc",
         "Never forget what you learn. A friendly review schedule resurfaces your notes at exactly the right moment."
       ),
-      gradient: "from-violet-400/20 to-primary/20"
+      gradient: "from-amber-300/20 to-primary/15"
     },
     {
       icon: AiChat02Icon,
@@ -464,7 +610,7 @@ function FeaturesSection() {
         "landing.features.ai.desc",
         "Chat with your notes. Ask questions, get summaries, and uncover connections across your whole knowledge base."
       ),
-      gradient: "from-fuchsia-400/20 to-pink-400/20"
+      gradient: "from-primary/20 to-orange-300/10"
     },
     {
       icon: Search01Icon,
@@ -473,7 +619,7 @@ function FeaturesSection() {
         "landing.features.search.desc",
         "Find anything in seconds with full-text and AI-powered semantic search across every entry you've ever made."
       ),
-      gradient: "from-primary/20 to-violet-400/20"
+      gradient: "from-amber-400/15 to-primary/15"
     },
     {
       icon: Tag01Icon,
@@ -482,7 +628,7 @@ function FeaturesSection() {
         "landing.features.tags.desc",
         "Tags, collections, and sources that grow into a personal taxonomy — structure that feels effortless."
       ),
-      gradient: "from-pink-400/20 to-fuchsia-400/20"
+      gradient: "from-primary/20 to-amber-300/15"
     },
     {
       icon: GridViewIcon,
@@ -491,12 +637,38 @@ function FeaturesSection() {
         "landing.features.graph.desc",
         "Watch your notes link up. Explore hidden relationships and see the big picture of everything you know."
       ),
-      gradient: "from-violet-400/20 to-fuchsia-400/20"
+      gradient: "from-amber-300/15 to-primary/20"
     }
   ]
 
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.set("[data-feature-card]", { y: 40, autoAlpha: 0 })
+        ScrollTrigger.batch("[data-feature-card]", {
+          start: "top 88%",
+          onEnter: (batch) =>
+            gsap.to(batch, {
+              y: 0,
+              autoAlpha: 1,
+              stagger: 0.12,
+              duration: 0.7,
+              ease: "power3.out",
+              overwrite: true
+            })
+        })
+      })
+    },
+    { scope: root }
+  )
+
   return (
-    <section className="relative py-20 md:py-28" id="features">
+    <section className="relative py-20 md:py-28" id="features" ref={root}>
+      <Obj
+        className="animate-floaty pointer-events-none absolute top-16 right-[6%] hidden size-20 lg:block"
+        src={OBJ.tag}
+      />
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
           badge={t("landing.features.badge", "Core Features")}
@@ -508,12 +680,8 @@ function FeaturesSection() {
         />
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, index) => (
-            <FeatureCard
-              delay={(index % 3) * 0.08}
-              feature={feature}
-              key={feature.title}
-            />
+          {features.map((feature) => (
+            <FeatureCard feature={feature} key={feature.title} />
           ))}
         </div>
       </div>
@@ -521,54 +689,40 @@ function FeaturesSection() {
   )
 }
 
-function FeatureCard({
-  feature,
-  delay
-}: {
-  feature: FeatureItem
-  delay: number
-}) {
-  const reduced = useReducedMotion()
-
+function FeatureCard({ feature }: { feature: FeatureItem }) {
   return (
-    <Reveal delay={delay}>
-      <motion.div
-        className="group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur-sm transition-colors hover:border-primary/40"
-        whileHover={reduced ? undefined : { y: -6, scale: 1.015 }}
-      >
+    <div
+      className="group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-xl"
+      data-feature-card=""
+    >
+      <div
+        className={cn(
+          "absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+          feature.gradient
+        )}
+      />
+      <div className="relative">
         <div
           className={cn(
-            "absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+            "mb-4 flex size-14 items-center justify-center rounded-2xl bg-linear-to-br transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110",
             feature.gradient
           )}
-        />
-        <div className="relative">
-          <motion.div
-            className={cn(
-              "mb-4 flex size-14 items-center justify-center rounded-2xl bg-linear-to-br",
-              feature.gradient
-            )}
-            whileHover={reduced ? undefined : { rotate: -8, scale: 1.1 }}
-          >
-            <HugeiconsIcon
-              className="size-7 text-primary"
-              icon={feature.icon}
-            />
-          </motion.div>
-          <h3 className="mb-2 font-display text-xl font-semibold">
-            {feature.title}
-          </h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {feature.description}
-          </p>
+        >
+          <HugeiconsIcon className="size-7 text-primary" icon={feature.icon} />
         </div>
-      </motion.div>
-    </Reveal>
+        <h3 className="mb-2 font-display text-xl font-semibold">
+          {feature.title}
+        </h3>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {feature.description}
+        </p>
+      </div>
+    </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// How It Works
+// How It Works — sticky scrollytelling
 // ---------------------------------------------------------------------------
 
 interface StepItem {
@@ -581,6 +735,7 @@ interface StepItem {
 
 function HowItWorksSection() {
   const { t } = useTranslation()
+  const root = useRef<HTMLElement>(null)
 
   const steps: StepItem[] = [
     {
@@ -591,7 +746,7 @@ function HowItWorksSection() {
         "Jot ideas, highlights, and learnings as they come. Rich editor, quick capture, paste from anywhere."
       ),
       icon: PencilEdit02Icon,
-      object: OBJECT_BOOK
+      object: OBJ.note
     },
     {
       number: "2",
@@ -601,7 +756,7 @@ function HowItWorksSection() {
         "Tag your entries, add sources, and let AI help categorize. Your notes become a living knowledge base."
       ),
       icon: InboxIcon,
-      object: OBJECT_BOOKMARK
+      object: OBJ.bookmark
     },
     {
       number: "3",
@@ -611,13 +766,108 @@ function HowItWorksSection() {
         "Spaced review surfaces the right notes at the right time. Revisit, strengthen, and truly retain."
       ),
       icon: BookOpen01Icon,
-      object: OBJECT_LENS
+      object: OBJ.lens
     }
   ]
 
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          const layers = gsap.utils.toArray<HTMLElement>(
+            "[data-hiw-layer]",
+            root.current
+          )
+          const stepEls = gsap.utils.toArray<HTMLElement>(
+            "[data-hiw-step]",
+            root.current
+          )
+          const dots = gsap.utils.toArray<HTMLElement>(
+            "[data-hiw-dot]",
+            root.current
+          )
+
+          const setActive = (idx: number) => {
+            for (const [i, el] of layers.entries()) {
+              gsap.to(el, {
+                autoAlpha: i === idx ? 1 : 0,
+                scale: i === idx ? 1 : 0.86,
+                yPercent: i === idx ? 0 : 6,
+                duration: 0.6,
+                ease: "power3.out"
+              })
+            }
+            for (const [i, el] of stepEls.entries()) {
+              gsap.to(el, {
+                autoAlpha: i === idx ? 1 : 0.4,
+                duration: 0.4,
+                ease: "power2.out"
+              })
+            }
+            for (const [i, el] of dots.entries()) {
+              el.classList.toggle("bg-primary", i === idx)
+              el.classList.toggle("bg-muted-foreground/30", i !== idx)
+              gsap.to(el, { scale: i === idx ? 1.4 : 1, duration: 0.3 })
+            }
+          }
+
+          gsap.set(layers, { autoAlpha: 0, scale: 0.86 })
+          setActive(0)
+
+          for (let i = 0; i < steps.length; i++) {
+            ScrollTrigger.create({
+              trigger: `[data-hiw-step="${i}"]`,
+              start: "top center",
+              end: "bottom center",
+              onToggle: (self) => {
+                if (self.isActive) {
+                  setActive(i)
+                }
+              }
+            })
+          }
+
+          gsap.to("[data-hiw-halo]", {
+            yPercent: 16,
+            ease: "none",
+            scrollTrigger: {
+              trigger: root.current,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: true
+            }
+          })
+        }
+      )
+
+      mm.add(
+        "(max-width: 1023px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          gsap.set("[data-hiw-card]", { y: 40, autoAlpha: 0 })
+          ScrollTrigger.batch("[data-hiw-card]", {
+            start: "top 85%",
+            onEnter: (batch) =>
+              gsap.to(batch, {
+                y: 0,
+                autoAlpha: 1,
+                stagger: 0.15,
+                duration: 0.7,
+                ease: "power3.out",
+                overwrite: true
+              })
+          })
+        }
+      )
+    },
+    { scope: root }
+  )
+
   return (
-    <section className="relative py-20 md:py-28" id="how-it-works">
-      <Blob className="top-1/2 left-1/2 size-[520px] -translate-x-1/2 -translate-y-1/2 bg-primary/8" />
+    <section className="relative py-20 md:py-28" id="how-it-works" ref={root}>
+      <Blob className="top-1/3 left-1/2 size-[520px] -translate-x-1/2 bg-primary/8" />
 
       <div className="relative mx-auto max-w-6xl px-6">
         <SectionHeader
@@ -629,9 +879,79 @@ function HowItWorksSection() {
           title={t("landing.howItWorks.title", "How It Works")}
         />
 
-        <div className="mt-16 grid gap-10 md:grid-cols-3">
-          {steps.map((step, index) => (
-            <StepCard delay={index * 0.12} key={step.number} step={step} />
+        {/* Desktop: sticky media + scrolling steps */}
+        <div className="mt-8 hidden gap-16 lg:grid lg:grid-cols-2">
+          <div className="relative">
+            <div className="sticky top-0 flex h-dvh items-center justify-center">
+              <div className="relative size-[22rem]">
+                <Halo
+                  className="top-1/2 left-1/2 size-72 -translate-x-1/2 -translate-y-1/2"
+                  data-hiw-halo=""
+                />
+                {steps.map((step, i) => (
+                  <div
+                    className={cn(
+                      "absolute inset-0 flex items-center justify-center will-change-transform",
+                      i !== 0 && "opacity-0"
+                    )}
+                    data-hiw-layer=""
+                    key={step.number}
+                  >
+                    <img
+                      alt={step.title}
+                      className={cn("size-80 select-none", OBJ_SHADOW)}
+                      draggable={false}
+                      src={step.object}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            {/* progress rail */}
+            <div className="pointer-events-none fixed top-1/2 right-8 z-10 hidden -translate-y-1/2 flex-col items-center gap-3 lg:flex xl:right-16">
+              {steps.map((step, i) => (
+                <span
+                  className="size-2.5 rounded-full bg-muted-foreground/30 transition-colors"
+                  data-hiw-dot={i}
+                  key={step.number}
+                />
+              ))}
+            </div>
+
+            {steps.map((step, i) => (
+              <div
+                className="flex min-h-dvh flex-col justify-center"
+                data-hiw-step={i}
+                key={step.number}
+              >
+                <StepBody step={step} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile: stacked cards */}
+        <div className="mt-12 grid gap-8 lg:hidden">
+          {steps.map((step) => (
+            <div
+              className="rounded-3xl border border-border/60 bg-card/70 p-6 text-center shadow-sm backdrop-blur-sm"
+              data-hiw-card=""
+              key={step.number}
+            >
+              <div className="relative mx-auto mb-5 size-32">
+                <Halo className="inset-0" />
+                <img
+                  alt={step.title}
+                  className={cn("relative size-32 select-none", OBJ_SHADOW)}
+                  draggable={false}
+                  src={step.object}
+                />
+              </div>
+              <StepBody step={step} />
+            </div>
           ))}
         </div>
       </div>
@@ -639,31 +959,24 @@ function HowItWorksSection() {
   )
 }
 
-function StepCard({ step, delay }: { step: StepItem; delay: number }) {
-  const reduced = useReducedMotion()
-
+function StepBody({ step }: { step: StepItem }) {
   return (
-    <Reveal className="text-center" delay={delay}>
-      <motion.div
-        className="relative mx-auto mb-6 flex size-28 items-center justify-center"
-        whileHover={reduced ? undefined : { scale: 1.06 }}
-      >
-        <div className="absolute inset-0 rounded-[42%_58%_55%_45%/55%_45%_55%_45%] bg-linear-to-br from-primary/15 to-fuchsia-400/15" />
-        <img
-          alt=""
-          aria-hidden="true"
-          className="size-20 drop-shadow-[0_16px_28px_rgba(91,33,182,0.25)]"
-          src={step.object}
-        />
-        <span className="absolute -top-1 -right-1 flex size-9 items-center justify-center rounded-full bg-primary font-number text-base text-primary-foreground shadow-md">
+    <div>
+      <div className="mb-4 inline-flex items-center gap-3 lg:mb-5">
+        <span className="flex size-11 items-center justify-center rounded-2xl bg-primary font-number text-lg text-primary-foreground shadow-md">
           {step.number}
         </span>
-      </motion.div>
-      <h3 className="mb-2 font-display text-xl font-semibold">{step.title}</h3>
-      <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
+        <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12">
+          <HugeiconsIcon className="size-5 text-primary" icon={step.icon} />
+        </span>
+      </div>
+      <h3 className="mb-3 font-display text-3xl font-bold md:text-4xl">
+        {step.title}
+      </h3>
+      <p className="mx-auto max-w-md text-lg leading-relaxed text-muted-foreground lg:mx-0">
         {step.description}
       </p>
-    </Reveal>
+    </div>
   )
 }
 
@@ -673,9 +986,84 @@ function StepCard({ step, delay }: { step: StepItem; delay: number }) {
 
 function ShowcaseSection() {
   const { t } = useTranslation()
+  const root = useRef<HTMLElement>(null)
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.set("[data-bento]", { y: 44, autoAlpha: 0 })
+        ScrollTrigger.batch("[data-bento]", {
+          start: "top 88%",
+          onEnter: (batch) =>
+            gsap.to(batch, {
+              y: 0,
+              autoAlpha: 1,
+              stagger: 0.1,
+              duration: 0.7,
+              ease: "power3.out",
+              overwrite: true
+            })
+        })
+
+        gsap.from("[data-chat]", {
+          autoAlpha: 0,
+          y: 14,
+          stagger: 0.25,
+          duration: 0.6,
+          ease: "power2.out",
+          scrollTrigger: { trigger: "[data-chat]", start: "top 85%" }
+        })
+
+        const edges = gsap.utils.toArray<SVGLineElement>(
+          "[data-graph-edge]",
+          root.current
+        )
+        for (const line of edges) {
+          const len = line.getTotalLength()
+          gsap.set(line, { strokeDasharray: len, strokeDashoffset: len })
+        }
+        gsap.to(edges, {
+          strokeDashoffset: 0,
+          duration: 0.8,
+          stagger: 0.08,
+          ease: "power2.inOut",
+          scrollTrigger: { trigger: "[data-graph]", start: "top 80%" }
+        })
+        gsap.from("[data-graph-node]", {
+          scale: 0,
+          transformOrigin: "center",
+          stagger: 0.08,
+          duration: 0.5,
+          ease: "back.out(2)",
+          scrollTrigger: { trigger: "[data-graph]", start: "top 80%" }
+        })
+
+        gsap.from("[data-review-day]", {
+          autoAlpha: 0,
+          y: 12,
+          scale: 0.8,
+          stagger: 0.08,
+          duration: 0.5,
+          ease: "back.out(1.7)",
+          scrollTrigger: { trigger: "[data-review]", start: "top 85%" }
+        })
+
+        gsap.from("[data-editor-line]", {
+          scaleX: 0,
+          transformOrigin: "left",
+          stagger: 0.12,
+          duration: 0.6,
+          ease: "power2.out",
+          scrollTrigger: { trigger: "[data-editor]", start: "top 85%" }
+        })
+      })
+    },
+    { scope: root }
+  )
 
   return (
-    <section className="relative py-20 md:py-28" id="showcase">
+    <section className="relative py-20 md:py-28" id="showcase" ref={root}>
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
           badge={t("landing.showcase.badge", "Product Tour")}
@@ -692,12 +1080,12 @@ function ShowcaseSection() {
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <BentoCard
             className="lg:col-span-2"
-            delay={0}
             description={t(
               "landing.showcase.ai.desc",
               "Have a conversation with your knowledge base. Ask questions, get summaries, and discover insights you never knew were there."
             )}
             icon={AiChat02Icon}
+            object={OBJ.brain}
             title={t("landing.showcase.ai.title", "AI-Powered Chat")}
           >
             <div className="mt-4 space-y-3">
@@ -719,7 +1107,6 @@ function ShowcaseSection() {
           </BentoCard>
 
           <BentoCard
-            delay={0.08}
             description={t(
               "landing.showcase.graph.desc",
               "See how your notes connect. Explore topics and uncover hidden relationships."
@@ -727,29 +1114,36 @@ function ShowcaseSection() {
             icon={GridViewIcon}
             title={t("landing.showcase.graph.title", "Knowledge Graph")}
           >
-            <div className="mt-4 flex items-center justify-center">
+            <div
+              className="mt-4 flex items-center justify-center"
+              data-graph=""
+            >
               <GraphMock />
             </div>
           </BentoCard>
 
           <BentoCard
-            delay={0.16}
             description={t(
               "landing.showcase.review.desc",
               "Science-backed review scheduling that helps you remember what matters most."
             )}
             icon={Calendar03Icon}
+            object={OBJ.calendar}
             title={t("landing.showcase.review.title", "Spaced Repetition")}
           >
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex gap-2" data-review="">
               {REVIEW_DAYS.map((day, i) => (
-                <div className="flex-1 text-center" key={day}>
+                <div
+                  className="flex-1 text-center"
+                  data-review-day=""
+                  key={day}
+                >
                   <div
                     className={cn(
                       "mx-auto mb-1 flex size-8 items-center justify-center rounded-xl font-medium text-xs",
                       i < 3 && "bg-primary/20 text-primary",
                       i === 3 &&
-                        "bg-fuchsia-400/25 text-fuchsia-600 dark:text-fuchsia-300",
+                        "bg-amber-400/25 text-amber-700 dark:text-amber-300",
                       i > 3 && "bg-muted/60 text-muted-foreground"
                     )}
                   >
@@ -770,7 +1164,6 @@ function ShowcaseSection() {
 
           <BentoCard
             className="lg:col-span-2"
-            delay={0.24}
             description={t(
               "landing.showcase.editor.desc",
               "A beautiful, distraction-free editor with markdown, code blocks, and rich media."
@@ -778,7 +1171,10 @@ function ShowcaseSection() {
             icon={PencilEdit02Icon}
             title={t("landing.showcase.editor.title", "Rich Text Editor")}
           >
-            <div className="mt-4 rounded-2xl border border-border/40 bg-background/60 p-4">
+            <div
+              className="mt-4 rounded-2xl border border-border/40 bg-background/60 p-4"
+              data-editor=""
+            >
               <div className="mb-3 flex gap-2 border-b border-border/40 pb-3">
                 {EDITOR_TOOLS.map((btn) => (
                   <div
@@ -796,6 +1192,7 @@ function ShowcaseSection() {
                       "h-2.5 rounded-full bg-primary/15",
                       line.width
                     )}
+                    data-editor-line=""
                     key={line.id}
                   />
                 ))}
@@ -821,42 +1218,56 @@ function BentoCard({
   title,
   description,
   className,
-  delay,
+  object,
   children
 }: {
   icon: IconSvgElement
   title: string
   description: string
   className?: string
-  delay: number
+  object?: string
   children?: ReactNode
 }) {
-  const reduced = useReducedMotion()
-
   return (
-    <Reveal className={className} delay={delay}>
-      <motion.div
-        className="group h-full overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur-sm transition-colors hover:border-primary/30"
-        whileHover={reduced ? undefined : { y: -4 }}
-      >
-        <div className="mb-3 flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-primary/20 to-fuchsia-400/20">
-            <HugeiconsIcon className="size-5 text-primary" icon={icon} />
-          </div>
-          <h3 className="font-display text-lg font-semibold">{title}</h3>
+    <div
+      className={cn(
+        "group relative h-full overflow-hidden rounded-3xl border border-border/60 bg-card/70 p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg",
+        className
+      )}
+      data-bento=""
+    >
+      {object ? (
+        <img
+          alt=""
+          aria-hidden="true"
+          className={cn(
+            "-top-6 -right-6 pointer-events-none absolute size-28 rotate-6 opacity-90 transition-transform duration-500 group-hover:-rotate-3 group-hover:scale-110",
+            OBJ_SHADOW
+          )}
+          draggable={false}
+          src={object}
+        />
+      ) : null}
+      <div className="relative mb-3 flex items-center gap-3">
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-primary/20 to-amber-300/15">
+          <HugeiconsIcon className="size-5 text-primary" icon={icon} />
         </div>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-        {children}
-      </motion.div>
-    </Reveal>
+        <h3 className="font-display text-lg font-semibold">{title}</h3>
+      </div>
+      <p className="relative text-sm leading-relaxed text-muted-foreground">
+        {description}
+      </p>
+      {children}
+    </div>
   )
 }
 
 function ChatBubble({ text, isAi }: { text: string; isAi: boolean }) {
   return (
-    <div className={cn("flex", isAi ? "justify-start" : "justify-end")}>
+    <div
+      className={cn("flex", isAi ? "justify-start" : "justify-end")}
+      data-chat=""
+    >
       <div
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
@@ -888,10 +1299,11 @@ function GraphMock() {
         }
         return (
           <line
+            data-graph-edge=""
             key={`${from}-${to}`}
             stroke="currentColor"
-            strokeOpacity="0.25"
-            strokeWidth="0.5"
+            strokeOpacity="0.3"
+            strokeWidth="0.6"
             x1={a.x}
             x2={b.x}
             y1={a.y}
@@ -900,7 +1312,7 @@ function GraphMock() {
         )
       })}
       {GRAPH_NODES.map((node) => (
-        <g key={node.label}>
+        <g data-graph-node="" key={node.label}>
           <circle
             cx={node.x}
             cy={node.y}
@@ -912,7 +1324,7 @@ function GraphMock() {
             cx={node.x}
             cy={node.y}
             fill="currentColor"
-            fillOpacity="0.7"
+            fillOpacity="0.75"
             r={node.size * 0.4}
           />
           <text
@@ -958,6 +1370,7 @@ interface StatItem {
 
 function StatsSection() {
   const { t } = useTranslation()
+  const root = useRef<HTMLElement>(null)
 
   const stats: StatItem[] = [
     {
@@ -982,14 +1395,40 @@ function StatsSection() {
     }
   ]
 
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.set("[data-stat]", { y: 36, autoAlpha: 0 })
+        ScrollTrigger.batch("[data-stat]", {
+          start: "top 88%",
+          onEnter: (batch) =>
+            gsap.to(batch, {
+              y: 0,
+              autoAlpha: 1,
+              stagger: 0.1,
+              duration: 0.6,
+              ease: "power3.out",
+              overwrite: true
+            })
+        })
+      })
+    },
+    { scope: root }
+  )
+
   return (
-    <section className="relative py-20 md:py-28">
-      <Blob className="top-1/2 left-1/2 size-[460px] -translate-x-1/2 -translate-y-1/2 bg-fuchsia-400/8" />
+    <section className="relative py-20 md:py-28" ref={root}>
+      <Blob className="top-1/2 left-1/2 size-[460px] -translate-x-1/2 -translate-y-1/2 bg-amber-300/8" />
+      <Obj
+        className="animate-floaty pointer-events-none absolute top-6 left-[8%] hidden size-16 lg:block"
+        src={OBJ.sparkle}
+      />
 
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
-            <StatCard delay={(index % 4) * 0.08} key={stat.label} stat={stat} />
+          {stats.map((stat) => (
+            <StatCard key={stat.label} stat={stat} />
           ))}
         </div>
       </div>
@@ -997,22 +1436,20 @@ function StatsSection() {
   )
 }
 
-function StatCard({ stat, delay }: { stat: StatItem; delay: number }) {
-  const reduced = useReducedMotion()
-
+function StatCard({ stat }: { stat: StatItem }) {
   return (
-    <Reveal delay={delay}>
-      <motion.div
-        className="rounded-3xl border border-border/60 bg-card/70 p-6 text-center shadow-sm backdrop-blur-sm"
-        whileHover={reduced ? undefined : { y: -4, scale: 1.02 }}
-      >
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/15">
-          <HugeiconsIcon className="size-6 text-primary" icon={stat.icon} />
-        </div>
-        <p className="font-number text-4xl text-primary">{stat.value}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-      </motion.div>
-    </Reveal>
+    <div
+      className="rounded-3xl border border-border/60 bg-card/70 p-6 text-center shadow-sm backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1"
+      data-stat=""
+    >
+      <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/15">
+        <HugeiconsIcon className="size-6 text-primary" icon={stat.icon} />
+      </div>
+      <p className="font-number text-4xl text-primary">
+        <CountUp value={stat.value} />
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+    </div>
   )
 }
 
@@ -1022,60 +1459,104 @@ function StatCard({ stat, delay }: { stat: StatItem; delay: number }) {
 
 function FinalCTASection() {
   const { t } = useTranslation()
-  const reduced = useReducedMotion()
+  const root = useRef<HTMLElement>(null)
+  const magneticRef = useMagnetic<HTMLSpanElement>(0.5)
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.from("[data-cta-rise]", {
+          y: 40,
+          autoAlpha: 0,
+          stagger: 0.12,
+          duration: 0.9,
+          ease: "power3.out",
+          scrollTrigger: { trigger: root.current, start: "top 75%" }
+        })
+        gsap.to("[data-cta-float]", {
+          y: -18,
+          duration: 3.4,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        })
+        gsap.to("[data-cta-glow]", {
+          autoAlpha: 0.55,
+          scale: 1.12,
+          duration: 2.6,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        })
+      })
+    },
+    { scope: root }
+  )
 
   return (
-    <section className="relative py-20 md:py-28">
+    <section className="relative py-20 md:py-28" ref={root}>
       <div className="mx-auto max-w-6xl px-6">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-card/70 px-6 py-14 text-center shadow-lg backdrop-blur-sm md:px-16 md:py-20">
-            <Blob className="-top-24 left-1/3 size-[420px] bg-primary/20" />
-            <Blob
-              className="-right-16 -bottom-24 size-[320px] bg-fuchsia-400/20"
-              shape="60% 40% 30% 70% / 60% 30% 70% 40%"
-            />
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-border/60 bg-card/70 px-6 py-14 text-center shadow-lg backdrop-blur-sm md:px-16 md:py-20">
+          <Blob className="-top-24 left-1/3 size-[420px] bg-primary/18" />
+          <Blob
+            className="-right-16 -bottom-24 size-[320px] bg-amber-300/15"
+            shape="60% 40% 30% 70% / 60% 30% 70% 40%"
+          />
 
-            <FloatObject
+          <div className="relative mx-auto mb-6 size-28 md:size-32">
+            <Halo
+              className="top-1/2 left-1/2 size-32 -translate-x-1/2 -translate-y-1/2 opacity-70"
+              data-cta-glow=""
+            />
+            <img
               alt=""
-              className="mx-auto mb-6 size-24 md:size-28"
-              floatDistance={14}
-              src={OBJECT_BOOK}
+              aria-hidden="true"
+              className={cn(
+                "relative size-28 select-none md:size-32",
+                OBJ_SHADOW
+              )}
+              data-cta-float=""
+              draggable={false}
+              src={OBJ.note}
             />
+          </div>
 
-            <div className="relative">
-              <h2 className="font-display text-3xl font-bold md:text-5xl">
-                {t("landing.cta.title", "Ready to build your")}{" "}
-                <span className="font-script font-normal text-primary">
-                  {t("landing.cta.titleAccent", "knowledge system")}
+          <div className="relative">
+            <h2
+              className="font-display text-3xl font-bold md:text-5xl"
+              data-cta-rise=""
+            >
+              {t("landing.cta.title", "Ready to build your")}{" "}
+              <span className="font-script font-normal text-primary">
+                {t("landing.cta.titleAccent", "knowledge system")}
+              </span>
+              ?
+            </h2>
+            <p
+              className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground"
+              data-cta-rise=""
+            >
+              {t(
+                "landing.cta.description",
+                "Join the learners using FolioNote to capture, organize, and remember everything they learn."
+              )}
+            </p>
+            <div
+              className="mt-9 flex flex-wrap items-center justify-center gap-4"
+              data-cta-rise=""
+            >
+              <Link to="/register">
+                <span className="inline-block" ref={magneticRef}>
+                  <Button className="h-12 cursor-pointer gap-2 rounded-full px-8 text-base shadow-lg shadow-primary/25 transition-transform hover:scale-[1.04] active:scale-[0.97]">
+                    {t("landing.cta.button", "Get started for free")}
+                    <HugeiconsIcon className="size-5" icon={ArrowRight02Icon} />
+                  </Button>
                 </span>
-                ?
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
-                {t(
-                  "landing.cta.description",
-                  "Join the learners using FolioNote to capture, organize, and remember everything they learn."
-                )}
-              </p>
-              <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link to="/register">
-                  <motion.span
-                    className="inline-block"
-                    whileHover={reduced ? undefined : { scale: 1.04 }}
-                    whileTap={reduced ? undefined : { scale: 0.97 }}
-                  >
-                    <Button className="h-12 cursor-pointer gap-2 rounded-full px-8 text-base shadow-lg shadow-primary/20">
-                      {t("landing.cta.button", "Get started for free")}
-                      <HugeiconsIcon
-                        className="size-5"
-                        icon={ArrowRight02Icon}
-                      />
-                    </Button>
-                  </motion.span>
-                </Link>
-              </div>
+              </Link>
             </div>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   )
@@ -1152,8 +1633,26 @@ function SectionHeader({
   title: string
   description: string
 }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.from(gsap.utils.toArray(ref.current?.children ?? []), {
+          y: 26,
+          autoAlpha: 0,
+          stagger: 0.12,
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ref.current, start: "top 85%" }
+        })
+      })
+    },
+    { scope: ref }
+  )
+
   return (
-    <Reveal className="mx-auto max-w-2xl text-center">
+    <div className="mx-auto max-w-2xl text-center" ref={ref}>
       <Badge className="mb-4 rounded-full px-3 py-1" variant="secondary">
         {badge}
       </Badge>
@@ -1163,7 +1662,7 @@ function SectionHeader({
       <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
         {description}
       </p>
-    </Reveal>
+    </div>
   )
 }
 
@@ -1172,8 +1671,71 @@ function SectionHeader({
 // ---------------------------------------------------------------------------
 
 function LandingPage() {
+  const root = useRef<HTMLDivElement>(null)
+
+  // Smooth scroll (Lenis) wired into GSAP's ticker + ScrollTrigger.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return
+    }
+
+    const lenis = new Lenis({ duration: 1.1, smoothWheel: true })
+    lenis.on("scroll", ScrollTrigger.update)
+    const ticker = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(ticker)
+    gsap.ticker.lagSmoothing(0)
+
+    // Delegate in-page anchor links to Lenis (offset for the fixed navbar).
+    const onClick = (event: MouseEvent) => {
+      const anchor = (event.target as HTMLElement | null)?.closest?.(
+        'a[href^="#"]'
+      ) as HTMLAnchorElement | null
+      const href = anchor?.getAttribute("href")
+      if (href && href.length > 1) {
+        event.preventDefault()
+        lenis.scrollTo(href, { offset: -90 })
+      }
+    }
+    document.addEventListener("click", onClick)
+
+    const onLoad = () => ScrollTrigger.refresh()
+    window.addEventListener("load", onLoad)
+
+    return () => {
+      document.removeEventListener("click", onClick)
+      window.removeEventListener("load", onLoad)
+      gsap.ticker.remove(ticker)
+      lenis.destroy()
+    }
+  }, [])
+
+  // Top scroll-progress bar.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.to("[data-progress]", {
+          scaleX: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: document.documentElement,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.3
+          }
+        })
+      })
+    },
+    { scope: root }
+  )
+
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-clip" ref={root}>
+      <span
+        aria-hidden="true"
+        className="fixed top-0 left-0 z-[60] h-1 w-full origin-left scale-x-0 bg-linear-to-r from-primary to-amber-400"
+        data-progress=""
+      />
       <LandingNavbar />
       <main>
         <HeroSection />

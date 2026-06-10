@@ -25,7 +25,7 @@ export function ResetPasswordEmail({
   resetUrl = "https://example.com/reset-password"
 }: ResetPasswordEmailProps) {
   return (
-    <Html>
+    <Html lang="en">
       <Head />
       <Preview>Reset your FolioNote password</Preview>
       <Tailwind config={tailwindConfig}>

@@ -23,7 +23,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: "20"
   DEPLOY_PATH: /opt/folio/server
   PM2_APP_NAME: folio-server
 
@@ -35,20 +34,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+          node-version: "24"
+          cache: true
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Build server
-        run: pnpm turbo -F server build
+        run: vp run build -F server
 
       - name: Prepare deployment package
         run: |

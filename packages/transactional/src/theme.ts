@@ -5,6 +5,8 @@
  * The values are converted to hex/rgb for email client compatibility.
  */
 
+import { pixelBasedPreset } from "@react-email/components"
+
 export const emailTheme = {
   // Brand colors (derived from oklch values in web app)
   colors: {
@@ -72,6 +74,10 @@ export const emailTheme = {
  * Uses pixel-based values for better email client compatibility
  */
 export const tailwindConfig = {
+  // pixelBasedPreset converts Tailwind's default rem-based utilities (text-*,
+  // px-*, leading-*, …) to px so email clients (notably Outlook) render them
+  // reliably. Required for React Email v6, which is built on Tailwind v4.
+  presets: [pixelBasedPreset],
   theme: {
     extend: {
       colors: {

@@ -38,7 +38,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
       { title: siteConfig.name },
       { name: "description", content: siteConfig.description },
-      { name: "theme-color", content: "#0D9488" },
+      { name: "theme-color", content: "#161210" },
       // Open Graph
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: siteConfig.name },

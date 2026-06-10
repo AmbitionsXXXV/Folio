@@ -22,9 +22,8 @@
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",
-    "@react-email/preview-server": "^5.1.1",
     "@types/react": "catalog:",
-    "react-email": "^5.2.8",
+    "react-email": "^6.6.0",
     "typescript": "catalog:"
   }
 }
