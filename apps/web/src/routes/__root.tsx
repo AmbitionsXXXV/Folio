@@ -1,16 +1,14 @@
 import { Toaster } from "@folionote/ui/sonner"
-import { TanStackDevtools } from "@tanstack/react-devtools"
 import type { QueryClient } from "@tanstack/react-query"
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools"
 import {
   createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts
 } from "@tanstack/react-router"
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { RootProvider } from "fumadocs-ui/provider/tanstack"
 import { ThemeProvider } from "next-themes"
+import { lazy, Suspense } from "react"
 import { I18nextProvider, useTranslation } from "react-i18next"
 
 import { CommandPalette } from "@/components/command-palette"
@@ -22,6 +20,13 @@ import { cn } from "@/lib/utils"
 import type { orpc } from "@/utils/orpc"
 
 import appCss from "../index.css?url"
+
+// Dev-only, client-only. In production this is `() => null` and the dynamic
+// import is dead-code-eliminated, so the devtools packages (which call
+// browser-only APIs at module load) never reach the SSR/production bundle.
+const DevTools = import.meta.env.PROD
+  ? () => null
+  : lazy(() => import("@/components/dev-tools"))
 
 export interface RouterAppContext {
   orpc: typeof orpc
@@ -122,21 +127,11 @@ function RootDocument() {
               <Toaster richColors />
             </ThemeProvider>
           </RootProvider>
-          <TanStackDevtools
-            config={{ hideUntilHover: true }}
-            plugins={[
-              {
-                name: "TanStack Query",
-                render: <ReactQueryDevtoolsPanel />,
-                defaultOpen: true
-              },
-              {
-                name: "TanStack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-                defaultOpen: false
-              }
-            ]}
-          />
+          {import.meta.env.DEV && (
+            <Suspense fallback={null}>
+              <DevTools />
+            </Suspense>
+          )}
           <Scripts />
         </body>
       </html>
