@@ -68,10 +68,5 @@
     "ultracite": "^7.8.3",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@11.5.2",
-  "pnpm": {
-    "overrides": {
-      "drizzle-orm": "^0.45.2"
-    }
-  }
+  "packageManager": "pnpm@11.5.2"
 }

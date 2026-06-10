@@ -3,6 +3,9 @@ packages:
   - apps/*
   - packages/*
 
+overrides:
+  drizzle-orm: ^0.45.2
+
 allowBuilds:
   "@prisma/engines": true
   esbuild: true

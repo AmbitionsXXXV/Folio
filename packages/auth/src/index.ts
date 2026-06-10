@@ -49,6 +49,51 @@ const cookieDomainFromBaseUrl = (() => {
   }
 })()
 
+// The server process supplies BETTER_AUTH_URL. The web SSR process imports this
+// module (via the oRPC context) but loads none of the server's env, so fall
+// back to the local server URL in development to avoid Better Auth warning that
+// it must derive the origin per-request. In production, leave it unset so the
+// origin is request-derived rather than pinned to a wrong default.
+const LOCAL_AUTH_URL = "http://localhost:3000"
+const baseURL =
+  process.env.BETTER_AUTH_URL ??
+  process.env.VITE_SERVER_URL ??
+  (process.env.NODE_ENV === "production" ? undefined : LOCAL_AUTH_URL)
+
+interface SocialProviderCredentials {
+  clientId: string
+  clientSecret: string
+}
+
+// Only register an OAuth provider when both halves of its credentials are
+// present. The web SSR process has none, so it skips them silently instead of
+// warning; the server process supplies them and enables the providers.
+function readSocialCredentials(
+  clientId: string | undefined,
+  clientSecret: string | undefined
+): SocialProviderCredentials | null {
+  if (clientId && clientSecret) {
+    return { clientId, clientSecret }
+  }
+  return null
+}
+
+const githubCredentials = readSocialCredentials(
+  process.env.GITHUB_CLIENT_ID,
+  process.env.GITHUB_CLIENT_SECRET
+)
+const googleCredentials = readSocialCredentials(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET
+)
+
+const socialProviders = {
+  ...(githubCredentials ? { github: githubCredentials } : {}),
+  ...(googleCredentials
+    ? { google: { ...googleCredentials, prompt: "select_account" as const } }
+    : {})
+}
+
 /**
  * Send password reset email to user using Resend with React Email template.
  * Falls back to console logging in development or when RESEND_API_KEY is not set.
@@ -90,7 +135,7 @@ async function sendResetPasswordEmail({
 
 export const auth = betterAuth({
   // account: { skipStateCookieCheck: true },
-  baseURL: process.env.BETTER_AUTH_URL as string,
+  baseURL,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -119,19 +164,7 @@ export const auth = betterAuth({
     "exp://",
     "folio-note://"
   ],
-  socialProviders: {
-    github: {
-      enabled: true,
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string
-    },
-    google: {
-      enabled: true,
-      prompt: "select_account",
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
-    }
-  },
+  socialProviders,
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
