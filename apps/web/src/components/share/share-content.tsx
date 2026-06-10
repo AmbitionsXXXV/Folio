@@ -7,7 +7,7 @@ import { ShareFooter } from "@/components/share/share-footer"
 import { ShareHeader } from "@/components/share/share-header"
 import { TableOfContents } from "@/components/table-of-contents"
 import { useTocPosition } from "@/hooks/use-toc-position"
-import { assignHeadingIds, parseTocFromContent } from "@/lib/toc"
+import { parseTocFromContent } from "@/lib/toc"
 import { cn } from "@/lib/utils"
 import type { ShareContentProps } from "@/types/share"
 
@@ -30,9 +30,9 @@ export function ShareContent({ entryData }: ShareContentProps) {
     return parseTocFromContent(entry.contentJson)
   }, [entry.contentJson])
 
-  // TipTap uses `immediatelyRender: false`, so headings may not exist in the DOM
-  // when fumadocs AnchorProvider tries to observe them. We assign heading ids and
-  // remount the TOC once headings are present so IntersectionObserver can attach.
+  // Headings get stable slug ids from the HeadingIds editor extension, but the
+  // fumadocs TOC sets up its observer on mount — before TipTap (immediatelyRender:
+  // false) has rendered them. Remount the TOC once the ids are present in the DOM.
   useEffect(() => {
     const container = contentRef.current
     if (!container || tocItems.length === 0) {
@@ -41,9 +41,7 @@ export function ShareContent({ entryData }: ShareContentProps) {
 
     let didRemount = false
 
-    const assignAndMaybeRemount = () => {
-      assignHeadingIds(container, tocItems)
-
+    const remountWhenHeadingsReady = () => {
       const hasAnyObservedHeading = tocItems.some((item) => {
         // URL is always prefixed with # by makeUniqueItems
         const id = item.url.slice(1)
@@ -51,7 +49,9 @@ export function ShareContent({ entryData }: ShareContentProps) {
           return false
         }
 
-        const element = document.querySelector(`#${id}`)
+        // getElementById (not querySelector(`#${id}`)): slugs from numeric
+        // headings (e.g. "2026-1-7") are valid ids but invalid CSS selectors.
+        const element = document.getElementById(id)
         return element !== null && container.contains(element)
       })
 
@@ -65,16 +65,16 @@ export function ShareContent({ entryData }: ShareContentProps) {
     }
 
     if (typeof MutationObserver === "undefined") {
-      assignAndMaybeRemount()
+      remountWhenHeadingsReady()
       return
     }
 
-    if (assignAndMaybeRemount()) {
+    if (remountWhenHeadingsReady()) {
       return
     }
 
     const observer = new MutationObserver(() => {
-      if (assignAndMaybeRemount()) {
+      if (remountWhenHeadingsReady()) {
         observer.disconnect()
       }
     })

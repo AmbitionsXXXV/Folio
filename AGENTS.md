@@ -301,5 +301,10 @@ pnpm dev:web
 - `heroui-native` rc.2+ resolves peer dependency warnings in the native app
 - Use `@tanstack/react-hotkeys` for keyboard shortcut support in web components
 - Page animations and transitions should integrate with system design tokens via the animate/extract skills
+- `@base-ui/react` Tooltip uses `render` prop pattern for custom trigger elements, not `asChild` (unlike Radix/shadcn)
+- TanStack Router route loaders use `queryClient.ensureQueryData` (not `prefetchQuery`) for consistency with project patterns
+- TypeScript 7+ deprecated `baseUrl` in tsconfig — use `./` prefix in `paths` values instead (e.g. `"@/*": ["./src/*"]`)
+- Vite 8 natively supports tsconfig paths — use `resolve.tsconfigPaths: true` instead of `vite-tsconfig-paths` plugin
+- Monorepo packages exporting source directly (via `"default": "./src/index.ts"`) should use `noEmit: true` instead of `declaration`/`composite` to avoid Zod v4 type naming issues
 
 @RTK.md

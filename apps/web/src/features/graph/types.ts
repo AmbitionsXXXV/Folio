@@ -1,6 +1,8 @@
 import type { Edge, Node } from "@xyflow/react"
 
-export interface GraphNodeData {
+// Extend Record<string, unknown> so these satisfy @xyflow/react's node/edge
+// data constraint, which requires an index signature.
+export interface GraphNodeData extends Record<string, unknown> {
   title: string
   isInbox: boolean
   isStarred: boolean
@@ -9,7 +11,7 @@ export interface GraphNodeData {
   updatedAt: string
 }
 
-export interface GraphEdgeData {
+export interface GraphEdgeData extends Record<string, unknown> {
   linkType: "ref" | "manual" | "shared-tag" | "shared-source"
   label?: string
 }

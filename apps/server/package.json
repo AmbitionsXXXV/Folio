@@ -4,14 +4,14 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsdown",
+    "build": "vp pack",
     "check-types": "tsc --noEmit",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
     "dev:ai-devtools": "npx @ai-sdk/devtools"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.15",
+    "@ai-sdk/devtools": "catalog:",
     "@folionote/ai": "workspace:*",
     "@folionote/ai-tools": "workspace:*",
     "@folionote/api": "workspace:*",
@@ -20,7 +20,7 @@
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
     "@folionote/storage": "workspace:*",
-    "@hono/node-server": "^1.19.9",
+    "@hono/node-server": "^2.0.4",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
@@ -38,7 +38,6 @@
     "@folionote/config": "workspace:*",
     "@types/node": "catalog:",
     "msw": "catalog:",
-    "tsdown": "^0.20.3",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"

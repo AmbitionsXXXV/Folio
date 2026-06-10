@@ -20,6 +20,8 @@ import { useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
+import { HeadingIds } from "@/lib/heading-id-extension"
+
 /**
  * 内容格式类型
  * - json: ProseMirror JSON 格式（推荐）
@@ -201,6 +203,9 @@ export function EntryEditor({
       CodeBlockShiki.configure({
         defaultLanguage: "plaintext"
       }),
+      // Stable slug ids on H1-H3 headings so the fumadocs TOC can track the
+      // active section (decorations persist through editor re-renders).
+      HeadingIds,
       // Table extensions
       ...TableKit,
       // Link 扩展：支持粘贴 URL 自动转换为链接

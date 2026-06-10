@@ -50,7 +50,7 @@ import { useAutoSave } from "@/hooks/use-auto-save"
 import type { SaveStatus } from "@/hooks/use-auto-save"
 import { useTocPosition } from "@/hooks/use-toc-position"
 import { createPageHead } from "@/lib/seo"
-import { assignHeadingIds, parseTocFromContent } from "@/lib/toc"
+import { parseTocFromContent } from "@/lib/toc"
 import { cn } from "@/lib/utils"
 import { orpc } from "@/utils/orpc"
 
@@ -382,9 +382,9 @@ function EntryEditPage() {
   const tocContent = debouncedContent ?? entry?.contentJson ?? ""
   const tocItems = useMemo(() => parseTocFromContent(tocContent), [tocContent])
 
-  // TipTap uses `immediatelyRender: false`, so headings may not exist in the DOM
-  // when fumadocs AnchorProvider tries to observe them. We assign heading ids and
-  // remount the TOC once headings are present so IntersectionObserver can attach.
+  // Headings get stable slug ids from the HeadingIds editor extension, but the
+  // fumadocs TOC sets up its observer on mount — before TipTap (immediatelyRender:
+  // false) has rendered them. Remount the TOC once the ids are present in the DOM.
   useEffect(() => {
     const container = contentRef.current
     if (!container || tocItems.length === 0) {
@@ -393,9 +393,7 @@ function EntryEditPage() {
 
     let didRemount = false
 
-    const assignAndMaybeRemount = () => {
-      assignHeadingIds(container, tocItems)
-
+    const remountWhenHeadingsReady = () => {
       const hasAnyObservedHeading = tocItems.some((item) => {
         // URL is always prefixed with # by makeUniqueItems
         const id = item.url.slice(1)
@@ -403,7 +401,9 @@ function EntryEditPage() {
           return false
         }
 
-        const element = document.querySelector(`#${id}`)
+        // getElementById (not querySelector(`#${id}`)): slugs from numeric
+        // headings (e.g. "2026-1-7") are valid ids but invalid CSS selectors.
+        const element = document.getElementById(id)
         return element !== null && container.contains(element)
       })
 
@@ -417,16 +417,16 @@ function EntryEditPage() {
     }
 
     if (typeof MutationObserver === "undefined") {
-      assignAndMaybeRemount()
+      remountWhenHeadingsReady()
       return
     }
 
-    if (assignAndMaybeRemount()) {
+    if (remountWhenHeadingsReady()) {
       return
     }
 
     const observer = new MutationObserver(() => {
-      if (assignAndMaybeRemount()) {
+      if (remountWhenHeadingsReady()) {
         observer.disconnect()
       }
     })

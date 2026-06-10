@@ -5,6 +5,7 @@ import { devtools } from "@tanstack/devtools-vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import viteReact from "@vitejs/plugin-react"
 import { nitro } from "nitro/vite"
+import type { Rollup } from "vite"
 import { defineConfig } from "vite"
 
 const SHIKIJS_RE = /^@shikijs\//
@@ -76,7 +77,7 @@ export default defineConfig(({ command, isSsrBuild }) => ({
           "recharts",
           SHIKIJS_RE
         ],
-        onwarn(warning, warn) {
+        onwarn(warning: Rollup.RollupLog, warn: Rollup.LoggingFunction) {
           if (shouldIgnoreUseClientDirectiveWarning(warning.message)) {
             return
           }

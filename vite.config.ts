@@ -36,9 +36,9 @@ const lintRules = {
   ...ultraciteCoreConfig.rules,
   ...ultraciteReactConfig.rules,
   ...ultraciteTanstackConfig.rules,
-  "eslint/func-style": "off",
-  "eslint/no-use-before-define": "off",
-  "eslint/sort-keys": "off"
+  "eslint/func-style": "off" as const,
+  "eslint/no-use-before-define": "off" as const,
+  "eslint/sort-keys": "off" as const
 }
 
 for (const rule of incompatibleOxlintRules) {
@@ -109,6 +109,9 @@ const relaxedRules = [
   "unicorn/prefer-dom-node-remove",
   "unicorn/prefer-module",
   "unicorn/prefer-native-coercion-functions",
+  // getElementById is intentional for numeric-leading heading ids (e.g. dates),
+  // which are valid ids but invalid CSS selectors for querySelector("#...").
+  "unicorn/prefer-query-selector",
   "unicorn/prefer-spread",
   "unicorn/prefer-string-replace-all",
   "unicorn/prefer-ternary",

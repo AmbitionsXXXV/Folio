@@ -153,7 +153,7 @@ export function PromptInputProvider({
     (FileUIPart & { id: string })[]
   >([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const openRef = useRef<(() => void) | undefined>()
+  const openRef = useRef<(() => void) | undefined>(undefined)
 
   const add = useCallback((files: File[] | FileList) => {
     const incoming = [...files]

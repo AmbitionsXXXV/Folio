@@ -30,7 +30,6 @@ export const getRouter = () => {
 }
 
 declare module "@tanstack/react-router" {
-  // @ts-expect-error
   interface Register {
     router: ReturnType<typeof getRouter>
   }

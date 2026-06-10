@@ -77,6 +77,7 @@
     "Noninteractive",
     "Noto",
     "onwarn",
+    "popperjs",
     "Qing",
     "refetches",
     "reranking",
@@ -86,6 +87,7 @@
     "Toggleable",
     "tokenlens",
     "workerd",
+    "xyflow",
     "ZCOOL"
   ],
   "sweetpad.build.xcodeWorkspacePath": "apps/native/ios/FolioNote.xcodeproj/project.xcworkspace"
