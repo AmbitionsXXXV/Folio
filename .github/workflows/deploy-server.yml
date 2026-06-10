@@ -34,11 +34,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "24"
+          node-version-file: ".node-version"
           cache: true
+          run-install: false
 
       - name: Install dependencies
         run: vp install --frozen-lockfile

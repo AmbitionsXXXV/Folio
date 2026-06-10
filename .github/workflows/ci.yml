@@ -31,20 +31,21 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+          node-version-file: ".node-version"
+          cache: true
+          run-install: false
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm check
+      - name: Lint & format
+        run: vp check
 
       - name: Type check
-        run: pnpm check-types
+        run: vp run check-types
 
   test:
     name: Test
@@ -73,21 +74,22 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+          node-version-file: ".node-version"
+          cache: true
+          run-install: false
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Push database schema
-        run: pnpm db:push
+        run: vp run db:push
         continue-on-error: true
 
       - name: Run server tests
-        run: pnpm test:server
+        run: vp test --project server
         continue-on-error: true
 
   build:
@@ -101,17 +103,18 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+          node-version-file: ".node-version"
+          cache: true
+          run-install: false
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
       - name: Build server
-        run: pnpm turbo -F server build
+        run: vp run build -F server
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
