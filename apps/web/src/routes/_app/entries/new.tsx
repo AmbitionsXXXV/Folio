@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { EntryEditor } from "@/components/entry-editor"
+import { Surface } from "@/components/surface"
 import { TableOfContents } from "@/components/table-of-contents"
 import { useTocPosition } from "@/hooks/use-toc-position"
 import { parseTocFromContent } from "@/lib/toc"
@@ -237,7 +238,7 @@ function NewEntryPage() {
           aria-label={t("entry.title")}
           autoComplete="off"
           autoFocus
-          className="mb-4 h-auto border-none bg-transparent py-2 text-2xl font-bold shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
+          className="mb-4 h-auto border-none bg-transparent py-2 font-display text-2xl font-semibold tracking-tight shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("entry.title")}
           spellCheck={false}
@@ -245,14 +246,16 @@ function NewEntryPage() {
         />
 
         {/* Editor */}
-        <div ref={contentRef}>
-          <EntryEditor
-            content={contentJson}
-            contentFormat="json"
-            onChange={handleContentChange}
-            placeholder={t("editor.placeholder")}
-          />
-        </div>
+        <Surface className="p-4 md:p-6">
+          <div ref={contentRef}>
+            <EntryEditor
+              content={contentJson}
+              contentFormat="json"
+              onChange={handleContentChange}
+              placeholder={t("editor.placeholder")}
+            />
+          </div>
+        </Surface>
       </div>
 
       {/* TOC on right side */}

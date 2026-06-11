@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next"
 import { z } from "zod"
 
 import { EntryList } from "@/components/entry-list"
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
 import { orpc } from "@/utils/orpc"
 
 type FilterType = "all" | "starred" | "pinned"
@@ -87,31 +89,20 @@ function LibraryPage() {
   ]
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <HugeiconsIcon
-              className="size-6 text-primary"
-              icon={BookOpen01Icon}
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{t("entry.library")}</h1>
-            <p className="text-sm text-muted-foreground">
-              {t("entry.emptyLibrary")}
-            </p>
-          </div>
-        </div>
-
-        <Link to="/entries/new">
-          <Button>
-            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            {t("entry.newEntry")}
-          </Button>
-        </Link>
-      </div>
+    <PageContainer>
+      <PageHeader
+        actions={
+          <Link to="/entries/new">
+            <Button>
+              <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+              {t("entry.newEntry")}
+            </Button>
+          </Link>
+        }
+        description={t("entry.emptyLibrary")}
+        icon={BookOpen01Icon}
+        title={t("entry.library")}
+      />
 
       {/* Filter tabs */}
       <div className="mb-6 flex gap-2">
@@ -144,6 +135,6 @@ function LibraryPage() {
         onLoadMore={() => fetchNextPage()}
         onRetry={refetch}
       />
-    </div>
+    </PageContainer>
   )
 }

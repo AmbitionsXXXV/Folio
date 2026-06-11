@@ -1,5 +1,4 @@
 import { formatDate } from "@folionote/locales"
-import { Card, CardContent } from "@folionote/ui/card"
 import { Skeleton } from "@folionote/ui/skeleton"
 import {
   ArrowRight01Icon,
@@ -13,7 +12,10 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
 import { EntryCard } from "@/components/entry-card"
+import { PageContainer } from "@/components/page-container"
 import { QuickCapture } from "@/components/quick-capture"
+import { Reveal } from "@/components/reveal"
+import { Surface } from "@/components/surface"
 import { getUserTimezoneOffset } from "@/constants"
 import { cn, getGreetingKey } from "@/lib/utils"
 import { orpc } from "@/utils/orpc"
@@ -199,7 +201,7 @@ function ActivityPage() {
   ]
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10 md:py-14">
+    <PageContainer>
       {/* Hero greeting */}
       <header className="animate-fade-in mb-12 md:mb-16">
         <p className="mb-2 text-sm font-medium tracking-wide text-primary uppercase">
@@ -214,7 +216,7 @@ function ActivityPage() {
 
         {totalDue > 0 && (
           <Link
-            className="group mt-4 inline-flex items-center gap-2 rounded-full bg-primary/8 px-4 py-2 text-sm text-primary transition-colors hover:bg-primary/12 dark:bg-primary/12 dark:hover:bg-primary/18"
+            className="group mt-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm text-primary transition-colors hover:bg-primary/15"
             to="/review"
           >
             <span className="relative flex size-2">
@@ -231,7 +233,7 @@ function ActivityPage() {
       </header>
 
       {/* Quick Capture */}
-      <section className="animate-fade-in mb-12 delay-100">
+      <Reveal className="mb-12" delay={60}>
         <div className="mb-4 flex items-center gap-2">
           <div className="h-px flex-1 bg-border/60" />
           <h2 className="font-display text-sm font-medium tracking-wide text-muted-foreground uppercase">
@@ -240,23 +242,23 @@ function ActivityPage() {
           <div className="h-px flex-1 bg-border/60" />
         </div>
         <QuickCapture placeholder={t("activity.quickCapturePlaceholder")} />
-      </section>
+      </Reveal>
 
       {/* Quick Access */}
-      <section className="animate-fade-in mb-12 delay-200">
+      <Reveal className="mb-12" delay={120}>
         <div className="grid gap-4 sm:grid-cols-3">
           {QUICK_ACCESS_ITEMS.map((item, i) => {
             const stat = statValues[i]
             return (
               <Link key={item.to} to={item.to}>
-                <Card className="group relative overflow-hidden border-border/50 transition-all duration-300 hover:border-border hover:shadow-md">
+                <Surface className="group relative overflow-hidden" interactive>
                   <div
                     className={cn(
                       "absolute inset-0 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100",
                       item.accentClass
                     )}
                   />
-                  <CardContent className="relative flex items-center gap-4 py-5">
+                  <div className="relative flex items-center gap-4 p-5">
                     <div className="flex size-11 items-center justify-center rounded-xl bg-background shadow-sm ring-1 ring-border/50">
                       <HugeiconsIcon
                         className={cn("size-5", item.iconClass)}
@@ -284,16 +286,16 @@ function ActivityPage() {
                       className="size-4 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-muted-foreground"
                       icon={ArrowRight01Icon}
                     />
-                  </CardContent>
-                </Card>
+                  </div>
+                </Surface>
               </Link>
             )
           })}
         </div>
-      </section>
+      </Reveal>
 
       {/* Recent Entries */}
-      <section className="animate-fade-in delay-300">
+      <Reveal delay={180}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">
             {t("activity.recentEntries")}
@@ -315,7 +317,7 @@ function ActivityPage() {
           isLoading={isLoadingRecent}
           t={t}
         />
-      </section>
-    </div>
+      </Reveal>
+    </PageContainer>
   )
 }

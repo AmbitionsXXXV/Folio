@@ -1,13 +1,6 @@
 import { formatUserNo, getDaysSince } from "@folionote/constants"
 import { Button } from "@folionote/ui/button"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@folionote/ui/card"
-import {
   Calendar03Icon,
   Edit02Icon,
   UserAccountIcon
@@ -18,6 +11,7 @@ import { Trans, useTranslation } from "react-i18next"
 
 import { AvatarUploader } from "@/components/avatar-uploader"
 import type { AvatarUploaderRef } from "@/components/avatar-uploader"
+import { Surface } from "@/components/surface"
 import { useAvatarState } from "@/hooks/use-avatar-state"
 
 /**
@@ -33,99 +27,102 @@ export function ProfileCard() {
   } = useAvatarState()
 
   return (
-    <Card className="mb-6 bg-radial-[at_50%_100%] from-[#A78BFA] via-[#DDD6FE] to-[#E9D5FF] dark:from-[#C0AAFD] dark:via-[#1E1B4B] dark:to-[#05040A]">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <HugeiconsIcon className="size-5" icon={UserAccountIcon} />
+    <Surface className="p-6">
+      <div className="mb-6 space-y-1.5">
+        <h2 className="flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight">
+          <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
+            <HugeiconsIcon
+              className="size-5 text-primary"
+              icon={UserAccountIcon}
+            />
+          </span>
           {t("profile.settings")}
-        </CardTitle>
-        <CardDescription className="text-pretty">
+        </h2>
+        <p className="text-sm text-pretty text-muted-foreground">
           {t("profile.avatarHelp")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col items-center gap-8">
-          {/* Avatar Section */}
-          <div className="flex aspect-square flex-col items-center gap-4">
-            <div className="flex items-center justify-center rounded-full bg-white p-1 shadow-xl">
-              <AvatarUploader
-                avatarClassName="size-24!"
-                currentImageUrl={currentImageUrl}
-                onAvatarChange={onLocalImageUrlChange}
-                ref={avatarUploaderRef}
-                size="lg"
-                userName={user?.name}
-              />
-            </div>
-            <Button
-              className="rounded-full shadow-xl"
-              onClick={() => avatarUploaderRef.current?.open()}
-              size="sm"
-              variant="outline"
-            >
-              <HugeiconsIcon className="mr-2 size-4" icon={Edit02Icon} />
-              {t("profile.editPhoto")}
-            </Button>
+        </p>
+      </div>
+      <div className="flex flex-col items-center gap-8">
+        {/* Avatar Section */}
+        <div className="flex aspect-square flex-col items-center gap-4">
+          <div className="flex items-center justify-center rounded-full bg-white p-1 shadow-xl">
+            <AvatarUploader
+              avatarClassName="size-24!"
+              currentImageUrl={currentImageUrl}
+              onAvatarChange={onLocalImageUrlChange}
+              ref={avatarUploaderRef}
+              size="lg"
+              userName={user?.name}
+            />
+          </div>
+          <Button
+            className="rounded-full shadow-xl"
+            onClick={() => avatarUploaderRef.current?.open()}
+            size="sm"
+            variant="outline"
+          >
+            <HugeiconsIcon className="mr-2 size-4" icon={Edit02Icon} />
+            {t("profile.editPhoto")}
+          </Button>
+        </div>
+
+        {/* Info Section */}
+        <div className="w-full space-y-1">
+          {/* Name */}
+          <div className="flex items-center justify-between rounded-lg p-3">
+            <span className="text-sm text-muted-foreground">
+              {t("profile.name")}
+            </span>
+            <span className="font-display text-lg font-semibold text-foreground">
+              {user?.name}
+            </span>
           </div>
 
-          {/* Info Section */}
-          <div className="w-full space-y-1">
-            {/* Name */}
+          {/* Email */}
+          <div className="flex items-center justify-between rounded-lg p-3">
+            <span className="text-sm text-muted-foreground">Email</span>
+            <span className="truncate text-muted-foreground">
+              {user?.email}
+            </span>
+          </div>
+
+          {/* Founding Member */}
+          {user?.no && (
             <div className="flex items-center justify-between rounded-lg p-3">
               <span className="text-sm text-muted-foreground">
-                {t("profile.name")}
+                {t("profile.foundingMember")}
               </span>
-              <span className="font-display text-lg font-bold text-black text-shadow-[-1px_-1px_0_#fff,1px_-1px_0_#fff,-1px_1px_0_#fff,1px_1px_0_#fff]">
-                {user?.name}
-              </span>
-            </div>
-
-            {/* Email */}
-            <div className="flex items-center justify-between rounded-lg p-3">
-              <span className="text-sm text-muted-foreground">Email</span>
-              <span className="truncate text-muted-foreground">
-                {user?.email}
+              <span className="rounded bg-muted px-1.5 py-0.5 font-number text-lg font-semibold text-primary tabular-nums dark:bg-transparent">
+                No.{formatUserNo(user.no)}
               </span>
             </div>
+          )}
 
-            {/* Founding Member */}
-            {user?.no && (
-              <div className="flex items-center justify-between rounded-lg p-3">
-                <span className="text-sm text-muted-foreground">
-                  {t("profile.foundingMember")}
-                </span>
-                <span className="rounded bg-muted px-1.5 py-0.5 font-number text-lg font-semibold text-primary tabular-nums dark:bg-transparent">
-                  No.{formatUserNo(user.no)}
-                </span>
-              </div>
-            )}
-
-            {/* Joined */}
-            <div className="flex items-center justify-between rounded-lg p-3">
-              <span className="text-sm text-muted-foreground">
-                {t("profile.joined")}
-              </span>
-              <div className="flex items-center gap-1.5 text-sm">
-                <HugeiconsIcon
-                  className="size-4 text-muted-foreground"
-                  icon={Calendar03Icon}
+          {/* Joined */}
+          <div className="flex items-center justify-between rounded-lg p-3">
+            <span className="text-sm text-muted-foreground">
+              {t("profile.joined")}
+            </span>
+            <div className="flex items-center gap-1.5 text-sm">
+              <HugeiconsIcon
+                className="size-4 text-muted-foreground"
+                icon={Calendar03Icon}
+              />
+              <span className="text-muted-foreground">
+                <Trans
+                  components={{
+                    1: (
+                      <span className="font-number text-lg font-semibold text-primary tabular-nums" />
+                    )
+                  }}
+                  i18nKey="profile.joinedDays"
+                  values={{ count: getDaysSince(user?.createdAt) }}
                 />
-                <span className="text-muted-foreground">
-                  <Trans
-                    components={{
-                      1: (
-                        <span className="font-number text-lg font-semibold text-primary tabular-nums" />
-                      )
-                    }}
-                    i18nKey="profile.joinedDays"
-                    values={{ count: getDaysSince(user?.createdAt) }}
-                  />
-                </span>
-              </div>
+              </span>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Surface>
   )
 }

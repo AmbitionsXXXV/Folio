@@ -1,9 +1,9 @@
 import { Button } from "@folionote/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@folionote/ui/card"
 import { Link } from "@tanstack/react-router"
 import { AnimatePresence, motion } from "motion/react"
 import { useTranslation } from "react-i18next"
 
+import { Surface } from "@/components/surface"
 import type { ReviewCardProps } from "@/types/review"
 
 import { RatingButtons } from "./rating-buttons"
@@ -31,13 +31,13 @@ export function ReviewCard({
         key={entry.id}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b bg-muted/30">
+        <Surface className="overflow-hidden">
+          <div className="border-b border-border/60 bg-primary/5 p-6">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <CardTitle className="text-xl">
+                <h2 className="font-display text-xl font-semibold tracking-tight">
                   {entry.title || t("entry.untitled")}
-                </CardTitle>
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {entry.isInbox ? t("entry.inbox") : t("entry.library")}
                   {entry.isStarred ? ` · ⭐ ${t("entry.starred")}` : ""}
@@ -49,8 +49,8 @@ export function ReviewCard({
                 </Button>
               </Link>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6">
+          </div>
+          <div className="p-6">
             <div className="relative mb-6">
               <div className="max-h-64 overflow-y-auto">
                 <p className="leading-relaxed whitespace-pre-wrap text-foreground">
@@ -63,7 +63,7 @@ export function ReviewCard({
               />
             </div>
 
-            <div className="border-t pt-6">
+            <div className="border-t border-border/60 pt-6">
               <RatingButtons isLoading={isLoading} onRate={onRate} />
               <div className="mt-4 flex items-center justify-center gap-2">
                 <Button
@@ -79,8 +79,8 @@ export function ReviewCard({
                 <SnoozeDropdown disabled={isLoading} onSnooze={onSnooze} />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </Surface>
       </motion.div>
     </AnimatePresence>
   )

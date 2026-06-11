@@ -1,7 +1,10 @@
+import { AccountSetting01Icon } from "@hugeicons/core-free-icons"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
 import {
   ApiEnvironmentSettings,
   AppearanceSettings,
@@ -9,6 +12,7 @@ import {
   LanguageSettings,
   ProfileCard
 } from "@/components/profile"
+import { Reveal } from "@/components/reveal"
 import { authClient } from "@/lib/auth-client"
 
 export const Route = createFileRoute("/_app/settings/general")({
@@ -30,25 +34,32 @@ function GeneralSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 md:px-8 md:py-10">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold md:text-2xl">
-          {t("settings.general.title")}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("settings.general.description")}
-        </p>
-      </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        description={t("settings.general.description")}
+        icon={AccountSetting01Icon}
+        title={t("settings.general.title")}
+      />
 
       <div className="space-y-5">
-        <ProfileCard />
-        <AppearanceSettings mounted={mounted} />
-        <LanguageSettings />
-        {import.meta.env.MODE === "development" && <ApiEnvironmentSettings />}
-        <DangerZone onSignOut={handleSignOut} />
+        <Reveal delay={60}>
+          <ProfileCard />
+        </Reveal>
+        <Reveal delay={120}>
+          <AppearanceSettings mounted={mounted} />
+        </Reveal>
+        <Reveal delay={180}>
+          <LanguageSettings />
+        </Reveal>
+        {import.meta.env.MODE === "development" && (
+          <Reveal delay={240}>
+            <ApiEnvironmentSettings />
+          </Reveal>
+        )}
+        <Reveal delay={300}>
+          <DangerZone onSignOut={handleSignOut} />
+        </Reveal>
       </div>
-
-      <div className="h-8" />
-    </div>
+    </PageContainer>
   )
 }

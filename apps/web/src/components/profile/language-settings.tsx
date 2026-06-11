@@ -21,10 +21,15 @@ export function LanguageSettings() {
   const { t, i18n } = useTranslation()
 
   return (
-    <Card className="mb-6">
+    <Card className="rounded-3xl border border-border/60 bg-card/70 shadow-sm backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <HugeiconsIcon className="size-5" icon={LanguageCircleIcon} />
+        <CardTitle className="flex items-center gap-2 font-display font-semibold">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
+            <HugeiconsIcon
+              className="size-5 text-primary"
+              icon={LanguageCircleIcon}
+            />
+          </span>
           {t("profile.languageAndRegion")}
         </CardTitle>
       </CardHeader>

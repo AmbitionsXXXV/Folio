@@ -1,10 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@folionote/ui/card"
 import { ArrowRight01Icon, Rocket01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQuery } from "@tanstack/react-query"
-import { motion } from "motion/react"
 import { useTranslation } from "react-i18next"
 
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
+import { Reveal } from "@/components/reveal"
+import { Surface } from "@/components/surface"
 import { getUserTimezoneOffset, REVIEW_RULES } from "@/constants"
 import type { ReviewDashboardProps } from "@/types/review"
 import { orpc } from "@/utils/orpc"
@@ -35,40 +37,25 @@ export function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
   })
 
   return (
-    <div className="relative container mx-auto max-w-5xl px-4 py-8">
+    <PageContainer className="relative">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-0 right-0 hidden size-80 translate-x-1/3 -translate-y-1/4 rounded-full bg-linear-to-br from-primary/6 via-purple-500/4 to-transparent blur-3xl sm:block"
+        className="pointer-events-none absolute top-0 right-0 hidden size-80 translate-x-1/3 -translate-y-1/4 rounded-full bg-linear-to-br from-primary/5 via-purple-500/4 to-transparent blur-3xl sm:block"
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 hidden size-64 -translate-x-1/4 translate-y-1/4 rounded-full bg-linear-to-tr from-blue-500/4 via-cyan-500/3 to-transparent blur-3xl sm:block"
       />
 
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10 flex items-center gap-4"
-        initial={{ opacity: 0, y: 12 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-linear-to-br from-primary/20 to-purple-500/15 shadow-sm">
-          <HugeiconsIcon className="size-6 text-primary" icon={Rocket01Icon} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {t("nav.review")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("review.description")}
-          </p>
-        </div>
-      </motion.div>
+      <PageHeader
+        description={t("review.description")}
+        icon={Rocket01Icon}
+        title={t("nav.review")}
+      />
 
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
+      <Reveal
         className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-        initial={{ opacity: 0, y: 12 }}
-        transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+        delay={60}
       >
         <StatsContent
           dueStats={dueStats}
@@ -78,30 +65,20 @@ export function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
           onRetry={refetchStats}
           stats={stats}
         />
-      </motion.div>
+      </Reveal>
 
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        initial={{ opacity: 0, y: 12 }}
-        transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
-      >
-        <h2 className="mb-4 text-lg font-semibold">{t("review.selectMode")}</h2>
+      <Reveal delay={120}>
+        <h2 className="mb-4 font-display text-lg font-semibold">
+          {t("review.selectMode")}
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {REVIEW_RULES.map(
             ({ key, labelKey, icon, descriptionKey }, index) => (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                initial={{ opacity: 0, y: 8 }}
-                key={key}
-                transition={{
-                  delay: 0.25 + index * 0.06,
-                  duration: 0.35,
-                  ease: "easeOut"
-                }}
-              >
-                <Card
+              <Reveal delay={150 + index * 60} key={key}>
+                <Surface
                   aria-label={t(labelKey)}
-                  className="group cursor-pointer border-border/40 bg-card/60 backdrop-blur-sm transition-all duration-200 hover:scale-[1.01] hover:border-primary/20 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+                  className="group cursor-pointer p-5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+                  interactive
                   onClick={() => onStartReview(key)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -112,37 +89,33 @@ export function ReviewDashboard({ onStartReview }: ReviewDashboardProps) {
                   role="button"
                   tabIndex={0}
                 >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-lg bg-linear-to-br from-primary/15 to-purple-500/10">
-                          <HugeiconsIcon
-                            className="size-5 text-primary"
-                            icon={icon}
-                          />
-                        </div>
-                        <CardTitle className="text-base">
-                          {t(labelKey)}
-                        </CardTitle>
-                      </div>
-                      <HugeiconsIcon
-                        aria-hidden="true"
-                        className="size-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5"
-                        icon={ArrowRight01Icon}
-                      />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
+                        <HugeiconsIcon
+                          className="size-5 text-primary"
+                          icon={icon}
+                        />
+                      </span>
+                      <h3 className="font-display text-base font-semibold">
+                        {t(labelKey)}
+                      </h3>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-muted-foreground">
-                      {t(descriptionKey)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                    <HugeiconsIcon
+                      aria-hidden="true"
+                      className="size-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5"
+                      icon={ArrowRight01Icon}
+                    />
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {t(descriptionKey)}
+                  </p>
+                </Surface>
+              </Reveal>
             )
           )}
         </div>
-      </motion.div>
-    </div>
+      </Reveal>
+    </PageContainer>
   )
 }

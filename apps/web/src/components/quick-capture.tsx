@@ -99,7 +99,7 @@ export function QuickCapture({
 
   return (
     <div className="flex gap-2">
-      <div className="relative flex-1">
+      <div className="relative flex-1 rounded-[min(var(--radius-md),12px)] transition-shadow focus-within:ring-2 focus-within:ring-primary/30">
         {/* Radius uses `!` because `.etc-textarea` ships unlayered (see
             packages/ui component.css) and outranks normal utilities — only
             !important (or the `unstyled` prop) can override its rounded-lg. */}
@@ -125,6 +125,7 @@ export function QuickCapture({
         ) : null}
       </div>
       <Button
+        className="transition-transform hover:scale-[1.02] active:scale-[0.98]"
         disabled={!value.trim() || createMutation.isPending}
         onClick={handleSubmit}
         size="icon"

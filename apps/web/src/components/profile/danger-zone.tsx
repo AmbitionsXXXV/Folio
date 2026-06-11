@@ -26,9 +26,10 @@ export function DangerZone({ onSignOut }: DangerZoneProps) {
   const [signOutDialogOpen, setSignOutDialogOpen] = useState(false)
 
   return (
-    <Card className="border-destructive/50">
+    <Card className="rounded-3xl border border-destructive/40 bg-card/70 shadow-sm backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-destructive">
+        <CardTitle className="flex items-center gap-2 font-display font-semibold text-destructive">
+          <HugeiconsIcon className="size-5" icon={Alert01Icon} />
           {t("profile.dangerZone")}
         </CardTitle>
       </CardHeader>
