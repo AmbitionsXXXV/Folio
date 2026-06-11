@@ -247,7 +247,10 @@ async function markAttempt(): Promise<void> {
     })
 }
 
-async function markSuccess(source: CatalogSource, modelCount: number): Promise<void> {
+async function markSuccess(
+  source: CatalogSource,
+  modelCount: number
+): Promise<void> {
   const now = new Date()
   await db
     .insert(aiCatalogSync)

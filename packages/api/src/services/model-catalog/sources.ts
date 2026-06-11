@@ -246,8 +246,10 @@ function toPerMillion(value: unknown): number | undefined {
 
 function normalizeGateway(raw: unknown): ModelCatalog {
   const data =
-    raw && typeof raw === "object" && Array.isArray((raw as { data?: unknown }).data)
-      ? ((raw as { data: RawGatewayModel[] }).data)
+    raw &&
+    typeof raw === "object" &&
+    Array.isArray((raw as { data?: unknown }).data)
+      ? (raw as { data: RawGatewayModel[] }).data
       : []
 
   const providerMap = new Map<string, CatalogProvider>()
