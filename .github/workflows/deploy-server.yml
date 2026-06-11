@@ -47,6 +47,14 @@ jobs:
       - name: Install dependencies
         run: vp install --frozen-lockfile
 
+      # Gate the deploy: never ship a release that fails lint or server types.
+      # (Server-scoped type-check so unrelated native debt can't block deploys.)
+      - name: Lint
+        run: vp check
+
+      - name: Type check server
+        run: pnpm -C apps/server check-types
+
       - name: Build server
         run: vp run build -F server
 
@@ -253,9 +261,21 @@ jobs:
             export FNM_PATH="/root/.local/share/fnm"
             export PATH="$FNM_PATH:$PATH"
             eval "$(fnm env --shell bash)"
-            
-            # Check if the process is running
+
+            # Process must be registered with PM2
             pm2 show folio-server || exit 1
+
+            # ...and actually serve a ready response (DB reachable), not just be up.
+            for attempt in 1 2 3 4 5; do
+              if curl -fsS http://localhost:3000/ready > /dev/null; then
+                echo "Readiness check passed"
+                exit 0
+              fi
+              echo "Readiness attempt $attempt failed; retrying in 3s..."
+              sleep 3
+            done
+            echo "Readiness check failed after deploy"
+            exit 1
           ENDSSH
 
       - name: Deployment notification

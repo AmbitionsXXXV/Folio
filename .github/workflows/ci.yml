@@ -70,6 +70,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/folionote_test
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/folionote_test
+      # CI-only dummy (>=32 chars) so server env validation / auth init don't fail.
+      BETTER_AUTH_SECRET: ci-test-better-auth-secret-0123456789
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -93,7 +95,6 @@ jobs:
 
       - name: Run server tests
         run: vp test --project server
-        continue-on-error: true
 
   build:
     name: Build Server
