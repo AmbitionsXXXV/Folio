@@ -1,8 +1,9 @@
 /**
- * Rich Text Components for iOS
+ * Rich Text Components
  *
- * These components use Expo DOM Components to embed Tiptap editor
- * in a WebView, enabling rich text editing on iOS.
+ * RichTextEditor embeds the Tiptap editor in a WebView via Expo DOM Components.
+ * RichTextViewer renders ProseMirror JSON natively (no WebView) via Tiptap's
+ * static renderer.
  */
 
 export { default as RichTextEditor } from "./rich-text-editor"
