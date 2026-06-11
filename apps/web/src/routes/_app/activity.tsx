@@ -269,7 +269,7 @@ function ActivityPage() {
                       <p className="font-medium text-foreground">
                         {t(item.labelKey)}
                       </p>
-                      <p className="text-sm text-muted-foreground tabular-nums">
+                      <div className="text-sm text-muted-foreground tabular-nums">
                         {stat?.loading ? (
                           <Skeleton className="h-4 w-12" />
                         ) : (
@@ -280,7 +280,7 @@ function ActivityPage() {
                               : ""}
                           </>
                         )}
-                      </p>
+                      </div>
                     </div>
                     <HugeiconsIcon
                       className="size-4 text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-muted-foreground"
