@@ -36,13 +36,17 @@ export const MAX_AVATAR_SIZE = 3 * 1024 * 1024
 
 /**
  * Allowed image MIME types for entry attachments
+ *
+ * NOTE: image/svg+xml is intentionally excluded. An SVG can embed <script>, and
+ * because attachments are served inline from a public bucket, opening one
+ * top-level would execute as stored XSS. Only re-add behind server-side
+ * sanitization + a non-executing Content-Disposition.
  */
 export const ALLOWED_ATTACHMENT_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
   "image/gif",
-  "image/webp",
-  "image/svg+xml"
+  "image/webp"
 ] as const
 
 export type AllowedAttachmentImageType =
