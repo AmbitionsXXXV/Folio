@@ -18,6 +18,10 @@ import { aiTools } from "../../services/ai-tools"
 import type { App } from "../../types"
 import { calculateCostFromUsage } from "../../utils/cost"
 import {
+  AI_STREAM_RATE_LIMIT,
+  enforceAiRateLimit
+} from "../../utils/rate-limit"
+import {
   buildModelMessagesWithVisionContext,
   combineSystemPrompt,
   prepareNoteContext,
@@ -30,7 +34,8 @@ import {
   getAuthenticatedUser,
   getLocalDateString,
   isValidProvider,
-  log
+  log,
+  validateUserBaseUrl
 } from "./helpers"
 import { buildProviderOptions } from "./provider-options"
 import type { AiStreamRequestBody, UsageMetadata } from "./types"
@@ -86,6 +91,15 @@ export function registerStreamRoute(app: App) {
       return c.json({ error: "Unauthorized" }, 401)
     }
 
+    const limited = await enforceAiRateLimit(
+      c,
+      auth.userId,
+      AI_STREAM_RATE_LIMIT
+    )
+    if (limited) {
+      return limited
+    }
+
     const body = await c.req.json<AiStreamRequestBody>()
     const {
       chatId: requestChatId,
@@ -105,6 +119,10 @@ export function registerStreamRoute(app: App) {
     const validationError = validateStreamRequest(body)
     if (validationError) {
       return c.json({ error: validationError.error }, validationError.status)
+    }
+    const baseUrlError = validateUserBaseUrl(baseUrl)
+    if (baseUrlError) {
+      return c.json({ error: baseUrlError }, 400)
     }
     const validProvider = provider as AiProvider
     const credential = buildCredential(validProvider, apiKey, baseUrl, model)

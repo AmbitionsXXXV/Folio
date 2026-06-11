@@ -459,7 +459,11 @@ export const getEntrySources = protectedProcedure
       .from(entrySources)
       .innerJoin(sources, eq(entrySources.sourceId, sources.id))
       .where(
-        and(eq(entrySources.entryId, input.entryId), isNull(sources.deletedAt))
+        and(
+          eq(entrySources.entryId, input.entryId),
+          eq(sources.userId, userId),
+          isNull(sources.deletedAt)
+        )
       )
 
     return associations.map((a) => ({ ...a.source, position: a.position }))
@@ -500,7 +504,11 @@ export const getSourceEntries = protectedProcedure
       .from(entrySources)
       .innerJoin(entries, eq(entrySources.entryId, entries.id))
       .where(
-        and(eq(entrySources.sourceId, input.id), isNull(entries.deletedAt))
+        and(
+          eq(entrySources.sourceId, input.id),
+          eq(entries.userId, userId),
+          isNull(entries.deletedAt)
+        )
       )
 
     return associations.map((a) => ({ ...a.entry, position: a.position }))

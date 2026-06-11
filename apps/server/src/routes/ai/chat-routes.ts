@@ -7,12 +7,17 @@ import {
   touchChat
 } from "../../services/ai-chat-store"
 import type { App } from "../../types"
+import {
+  AI_STREAM_RATE_LIMIT,
+  enforceAiRateLimit
+} from "../../utils/rate-limit"
 import { executeContextCompaction } from "./compact"
 import {
   buildCredential,
   getAuthenticatedUser,
   isValidProvider,
-  log
+  log,
+  validateUserBaseUrl
 } from "./helpers"
 import type { AiCompactRequestBody } from "./types"
 
@@ -132,6 +137,15 @@ export function registerChatRoutes(app: App) {
       return c.json({ error: "Unauthorized" }, 401)
     }
 
+    const limited = await enforceAiRateLimit(
+      c,
+      auth.userId,
+      AI_STREAM_RATE_LIMIT
+    )
+    if (limited) {
+      return limited
+    }
+
     const body = await c.req.json<AiCompactRequestBody>()
     const {
       chatId,
@@ -148,6 +162,10 @@ export function registerChatRoutes(app: App) {
     }
     if (!isValidProvider(provider)) {
       return c.json({ error: `Unsupported provider: ${provider}` }, 400)
+    }
+    const compactBaseUrlError = validateUserBaseUrl(baseUrl)
+    if (compactBaseUrlError) {
+      return c.json({ error: compactBaseUrlError }, 400)
     }
 
     const credential = buildCredential(provider, apiKey, baseUrl, model)

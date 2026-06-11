@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto"
+
 import type { AiProvider, DecryptedCredential } from "@folionote/ai"
 import { createVercelAiImageModel } from "@folionote/ai/vercel-ai"
 import { generateImage } from "ai"
@@ -8,23 +10,48 @@ import {
 } from "../../services/image-captioning"
 import type { App } from "../../types"
 import {
+  AI_CAPTION_RATE_LIMIT,
+  AI_IMAGE_RATE_LIMIT,
+  enforceAiRateLimit
+} from "../../utils/rate-limit"
+import {
   buildCredential,
   extractApiErrorMessage,
   extractApiErrorStatus,
   getAuthenticatedUser,
   isValidProvider,
-  log
+  log,
+  validateUserBaseUrl
 } from "./helpers"
 import type {
   CaptionImageRequestBody,
   InternalCaptionImageRequestBody
 } from "./types"
 
+/** Constant-time string comparison to avoid token-timing leaks. */
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a)
+  const bBuf = Buffer.from(b)
+  if (aBuf.length !== bBuf.length) {
+    return false
+  }
+  return timingSafeEqual(aBuf, bBuf)
+}
+
 export function registerImageRoutes(app: App) {
   app.post("/api/image/caption", async (c) => {
     const auth = await getAuthenticatedUser(c)
     if (!auth) {
       return c.json({ error: "Unauthorized" }, 401)
+    }
+
+    const limited = await enforceAiRateLimit(
+      c,
+      auth.userId,
+      AI_CAPTION_RATE_LIMIT
+    )
+    if (limited) {
+      return limited
     }
 
     const body = await c.req.json<CaptionImageRequestBody>()
@@ -51,6 +78,10 @@ export function registerImageRoutes(app: App) {
 
     if (!isValidProvider(body.provider)) {
       return c.json({ error: `Unsupported provider: ${body.provider}` }, 400)
+    }
+    const captionBaseUrlError = validateUserBaseUrl(body.baseUrl)
+    if (captionBaseUrlError) {
+      return c.json({ error: captionBaseUrlError }, 400)
     }
     const credential: DecryptedCredential = buildCredential(
       body.provider,
@@ -80,7 +111,13 @@ export function registerImageRoutes(app: App) {
     const expectedToken = process.env.IMAGE_CAPTION_INTERNAL_TOKEN
     const providedToken = c.req.header("x-caption-internal-token")
 
-    if (!expectedToken || providedToken !== expectedToken) {
+    if (
+      !(
+        expectedToken &&
+        providedToken &&
+        safeEqual(providedToken, expectedToken)
+      )
+    ) {
       return c.json({ error: "Unauthorized" }, 401)
     }
 
@@ -116,6 +153,15 @@ export function registerImageRoutes(app: App) {
       return c.json({ error: "Unauthorized" }, 401)
     }
 
+    const limited = await enforceAiRateLimit(
+      c,
+      auth.userId,
+      AI_IMAGE_RATE_LIMIT
+    )
+    if (limited) {
+      return limited
+    }
+
     const body = await c.req.json<{
       provider: string
       apiKey: string
@@ -141,6 +187,10 @@ export function registerImageRoutes(app: App) {
     }
     if (!isValidProvider(provider)) {
       return c.json({ error: `Unsupported provider: ${provider}` }, 400)
+    }
+    const generateBaseUrlError = validateUserBaseUrl(baseUrl)
+    if (generateBaseUrlError) {
+      return c.json({ error: generateBaseUrlError }, 400)
     }
 
     const validProvider = provider as AiProvider

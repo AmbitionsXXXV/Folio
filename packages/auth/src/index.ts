@@ -133,6 +133,51 @@ async function sendResetPasswordEmail({
   console.log("[Password Reset] Email sent successfully to:", targetUser.email)
 }
 
+/**
+ * Send an email-verification link using Resend. Falls back to console logging in
+ * development or when RESEND_API_KEY is not set. The display name is escaped
+ * before interpolation to avoid HTML injection into the email body.
+ */
+async function sendVerificationEmail({
+  user: targetUser,
+  url
+}: {
+  user: { email: string; name: string }
+  url: string
+}): Promise<void> {
+  if (!resend) {
+    console.log("=".repeat(60))
+    console.log(
+      "[Email Verification] RESEND_API_KEY not set, logging to console"
+    )
+    console.log(
+      "[Email Verification] Email would be sent to:",
+      targetUser.email
+    )
+    console.log("[Email Verification] Verification URL:", url)
+    console.log("=".repeat(60))
+    return
+  }
+
+  const safeName = (targetUser.name || "there").replace(/[&<>"']/g, "")
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM || "FolioNote <onboarding@resend.dev>",
+    to: targetUser.email,
+    subject: "Verify your FolioNote email",
+    html: `<p>Hi ${safeName},</p><p>Confirm your email address to finish setting up FolioNote.</p><p><a href="${url}">Verify email</a></p><p>If you didn't create this account, you can ignore this message.</p>`
+  })
+
+  if (error) {
+    console.error("[Email Verification] Failed to send email:", error)
+    throw new Error(`Failed to send verification email: ${error.message}`)
+  }
+
+  console.log(
+    "[Email Verification] Email sent successfully to:",
+    targetUser.email
+  )
+}
+
 export const auth = betterAuth({
   // account: { skipStateCookieCheck: true },
   baseURL,
@@ -164,15 +209,42 @@ export const auth = betterAuth({
     "exp://",
     "folio-note://"
   ],
+  // Throttle credential endpoints to blunt brute-force / credential stuffing.
+  // NOTE: default storage is in-memory, so in the 2-instance PM2 cluster the
+  // effective limit is per-process (≈2×). Move to database/secondary storage
+  // for a cluster-wide limit.
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 3 },
+      "/reset-password": { window: 60, max: 5 }
+    }
+  },
   socialProviders,
   emailAndPassword: {
     enabled: true,
+    minPasswordLength: 10,
+    // Off by default so signups keep working until verification email delivery
+    // is confirmed in production. Set REQUIRE_EMAIL_VERIFICATION=true to enforce.
+    requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === "true",
     sendResetPassword: async ({ user, url }) => {
       await sendResetPasswordEmail({ user, url })
     }
   },
+  emailVerification: {
+    sendOnSignUp: process.env.REQUIRE_EMAIL_VERIFICATION === "true",
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail({ user, url })
+    }
+  },
   advanced: {
-    disableCSRFCheck: true,
+    // CSRF protection is enabled by default. DISABLE_CSRF=true is an escape hatch
+    // for the cross-origin cookie flow; prefer fixing trustedOrigins + CORS.
+    disableCSRFCheck: process.env.DISABLE_CSRF === "true",
     ...(cookieDomainFromBaseUrl
       ? {
           crossSubDomainCookies: {

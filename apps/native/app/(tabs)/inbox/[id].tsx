@@ -186,13 +186,7 @@ export default function EntryDetailScreen() {
             contentInsetAdjustmentBehavior="automatic"
           >
             {contentJson ? (
-              <RichTextViewer
-                content={contentJson}
-                dom={{
-                  scrollEnabled: false
-                }}
-                isDark
-              />
+              <RichTextViewer content={contentJson} isDark />
             ) : (
               <View className="flex-1 items-center justify-center p-8">
                 <Text className="text-center text-muted">

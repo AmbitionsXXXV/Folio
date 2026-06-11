@@ -40,6 +40,59 @@ export function buildCredential(
   }
 }
 
+// Hosts an attacker could use to make the server reach internal services
+// (SSRF) via a user-supplied BYOK baseUrl.
+const PRIVATE_IPV4_REGEX =
+  /^(?:0\.|10\.|127\.|169\.254\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/
+const LOOPBACK_OR_LINK_LOCAL_IPV6_REGEX = /^(?:::1|fe80:|fc00:|fd[0-9a-f]{2}:)/i
+
+function isDisallowedHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "")
+  if (
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host === "0.0.0.0"
+  ) {
+    return true
+  }
+  if (PRIVATE_IPV4_REGEX.test(host)) {
+    return true
+  }
+  return host.includes(":") && LOOPBACK_OR_LINK_LOCAL_IPV6_REGEX.test(host)
+}
+
+/**
+ * Validate a user-supplied BYOK baseUrl before the server uses it to reach an AI
+ * provider. Blocks SSRF to internal/metadata endpoints and credential leakage.
+ * Returns an error message when invalid, or null when absent (use the provider
+ * default) or valid.
+ *
+ * Note: this blocks IP-literal and localhost targets synchronously. A public
+ * hostname that resolves to a private IP (DNS rebinding) is not caught here.
+ */
+export function validateUserBaseUrl(baseUrl?: string): string | null {
+  const trimmed = baseUrl?.trim()
+  if (!trimmed) {
+    return null
+  }
+  let url: URL
+  try {
+    url = new URL(trimmed)
+  } catch {
+    return "Invalid baseUrl"
+  }
+  if (url.protocol !== "https:") {
+    return "baseUrl must use https"
+  }
+  if (url.username || url.password) {
+    return "baseUrl must not embed credentials"
+  }
+  if (isDisallowedHost(url.hostname)) {
+    return "baseUrl host is not allowed"
+  }
+  return null
+}
+
 export function getLocalDateString(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, "0")
