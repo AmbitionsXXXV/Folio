@@ -690,7 +690,8 @@
         "allTypes": "すべてのタイプ",
         "enableAll": "すべて有効",
         "disableAll": "すべて無効",
-        "toggleProvider": "{{provider}} プロバイダーを切り替え"
+        "toggleProvider": "{{provider}} プロバイダーを切り替え",
+        "recentOnly": "過去6か月"
       }
     }
   },

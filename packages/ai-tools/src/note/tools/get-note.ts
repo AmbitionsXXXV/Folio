@@ -1,6 +1,7 @@
 import { db, entries } from "@folionote/db"
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
 import { and, eq, isNull } from "drizzle-orm"
+import type { z } from "zod"
 
 import { GetNoteInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
@@ -9,19 +10,20 @@ import type { NoteGetData, NoteToolResult } from "../types"
 const TOOL_ABORTED_ERROR = "Tool execution aborted."
 const NOTE_NOT_FOUND_ERROR = "Note not found or access denied."
 
-export const getNote = tool({
+export const getNote = createTool({
+  id: "getNote",
   description: "Get a note by ID",
   strict: true,
   inputSchema: GetNoteInputSchema,
   execute: async (
-    { id },
-    { experimental_context, abortSignal }
+    { id }: z.infer<typeof GetNoteInputSchema>,
+    context
   ): Promise<NoteToolResult<NoteGetData>> => {
-    if (abortSignal?.aborted) {
+    if (context?.abortSignal?.aborted) {
       throw new Error(TOOL_ABORTED_ERROR)
     }
 
-    const { userId } = getNoteToolContext(experimental_context)
+    const { userId } = getNoteToolContext(context?.requestContext)
 
     const [entry] = await db
       .select({

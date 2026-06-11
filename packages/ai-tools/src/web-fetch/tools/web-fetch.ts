@@ -1,9 +1,11 @@
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
+import type { z } from "zod"
 
 import { fetchUrlContent } from "../api/fetch-url"
 import { WebFetchToolInputSchema } from "../schemas"
 
-export const webFetch = tool({
+export const webFetch = createTool({
+  id: "webFetch",
   description: [
     "Fetch content from a specified URL and return it in the requested format.",
     "Use this when you need to retrieve and analyze web page content, documentation, or articles.",
@@ -15,6 +17,8 @@ export const webFetch = tool({
     "  - If another tool offers better web fetching for the task, prefer that tool"
   ].join("\n"),
   inputSchema: WebFetchToolInputSchema,
-  execute: async ({ url, format, timeout }, { abortSignal }) =>
-    await fetchUrlContent(url, format, timeout, abortSignal)
+  execute: async (
+    { url, format, timeout }: z.infer<typeof WebFetchToolInputSchema>,
+    context
+  ) => await fetchUrlContent(url, format, timeout, context?.abortSignal)
 })

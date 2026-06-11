@@ -1,20 +1,26 @@
 import type { AiProvider } from "@folionote/ai"
 import { buildKnowledgeChatSystemPrompt, providerSupports } from "@folionote/ai"
 import { createImageGenerationTool } from "@folionote/ai-tools/image-generation/tools"
-import type { NoteToolContext } from "@folionote/ai-tools/note/types"
 import { isTavilyConfigured } from "@folionote/ai-tools/web-search/api"
 import {
   createVercelAiChatModel,
   createVercelAiImageModel
 } from "@folionote/ai/vercel-ai"
+import { toAISdkStream } from "@mastra/ai-sdk"
+import type { AgentExecutionOptions } from "@mastra/core/agent"
+import { RequestContext } from "@mastra/core/request-context"
 import {
-  streamText as aiStreamText,
-  convertToModelMessages,
-  createIdGenerator
+  createIdGenerator,
+  createUIMessageStream,
+  createUIMessageStreamResponse
 } from "ai"
+import type { UIMessage } from "ai"
 
-import { generateChatId, saveChat } from "../../services/ai-chat-store"
-import { aiTools } from "../../services/ai-tools"
+import {
+  CHAT_CTX,
+  knowledgeChatAgent
+} from "../../mastra/agents/knowledge-chat-agent"
+import { generateChatId } from "../../services/ai-chat-store"
 import type { App } from "../../types"
 import { calculateCostFromUsage } from "../../utils/cost"
 import {
@@ -22,10 +28,10 @@ import {
   enforceAiRateLimit
 } from "../../utils/rate-limit"
 import {
-  buildModelMessagesWithVisionContext,
+  buildVisionContextMessage,
   combineSystemPrompt,
+  mergeVisionCandidateNotes,
   prepareNoteContext,
-  resolveStreamMessages,
   resolveTopologyContextText
 } from "./context"
 import {
@@ -58,30 +64,6 @@ function validateStreamRequest(
     }
   }
   return null
-}
-
-function resolveTools(options: {
-  shouldEnableTools: boolean
-  shouldEnableWebSearch: boolean
-  imageGenerationTool?: ReturnType<typeof createImageGenerationTool>
-}) {
-  const { shouldEnableTools, shouldEnableWebSearch, imageGenerationTool } =
-    options
-  if (!shouldEnableTools) {
-    return undefined
-  }
-
-  const baseTools = shouldEnableWebSearch
-    ? aiTools
-    : (() => {
-        const { webSearch: _ws, webFetch: _wf, ...rest } = aiTools
-        return rest
-      })()
-
-  if (imageGenerationTool) {
-    return { ...baseTools, generateImage: imageGenerationTool }
-  }
-  return baseTools
 }
 
 export function registerStreamRoute(app: App) {
@@ -129,13 +111,20 @@ export function registerStreamRoute(app: App) {
 
     try {
       const chatId = requestChatId || generateChatId()
+      const generateMessageId = createIdGenerator({ prefix: "msg", size: 16 })
 
-      const messages = await resolveStreamMessages({
-        userId: auth.userId,
-        chatId,
-        prompt,
-        requestMessages
-      })
+      // Memory (ChatSessionMemoryStore) loads prior history per thread, so only
+      // the current turn is passed; for prompt-only requests we synthesize the
+      // single new user message.
+      const messages: UIMessage[] = requestMessages?.length
+        ? requestMessages
+        : [
+            {
+              id: generateMessageId(),
+              role: "user",
+              parts: [{ type: "text", text: prompt ?? "" }]
+            }
+          ]
 
       const ragQuery = prompt || extractLastUserText(messages)
       const aiModel = createVercelAiChatModel(credential, { model })
@@ -170,13 +159,15 @@ export function registerStreamRoute(app: App) {
         baseSystemPrompt,
         topologyContextText
       )
-      const modelMessages = await convertToModelMessages(messages)
-      const modelMessagesWithVision = buildModelMessagesWithVisionContext({
-        provider: validProvider,
-        modelMessages,
-        attachedNotes,
-        retrievedNotes
-      })
+
+      // Note images for vision-capable providers are injected as extra context
+      // messages (instead of being woven into the persisted history).
+      const visionContextMessage = providerSupports(validProvider, "vision")
+        ? buildVisionContextMessage(
+            mergeVisionCandidateNotes(attachedNotes, retrievedNotes)
+          )
+        : undefined
+
       const providerOptions = buildProviderOptions(
         validProvider,
         enableReasoning ?? false
@@ -205,60 +196,78 @@ export function registerStreamRoute(app: App) {
         }
       }
 
-      const tools = resolveTools({
-        shouldEnableTools,
-        shouldEnableWebSearch,
-        imageGenerationTool
-      })
+      // Seed per-request BYOK config for the agent's dynamic model/tools.
+      const requestContext = new RequestContext()
+      requestContext.set(CHAT_CTX.userId, auth.userId)
+      requestContext.set(CHAT_CTX.chatModel, aiModel)
+      requestContext.set(CHAT_CTX.enableTools, shouldEnableTools)
+      requestContext.set(CHAT_CTX.enableWebSearch, shouldEnableWebSearch)
+      if (imageGenerationTool) {
+        requestContext.set(CHAT_CTX.imageGenerationTool, imageGenerationTool)
+      }
 
-      const result = aiStreamText({
-        model: aiModel,
-        system: systemPrompt,
-        messages: modelMessagesWithVision,
-        tools,
-        experimental_context: {
-          userId: auth.userId
-        } satisfies NoteToolContext,
-        providerOptions: providerOptions as Parameters<
-          typeof aiStreamText
-        >[0]["providerOptions"]
-      })
+      const mastraStream = await knowledgeChatAgent.stream(
+        messages as unknown as Parameters<typeof knowledgeChatAgent.stream>[0],
+        {
+          instructions: systemPrompt,
+          // Vision message is an AI SDK v6 ModelMessage; Mastra types `context`
+          // against its bundled v5 ModelMessage, so widen at the boundary.
+          context: visionContextMessage
+            ? ([visionContextMessage] as unknown as NonNullable<
+                AgentExecutionOptions["context"]
+              >)
+            : undefined,
+          memory: { thread: chatId, resource: auth.userId },
+          requestContext,
+          // buildProviderOptions returns AI SDK provider options; Mastra types
+          // the field with a stricter, non-exported ProviderOptions, so widen at
+          // the boundary (the runtime value is unchanged).
+          providerOptions: providerOptions as unknown as
+            | Record<string, Record<string, never>>
+            | undefined
+        }
+      )
 
-      result.consumeStream()
+      // Keep generating (and persisting via memory) even if the client disconnects.
+      mastraStream.consumeStream()
 
-      return result.toUIMessageStreamResponse({
+      // Persistence is handled by Mastra Memory (ChatSessionMemoryStore), which
+      // merges each turn into the existing ai_chat_sessions blob.
+      const uiMessageStream = createUIMessageStream({
         originalMessages: messages,
-        generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }),
-        sendSources: true,
-        sendReasoning: true,
-        messageMetadata: ({ part }) => {
-          if (part.type === "finish") {
-            const usage: UsageMetadata = {
-              inputTokens: part.totalUsage.inputTokens,
-              outputTokens: part.totalUsage.outputTokens,
-              totalTokens: part.totalUsage.totalTokens,
-              reasoningTokens:
-                part.totalUsage.outputTokenDetails?.reasoningTokens
+        generateId: generateMessageId,
+        execute: async ({ writer }) => {
+          for await (const part of toAISdkStream(mastraStream, {
+            from: "agent",
+            version: "v6",
+            sendReasoning: true,
+            sendSources: true,
+            messageMetadata: ({ part }) => {
+              if (part.type === "finish") {
+                const usage: UsageMetadata = {
+                  inputTokens: part.totalUsage.inputTokens,
+                  outputTokens: part.totalUsage.outputTokens,
+                  totalTokens: part.totalUsage.totalTokens,
+                  reasoningTokens:
+                    part.totalUsage.outputTokenDetails?.reasoningTokens
+                }
+                const costUSD = calculateCostFromUsage(
+                  provider,
+                  aiModel.modelId,
+                  usage
+                )
+                return { usage: { ...usage, costUSD } }
+              }
+              return
             }
-            const costUSD = calculateCostFromUsage(
-              provider,
-              aiModel.modelId,
-              usage
-            )
-            return { usage: { ...usage, costUSD } }
+          })) {
+            await writer.write(part as Parameters<typeof writer.write>[0])
           }
-          return
-        },
-        onFinish: ({ messages: finalMessages }) => {
-          saveChat({
-            userId: auth.userId,
-            chatId,
-            messages: finalMessages
-          })
-          log.debug(
-            `Chat ${chatId} completed: ${finalMessages.length} messages`
-          )
-        },
+        }
+      })
+
+      return createUIMessageStreamResponse({
+        stream: uiMessageStream,
         headers: { "X-Chat-Id": chatId }
       })
     } catch (error) {

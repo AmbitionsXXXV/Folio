@@ -46,7 +46,7 @@ const config: ExpoConfig = {
     }
   },
   android: {
-    package: "com.etcetera.folio-note"
+    package: "com.etcetera.folionote"
   },
   updates: {
     enabled: true,

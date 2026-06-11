@@ -1,6 +1,7 @@
 import { db, entries } from "@folionote/db"
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
 import { nanoid } from "nanoid"
+import type { z } from "zod"
 
 import { CreateNoteInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
@@ -48,20 +49,21 @@ function buildContentPayload(content: string): {
   }
 }
 
-export const createNote = tool({
+export const createNote = createTool({
+  id: "createNote",
   description: "Create a new note in the user library or inbox",
   strict: true,
   inputSchema: CreateNoteInputSchema,
-  needsApproval: true,
+  requireApproval: true,
   execute: async (
-    { title, content, isInbox },
-    { experimental_context, abortSignal }
+    { title, content, isInbox }: z.infer<typeof CreateNoteInputSchema>,
+    context
   ): Promise<NoteToolResult<NoteCreateData>> => {
-    if (abortSignal?.aborted) {
+    if (context?.abortSignal?.aborted) {
       throw new Error(TOOL_ABORTED_ERROR)
     }
 
-    const { userId } = getNoteToolContext(experimental_context)
+    const { userId } = getNoteToolContext(context?.requestContext)
     const id = nanoid()
 
     let contentJson: string | null = null

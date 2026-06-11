@@ -477,15 +477,47 @@ async function invalidateChatListCache(userId: string): Promise<void> {
 }
 
 /**
- * Update lastOpenedAt in DB and synchronize caches.
+ * Skip redundant lastOpenedAt writes when a chat is reopened within this window.
+ * lastOpenedAt only drives "resume most recent chat", so sub-window precision is
+ * unnecessary and skipping the writes keeps the read path fast.
  */
-async function updateLastOpenedAt(
+const LAST_OPENED_DEBOUNCE_MS = 30_000
+
+/**
+ * Schedule a lastOpenedAt bump WITHOUT blocking the read it accompanies.
+ *
+ * The DB write and list-cache invalidation run in the background; loading a chat
+ * must never wait on a bookkeeping write. Returns the timestamp the session should
+ * report: `now` when a write was scheduled, or the unchanged value when debounced.
+ */
+function scheduleLastOpenedBump(
   userId: string,
   chatId: string,
-  cachedSession?: ChatSession
-): Promise<Date> {
+  currentLastOpened: Date
+): Date {
   const now = new Date()
+  if (now.getTime() - currentLastOpened.getTime() < LAST_OPENED_DEBOUNCE_MS) {
+    return currentLastOpened
+  }
 
+  void persistLastOpenedAt(userId, chatId, now).catch((error) => {
+    log.warn("Background lastOpenedAt update failed:", error)
+  })
+  return now
+}
+
+/**
+ * Persist lastOpenedAt and invalidate the (now reordered) chat-list cache.
+ *
+ * Intentionally does not rewrite the full session blob to Redis: the cached
+ * session's lastOpenedAt is non-authoritative and self-heals on the next DB read,
+ * so we avoid re-uploading the entire message history just to move a timestamp.
+ */
+async function persistLastOpenedAt(
+  userId: string,
+  chatId: string,
+  now: Date
+): Promise<void> {
   await db
     .update(aiChatSessions)
     .set({ lastOpenedAt: now })
@@ -493,22 +525,26 @@ async function updateLastOpenedAt(
       and(eq(aiChatSessions.id, chatId), eq(aiChatSessions.userId, userId))
     )
 
-  if (isRedisConfigured()) {
-    try {
-      const redis = getRedisClient()
-      if (cachedSession) {
-        cachedSession.lastOpenedAt = now
-        await redis.set(getChatRedisKey(userId, chatId), cachedSession, {
-          ex: REDIS_CACHE_TTL_SECONDS
-        })
-      }
-      await redis.del(getListRedisKey(userId))
-    } catch (error) {
-      log.warn("Failed to update Redis lastOpenedAt cache:", error)
-    }
-  }
+  await invalidateChatListCache(userId)
+}
 
-  return now
+/**
+ * Populate the Redis session cache. Safe to fire-and-forget: failures are logged
+ * and the next read simply falls back to PostgreSQL.
+ */
+async function cacheChatSession(
+  userId: string,
+  chatId: string,
+  session: ChatSession
+): Promise<void> {
+  try {
+    const redis = getRedisClient()
+    await redis.set(getChatRedisKey(userId, chatId), session, {
+      ex: REDIS_CACHE_TTL_SECONDS
+    })
+  } catch (error) {
+    log.warn("Redis cache write failed:", error)
+  }
 }
 
 // =============================================================================
@@ -708,9 +744,13 @@ export async function loadChat(
         const normalizedSession = normalizeChatSessionDates(cached)
         log.debug(`[redis] Cache hit for chat ${chatId}`)
 
-        // Update lastOpenedAt if needed (still need DB write)
+        // Bump lastOpenedAt off the critical path (no full-blob rewrite).
         if (updateLastOpened) {
-          await updateLastOpenedAt(userId, chatId, normalizedSession)
+          normalizedSession.lastOpenedAt = scheduleLastOpenedBump(
+            userId,
+            chatId,
+            normalizedSession.lastOpenedAt
+          )
         }
 
         return normalizedSession
@@ -734,23 +774,20 @@ export async function loadChat(
     return undefined
   }
 
-  // Update lastOpenedAt if needed
-  if (updateLastOpened) {
-    row.lastOpenedAt = await updateLastOpenedAt(userId, chatId)
-  }
-
   const session = dbRowToSession(row)
 
-  // Cache in Redis
+  // Bump lastOpenedAt off the critical path (debounced, fire-and-forget).
+  if (updateLastOpened) {
+    session.lastOpenedAt = scheduleLastOpenedBump(
+      userId,
+      chatId,
+      session.lastOpenedAt
+    )
+  }
+
+  // Populate Redis cache in the background — the response doesn't depend on it.
   if (isRedisConfigured()) {
-    try {
-      const redis = getRedisClient()
-      await redis.set(getChatRedisKey(userId, chatId), session, {
-        ex: REDIS_CACHE_TTL_SECONDS
-      })
-    } catch (error) {
-      log.warn("Redis cache write failed:", error)
-    }
+    void cacheChatSession(userId, chatId, session)
   }
 
   return session

@@ -38,6 +38,23 @@ export const Route = createFileRoute("/_app/settings/models")({
   component: ModelsSettingsPage
 })
 
+const RECENCY_WINDOW_MONTHS = 6
+
+/**
+ * Cutoff date (ISO `YYYY-MM-DD`) for the default "recent models" filter.
+ *
+ * Anchored to the first day of the month `RECENCY_WINDOW_MONTHS` months ago, so
+ * the value is stable for the whole calendar month and only rolls over on the
+ * 1st. This avoids recomputing a sliding cutoff on every render and keeps the
+ * memoized filter dependency stable.
+ */
+function getRecencyCutoff(now: Date): string {
+  const cutoff = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - RECENCY_WINDOW_MONTHS, 1)
+  )
+  return cutoff.toISOString().slice(0, 10)
+}
+
 function ModelsSettingsPage() {
   const { t } = useTranslation()
   const {
@@ -59,6 +76,9 @@ function ModelsSettingsPage() {
 
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<ModelType | "all">("all")
+  const [recentOnly, setRecentOnly] = useState(true)
+  // Computed once per mount; stable for the whole calendar month (see getRecencyCutoff).
+  const recencyCutoff = useMemo(() => getRecencyCutoff(new Date()), [])
 
   const handleConfigure = useCallback(
     (providerId: string, providerConfig: ModelProviderConfig) => {
@@ -106,6 +126,12 @@ function ModelsSettingsPage() {
   const filteredModels = useMemo(() => {
     let result = catalogModels
 
+    if (recentOnly) {
+      result = result.filter(
+        (m) => m.releasedAt != null && m.releasedAt >= recencyCutoff
+      )
+    }
+
     if (typeFilter !== "all") {
       result = result.filter((m) => m.type === typeFilter)
     }
@@ -121,7 +147,7 @@ function ModelsSettingsPage() {
     }
 
     return result
-  }, [catalogModels, typeFilter, searchQuery])
+  }, [catalogModels, typeFilter, searchQuery, recentOnly, recencyCutoff])
 
   const modelsByProvider = useMemo(() => {
     const grouped = new Map<string, CatalogModel[]>()
@@ -138,7 +164,8 @@ function ModelsSettingsPage() {
       catalogProviders.find((p) => p.id === providerId) || {
         id: providerId,
         name: providerId,
-        enabled: false
+        enabled: false,
+        source: "seed"
       },
     [catalogProviders]
   )
@@ -215,6 +242,17 @@ function ModelsSettingsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <Switch
+                aria-label={t("settings.models.modelList.recentOnly")}
+                checked={recentOnly}
+                onCheckedChange={setRecentOnly}
+              />
+              <span className="text-sm whitespace-nowrap text-muted-foreground">
+                {t("settings.models.modelList.recentOnly")}
+              </span>
+            </div>
+
             <Select
               onValueChange={(value) =>
                 setTypeFilter(value as ModelType | "all")

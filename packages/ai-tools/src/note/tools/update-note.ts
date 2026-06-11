@@ -1,6 +1,7 @@
 import { db, entries } from "@folionote/db"
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
 import { and, eq, isNull } from "drizzle-orm"
+import type { z } from "zod"
 
 import { UpdateNoteInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
@@ -49,20 +50,28 @@ function buildContentPayload(content: string): {
   }
 }
 
-export const updateNote = tool({
+export const updateNote = createTool({
+  id: "updateNote",
   description: "Update an existing note by ID",
   strict: true,
   inputSchema: UpdateNoteInputSchema,
-  needsApproval: true,
+  requireApproval: true,
   execute: async (
-    { id, title, content, isInbox, isStarred, isPinned },
-    { experimental_context, abortSignal }
+    {
+      id,
+      title,
+      content,
+      isInbox,
+      isStarred,
+      isPinned
+    }: z.infer<typeof UpdateNoteInputSchema>,
+    context
   ): Promise<NoteToolResult<NoteUpdateData>> => {
-    if (abortSignal?.aborted) {
+    if (context?.abortSignal?.aborted) {
       throw new Error(TOOL_ABORTED_ERROR)
     }
 
-    const { userId } = getNoteToolContext(experimental_context)
+    const { userId } = getNoteToolContext(context?.requestContext)
     const fieldsToUpdate: Partial<typeof entries.$inferInsert> = {}
     let hasUpdates = false
 

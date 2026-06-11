@@ -1,11 +1,13 @@
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
+import type { z } from "zod"
 
 import { fetchWebSearchResults } from "../api/tavily-api"
 import { WebSearchToolInputSchema } from "../schemas"
 
 const currentYear = new Date().getFullYear()
 
-export const webSearch = tool({
+export const webSearch = createTool({
+  id: "webSearch",
   description: [
     "Search the web for current information using Tavily.",
     "Use this when the user asks about recent events, needs up-to-date facts, or wants information beyond your training data.",
@@ -16,6 +18,18 @@ export const webSearch = tool({
   ].join("\n"),
   strict: true,
   inputSchema: WebSearchToolInputSchema,
-  execute: async ({ query, maxResults, searchDepth }, { abortSignal }) =>
-    await fetchWebSearchResults(query, maxResults, searchDepth, abortSignal)
+  execute: async (
+    {
+      query,
+      maxResults,
+      searchDepth
+    }: z.infer<typeof WebSearchToolInputSchema>,
+    context
+  ) =>
+    await fetchWebSearchResults(
+      query,
+      maxResults,
+      searchDepth,
+      context?.abortSignal
+    )
 })

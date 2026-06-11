@@ -1,6 +1,7 @@
 import { db, entries } from "@folionote/db"
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
 import { and, eq, isNull } from "drizzle-orm"
+import type { z } from "zod"
 
 import { DeleteNoteInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
@@ -9,20 +10,21 @@ import type { NoteDeleteData, NoteToolResult } from "../types"
 const TOOL_ABORTED_ERROR = "Tool execution aborted."
 const NOTE_NOT_FOUND_ERROR = "Note not found or access denied."
 
-export const deleteNote = tool({
+export const deleteNote = createTool({
+  id: "deleteNote",
   description: "Soft delete a note by ID",
   strict: true,
   inputSchema: DeleteNoteInputSchema,
-  needsApproval: true,
+  requireApproval: true,
   execute: async (
-    { id },
-    { experimental_context, abortSignal }
+    { id }: z.infer<typeof DeleteNoteInputSchema>,
+    context
   ): Promise<NoteToolResult<NoteDeleteData>> => {
-    if (abortSignal?.aborted) {
+    if (context?.abortSignal?.aborted) {
       throw new Error(TOOL_ABORTED_ERROR)
     }
 
-    const { userId } = getNoteToolContext(experimental_context)
+    const { userId } = getNoteToolContext(context?.requestContext)
     const deletedAt = new Date()
 
     const [entry] = await db

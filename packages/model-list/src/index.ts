@@ -18,6 +18,8 @@ export {
   openaiModels,
   xaiModels
 } from "./ai-models"
+// Canonical catalog schema (single source of truth, shared end-to-end)
+export * from "./catalog"
 // Constants
 export * from "./constants"
 // Model Providers

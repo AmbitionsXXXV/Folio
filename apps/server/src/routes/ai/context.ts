@@ -2,15 +2,10 @@ import {
   DEFAULT_KNOWLEDGE_CHAT_RAG_TOP_K,
   providerSupports
 } from "@folionote/ai"
-import type {
-  AiProvider,
-  DecryptedCredential,
-  NoteContext
-} from "@folionote/ai"
+import type { DecryptedCredential, NoteContext } from "@folionote/ai"
 import { createVercelAiEmbeddingModel } from "@folionote/ai/vercel-ai"
-import type { ModelMessage, UIMessage } from "ai"
+import type { ModelMessage } from "ai"
 
-import { loadChatMessages } from "../../services/ai-chat-store"
 import { ensureEntryImageCaptions } from "../../services/image-captioning"
 import {
   fetchNotesByIds,
@@ -81,26 +76,6 @@ export function buildVisionContextMessage(
     role: "user",
     content
   }
-}
-
-export async function resolveStreamMessages(input: {
-  userId: string
-  chatId: string
-  prompt?: string
-  requestMessages?: UIMessage[]
-}): Promise<UIMessage[]> {
-  if (input.requestMessages && input.requestMessages.length > 0) {
-    return input.requestMessages
-  }
-
-  const storedMessages = await loadChatMessages(input.userId, input.chatId)
-  const userMessage: UIMessage = {
-    id: `user-${Date.now()}`,
-    role: "user",
-    parts: [{ type: "text", text: input.prompt ?? "" }]
-  }
-
-  return [...storedMessages, userMessage]
 }
 
 /**
@@ -213,26 +188,6 @@ export function mergeVisionCandidateNotes(
     (note) => !attachedNoteIds.has(note.id)
   )
   return [...attachedNotes, ...uniqueRetrievedNotes]
-}
-
-export function buildModelMessagesWithVisionContext(input: {
-  provider: AiProvider
-  modelMessages: ModelMessage[]
-  attachedNotes: NoteContext[]
-  retrievedNotes: NoteContext[]
-}): ModelMessage[] {
-  if (!providerSupports(input.provider, "vision")) {
-    return input.modelMessages
-  }
-
-  const visionContextMessage = buildVisionContextMessage(
-    mergeVisionCandidateNotes(input.attachedNotes, input.retrievedNotes)
-  )
-  if (!visionContextMessage) {
-    return input.modelMessages
-  }
-
-  return [...input.modelMessages, visionContextMessage]
 }
 
 export function combineSystemPrompt(

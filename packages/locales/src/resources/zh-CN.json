@@ -690,7 +690,8 @@
         "allTypes": "全部类型",
         "enableAll": "全部启用",
         "disableAll": "全部禁用",
-        "toggleProvider": "切换 {{provider}} 提供商"
+        "toggleProvider": "切换 {{provider}} 提供商",
+        "recentOnly": "近 6 个月"
       }
     }
   },

@@ -690,7 +690,8 @@
         "allTypes": "All Types",
         "enableAll": "Enable All",
         "disableAll": "Disable All",
-        "toggleProvider": "Toggle {{provider}} provider"
+        "toggleProvider": "Toggle {{provider}} provider",
+        "recentOnly": "Last 6 months"
       }
     }
   },

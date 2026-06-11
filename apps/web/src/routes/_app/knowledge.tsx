@@ -59,7 +59,6 @@ import {
   PromptInputTools
 } from "@/components/ai-elements/prompt-input"
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input"
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion"
 import type { ToolApprovalHandler } from "@/components/ai-elements/tool-approval"
 import { AttachmentDisplay } from "@/features/knowledge/components/attachment-display"
 import {
@@ -115,15 +114,6 @@ function preloadChatHistoryPanel(): void {
     // Preload failures are non-fatal; the lazy load will still run.
   })
 }
-
-const SUGGESTIONS = [
-  "What are the latest trends in AI?",
-  "How does machine learning work?",
-  "Explain quantum computing",
-  "Best practices for React development",
-  "Tell me about TypeScript benefits",
-  "How to optimize database queries?"
-]
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Request failed"
@@ -1021,36 +1011,6 @@ function KnowledgePage() {
     ]
   )
 
-  const handleSuggestionClick = useCallback(
-    (suggestion: string) => {
-      if (isPending || !selectedChatId) {
-        return
-      }
-      if (!isApiSupportedProvider(selectedProvider)) {
-        toast.error(
-          `Provider "${selectedProvider}" is not yet supported by the API`
-        )
-        return
-      }
-      setInputValue("")
-      if (isImageMode) {
-        handleImageSubmit(suggestion).catch((error: unknown) => {
-          toast.error(getErrorMessage(error))
-        })
-        return
-      }
-      sendMessage({ text: suggestion })
-    },
-    [
-      isPending,
-      selectedChatId,
-      selectedProvider,
-      isImageMode,
-      handleImageSubmit,
-      sendMessage
-    ]
-  )
-
   const handleOpenWebSearchPanel = useCallback<WebSearchPanelOpenHandler>(
     (data) => {
       setWebSearchPanelData(data)
@@ -1161,18 +1121,6 @@ function KnowledgePage() {
           </Conversation>
 
           <div className="grid shrink-0 gap-4 pt-4">
-            {messages.length === 0 ? (
-              <Suggestions className="px-4">
-                {SUGGESTIONS.map((suggestion) => (
-                  <Suggestion
-                    key={suggestion}
-                    onClick={handleSuggestionClick}
-                    suggestion={suggestion}
-                  />
-                ))}
-              </Suggestions>
-            ) : null}
-
             <div className="relative w-full px-4 pb-4">
               <MentionPopover {...mention.popoverProps} />
               <PromptInput
