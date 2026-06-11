@@ -7,15 +7,17 @@
  */
 
 import {
-  type CatalogModel,
-  type CatalogModelAbilities,
-  type CatalogModelPricing,
-  type CatalogProvider,
   DEFAULT_MODEL_PROVIDER_LIST,
-  FOLIO_DEFAULT_MODEL_LIST,
-  type ModelAbilities,
-  type ModelCatalog,
-  type Pricing
+  FOLIO_DEFAULT_MODEL_LIST
+} from "@folionote/model-list"
+import type {
+  CatalogModel,
+  CatalogModelAbilities,
+  CatalogModelPricing,
+  CatalogProvider,
+  ModelAbilities,
+  ModelCatalog,
+  Pricing
 } from "@folionote/model-list"
 
 function toAbilities(abilities?: ModelAbilities): CatalogModelAbilities {

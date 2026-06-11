@@ -229,12 +229,12 @@ function mapGatewayType(type?: string): CatalogModel["type"] {
 }
 
 function toNumber(value: unknown): number | undefined {
-  const parsed =
-    typeof value === "string"
-      ? Number.parseFloat(value)
-      : typeof value === "number"
-        ? value
-        : Number.NaN
+  let parsed = Number.NaN
+  if (typeof value === "string") {
+    parsed = Number.parseFloat(value)
+  } else if (typeof value === "number") {
+    parsed = value
+  }
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
@@ -309,7 +309,7 @@ function normalizeGateway(raw: unknown): ModelCatalog {
  * Fetch the latest catalog from models.dev, transparently falling back to the
  * Vercel AI Gateway if the primary source is unavailable or empty.
  *
- * @throws if BOTH sources fail.
+ * @throws {Error} if BOTH sources fail.
  */
 export async function fetchUpstreamCatalog(): Promise<UpstreamCatalog> {
   try {
@@ -327,13 +327,16 @@ export async function fetchUpstreamCatalog(): Promise<UpstreamCatalog> {
     try {
       const catalog = normalizeGateway(await fetchJson(VERCEL_GATEWAY_URL))
       if (catalog.models.length === 0) {
-        throw new Error("Vercel AI Gateway returned no usable models")
+        throw new Error("Vercel AI Gateway returned no usable models", {
+          cause: primaryError
+        })
       }
       log.info(`Fetched ${catalog.models.length} models from Vercel AI Gateway`)
       return { source: "vercel-gateway", ...catalog }
     } catch (fallbackError) {
       throw new Error(
-        `All model sources failed — models.dev: ${errorMessage(primaryError)}; vercel-gateway: ${errorMessage(fallbackError)}`
+        `All model sources failed — models.dev: ${errorMessage(primaryError)}; vercel-gateway: ${errorMessage(fallbackError)}`,
+        { cause: fallbackError }
       )
     }
   }
