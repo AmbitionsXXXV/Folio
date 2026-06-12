@@ -27,9 +27,9 @@ export function TodayHeader({ userName, streak }: TodayHeaderProps) {
       <View className="flex-row items-center justify-between">
         <Text className="text-muted">{dateString}</Text>
         {streak > 0 && (
-          <View className="bg-warning/10 flex-row items-center rounded-full px-3 py-1">
+          <View className="flex-row items-center rounded-full bg-warning/10 px-3 py-1">
             <HugeiconsIcon color={warningColor} icon={FireIcon} size={16} />
-            <Text className="text-warning ml-1 text-sm font-medium">
+            <Text className="ml-1 text-sm font-medium text-warning">
               {t("review.streakDays", { count: streak })}
             </Text>
           </View>

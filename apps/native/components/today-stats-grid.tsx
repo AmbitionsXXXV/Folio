@@ -32,7 +32,7 @@ export function TodayStatsGrid({
     <View className="mb-4 flex-row flex-wrap">
       {/* Due Today */}
       <View className="w-1/2 p-2">
-        <View className="bg-surface rounded-lg p-3">
+        <View className="rounded-lg bg-surface p-3">
           <View className="mb-2 flex-row items-center">
             <HugeiconsIcon
               color={accentColor}
@@ -49,7 +49,7 @@ export function TodayStatsGrid({
 
       {/* Overdue */}
       <View className="w-1/2 p-2">
-        <View className="bg-surface rounded-lg p-3">
+        <View className="rounded-lg bg-surface p-3">
           <View className="mb-2 flex-row items-center">
             <HugeiconsIcon
               color={dangerColor}
@@ -60,13 +60,13 @@ export function TodayStatsGrid({
               {t("review.overdue")}
             </Text>
           </View>
-          <Text className="text-danger text-2xl font-bold">{overdue}</Text>
+          <Text className="text-2xl font-bold text-danger">{overdue}</Text>
         </View>
       </View>
 
       {/* Reviewed Today */}
       <View className="w-1/2 p-2">
-        <View className="bg-surface rounded-lg p-3">
+        <View className="rounded-lg bg-surface p-3">
           <View className="mb-2 flex-row items-center">
             <HugeiconsIcon
               color={successColor}
@@ -77,7 +77,7 @@ export function TodayStatsGrid({
               {t("review.completed")}
             </Text>
           </View>
-          <Text className="text-success text-2xl font-bold">
+          <Text className="text-2xl font-bold text-success">
             {reviewedToday}
           </Text>
         </View>
@@ -85,7 +85,7 @@ export function TodayStatsGrid({
 
       {/* New Items */}
       <View className="w-1/2 p-2">
-        <View className="bg-surface rounded-lg p-3">
+        <View className="rounded-lg bg-surface p-3">
           <View className="mb-2 flex-row items-center">
             <HugeiconsIcon color={mutedColor} icon={SparklesIcon} size={20} />
             <Text className="ml-2 text-sm text-muted">

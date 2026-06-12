@@ -31,36 +31,36 @@ export function ReviewRatingButtons({
       <View className="flex-row justify-between">
         {/* Again */}
         <Button
-          className="bg-danger/10 mr-2 flex-1 items-center active:opacity-70"
+          className="mr-2 flex-1 items-center bg-danger/10 active:opacity-70"
           isDisabled={isPending}
           onPress={() => onRating("again")}
         >
           <HugeiconsIcon color={dangerColor} icon={RefreshIcon} size={24} />
-          <Text className="text-danger mt-1 text-sm font-medium">
+          <Text className="mt-1 text-sm font-medium text-danger">
             {t("review.again")}
           </Text>
         </Button>
 
         {/* Hard */}
         <Button
-          className="bg-warning/10 mr-2 flex-1 items-center active:opacity-70"
+          className="mr-2 flex-1 items-center bg-warning/10 active:opacity-70"
           isDisabled={isPending}
           onPress={() => onRating("hard")}
         >
           <HugeiconsIcon color={warningColor} icon={HelpCircleIcon} size={24} />
-          <Text className="text-warning mt-1 text-sm font-medium">
+          <Text className="mt-1 text-sm font-medium text-warning">
             {t("review.hard")}
           </Text>
         </Button>
 
         {/* Good */}
         <Button
-          className="bg-success/10 mr-2 flex-1 items-center active:opacity-70"
+          className="mr-2 flex-1 items-center bg-success/10 active:opacity-70"
           isDisabled={isPending}
           onPress={() => onRating("good")}
         >
           <HugeiconsIcon color={successColor} icon={Tick01Icon} size={24} />
-          <Text className="text-success mt-1 text-sm font-medium">
+          <Text className="mt-1 text-sm font-medium text-success">
             {t("review.good")}
           </Text>
         </Button>

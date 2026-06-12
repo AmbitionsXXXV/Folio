@@ -308,7 +308,7 @@ export default function SettingsScreen() {
           onPress={() => setLanguageModalVisible(true)}
         >
           <View className="flex-row items-center">
-            <View className="bg-success/10 mr-3 size-10 items-center justify-center rounded-lg">
+            <View className="mr-3 size-10 items-center justify-center rounded-lg bg-success/10">
               <HugeiconsIcon
                 color={useThemeColor("success")}
                 icon={TranslationIcon}
@@ -334,18 +334,18 @@ export default function SettingsScreen() {
         {/* Danger Zone Section */}
         {session?.user && (
           <>
-            <Text className="text-danger mt-4 mb-3 text-lg font-semibold">
+            <Text className="mt-4 mb-3 text-lg font-semibold text-danger">
               {t("profile.dangerZone")}
             </Text>
 
             {/* Sign Out */}
             <PressableFeedback
-              className="border-danger/30 mb-3 rounded-2xl border bg-[#FFFBFF] p-4 dark:bg-[#3f324a]"
+              className="mb-3 rounded-2xl border border-danger/30 bg-[#FFFBFF] p-4 dark:bg-[#3f324a]"
               isDisabled={isSigningOut}
               onPress={handleSignOutPress}
             >
               <View className="flex-row items-center">
-                <View className="bg-danger/10 mr-3 size-10 items-center justify-center rounded-lg">
+                <View className="mr-3 size-10 items-center justify-center rounded-lg bg-danger/10">
                   <HugeiconsIcon
                     color={dangerColor}
                     icon={Logout03Icon}
@@ -353,7 +353,7 @@ export default function SettingsScreen() {
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-danger font-medium">
+                  <Text className="font-medium text-danger">
                     {t("profile.signOutAllDevices")}
                   </Text>
                   <Text className="text-xs text-muted">
@@ -368,11 +368,11 @@ export default function SettingsScreen() {
 
             {/* Delete Account */}
             <PressableFeedback
-              className="border-danger/30 mb-3 rounded-2xl border bg-[#FFFBFF] p-4 opacity-50 dark:bg-[#3f324a]"
+              className="mb-3 rounded-2xl border border-danger/30 bg-[#FFFBFF] p-4 opacity-50 dark:bg-[#3f324a]"
               isDisabled
             >
               <View className="flex-row items-center">
-                <View className="bg-danger/10 mr-3 size-10 items-center justify-center rounded-lg">
+                <View className="mr-3 size-10 items-center justify-center rounded-lg bg-danger/10">
                   <HugeiconsIcon
                     color={dangerColor}
                     icon={Delete02Icon}
@@ -380,7 +380,7 @@ export default function SettingsScreen() {
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-danger font-medium">
+                  <Text className="font-medium text-danger">
                     {t("profile.deleteAccount")}
                   </Text>
                   <Text className="text-xs text-muted">

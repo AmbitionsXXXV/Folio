@@ -89,13 +89,13 @@ export function SignUp() {
       <Card.Title className="mb-4">{t("auth.createAccount")}</Card.Title>
 
       {error ? (
-        <View className="bg-danger/10 mb-4 rounded-lg p-3">
-          <Text className="text-danger text-sm">{error}</Text>
+        <View className="mb-4 rounded-lg bg-danger/10 p-3">
+          <Text className="text-sm text-danger">{error}</Text>
         </View>
       ) : null}
 
       <TextInput
-        className="border-divider bg-surface mb-3 rounded-lg border px-4 py-3 text-foreground"
+        className="border-divider mb-3 rounded-lg border bg-surface px-4 py-3 text-foreground"
         onChangeText={setName}
         placeholder={t("auth.name")}
         placeholderTextColor={mutedColor}
@@ -104,7 +104,7 @@ export function SignUp() {
 
       <TextInput
         autoCapitalize="none"
-        className="border-divider bg-surface mb-3 rounded-lg border px-4 py-3 text-foreground"
+        className="border-divider mb-3 rounded-lg border bg-surface px-4 py-3 text-foreground"
         keyboardType="email-address"
         onChangeText={setEmail}
         placeholder={t("auth.email")}
@@ -113,7 +113,7 @@ export function SignUp() {
       />
 
       <TextInput
-        className="border-divider bg-surface mb-4 rounded-lg border px-4 py-3 text-foreground"
+        className="border-divider mb-4 rounded-lg border bg-surface px-4 py-3 text-foreground"
         onChangeText={setPassword}
         placeholder={t("auth.password")}
         placeholderTextColor={mutedColor}

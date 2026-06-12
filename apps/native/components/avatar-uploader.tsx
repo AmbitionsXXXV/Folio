@@ -517,7 +517,7 @@ function RateLimitWarning({
   const { value, unit } = formatTimeWithI18n(countdown, t, { maxUnit: "hour" })
 
   return (
-    <View className="bg-warning/10 mb-4 flex-row items-center gap-2 rounded-lg p-3">
+    <View className="mb-4 flex-row items-center gap-2 rounded-lg bg-warning/10 p-3">
       <HugeiconsIcon color={warningColor} icon={Time02Icon} size={16} />
       <Text className="flex-1 text-sm text-foreground">
         {t("avatar.rateLimitedWait", { value, unit })}
@@ -618,7 +618,7 @@ function DeleteButton({
     >
       <PressableFeedback.Highlight />
       <HugeiconsIcon color={dangerColor} icon={Delete02Icon} size={20} />
-      <Text className="text-danger ml-3 flex-1 font-medium">
+      <Text className="ml-3 flex-1 font-medium text-danger">
         {t("avatar.delete")}
       </Text>
     </PressableFeedback>

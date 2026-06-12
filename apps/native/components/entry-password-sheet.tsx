@@ -196,7 +196,7 @@ export const EntryPasswordSheet = forwardRef<
             </Text>
             <BottomSheetTextInput
               autoCapitalize="none"
-              className="bg-surface mb-3 rounded-lg border border-border px-3 py-2 text-foreground"
+              className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
               onChangeText={setPassword}
               placeholder={t("privacy.passwordPlaceholder")}
               placeholderTextColor={mutedColor}
@@ -211,7 +211,7 @@ export const EntryPasswordSheet = forwardRef<
                 </Text>
                 <BottomSheetTextInput
                   autoCapitalize="none"
-                  className="bg-surface mb-3 rounded-lg border border-border px-3 py-2 text-foreground"
+                  className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                   onChangeText={setConfirmPassword}
                   placeholder={t("privacy.confirmPlaceholder")}
                   placeholderTextColor={mutedColor}
@@ -219,7 +219,7 @@ export const EntryPasswordSheet = forwardRef<
                   value={confirmPassword}
                 />
                 {confirmPassword.length > 0 && !passwordsMatch && (
-                  <Text className="text-danger mb-3 text-sm">
+                  <Text className="mb-3 text-sm text-danger">
                     {t("privacy.passwordMismatch")}
                   </Text>
                 )}
@@ -282,7 +282,7 @@ export const EntryPasswordSheet = forwardRef<
             </Text>
             <BottomSheetTextInput
               autoCapitalize="none"
-              className="bg-surface mb-3 rounded-lg border border-border px-3 py-2 text-foreground"
+              className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
               onChangeText={setPassword}
               placeholder={t("privacy.passwordPlaceholder")}
               placeholderTextColor={mutedColor}
@@ -302,7 +302,7 @@ export const EntryPasswordSheet = forwardRef<
                 </Text>
                 <BottomSheetTextInput
                   autoCapitalize="none"
-                  className="bg-surface mb-3 rounded-lg border border-border px-3 py-2 text-foreground"
+                  className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                   onChangeText={setConfirmPassword}
                   placeholder={t("privacy.confirmPlaceholder")}
                   placeholderTextColor={mutedColor}
@@ -310,7 +310,7 @@ export const EntryPasswordSheet = forwardRef<
                   value={confirmPassword}
                 />
                 {confirmPassword.length > 0 && !passwordsMatch && (
-                  <Text className="text-danger mb-3 text-sm">
+                  <Text className="mb-3 text-sm text-danger">
                     {t("privacy.passwordMismatch")}
                   </Text>
                 )}

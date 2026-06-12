@@ -123,8 +123,8 @@ export default function SignUpScreen() {
 
               {/* Form Error Message */}
               {submitError ? (
-                <View className="bg-danger/10 mb-4 rounded-xl p-4">
-                  <Text className="text-danger text-sm">{submitError}</Text>
+                <View className="mb-4 rounded-xl bg-danger/10 p-4">
+                  <Text className="text-sm text-danger">{submitError}</Text>
                 </View>
               ) : null}
 
