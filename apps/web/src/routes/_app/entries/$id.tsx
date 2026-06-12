@@ -45,7 +45,6 @@ import { EntryTags } from "@/components/entry-tags"
 import type { EntryTagsRef } from "@/components/entry-tags"
 import { SaveStatusIndicator } from "@/components/save-status-indicator"
 import { ShareDialog } from "@/components/share-dialog"
-import { Surface } from "@/components/surface"
 import { TableOfContents } from "@/components/table-of-contents"
 import { useAutoSave } from "@/hooks/use-auto-save"
 import type { SaveStatus } from "@/hooks/use-auto-save"
@@ -620,20 +619,18 @@ function EntryEditPage() {
           <EntrySources entryId={id} ref={entrySourcesRef} />
         </div>
 
-        {/* Editor */}
-        <Surface className="p-5 md:p-6">
-          <div ref={contentRef}>
-            <EntryEditor
-              additionalCommands={additionalCommands}
-              autoFocus
-              content={editorContent}
-              contentFormat="json"
-              onChange={handleContentChange}
-              onUploadImage={uploadImage}
-              placeholder={t("editor.placeholderWithSlash")}
-            />
-          </div>
-        </Surface>
+        {/* Editor — flows directly on the page canvas (Lark-style), no card */}
+        <div ref={contentRef}>
+          <EntryEditor
+            additionalCommands={additionalCommands}
+            autoFocus
+            content={editorContent}
+            contentFormat="json"
+            onChange={handleContentChange}
+            onUploadImage={uploadImage}
+            placeholder={t("editor.placeholderWithSlash")}
+          />
+        </div>
 
         {/* Metadata footer */}
         <footer className="mt-8 border-t border-border/50 pt-4">

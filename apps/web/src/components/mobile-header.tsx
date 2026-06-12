@@ -1,10 +1,10 @@
 import { Button } from "@folionote/ui/button"
+import { Sidebar } from "@heroui-pro/react"
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
-import { SidebarTrigger } from "@/components/sidebar"
 import { useCommandPalette } from "@/contexts/command-palette-context"
 
 import { SettingsMenu } from "./settings-menu"
@@ -20,12 +20,9 @@ export function MobileHeader() {
 
   return (
     <header className="sticky top-0 z-50 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/60 md:hidden">
-      <SidebarTrigger />
+      <Sidebar.Trigger />
 
-      <Link
-        className="flex-1 font-script text-xl font-bold text-primary"
-        to="/"
-      >
+      <Link className="flex-1 font-script text-xl font-bold text-accent" to="/">
         FolioNote
       </Link>
 

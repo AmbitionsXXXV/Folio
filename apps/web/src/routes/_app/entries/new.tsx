@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { EntryEditor } from "@/components/entry-editor"
-import { Surface } from "@/components/surface"
 import { TableOfContents } from "@/components/table-of-contents"
 import { useTocPosition } from "@/hooks/use-toc-position"
 import { parseTocFromContent } from "@/lib/toc"
@@ -245,17 +244,15 @@ function NewEntryPage() {
           value={title}
         />
 
-        {/* Editor */}
-        <Surface className="p-4 md:p-6">
-          <div ref={contentRef}>
-            <EntryEditor
-              content={contentJson}
-              contentFormat="json"
-              onChange={handleContentChange}
-              placeholder={t("editor.placeholder")}
-            />
-          </div>
-        </Surface>
+        {/* Editor — flows directly on the page canvas (Lark-style), no card */}
+        <div ref={contentRef}>
+          <EntryEditor
+            content={contentJson}
+            contentFormat="json"
+            onChange={handleContentChange}
+            placeholder={t("editor.placeholder")}
+          />
+        </div>
       </div>
 
       {/* TOC on right side */}

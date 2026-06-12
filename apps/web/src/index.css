@@ -8,6 +8,8 @@
 @import "./styles/tiptap.css";
 @import "./styles/caret.css";
 @import "./styles/table.css";
+/* Re-themes the HeroUI Pro Sidebar items; must follow @folionote/ui/styles. */
+@import "./styles/sidebar.css";
 @source "../node_modules/streamdown/dist/*.js";
 @source "../../../packages/ai-tools/src/**/*.{ts,tsx}";
 
