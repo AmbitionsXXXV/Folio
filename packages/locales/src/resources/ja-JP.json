@@ -337,6 +337,17 @@
         "auxiliary": "助動詞",
         "expression": "表現"
       }
+    },
+    "japaneseReading": {
+      "title": "読解アナライザー",
+      "subtitle": "単語をタップすると読みと品詞が表示されます。",
+      "translationLabel": "翻訳",
+      "fieldReading": "読み",
+      "fieldRomaji": "ローマ字",
+      "fieldPos": "品詞",
+      "fieldBaseForm": "辞書形",
+      "selectHint": "単語を選ぶと読み・ローマ字・品詞が表示されます。",
+      "phraseNote": "文節のグループ分けはおおよその目安です。"
     }
   },
   "activity": {
@@ -469,7 +480,83 @@
       "addColumnBefore": "左に列を追加",
       "addColumnAfter": "右に列を追加",
       "deleteColumn": "列を削除",
-      "toggleHeaderRow": "ヘッダー行の切り替え"
+      "toggleHeaderRow": "ヘッダー行の切り替え",
+      "toggleHeaderColumn": "ヘッダー列の切り替え",
+      "insertAbove": "上に挿入",
+      "insertBelow": "下に挿入",
+      "insertLeft": "左に挿入",
+      "insertRight": "右に挿入",
+      "moveUp": "上へ移動",
+      "moveDown": "下へ移動",
+      "moveLeft": "左へ移動",
+      "moveRight": "右へ移動",
+      "duplicate": "複製",
+      "duplicateRow": "行を複製",
+      "duplicateColumn": "列を複製",
+      "clearRowContents": "行の内容をクリア",
+      "clearColumnContents": "列の内容をクリア",
+      "backgroundColor": "背景色",
+      "defaultColor": "デフォルト",
+      "clearRowStyle": "行のスタイルをクリア",
+      "clearColumnStyle": "列のスタイルをクリア",
+      "align": "テキストの配置",
+      "alignLeft": "左揃え",
+      "alignCenter": "中央揃え",
+      "alignRight": "右揃え",
+      "rowOptions": "行のオプション",
+      "columnOptions": "列のオプション",
+      "addRow": "行を追加",
+      "addColumn": "列を追加",
+      "block": {
+        "menuLabel": "テーブルのオプション",
+        "syncBlock": "同期ブロック",
+        "indent": "インデント",
+        "cut": "切り取り",
+        "copy": "コピー",
+        "duplicate": "複製",
+        "delete": "削除",
+        "share": "共有",
+        "saveAsTemplate": "テンプレートとして保存",
+        "copyLink": "リンクをコピー",
+        "headerRow": "ヘッダー行",
+        "headerColumn": "ヘッダー列",
+        "distributeColumns": "列幅を均等にする",
+        "addBelow": "下にブロックを追加",
+        "comingSoon": "近日公開"
+      }
+    },
+    "tableGrid": {
+      "hint": "ドラッグしてサイズを選択",
+      "insert": "テーブルを挿入"
+    },
+    "block": {
+      "add": "下にブロックを追加",
+      "delete": "削除",
+      "duplicate": "複製",
+      "moveUp": "上へ移動",
+      "moveDown": "下へ移動",
+      "options": "ブロックオプション",
+      "turnInto": "種類を変更",
+      "indentAndAlign": "インデントと配置",
+      "color": "色",
+      "comment": "コメント",
+      "cut": "切り取り",
+      "copy": "コピー",
+      "translate": "翻訳",
+      "share": "共有",
+      "saveAsTemplate": "テンプレートとして保存",
+      "copyLink": "リンクをコピー",
+      "comingSoon": "近日公開",
+      "types": {
+        "text": "テキスト",
+        "heading1": "見出し1",
+        "heading2": "見出し2",
+        "heading3": "見出し3",
+        "bulletList": "箇条書き",
+        "orderedList": "番号付きリスト",
+        "codeBlock": "コードブロック",
+        "quote": "引用"
+      }
     }
   },
   "entryCard": {

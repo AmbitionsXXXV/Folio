@@ -439,6 +439,17 @@
         "auxiliary": "助动词",
         "expression": "表达"
       }
+    },
+    "japaneseReading": {
+      "title": "阅读解析",
+      "subtitle": "点按词语查看其读音与词性。",
+      "translationLabel": "翻译",
+      "fieldReading": "读音",
+      "fieldRomaji": "罗马字",
+      "fieldPos": "词性",
+      "fieldBaseForm": "词典形",
+      "selectHint": "选择一个词语，查看其读音、罗马字与词性。",
+      "phraseNote": "短语分组为近似结果。"
     }
   },
   "activity": {
@@ -571,7 +582,83 @@
       "addColumnBefore": "在左侧插入列",
       "addColumnAfter": "在右侧插入列",
       "deleteColumn": "删除列",
-      "toggleHeaderRow": "切换标题行"
+      "toggleHeaderRow": "切换标题行",
+      "toggleHeaderColumn": "切换标题列",
+      "insertAbove": "在上方插入",
+      "insertBelow": "在下方插入",
+      "insertLeft": "在左侧插入",
+      "insertRight": "在右侧插入",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "moveLeft": "左移",
+      "moveRight": "右移",
+      "duplicate": "再制",
+      "duplicateRow": "再制行",
+      "duplicateColumn": "再制列",
+      "clearRowContents": "清空行内容",
+      "clearColumnContents": "清空列内容",
+      "backgroundColor": "背景色",
+      "defaultColor": "默认",
+      "clearRowStyle": "清除行样式",
+      "clearColumnStyle": "清除列样式",
+      "align": "文本对齐",
+      "alignLeft": "左对齐",
+      "alignCenter": "居中对齐",
+      "alignRight": "右对齐",
+      "rowOptions": "行选项",
+      "columnOptions": "列选项",
+      "addRow": "添加行",
+      "addColumn": "添加列",
+      "block": {
+        "menuLabel": "表格选项",
+        "syncBlock": "同步块",
+        "indent": "缩进",
+        "cut": "剪切",
+        "copy": "复制",
+        "duplicate": "再制",
+        "delete": "删除",
+        "share": "分享",
+        "saveAsTemplate": "保存为模板",
+        "copyLink": "复制链接",
+        "headerRow": "标题行",
+        "headerColumn": "标题列",
+        "distributeColumns": "均分列宽",
+        "addBelow": "在下方添加",
+        "comingSoon": "即将推出"
+      }
+    },
+    "tableGrid": {
+      "hint": "拖动以选择大小",
+      "insert": "插入表格"
+    },
+    "block": {
+      "add": "在下方添加",
+      "delete": "删除",
+      "duplicate": "再制",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "options": "块选项",
+      "turnInto": "转换为",
+      "indentAndAlign": "缩进和对齐",
+      "color": "颜色",
+      "comment": "评论",
+      "cut": "剪切",
+      "copy": "复制",
+      "translate": "翻译",
+      "share": "分享",
+      "saveAsTemplate": "保存为模板",
+      "copyLink": "复制链接",
+      "comingSoon": "即将推出",
+      "types": {
+        "text": "正文",
+        "heading1": "一级标题",
+        "heading2": "二级标题",
+        "heading3": "三级标题",
+        "bulletList": "无序列表",
+        "orderedList": "有序列表",
+        "codeBlock": "代码块",
+        "quote": "引用"
+      }
     }
   },
   "error": {

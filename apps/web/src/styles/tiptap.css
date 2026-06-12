@@ -351,38 +351,61 @@
   z-index: 50;
 }
 
+/* Flex row so an item's flyout submenu can sit beside the menu without
+   being clipped by the menu's own vertical scroll. */
+.slash-command-root {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
 .slash-command-menu {
+  flex-shrink: 0;
   min-width: 240px;
+  max-width: 320px;
   max-height: 320px;
-  padding: 0.5rem;
+  padding: 0.375rem;
   overflow-y: auto;
-  scrollbar-color: var(--primary) transparent;
+  scrollbar-color: color-mix(in oklab, var(--foreground) 18%, transparent)
+    transparent;
   scrollbar-width: thin;
   background: var(--popover);
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: 0.875rem;
   box-shadow: var(--shadow-lg);
 }
 
-/* Custom scrollbar for webkit browsers */
+/* Neutral scrollbar so it doesn't compete with the row content for attention */
 .slash-command-menu::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .slash-command-menu::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: 2px;
 }
 
 .slash-command-menu::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 2px;
-  opacity: 0.6;
+  background: color-mix(in oklab, var(--foreground) 16%, transparent);
+  border-radius: 9999px;
 }
 
 .slash-command-menu::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
-  opacity: 0.8;
+  background: color-mix(in oklab, var(--foreground) 26%, transparent);
+}
+
+/* Chevron on items that open a submenu (e.g. Table → size grid) */
+.slash-command-item-chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.25rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+/* Flyout submenu that sits to the right of the menu */
+.slash-command-submenu {
+  flex-shrink: 0;
 }
 
 .slash-command-group {
@@ -394,31 +417,34 @@
 }
 
 .slash-command-group-label {
-  padding: 0.375rem 0.5rem 0.25rem;
-  font-size: 0.7rem;
+  padding: 0.5rem 0.5rem 0.25rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--muted-foreground);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .slash-command-item {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
   align-items: center;
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.4375rem 0.5rem;
   text-align: left;
   cursor: pointer;
   background: transparent;
   border: none;
   border-radius: 0.5rem;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.12s ease;
 }
 
+/* The amber accent is loud, so a full-bleed fill drowns the row text. Mark the
+   active row with a soft neutral wash and let the brand color live on the icon
+   chip below instead — presence without the excessive contrast. */
 .slash-command-item:hover,
 .slash-command-item.is-selected {
-  background: var(--accent);
+  background: color-mix(in oklab, var(--foreground) 8%, transparent);
 }
 
 .slash-command-item-icon {
@@ -431,9 +457,21 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--foreground);
-  background: var(--muted);
-  border-radius: 0.375rem;
+  color: var(--muted-foreground);
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  border-radius: 0.5rem;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.slash-command-item:hover .slash-command-item-icon,
+.slash-command-item.is-selected .slash-command-item-icon {
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 15%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 30%, transparent);
 }
 
 .slash-icon {
@@ -444,28 +482,299 @@
 .slash-command-item-content {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: 0.0625rem;
   min-width: 0;
 }
 
 .slash-command-item-title {
+  overflow: hidden;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.25;
   color: var(--foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .slash-command-item-description {
+  overflow: hidden;
   font-size: 0.75rem;
   line-height: 1.25;
   color: var(--muted-foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .slash-command-empty {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: var(--muted-foreground);
   text-align: center;
+}
+
+/* ==================== */
+/* Foldable Headings    */
+/* ==================== */
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  position: relative;
+}
+
+.heading-fold-toggle {
+  position: absolute;
+  /* Fixed offset (not em) so large headings don't push it onto the block handle */
+  left: -1.3rem;
+  top: 0.25em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  color: var(--color-blue-500);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.heading-fold-toggle::before {
+  width: 0;
+  height: 0;
+  content: "";
+  border-top: 0.28rem solid transparent;
+  border-bottom: 0.28rem solid transparent;
+  border-left: 0.34rem solid currentColor;
+  transition: transform 0.15s ease;
+  /* Expanded → triangle points down; collapsed → points right */
+  transform: rotate(90deg);
+}
+
+.heading-fold-toggle.is-collapsed::before {
+  transform: rotate(0deg);
+}
+
+.ProseMirror h1:hover .heading-fold-toggle,
+.ProseMirror h2:hover .heading-fold-toggle,
+.ProseMirror h3:hover .heading-fold-toggle,
+.heading-fold-toggle.is-collapsed {
+  opacity: 1;
+}
+
+.heading-fold-toggle:hover {
+  background-color: color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+
+.pm-folded-hidden {
+  display: none !important;
+}
+
+/* ==================== */
+/* Block Handle (gutter)*/
+/* ==================== */
+
+.block-handle {
+  position: absolute;
+  /* Sit in the page's existing left margin so the text alignment is untouched
+     (adding left padding shifts content and breaks the custom caret offset). */
+  left: -3rem;
+  z-index: 20;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  /* Nudge toward the first line of the hovered block */
+  margin-top: 0.12em;
+}
+
+/* Type badge — shows the current block type and opens the "turn into" picker. */
+.block-handle-type {
+  display: flex;
+  gap: 1px;
+  align-items: center;
+  height: 1.4rem;
+  padding: 0 0.15rem 0 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--primary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0.3rem;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.block-handle-type:hover {
+  background-color: color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+
+.block-handle-type-label {
+  min-width: 0.9rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.block-handle-type-caret {
+  width: 0.7rem;
+  height: 0.7rem;
+  opacity: 0.7;
+}
+
+.block-handle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.4rem;
+  padding: 0;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0.3rem;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.block-handle-btn:hover {
+  color: var(--foreground);
+  background-color: color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+
+.block-handle-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  margin-top: 4px;
+  padding: 4px;
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.block-handle-fullmenu {
+  min-width: 232px;
+  /* Scroll internally rather than be clipped by the scroll container when the
+     block sits near the bottom of the viewport. */
+  max-height: min(420px, calc(100svh - 4rem));
+  overflow-y: auto;
+}
+
+.block-handle-typeswitch {
+  min-width: 204px;
+}
+
+.block-handle-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.block-handle-menu-label {
+  padding: 0.25rem 0.5rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+/* "Turn into" type grid */
+.block-handle-type-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.block-handle-type-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  color: var(--foreground);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.block-handle-type-cell:hover {
+  background: color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+
+.block-handle-type-cell.is-active {
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+.block-handle-menu-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  transition: background-color 0.12s ease;
+}
+
+.block-handle-menu-item span {
+  flex: 1;
+}
+
+.block-handle-menu-item:hover {
+  background: color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+
+.block-handle-menu-item .block-handle-menu-item-chevron {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+.block-handle-menu-item-disabled {
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.block-handle-menu-item-disabled:hover {
+  background: transparent;
+}
+
+.block-handle-menu-item-danger {
+  color: var(--color-red-500);
+}
+
+.block-handle-menu-item-danger:hover {
+  background: color-mix(in oklab, var(--color-red-500) 12%, transparent);
+}
+
+.block-handle-menu-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
 }
 
 /* Tippy.js animation */
