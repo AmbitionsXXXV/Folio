@@ -1,0 +1,94 @@
+/* ===========================================================================
+   Resizable editor image — FolioNote doc editor
+   ---------------------------------------------------------------------------
+   Styles the ResizableImage NodeView (apps/web/src/components/editor/
+   resizable-image-view.tsx): the sized frame, the image, and the drag handles.
+   Read-only / static renders fall back to a plain <img width="…"> and don't
+   use these rules.
+   =========================================================================== */
+
+.resizable-image {
+  margin-block: 0.75rem;
+}
+
+.resizable-image__frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+  vertical-align: top;
+}
+
+.resizable-image__img {
+  display: block;
+  /* Width comes from the inline style (px) when resized, else natural size.
+     max-width keeps it within the frame, which is itself capped to the column. */
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+}
+
+/* Selection / active-resize ring — follows the image's rounded corners. */
+.resizable-image__frame[data-selected] .resizable-image__img,
+.resizable-image__frame[data-resizing] .resizable-image__img {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Width handles: amber pills hugging the left/right edges. */
+.resizable-image__handle {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 6px;
+  height: 2.5rem;
+  max-height: 56%;
+  transform: translateY(-50%);
+  border: 1.5px solid var(--background);
+  border-radius: 9999px;
+  background-color: var(--accent);
+  opacity: 0;
+  cursor: ew-resize;
+  touch-action: none;
+  transition: opacity 0.15s ease;
+}
+
+.resizable-image__handle--left {
+  left: 0.5rem;
+}
+
+.resizable-image__handle--right {
+  right: 0.5rem;
+}
+
+.resizable-image__frame:hover .resizable-image__handle,
+.resizable-image__frame[data-selected] .resizable-image__handle,
+.resizable-image__frame[data-resizing] .resizable-image__handle {
+  opacity: 1;
+}
+
+/* Live width readout shown while dragging. */
+.resizable-image__badge {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background-color: color-mix(in oklch, var(--foreground) 82%, transparent);
+  color: var(--background);
+  font-size: 0.6875rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Don't select surrounding text while dragging a handle. */
+.resizable-image__frame[data-resizing] {
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resizable-image__handle {
+    transition: none;
+  }
+}

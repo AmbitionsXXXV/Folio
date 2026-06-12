@@ -11,7 +11,6 @@ import type { PasteStrategy, SlashCommandItem } from "@folionote/editor-react"
 import { CodeBlockShiki } from "@folionote/editor-react/extensions"
 import type { JSONContent } from "@tiptap/core"
 import { Extension } from "@tiptap/core"
-import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { EditorContent, useEditor } from "@tiptap/react"
@@ -20,6 +19,7 @@ import { useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
+import { ResizableImage } from "@/components/editor/resizable-image"
 import { HeadingIds } from "@/lib/heading-id-extension"
 
 /**
@@ -218,7 +218,7 @@ export function EntryEditor({
         placeholder,
         emptyEditorClass: "is-editor-empty"
       }),
-      Image.configure({
+      ResizableImage.configure({
         inline: false,
         allowBase64: false,
         HTMLAttributes: {

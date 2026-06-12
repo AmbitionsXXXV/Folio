@@ -7,6 +7,7 @@
 /* @import "./styles/component.css"; */
 @import "./styles/tiptap.css";
 @import "./styles/caret.css";
+@import "./styles/editor-image.css";
 @import "./styles/table.css";
 /* Re-themes the HeroUI Pro Sidebar items; must follow @folionote/ui/styles. */
 @import "./styles/sidebar.css";
