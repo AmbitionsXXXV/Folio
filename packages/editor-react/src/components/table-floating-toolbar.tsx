@@ -1,11 +1,15 @@
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type { Editor } from "@tiptap/core"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 export interface TableFloatingToolbarProps {
-  editor: Editor
   tableElement: HTMLTableElement | null
+  /** Add a column at the table's right edge. */
+  onAddColumn: () => void
+  /** Add a row at the table's bottom edge. */
+  onAddRow: () => void
+  /** Add a row and a column at once (bottom-right corner). */
+  onAddBoth: () => void
 }
 
 interface ToolbarPosition {
@@ -23,8 +27,10 @@ const HIDE_DELAY_MS = 150
  * Inspired by AFFiNE's table add-button implementation
  */
 export function TableFloatingToolbar({
-  editor,
-  tableElement
+  tableElement,
+  onAddColumn,
+  onAddRow,
+  onAddBoth
 }: TableFloatingToolbarProps) {
   const [position, setPosition] = useState<ToolbarPosition>({
     addColumn: null,
@@ -150,27 +156,6 @@ export function TableFloatingToolbar({
     }
   }, [tableElement, updatePosition])
 
-  const handleAddColumn = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).addColumnAfter().run()
-  }, [editor])
-
-  const handleAddRow = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).addRowAfter().run()
-  }, [editor])
-
-  const handleAddBoth = useCallback(() => {
-    // 需要分开执行，因为第一个命令执行后光标位置会变化
-    // 先添加列（在当前行的最后添加列）
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).addColumnAfter().run()
-
-    // 再添加行（这时光标在新列中，添加行会在最后一行后添加）
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).addRowAfter().run()
-  }, [editor])
-
   // Toolbar hover handlers with delayed hide
   const handleToolbarMouseEnter = useCallback(() => {
     // 立即取消所有隐藏 timers
@@ -210,13 +195,13 @@ export function TableFloatingToolbar({
         <button
           aria-label="Add column"
           className="table-floating-btn table-floating-btn-column"
-          onClick={handleAddColumn}
+          onClick={onAddColumn}
           style={{
             top: position.addColumn.top,
             left: position.addColumn.left,
             height: tableElement.offsetHeight
           }}
-          title="Add column (drag to add multiple)"
+          title="Add column"
           type="button"
         >
           <HugeiconsIcon className="size-3.5" icon={Add01Icon} />
@@ -228,13 +213,13 @@ export function TableFloatingToolbar({
         <button
           aria-label="Add row"
           className="table-floating-btn table-floating-btn-row"
-          onClick={handleAddRow}
+          onClick={onAddRow}
           style={{
             top: position.addRow.top,
             left: position.addRow.left,
             width: tableElement.offsetWidth
           }}
-          title="Add row (drag to add multiple)"
+          title="Add row"
           type="button"
         >
           <HugeiconsIcon className="size-3.5" icon={Add01Icon} />
@@ -246,7 +231,7 @@ export function TableFloatingToolbar({
         <button
           aria-label="Add row and column"
           className="table-floating-btn table-floating-btn-corner"
-          onClick={handleAddBoth}
+          onClick={onAddBoth}
           style={{
             top: position.addBoth.top,
             left: position.addBoth.left

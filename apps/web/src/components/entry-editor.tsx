@@ -2,9 +2,11 @@ import {
   CustomCaret,
   CustomLink,
   createSlashCommandExtension,
+  createTableKit,
+  FoldableHeadings,
   getResolvedDefaultCommands,
   PasteHandler,
-  TableKit,
+  TableCommands,
   useEditorCommands
 } from "@folionote/editor-react"
 import type { PasteStrategy, SlashCommandItem } from "@folionote/editor-react"
@@ -19,6 +21,7 @@ import { useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
+import { BlockHandle } from "@/components/editor/block-handle"
 import { ResizableImage } from "@/components/editor/resizable-image"
 import { HeadingIds } from "@/lib/heading-id-extension"
 
@@ -174,11 +177,14 @@ export function EntryEditor({
   onUploadImage
 }: EntryEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   // 跟踪最后一次内部更新的 content，用于避免 setContent 重置 undo 历史
   const lastInternalContentRef = useRef<string | null>(null)
 
-  // Combine default commands with additional commands
+  // Combine default commands with additional commands. The default `table`
+  // command carries submenuType "tableGrid", so the slash menu shows an
+  // interactive size grid as a flyout (see SlashCommandList).
   const commands = useMemo(() => {
     const defaults = getResolvedDefaultCommands(t)
     return [...defaults, ...additionalCommands]
@@ -206,8 +212,11 @@ export function EntryEditor({
       // Stable slug ids on H1-H3 headings so the fumadocs TOC can track the
       // active section (decorations persist through editor re-renders).
       HeadingIds,
-      // Table extensions
-      ...TableKit,
+      // Collapsible headings — fold content until the next same/higher heading
+      FoldableHeadings,
+      // Table extensions (+ position-based row/column/block commands)
+      ...createTableKit({ t }),
+      TableCommands,
       // Link 扩展：支持粘贴 URL 自动转换为链接
       CustomLink,
       // 粘贴处理扩展：处理富文本粘贴策略
@@ -335,7 +344,8 @@ export function EntryEditor({
   }
 
   return (
-    <div className="entry-editor tiptap-caret-container">
+    <div className="entry-editor tiptap-caret-container" ref={containerRef}>
+      <BlockHandle containerRef={containerRef} editor={editor} />
       <EditorContent editor={editor} />
     </div>
   )

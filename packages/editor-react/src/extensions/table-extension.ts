@@ -1,4 +1,6 @@
+import type { TranslateFunction } from "@folionote/editor-core"
 import { Table } from "@tiptap/extension-table"
+import type { TableOptions } from "@tiptap/extension-table"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
 import { TableRow } from "@tiptap/extension-table-row"
@@ -23,10 +25,25 @@ export const TABLE_CONSTANTS = {
 } as const
 
 /**
+ * Options for {@link CustomTable}, extending the base table options with a
+ * translation function so the node view's menus can be localized.
+ */
+export interface CustomTableOptions extends TableOptions {
+  /** Translation function forwarded to the node view's menus. */
+  t?: TranslateFunction
+}
+
+/**
  * Custom table extension with enhanced configuration
  * Inspired by AFFiNE's table implementation
  */
-export const CustomTable = Table.extend({
+export const CustomTable = Table.extend<CustomTableOptions>({
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      t: undefined
+    } as CustomTableOptions
+  },
   addNodeView() {
     return ReactNodeViewRenderer(TableNodeView)
   }
@@ -136,6 +153,21 @@ export const TableKit = [
   CustomTableHeader,
   CustomTableRow
 ]
+
+/**
+ * Build the table extension kit with a translation function injected into the
+ * table node view, so its row/column and block menus can be localized.
+ *
+ * Prefer this over the static {@link TableKit} when an i18n `t` is available.
+ */
+export function createTableKit(options?: { t?: TranslateFunction }) {
+  return [
+    options?.t ? CustomTable.configure({ t: options.t }) : CustomTable,
+    CustomTableCell,
+    CustomTableHeader,
+    CustomTableRow
+  ]
+}
 
 /**
  * Color palette for table cell backgrounds

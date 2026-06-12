@@ -44,9 +44,15 @@ export {
   CustomTable,
   CustomTableCell,
   CustomTableHeader,
+  type CustomTableOptions,
   CustomTableRow,
   createSlashCommandExtension,
+  createTableKit,
+  FoldableHeadings,
+  openTableGridPicker,
+  type OpenTableGridPickerOptions,
   type SlashCommandExtensionOptions,
+  TableCommands,
   TableKit
 } from "./extensions"
 
