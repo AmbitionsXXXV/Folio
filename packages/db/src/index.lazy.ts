@@ -11,8 +11,13 @@ export const db = new Proxy({} as DbType, {
 }) as DbType
 
 export {
+  aiCatalogSync,
   aiChatSessions,
   aiChatSessionsRelations,
+  aiModels,
+  aiModelsRelations,
+  aiProviders,
+  aiProvidersRelations,
   userAiModelSettings,
   userAiModelSettingsRelations,
   userAiProviderSettings,
