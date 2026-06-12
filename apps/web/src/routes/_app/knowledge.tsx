@@ -134,9 +134,9 @@ const ChatHistorySidebar = memo((props: ChatHistorySidebarProps) => {
     <Suspense
       fallback={
         <div className="h-full space-y-2 border-r bg-background p-3">
-          <div className="h-10 rounded-lg bg-muted/60" />
-          <div className="h-18 rounded-lg bg-muted/40" />
-          <div className="h-18 rounded-lg bg-muted/40" />
+          <div className="h-10 rounded-lg bg-surface-secondary/60" />
+          <div className="h-18 rounded-lg bg-surface-secondary/40" />
+          <div className="h-18 rounded-lg bg-surface-secondary/40" />
         </div>
       }
     >
@@ -1173,7 +1173,7 @@ function KnowledgePage() {
                     <AiModelSelector
                       catalogModels={catalogModels}
                       catalogProviders={catalogProviders}
-                      className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+                      className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-surface-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
                       disabled={isPending}
                       onValueChange={handleModelChange}
                       placeholder={t("knowledge.selectModel")}

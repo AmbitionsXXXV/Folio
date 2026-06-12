@@ -389,7 +389,7 @@ export function MessageAttachment({
         <>
           <Tooltip>
             <TooltipTrigger>
-              <div className="flex size-full shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <div className="flex size-full shrink-0 items-center justify-center rounded-lg bg-surface-secondary text-muted-foreground">
                 <HugeiconsIcon icon={Attachment01Icon} size={16} />
               </div>
             </TooltipTrigger>
@@ -400,7 +400,7 @@ export function MessageAttachment({
           {onRemove && (
             <Button
               aria-label="Remove attachment"
-              className="size-6 shrink-0 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-accent [&>svg]:size-3"
+              className="size-6 shrink-0 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-surface-secondary [&>svg]:size-3"
               onClick={(e) => {
                 e.stopPropagation()
                 onRemove()

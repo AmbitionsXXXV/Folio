@@ -114,7 +114,7 @@ function RootDocument() {
         <body className={cn("min-h-svh bg-background", langClass)}>
           <RootProvider search={{ enabled: false }}>
             <ThemeProvider
-              attribute="class"
+              attribute={["class", "data-theme"]}
               defaultTheme="dark"
               disableTransitionOnChange
               enableSystem

@@ -112,8 +112,8 @@ export function MentionPopover({
                   "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm",
                   "transition-colors duration-150 motion-reduce:transition-none",
                   isSelected
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent/70"
+                    ? "bg-surface-secondary text-foreground"
+                    : "hover:bg-surface-secondary/70"
                 )}
                 data-selected={isSelected}
                 id={`${listId}-option-${item.id}`}

@@ -31,7 +31,7 @@ export const CompactMessage = memo(
           <button
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs",
-              "border border-border/60 bg-muted/40 hover:bg-muted/70",
+              "border border-border/60 bg-surface-secondary/40 hover:bg-surface-secondary/70",
               "transition-colors motion-reduce:transition-none"
             )}
             onClick={() => setIsExpanded((expanded) => !expanded)}

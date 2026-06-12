@@ -62,7 +62,7 @@ export const WebFetchCard = memo(
               </a>
             </div>
             {contentType ? (
-              <span className="ml-auto shrink-0 rounded-full bg-muted/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+              <span className="ml-auto shrink-0 rounded-full bg-surface-secondary/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
                 {contentType.split(";")[0]}
               </span>
             ) : null}

@@ -325,7 +325,7 @@ export function PromptInputAttachment({
       <HoverCardTrigger>
         <div
           className={cn(
-            "group relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-md border border-border px-1.5 font-medium text-sm transition-all hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+            "group relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-md border border-border px-1.5 font-medium text-sm transition-all hover:bg-surface-secondary hover:text-foreground dark:hover:bg-surface-secondary/50",
             className
           )}
           key={data.id}
@@ -1259,7 +1259,7 @@ export const PromptInputSelectTrigger = ({
   <SelectTrigger
     className={cn(
       "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
-      "hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground",
+      "hover:bg-surface-secondary hover:text-foreground aria-expanded:bg-surface-secondary aria-expanded:text-foreground",
       className
     )}
     {...props}
@@ -1364,7 +1364,7 @@ export const PromptInputTabItem = ({
 }: PromptInputTabItemProps) => (
   <div
     className={cn(
-      "flex items-center gap-2 px-3 py-2 text-xs hover:bg-accent",
+      "flex items-center gap-2 px-3 py-2 text-xs hover:bg-surface-secondary",
       className
     )}
     {...props}

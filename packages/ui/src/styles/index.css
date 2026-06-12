@@ -2,6 +2,12 @@
 
 @import "tailwindcss";
 
+/* HeroUI v3 design system — must follow Tailwind. The obsidian+amber brand is
+   authored as HeroUI tokens in :root/.dark below, overriding HeroUI's defaults
+   so the whole HeroUI component set renders on-brand. */
+@import "@heroui/styles";
+@import "@heroui-pro/react/css";
+
 @import "tw-animate-css";
 
 @import "./component.css";
@@ -121,27 +127,67 @@ textarea::-webkit-resizer {
 :root {
   /* TOC sidebar sticky positioning - set to actual nav height if you have a fixed header */
   --folio-nav-height: 0px;
-  /* FolioNote — Obsidian & Warm Amber (light). Warm paper, obsidian ink,
-     honey-amber accent. Tuned to the monochrome glossy brand logo. */
+  /* FolioNote — Obsidian & Warm Amber (light), authored as a HeroUI v3 theme.
+     HeroUI semantic tokens are canonical and carry the brand; the legacy shadcn
+     names below alias to them so un-migrated custom CSS keeps resolving while
+     the component migration is in progress. */
+
+  /* Base */
   --background: oklch(0.964 0.009 84);
   --foreground: oklch(0.265 0.008 62);
-  --card: oklch(0.992 0.0045 84);
-  --card-foreground: oklch(0.265 0.008 62);
-  --popover: oklch(0.992 0.0045 84);
-  --popover-foreground: oklch(0.265 0.008 62);
-  --primary: oklch(0.685 0.132 69);
-  --primary-foreground: oklch(0.215 0.022 60);
-  --secondary: oklch(0.922 0.015 80);
-  --secondary-foreground: oklch(0.3 0.01 64);
-  --muted: oklch(0.941 0.012 82);
-  --muted-foreground: oklch(0.485 0.015 64);
-  --accent: oklch(0.918 0.035 78);
-  --accent-foreground: oklch(0.3 0.02 64);
-  --destructive: oklch(0.585 0.182 27);
-  --destructive-foreground: oklch(0.99 0.005 90);
+
+  /* Surfaces — cards, accordions, non-overlay containers */
+  --surface: oklch(0.992 0.0045 84);
+  --surface-foreground: var(--foreground);
+  --surface-secondary: oklch(0.941 0.012 82);
+  --surface-secondary-foreground: var(--foreground);
+  --surface-tertiary: oklch(0.922 0.015 80);
+  --surface-tertiary-foreground: var(--foreground);
+
+  /* Overlays — tooltips, popovers, modals, menus */
+  --overlay: oklch(0.992 0.0045 84);
+  --overlay-foreground: var(--foreground);
+
+  /* Brand accent — warm amber */
+  --accent: oklch(0.685 0.132 69);
+  --accent-foreground: oklch(0.215 0.022 60);
+
+  /* Neutral default control surface */
+  --default: oklch(0.922 0.015 80);
+  --default-foreground: oklch(0.3 0.01 64);
+
+  /* Secondary text */
+  --muted: oklch(0.485 0.015 64);
+
+  /* Status */
+  --danger: oklch(0.585 0.182 27);
+  --danger-foreground: oklch(0.99 0.005 90);
+
+  /* Lines + focus */
   --border: oklch(0.898 0.013 80);
-  --input: oklch(0.898 0.013 80);
-  --ring: oklch(0.685 0.132 69);
+  --separator: oklch(0.898 0.013 80);
+  --focus: oklch(0.685 0.132 69);
+
+  /* Form fields */
+  --field-background: oklch(0.992 0.0045 84);
+  --field-foreground: var(--foreground);
+  --field-border: oklch(0.898 0.013 80);
+  --field-placeholder: var(--muted);
+
+  /* Legacy shadcn aliases → HeroUI tokens (removed as custom CSS migrates) */
+  --card: var(--surface);
+  --card-foreground: var(--surface-foreground);
+  --popover: var(--overlay);
+  --popover-foreground: var(--overlay-foreground);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--surface-tertiary);
+  --secondary-foreground: var(--default-foreground);
+  --muted-foreground: var(--muted);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+  --input: var(--border);
+  --ring: var(--focus);
   --chart-1: oklch(0.685 0.132 69);
   --chart-2: oklch(0.6 0.115 58);
   --chart-3: oklch(0.5 0.085 52);
@@ -190,27 +236,66 @@ textarea::-webkit-resizer {
 }
 
 .dark {
-  /* FolioNote — Obsidian & Warm Amber (dark). Warm obsidian, paper-white ink,
-     brighter amber accent that glows against the dark. */
+  /* FolioNote — Obsidian & Warm Amber (dark), authored as a HeroUI v3 theme.
+     Same token contract as :root; every token set there is re-set here so
+     HeroUI components theme correctly in dark mode. */
+
+  /* Base */
   --background: oklch(0.195 0.006 56);
   --foreground: oklch(0.925 0.013 82);
-  --card: oklch(0.245 0.009 58);
-  --card-foreground: oklch(0.925 0.013 82);
-  --popover: oklch(0.245 0.009 58);
-  --popover-foreground: oklch(0.925 0.013 82);
-  --primary: oklch(0.778 0.136 72);
-  --primary-foreground: oklch(0.2 0.012 60);
-  --secondary: oklch(0.3 0.011 58);
-  --secondary-foreground: oklch(0.9 0.012 82);
-  --muted: oklch(0.265 0.009 58);
-  --muted-foreground: oklch(0.715 0.015 74);
-  --accent: oklch(0.335 0.04 70);
-  --accent-foreground: oklch(0.92 0.012 82);
-  --destructive: oklch(0.62 0.19 26);
-  --destructive-foreground: oklch(0.96 0.006 90);
+
+  /* Surfaces */
+  --surface: oklch(0.245 0.009 58);
+  --surface-foreground: var(--foreground);
+  --surface-secondary: oklch(0.265 0.009 58);
+  --surface-secondary-foreground: var(--foreground);
+  --surface-tertiary: oklch(0.3 0.011 58);
+  --surface-tertiary-foreground: var(--foreground);
+
+  /* Overlays */
+  --overlay: oklch(0.245 0.009 58);
+  --overlay-foreground: var(--foreground);
+
+  /* Brand accent */
+  --accent: oklch(0.778 0.136 72);
+  --accent-foreground: oklch(0.2 0.012 60);
+
+  /* Neutral default control surface */
+  --default: oklch(0.3 0.011 58);
+  --default-foreground: oklch(0.9 0.012 82);
+
+  /* Secondary text */
+  --muted: oklch(0.715 0.015 74);
+
+  /* Status */
+  --danger: oklch(0.62 0.19 26);
+  --danger-foreground: oklch(0.96 0.006 90);
+
+  /* Lines + focus */
   --border: oklch(0.305 0.011 58);
-  --input: oklch(0.305 0.011 58);
-  --ring: oklch(0.778 0.136 72);
+  --separator: oklch(0.305 0.011 58);
+  --focus: oklch(0.778 0.136 72);
+
+  /* Form fields */
+  --field-background: oklch(0.245 0.009 58);
+  --field-foreground: var(--foreground);
+  --field-border: oklch(0.305 0.011 58);
+  --field-placeholder: var(--muted);
+
+  /* Legacy shadcn aliases → HeroUI tokens */
+  --card: var(--surface);
+  --card-foreground: var(--surface-foreground);
+  --popover: var(--overlay);
+  --popover-foreground: var(--overlay-foreground);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--surface-tertiary);
+  --secondary-foreground: var(--default-foreground);
+  --muted-foreground: var(--muted);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+  --input: var(--border);
+  --ring: var(--focus);
   --chart-1: oklch(0.778 0.136 72);
   --chart-2: oklch(0.7 0.12 60);
   --chart-3: oklch(0.62 0.1 52);
@@ -357,11 +442,11 @@ textarea::-webkit-resizer {
 
   /* Code blocks */
   & pre {
-    @apply my-2 overflow-x-auto rounded-lg bg-muted/50 p-3 text-xs;
+    @apply my-2 overflow-x-auto rounded-lg bg-surface-secondary/50 p-3 text-xs;
   }
 
   & code {
-    @apply rounded bg-muted/50 px-1 py-0.5 text-xs;
+    @apply rounded bg-surface-secondary/50 px-1 py-0.5 text-xs;
   }
 
   & pre code {
@@ -412,7 +497,7 @@ textarea::-webkit-resizer {
   }
 
   & th {
-    @apply bg-muted/30 font-medium;
+    @apply bg-surface-secondary/30 font-medium;
   }
 }
 

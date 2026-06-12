@@ -364,7 +364,7 @@ export const MessageBubble = memo(
           {showActions ? (
             <MessageActions className="mt-2 justify-end">
               <MessageAction
-                className="transition-colors duration-200 hover:bg-accent/80 motion-reduce:transition-none"
+                className="transition-colors duration-200 hover:bg-surface-secondary/80 motion-reduce:transition-none"
                 disabled={!onRegenerate || isMessageStreaming}
                 label={t("knowledge.messageActions.retry")}
                 onClick={handleRegenerate}
@@ -373,7 +373,7 @@ export const MessageBubble = memo(
                 <HugeiconsIcon icon={RefreshIcon} size={14} />
               </MessageAction>
               <MessageAction
-                className="transition-colors duration-200 hover:bg-accent/80 motion-reduce:transition-none"
+                className="transition-colors duration-200 hover:bg-surface-secondary/80 motion-reduce:transition-none"
                 disabled={isMessageStreaming}
                 label={t("knowledge.messageActions.copy")}
                 onClick={handleCopy}

@@ -26,7 +26,7 @@ export function FileAttachment({ file, onRemove }: FileAttachmentProps) {
   return (
     <PromptInputHoverCard>
       <HoverCardTrigger>
-        <div className="group relative flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border px-1.5 text-sm font-medium transition-all select-none hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50">
+        <div className="group relative flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border px-1.5 text-sm font-medium transition-all select-none hover:bg-surface-secondary hover:text-foreground dark:hover:bg-surface-secondary/50">
           <div className="relative size-5 shrink-0">
             <div className="absolute inset-0 flex size-5 items-center justify-center overflow-hidden rounded bg-background transition-opacity group-hover:opacity-0">
               {isImage ? (

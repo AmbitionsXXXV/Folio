@@ -54,7 +54,7 @@
 }
 
 .etc-alert-dialog-media {
-  @apply mb-2 inline-flex size-10 items-center justify-center rounded-md bg-muted sm:group-data-[size=default]/alert-dialog-content:row-span-2 *:[svg:not([class*='size-'])]:size-6;
+  @apply mb-2 inline-flex size-10 items-center justify-center rounded-md bg-surface-secondary sm:group-data-[size=default]/alert-dialog-content:row-span-2 *:[svg:not([class*='size-'])]:size-6;
 }
 
 .etc-alert-dialog-title {
@@ -66,7 +66,7 @@
 }
 
 .etc-alert-dialog-footer {
-  @apply -mx-4 -mb-4 rounded-b-xl border-t bg-muted/50 p-4;
+  @apply -mx-4 -mb-4 rounded-b-xl border-t bg-surface-secondary/50 p-4;
 }
 
 /* MARK: Avatar */
@@ -75,7 +75,7 @@
 }
 
 .etc-avatar-fallback {
-  @apply rounded-full bg-muted text-muted-foreground;
+  @apply rounded-full bg-surface-secondary text-muted-foreground;
 }
 
 .etc-avatar-image {
@@ -87,7 +87,7 @@
 }
 
 .etc-avatar-group-count {
-  @apply size-8 rounded-full bg-muted text-sm text-muted-foreground group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3;
+  @apply size-8 rounded-full bg-surface-secondary text-sm text-muted-foreground group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3;
 }
 
 /* MARK: Badge */
@@ -104,7 +104,7 @@
 }
 
 .etc-badge-variant-outline {
-  @apply border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground;
+  @apply border-border text-foreground [a]:hover:bg-surface-secondary [a]:hover:text-muted-foreground;
 }
 
 .etc-badge-variant-destructive {
@@ -112,7 +112,7 @@
 }
 
 .etc-badge-variant-ghost {
-  @apply hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50;
+  @apply hover:bg-surface-secondary hover:text-muted-foreground dark:hover:bg-surface-secondary/50;
 }
 
 .etc-badge-variant-link {
@@ -154,7 +154,7 @@
 }
 
 .etc-button-variant-outline {
-  @apply border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50;
+  @apply border-border bg-background hover:bg-surface-secondary hover:text-foreground aria-expanded:bg-surface-secondary aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50;
 }
 
 .etc-button-variant-secondary {
@@ -162,7 +162,7 @@
 }
 
 .etc-button-variant-ghost {
-  @apply hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50;
+  @apply hover:bg-surface-secondary hover:text-foreground aria-expanded:bg-surface-secondary aria-expanded:text-foreground dark:hover:bg-surface-secondary/50;
 }
 
 .etc-button-variant-destructive {
@@ -219,7 +219,7 @@
 }
 
 .etc-button-group-text {
-  @apply gap-2 rounded-lg border bg-muted px-2.5 text-sm font-medium [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-2 rounded-lg border bg-surface-secondary px-2.5 text-sm font-medium [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-button-group-separator {
@@ -261,7 +261,7 @@
 }
 
 .etc-card-footer {
-  @apply rounded-b-xl border-t bg-muted/50 p-4 group-data-[size=sm]/card:p-3;
+  @apply rounded-b-xl border-t bg-surface-secondary/50 p-4 group-data-[size=sm]/card:p-3;
 }
 
 /* MARK: Carousel */
@@ -297,7 +297,7 @@
 }
 
 .etc-combobox-item {
-  @apply gap-2 rounded-md py-1 pr-8 pl-1.5 text-sm data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-2 rounded-md py-1 pr-8 pl-1.5 text-sm data-highlighted:bg-surface-secondary data-highlighted:text-foreground not-data-[variant=destructive]:data-highlighted:**:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-combobox-item-indicator {
@@ -333,7 +333,7 @@
 }
 
 .etc-combobox-chip {
-  @apply flex h-[calc(--spacing(5.25))] w-fit items-center justify-center gap-1 rounded-sm bg-muted px-1.5 text-xs font-medium whitespace-nowrap text-foreground has-data-[slot=combobox-chip-remove]:pr-0;
+  @apply flex h-[calc(--spacing(5.25))] w-fit items-center justify-center gap-1 rounded-sm bg-surface-secondary px-1.5 text-xs font-medium whitespace-nowrap text-foreground has-data-[slot=combobox-chip-remove]:pr-0;
 }
 
 .etc-combobox-chip-remove {
@@ -398,7 +398,7 @@
 }
 
 .etc-command-item {
-  @apply relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[selected=true]:bg-muted data-[selected=true]:text-foreground [&_svg:not([class*='size-'])]:size-4 data-[selected=true]:*:[svg]:text-foreground;
+  @apply relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground [&_svg:not([class*='size-'])]:size-4 data-[selected=true]:*:[svg]:text-foreground;
   /* Smooth transition for item selection and appearance */
   @apply transition-all duration-100 ease-out;
 }
@@ -413,15 +413,15 @@
 }
 
 .etc-context-menu-item {
-  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 focus:*:[svg]:text-accent-foreground data-[variant=destructive]:*:[svg]:text-destructive;
+  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-secondary focus:text-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 focus:*:[svg]:text-foreground data-[variant=destructive]:*:[svg]:text-destructive;
 }
 
 .etc-context-menu-checkbox-item {
-  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-surface-secondary focus:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-context-menu-radio-item {
-  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-surface-secondary focus:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-context-menu-item-indicator {
@@ -437,11 +437,11 @@
 }
 
 .etc-context-menu-shortcut {
-  @apply ml-auto text-xs tracking-widest text-muted-foreground group-focus/context-menu-item:text-accent-foreground;
+  @apply ml-auto text-xs tracking-widest text-muted-foreground group-focus/context-menu-item:text-foreground;
 }
 
 .etc-context-menu-sub-trigger {
-  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-secondary focus:text-foreground data-open:bg-surface-secondary data-open:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-context-menu-sub-content {
@@ -470,7 +470,7 @@
 }
 
 .etc-dialog-footer {
-  @apply -mx-4 -mb-4 rounded-b-xl border-t bg-muted/50 p-4;
+  @apply -mx-4 -mb-4 rounded-b-xl border-t bg-surface-secondary/50 p-4;
 }
 
 .etc-dialog-title {
@@ -491,7 +491,7 @@
 }
 
 .etc-drawer-handle {
-  @apply mx-auto mt-4 hidden h-1 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block;
+  @apply mx-auto mt-4 hidden h-1 w-[100px] shrink-0 rounded-full bg-surface-secondary group-data-[vaul-drawer-direction=bottom]/drawer-content:block;
 }
 
 .etc-drawer-header {
@@ -516,15 +516,15 @@
 }
 
 .etc-dropdown-menu-item {
-  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive;
+  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-secondary focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive;
 }
 
 .etc-dropdown-menu-checkbox-item {
-  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-surface-secondary focus:text-foreground focus:**:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-dropdown-menu-radio-item {
-  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-surface-secondary focus:text-foreground focus:**:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-dropdown-menu-item-indicator {
@@ -540,11 +540,11 @@
 }
 
 .etc-dropdown-menu-shortcut {
-  @apply ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground;
+  @apply ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-foreground;
 }
 
 .etc-dropdown-menu-sub-trigger {
-  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-secondary focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-open:bg-surface-secondary data-open:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-dropdown-menu-sub-content {
@@ -573,7 +573,7 @@
 }
 
 .etc-empty-media-icon {
-  @apply flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-secondary text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-empty-title {
@@ -666,7 +666,7 @@
 
 /* MARK: Item */
 .etc-item {
-  @apply rounded-lg border text-sm [a]:hover:bg-muted;
+  @apply rounded-lg border text-sm [a]:hover:bg-surface-secondary;
 }
 
 .etc-item-variant-default {
@@ -678,7 +678,7 @@
 }
 
 .etc-item-variant-muted {
-  @apply border-transparent bg-muted/50;
+  @apply border-transparent bg-surface-secondary/50;
 }
 
 .etc-item-size-default {
@@ -743,7 +743,7 @@
 
 /* MARK: Kbd */
 .etc-kbd {
-  @apply h-5 w-fit min-w-5 gap-1 rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground in-data-[slot=tooltip-content]:bg-background/20 in-data-[slot=tooltip-content]:text-background dark:in-data-[slot=tooltip-content]:bg-background/10 [&_svg:not([class*='size-'])]:size-3;
+  @apply h-5 w-fit min-w-5 gap-1 rounded-sm bg-surface-secondary px-1 font-sans text-xs font-medium text-muted-foreground in-data-[slot=tooltip-content]:bg-background/20 in-data-[slot=tooltip-content]:text-background dark:in-data-[slot=tooltip-content]:bg-background/10 [&_svg:not([class*='size-'])]:size-3;
 }
 
 .etc-kbd-group {
@@ -761,7 +761,7 @@
 }
 
 .etc-menubar-trigger {
-  @apply rounded-sm px-1.5 py-px text-sm font-medium hover:bg-muted aria-expanded:bg-muted;
+  @apply rounded-sm px-1.5 py-px text-sm font-medium hover:bg-surface-secondary aria-expanded:bg-surface-secondary;
 }
 
 .etc-menubar-content {
@@ -769,11 +769,11 @@
 }
 
 .etc-menubar-item {
-  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:opacity-50 data-inset:pl-8 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!;
+  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-secondary focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-disabled:opacity-50 data-inset:pl-8 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!;
 }
 
 .etc-menubar-checkbox-item {
-  @apply gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:opacity-50;
+  @apply gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm focus:bg-surface-secondary focus:text-foreground focus:**:text-foreground data-disabled:opacity-50;
 }
 
 .etc-menubar-checkbox-item-indicator {
@@ -781,7 +781,7 @@
 }
 
 .etc-menubar-radio-item {
-  @apply gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md py-1 pr-1.5 pl-7 text-sm focus:bg-surface-secondary focus:text-foreground focus:**:text-foreground data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-menubar-radio-item-indicator {
@@ -797,11 +797,11 @@
 }
 
 .etc-menubar-shortcut {
-  @apply text-xs tracking-widest text-muted-foreground group-focus/menubar-item:text-accent-foreground;
+  @apply text-xs tracking-widest text-muted-foreground group-focus/menubar-item:text-foreground;
 }
 
 .etc-menubar-sub-trigger {
-  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-accent focus:text-accent-foreground data-inset:pl-8 data-open:bg-accent data-open:text-accent-foreground [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1.5 rounded-md px-1.5 py-1 text-sm focus:bg-surface-secondary focus:text-foreground data-inset:pl-8 data-open:bg-surface-secondary data-open:text-foreground [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-menubar-sub-content {
@@ -818,11 +818,11 @@
 }
 
 .etc-navigation-menu-trigger {
-  @apply rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all hover:bg-muted focus:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 disabled:opacity-50 data-open:bg-muted/50 data-open:hover:bg-muted data-open:focus:bg-muted data-popup-open:bg-muted/50 data-popup-open:hover:bg-muted;
+  @apply rounded-lg bg-background px-2.5 py-1.5 text-sm font-medium transition-all hover:bg-surface-secondary focus:bg-surface-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 disabled:opacity-50 data-open:bg-surface-secondary/50 data-open:hover:bg-surface-secondary data-open:focus:bg-surface-secondary data-popup-open:bg-surface-secondary/50 data-popup-open:hover:bg-surface-secondary;
 }
 
 .etc-navigation-menu-link {
-  @apply flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-muted data-active:focus:bg-muted [&_svg:not([class*='size-'])]:size-4;
+  @apply flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-surface-secondary focus:bg-surface-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-surface-secondary/50 data-active:hover:bg-surface-secondary data-active:focus:bg-surface-secondary [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-navigation-menu-trigger-icon {
@@ -898,11 +898,11 @@
 
 /* MARK: Progress */
 .etc-progress {
-  @apply h-1 rounded-full bg-muted;
+  @apply h-1 rounded-full bg-surface-secondary;
 }
 
 .etc-progress-track {
-  @apply h-1 rounded-full bg-muted;
+  @apply h-1 rounded-full bg-surface-secondary;
 }
 
 .etc-progress-indicator {
@@ -970,7 +970,7 @@
 }
 
 .etc-select-item {
-  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2;
+  @apply gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm focus:bg-surface-secondary focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2;
 }
 
 .etc-select-item-indicator {
@@ -1150,7 +1150,7 @@
 
 /* MARK: Skeleton */
 .etc-skeleton {
-  @apply rounded-md bg-muted;
+  @apply rounded-md bg-surface-secondary;
 }
 
 /* MARK: Slider */
@@ -1159,7 +1159,7 @@
 }
 
 .etc-slider-track {
-  @apply rounded-full bg-muted data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1;
+  @apply rounded-full bg-surface-secondary data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1;
 }
 
 .etc-slider-range {
@@ -1202,11 +1202,11 @@
 }
 
 .etc-table-footer {
-  @apply border-t bg-muted/50 font-medium [&>tr]:last:border-b-0;
+  @apply border-t bg-surface-secondary/50 font-medium [&>tr]:last:border-b-0;
 }
 
 .etc-table-row {
-  @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+  @apply border-b transition-colors hover:bg-surface-secondary/50 data-[state=selected]:bg-surface-secondary;
 }
 
 .etc-table-head {
@@ -1245,7 +1245,7 @@
 
 /* MARK: Toggle */
 .etc-toggle {
-  @apply gap-1 rounded-lg text-sm font-medium transition-all hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4;
+  @apply gap-1 rounded-lg text-sm font-medium transition-all hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-surface-secondary data-[state=on]:bg-surface-secondary dark:aria-invalid:ring-destructive/40 [&_svg:not([class*='size-'])]:size-4;
 }
 
 .etc-toggle-variant-default {
@@ -1253,7 +1253,7 @@
 }
 
 .etc-toggle-variant-outline {
-  @apply border border-input bg-transparent hover:bg-muted;
+  @apply border border-input bg-transparent hover:bg-surface-secondary;
 }
 
 .etc-toggle-size-default {

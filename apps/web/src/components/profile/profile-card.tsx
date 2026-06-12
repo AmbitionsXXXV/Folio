@@ -92,7 +92,7 @@ export function ProfileCard() {
               <span className="text-sm text-muted-foreground">
                 {t("profile.foundingMember")}
               </span>
-              <span className="rounded bg-muted px-1.5 py-0.5 font-number text-lg font-semibold text-primary tabular-nums dark:bg-transparent">
+              <span className="rounded bg-surface-secondary px-1.5 py-0.5 font-number text-lg font-semibold text-primary tabular-nums dark:bg-transparent">
                 No.{formatUserNo(user.no)}
               </span>
             </div>

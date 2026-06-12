@@ -325,10 +325,10 @@ export function EntryEditor({
         className="animate-pulse space-y-3"
         role="status"
       >
-        <div className="h-5 w-4/5 rounded bg-muted/60" />
-        <div className="h-4 w-full rounded bg-muted/40" />
-        <div className="h-4 w-3/4 rounded bg-muted/40" />
-        <div className="h-4 w-1/2 rounded bg-muted/30" />
+        <div className="h-5 w-4/5 rounded bg-surface-secondary/60" />
+        <div className="h-4 w-full rounded bg-surface-secondary/40" />
+        <div className="h-4 w-3/4 rounded bg-surface-secondary/40" />
+        <div className="h-4 w-1/2 rounded bg-surface-secondary/30" />
         <span className="sr-only">{t("common.loading")}</span>
       </div>
     )

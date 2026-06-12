@@ -59,7 +59,7 @@ function GraphEdgeComponent({
       {data?.label && (
         <EdgeLabelRenderer>
           <div
-            className="pointer-events-none absolute rounded bg-muted/80 px-1 py-0.5 text-[10px] text-muted-foreground"
+            className="pointer-events-none absolute rounded bg-surface-secondary/80 px-1 py-0.5 text-[10px] text-muted-foreground"
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`
             }}

@@ -225,7 +225,7 @@ function NewEntryPage() {
             <TooltipContent side="bottom">
               <span className="flex items-center gap-1.5">
                 {t("common.save")}
-                <kbd className="rounded border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[10px]">
+                <kbd className="rounded border border-border/50 bg-surface-secondary/50 px-1.5 py-0.5 font-mono text-[10px]">
                   ⌘&nbsp;S
                 </kbd>
               </span>

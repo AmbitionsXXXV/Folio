@@ -56,7 +56,7 @@ export function ApiEnvironmentSettings() {
         </div>
 
         {/* Current Server URL Display */}
-        <div className="rounded-2xl border border-border/60 bg-muted/30 p-3">
+        <div className="rounded-2xl border border-border/60 bg-surface-secondary/30 p-3">
           <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
             <HugeiconsIcon
               className="size-3.5"

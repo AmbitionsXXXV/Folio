@@ -38,7 +38,10 @@ export const InlineCitationText = ({
   ...props
 }: InlineCitationTextProps) => (
   <span
-    className={cn("transition-colors group-hover:bg-accent", className)}
+    className={cn(
+      "transition-colors group-hover:bg-surface-secondary",
+      className
+    )}
     {...props}
   />
 )
@@ -273,7 +276,7 @@ export const InlineCitationQuote = ({
 }: InlineCitationQuoteProps) => (
   <blockquote
     className={cn(
-      "border-muted border-l-2 pl-3 text-muted-foreground text-sm italic",
+      "border-border border-l-2 pl-3 text-muted-foreground text-sm italic",
       className
     )}
     {...props}

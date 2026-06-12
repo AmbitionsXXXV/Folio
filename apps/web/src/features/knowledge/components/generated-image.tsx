@@ -38,7 +38,7 @@ export const GeneratedImage = memo(
 
     if (hasError) {
       return (
-        <div className="flex h-32 items-center justify-center rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground">
+        <div className="flex h-32 items-center justify-center rounded-lg border border-border/40 bg-surface-secondary/20 text-xs text-muted-foreground">
           Failed to load
         </div>
       )
@@ -47,7 +47,7 @@ export const GeneratedImage = memo(
     return (
       <div className="group relative">
         {isLoading ? (
-          <div className="flex h-48 items-center justify-center rounded-lg border border-border/40 bg-muted/20">
+          <div className="flex h-48 items-center justify-center rounded-lg border border-border/40 bg-surface-secondary/20">
             <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
           </div>
         ) : null}

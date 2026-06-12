@@ -98,7 +98,7 @@ export function SettingsSidebar() {
                         <Link
                           className={cn(
                             "relative flex size-10 items-center justify-center rounded-lg transition-colors",
-                            "hover:bg-accent/50",
+                            "hover:bg-surface-secondary/50",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             isActive && "bg-primary/10 ring-1 ring-primary/15"
                           )}
@@ -133,7 +133,7 @@ export function SettingsSidebar() {
                 <Link
                   className={cn(
                     "relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
-                    "hover:bg-accent/50",
+                    "hover:bg-surface-secondary/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive && "bg-primary/10 ring-1 ring-primary/15"
                   )}
@@ -177,7 +177,7 @@ export function SettingsSidebar() {
           <TooltipTrigger
             className={cn(
               "flex w-full items-center justify-center rounded-md p-2 text-muted-foreground transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
+              "hover:bg-surface-secondary hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             )}
             onClick={() => setIsCollapsed((prev) => !prev)}
@@ -227,7 +227,7 @@ export function SettingsNavTabs() {
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted/60 text-muted-foreground hover:bg-accent"
+                  : "bg-surface-secondary/60 text-muted-foreground hover:bg-surface-secondary"
               )}
               key={item.id}
               to={item.to}

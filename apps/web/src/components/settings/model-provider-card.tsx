@@ -185,7 +185,7 @@ export function ModelProviderCard({
                 </Button>
                 <CollapsibleTrigger
                   aria-label={t("settings.models.viewModels")}
-                  className="inline-flex size-9 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex size-9 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors hover:bg-surface-secondary hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                 >
                   <HugeiconsIcon
                     className={cn(
@@ -246,7 +246,7 @@ export function ModelProviderCard({
                 </div>
 
                 {/* Provider Settings Info */}
-                <div className="rounded-lg bg-muted/50 p-3">
+                <div className="rounded-lg bg-surface-secondary/50 p-3">
                   <h4 className="mb-2 text-sm font-medium">
                     {t("settings.models.capabilities")}
                   </h4>

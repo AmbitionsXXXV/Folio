@@ -35,7 +35,7 @@ export function SharePasswordForm({
     <div className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-surface-secondary">
             <HugeiconsIcon
               className="size-6 text-muted-foreground"
               icon={LockPasswordIcon}

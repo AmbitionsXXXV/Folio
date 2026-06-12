@@ -422,7 +422,7 @@ function CropDialog({
           <DialogDescription>{t("avatar.cropDescription")}</DialogDescription>
         </DialogHeader>
 
-        <div className="relative h-72 w-full overflow-hidden rounded-lg bg-muted">
+        <div className="relative h-72 w-full overflow-hidden rounded-lg bg-surface-secondary">
           {src && (
             <Cropper
               aspect={1}

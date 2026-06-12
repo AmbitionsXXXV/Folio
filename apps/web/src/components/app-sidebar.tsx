@@ -109,7 +109,7 @@ function SearchButton() {
   return (
     <button
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex w-full items-center gap-3 rounded-lg border border-border/50 bg-surface-secondary/30 px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-surface-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isCollapsed && "justify-center px-0"
       )}
       onClick={() => setOpen(true)}
@@ -119,7 +119,7 @@ function SearchButton() {
       {!isCollapsed && (
         <>
           <span className="flex-1 text-left">{t("nav.search")}</span>
-          <kbd className="pointer-events-none hidden h-5 items-center gap-1 rounded border border-border/40 bg-muted/40 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70 select-none md:flex">
+          <kbd className="pointer-events-none hidden h-5 items-center gap-1 rounded border border-border/40 bg-surface-secondary/40 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70 select-none md:flex">
             <span className="text-xs">⌘</span>K
           </kbd>
         </>

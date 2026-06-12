@@ -291,7 +291,7 @@ function TagsPage() {
             {/* Preview */}
             <div className="space-y-2">
               <Label>{t("tag.preview")}</Label>
-              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-surface-secondary/30 px-4 py-3">
                 {tagColor ? (
                   <span
                     className="size-3 rounded-full ring-1 ring-black/5"

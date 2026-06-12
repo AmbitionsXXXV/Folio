@@ -193,7 +193,7 @@ function UserMenuTrigger({
   return (
     <div
       className={cn(
-        "inline-flex w-full cursor-pointer items-center justify-start gap-3 rounded-md p-2 font-medium text-sm outline-none transition-all hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring",
+        "inline-flex w-full cursor-pointer items-center justify-start gap-3 rounded-md p-2 font-medium text-sm outline-none transition-all hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ring",
         collapsed && "size-10 justify-center p-0"
       )}
     >

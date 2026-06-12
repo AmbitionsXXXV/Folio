@@ -212,7 +212,7 @@ function SourcesPage() {
                 "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-medium text-sm transition-all duration-200",
                 filter === key
                   ? "border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40"
-                  : "border-border/50 bg-transparent text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground"
+                  : "border-border/50 bg-transparent text-muted-foreground hover:border-border hover:bg-surface-secondary/40 hover:text-foreground"
               )}
               key={key}
               onClick={() => setFilter(key)}

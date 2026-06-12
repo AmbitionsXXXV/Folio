@@ -7,14 +7,17 @@ overrides:
   drizzle-orm: ^0.45.2
 
 allowBuilds:
-  "@prisma/engines": true
+  '@heroui-pro/react': true
+  '@prisma/engines': true
+  '@shopify/react-native-skia': true
   esbuild: true
+  heroui-native-pro: true
+  heroui-pro: true
   msgpackr-extract: false
   msw: true
   prisma: true
   sharp: true
   supabase: true
-
 catalog:
   "@ai-sdk/devtools": ^0.0.18
   "@base-ui/react": ^1.5.0

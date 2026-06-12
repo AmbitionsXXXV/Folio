@@ -19,7 +19,7 @@ export function ReviewProgressBar({
       aria-valuemax={totalInQueue}
       aria-valuemin={0}
       aria-valuenow={currentIndex + 1}
-      className="mb-8 h-2 overflow-hidden rounded-full bg-muted"
+      className="mb-8 h-2 overflow-hidden rounded-full bg-surface-secondary"
       role="progressbar"
     >
       <div

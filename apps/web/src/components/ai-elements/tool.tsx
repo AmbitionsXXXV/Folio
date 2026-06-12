@@ -85,7 +85,7 @@ export type ToolProps = ComponentProps<typeof Collapsible>
 export const Tool = ({ className, ...props }: ToolProps) => (
   <Collapsible
     className={cn(
-      "group rounded-lg border border-border/60 bg-muted/30",
+      "group rounded-lg border border-border/60 bg-surface-secondary/30",
       className
     )}
     {...props}
@@ -247,14 +247,14 @@ function renderToolValue(value: unknown): ReactNode {
   }
   if (typeof value === "string") {
     return (
-      <pre className="rounded-md bg-muted/60 p-2 font-mono text-xs whitespace-pre-wrap">
+      <pre className="rounded-md bg-surface-secondary/60 p-2 font-mono text-xs whitespace-pre-wrap">
         {value}
       </pre>
     )
   }
   if (typeof value === "number" || typeof value === "boolean") {
     return (
-      <pre className="rounded-md bg-muted/60 p-2 font-mono text-xs whitespace-pre-wrap">
+      <pre className="rounded-md bg-surface-secondary/60 p-2 font-mono text-xs whitespace-pre-wrap">
         {String(value)}
       </pre>
     )
@@ -266,7 +266,7 @@ function renderToolValue(value: unknown): ReactNode {
   }
 
   return (
-    <pre className="rounded-md bg-muted/60 p-2 font-mono text-xs whitespace-pre-wrap">
+    <pre className="rounded-md bg-surface-secondary/60 p-2 font-mono text-xs whitespace-pre-wrap">
       {serialized}
     </pre>
   )

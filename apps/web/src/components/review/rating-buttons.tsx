@@ -43,7 +43,7 @@ export function RatingButtons({ onRate, isLoading }: RatingButtonsProps) {
           <TooltipContent>
             <p>
               {t(hintKey)}{" "}
-              <kbd className="ml-1 rounded border border-border/60 bg-muted/50 px-1 font-mono text-xs">
+              <kbd className="ml-1 rounded border border-border/60 bg-surface-secondary/50 px-1 font-mono text-xs">
                 {RATING_SHORTCUT_KEYS[key]}
               </kbd>
             </p>

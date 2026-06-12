@@ -25,7 +25,7 @@ export function WebSearchToggle({
         aria-pressed={enabled}
         className={cn(
           "relative inline-flex size-8 items-center justify-center rounded-lg",
-          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          "text-muted-foreground hover:bg-surface-secondary hover:text-foreground",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none",
           enabled &&

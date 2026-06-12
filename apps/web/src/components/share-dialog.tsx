@@ -1,22 +1,14 @@
-import { Button } from "@folionote/ui/button"
-import { Checkbox } from "@folionote/ui/checkbox"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@folionote/ui/dialog"
-import { Input } from "@folionote/ui/input"
-import { Label } from "@folionote/ui/label"
-import {
+  Button,
+  Checkbox,
+  Input,
+  Label,
+  ListBox,
+  Modal,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@folionote/ui/select"
+  TextField,
+  Tooltip
+} from "@heroui/react"
 import {
   Copy01Icon,
   Delete02Icon,
@@ -230,197 +222,241 @@ export function ShareDialog({
 
   return (
     <>
-      <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <HugeiconsIcon className="size-5" icon={Share01Icon} />
-              {t("share.title")}
-            </DialogTitle>
-            <DialogDescription>
-              {t("share.description", {
-                title: entryTitle || t("entry.untitled")
-              })}
-            </DialogDescription>
-          </DialogHeader>
+      <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange}>
+        <Modal.Container>
+          <Modal.Dialog className="sm:max-w-lg">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading className="flex items-center gap-2">
+                <HugeiconsIcon className="size-5" icon={Share01Icon} />
+                {t("share.title")}
+              </Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="space-y-4">
+                <p className="text-sm text-muted">
+                  {t("share.description", {
+                    title: entryTitle || t("entry.untitled")
+                  })}
+                </p>
 
-          {/* Existing shares */}
-          {shares && shares.length > 0 && (
-            <div className="space-y-3">
-              <Label className="text-xs text-muted-foreground uppercase">
-                {t("share.existingLinks")}
-              </Label>
-              <div className="space-y-2">
-                {shares.map((share) => (
-                  <div
-                    className={cn(
-                      "flex items-center justify-between rounded-lg border p-3",
-                      !share.isActive && "opacity-50",
-                      isExpired(share.expiresAt) && "border-destructive/50"
-                    )}
-                    key={share.id}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <HugeiconsIcon
-                          className="size-4 text-muted-foreground"
-                          icon={Link01Icon}
-                        />
-                        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-                          {share.shareToken.slice(0, 8)}...
-                        </code>
-                        {share.hasPassword && (
-                          <span title={t("share.passwordProtected")}>
-                            <HugeiconsIcon
-                              className="size-4 text-muted-foreground"
-                              icon={LockPasswordIcon}
-                            />
-                          </span>
-                        )}
-                        {isExpired(share.expiresAt) && (
-                          <span className="text-xs text-destructive">
-                            {t("share.expired")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <HugeiconsIcon className="size-3" icon={EyeIcon} />
-                          {share.viewCount} {t("share.views")}
-                        </span>
-                        {share.expiresAt && !isExpired(share.expiresAt) && (
-                          <span className="flex items-center gap-1">
-                            <HugeiconsIcon
-                              className="size-3"
-                              icon={TimeSetting01Icon}
-                            />
-                            {formatDate(share.expiresAt)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        onClick={() => handleCopyLink(share)}
-                        size="icon-sm"
-                        title={t("share.copyLink")}
-                        variant="ghost"
-                      >
-                        <HugeiconsIcon
-                          className="size-4"
-                          icon={copiedId === share.id ? Tick02Icon : Copy01Icon}
-                        />
-                      </Button>
-                      <Button
-                        disabled={deleteShareMutation.isPending}
-                        onClick={() => handleDeleteShare(share.id)}
-                        size="icon-sm"
-                        title={t("share.deleteLink")}
-                        variant="ghost"
-                      >
-                        <HugeiconsIcon
-                          className="size-4 text-destructive"
-                          icon={Delete02Icon}
-                        />
-                      </Button>
+                {/* Existing shares */}
+                {shares && shares.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted uppercase">
+                      {t("share.existingLinks")}
+                    </p>
+                    <div className="space-y-2">
+                      {shares.map((share) => (
+                        <div
+                          className={cn(
+                            "flex items-center justify-between rounded-lg border p-3",
+                            !share.isActive && "opacity-50",
+                            isExpired(share.expiresAt) && "border-danger/50"
+                          )}
+                          key={share.id}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <HugeiconsIcon
+                                className="size-4 text-muted"
+                                icon={Link01Icon}
+                              />
+                              <code className="rounded bg-surface-secondary px-1.5 py-0.5 font-mono text-xs">
+                                {share.shareToken.slice(0, 8)}...
+                              </code>
+                              {share.hasPassword && (
+                                <span title={t("share.passwordProtected")}>
+                                  <HugeiconsIcon
+                                    className="size-4 text-muted"
+                                    icon={LockPasswordIcon}
+                                  />
+                                </span>
+                              )}
+                              {isExpired(share.expiresAt) && (
+                                <span className="text-xs text-danger">
+                                  {t("share.expired")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted">
+                              <span className="flex items-center gap-1">
+                                <HugeiconsIcon
+                                  className="size-3"
+                                  icon={EyeIcon}
+                                />
+                                {share.viewCount} {t("share.views")}
+                              </span>
+                              {share.expiresAt &&
+                                !isExpired(share.expiresAt) && (
+                                  <span className="flex items-center gap-1">
+                                    <HugeiconsIcon
+                                      className="size-3"
+                                      icon={TimeSetting01Icon}
+                                    />
+                                    {formatDate(share.expiresAt)}
+                                  </span>
+                                )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Tooltip>
+                              <Button
+                                isIconOnly
+                                onPress={() => handleCopyLink(share)}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                <HugeiconsIcon
+                                  className="size-4"
+                                  icon={
+                                    copiedId === share.id
+                                      ? Tick02Icon
+                                      : Copy01Icon
+                                  }
+                                />
+                              </Button>
+                              <Tooltip.Content>
+                                {t("share.copyLink")}
+                              </Tooltip.Content>
+                            </Tooltip>
+                            <Tooltip>
+                              <Button
+                                isDisabled={deleteShareMutation.isPending}
+                                isIconOnly
+                                onPress={() => handleDeleteShare(share.id)}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                <HugeiconsIcon
+                                  className="size-4 text-danger"
+                                  icon={Delete02Icon}
+                                />
+                              </Button>
+                              <Tooltip.Content>
+                                {t("share.deleteLink")}
+                              </Tooltip.Content>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Create new share form */}
+                <div className="space-y-4 border-t pt-4">
+                  <p className="text-xs text-muted uppercase">
+                    {t("share.createNew")}
+                  </p>
+
+                  {/* Password protection */}
+                  <div className="space-y-2">
+                    <Checkbox
+                      id="use-password"
+                      isSelected={usePassword}
+                      onChange={setUsePassword}
+                    >
+                      <Checkbox.Control>
+                        <Checkbox.Indicator />
+                      </Checkbox.Control>
+                      <Checkbox.Content>
+                        <Label
+                          className="cursor-pointer"
+                          htmlFor="use-password"
+                        >
+                          {t("share.passwordProtection")}
+                        </Label>
+                      </Checkbox.Content>
+                    </Checkbox>
+                    {usePassword && (
+                      <TextField
+                        aria-label={t("share.passwordPlaceholder")}
+                        className="mt-2"
+                        minLength={4}
+                        onChange={setPassword}
+                        type="password"
+                        value={password}
+                      >
+                        <Input placeholder={t("share.passwordPlaceholder")} />
+                      </TextField>
+                    )}
+                  </div>
+
+                  {/* Expiration */}
+                  <Select
+                    onChange={(value) => {
+                      if (value) {
+                        setExpirationPreset(String(value))
+                      }
+                    }}
+                    value={expirationPreset}
+                    variant="secondary"
+                  >
+                    <Label>{t("share.expiration")}</Label>
+                    <Select.Trigger>
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                      <ListBox>
+                        {EXPIRATION_PRESETS.map((preset) => (
+                          <ListBox.Item
+                            id={preset.value}
+                            key={preset.value}
+                            textValue={t(preset.label)}
+                          >
+                            {t(preset.label)}
+                            <ListBox.ItemIndicator />
+                          </ListBox.Item>
+                        ))}
+                      </ListBox>
+                    </Select.Popover>
+                  </Select>
+
+                  {/* Show branding */}
+                  <Checkbox
+                    id="show-branding"
+                    isSelected={showBranding}
+                    onChange={setShowBranding}
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <Checkbox.Content>
+                      <Label className="cursor-pointer" htmlFor="show-branding">
+                        {t("share.showBranding")}
+                      </Label>
+                    </Checkbox.Content>
+                  </Checkbox>
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Create new share form */}
-          <div className="space-y-4 border-t pt-4">
-            <Label className="text-xs text-muted-foreground uppercase">
-              {t("share.createNew")}
-            </Label>
-
-            {/* Password protection */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={usePassword}
-                  id="use-password"
-                  onCheckedChange={(checked) => setUsePassword(!!checked)}
-                />
-                <Label className="cursor-pointer" htmlFor="use-password">
-                  {t("share.passwordProtection")}
-                </Label>
-              </div>
-              {usePassword && (
-                <Input
-                  className="mt-2"
-                  minLength={4}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("share.passwordPlaceholder")}
-                  type="password"
-                  value={password}
-                />
-              )}
-            </div>
-
-            {/* Expiration */}
-            <div className="space-y-2">
-              <Label htmlFor="expiration">{t("share.expiration")}</Label>
-              <Select
-                onValueChange={(value) => {
-                  if (value) {
-                    setExpirationPreset(value)
-                  }
-                }}
-                value={expirationPreset}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button onPress={() => onOpenChange(false)} variant="outline">
+                {t("common.cancel")}
+              </Button>
+              <Button
+                isDisabled={
+                  createShareMutation.isPending ||
+                  (usePassword && password.length < 4)
+                }
+                onPress={handleCreateShare}
               >
-                <SelectTrigger id="expiration">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPIRATION_PRESETS.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>
-                      {t(preset.label)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Show branding */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={showBranding}
-                id="show-branding"
-                onCheckedChange={(checked) => setShowBranding(!!checked)}
-              />
-              <Label className="cursor-pointer" htmlFor="show-branding">
-                {t("share.showBranding")}
-              </Label>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => onOpenChange(false)} variant="outline">
-              {t("common.cancel")}
-            </Button>
-            <Button
-              disabled={
-                createShareMutation.isPending ||
-                (usePassword && password.length < 4)
-              }
-              onClick={handleCreateShare}
-            >
-              <HugeiconsIcon className="mr-2 size-4" icon={Link01Icon} />
-              {t("share.createLink")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                <HugeiconsIcon className="size-4" icon={Link01Icon} />
+                {t("share.createLink")}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
 
       <ConfirmDeleteDialog
         confirmText={t("share.deleteLink")}
         description={t("share.deleteConfirm")}
         isLoading={deleteShareMutation.isPending}
         onConfirm={handleConfirmDeleteShare}
-        onOpenChange={(open) => !open && setShareToDelete(null)}
+        onOpenChange={(value) => !value && setShareToDelete(null)}
         open={!!shareToDelete}
         title={t("share.deleteLink")}
       />

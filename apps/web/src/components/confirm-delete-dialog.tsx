@@ -1,15 +1,4 @@
-import { Button } from "@folionote/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@folionote/ui/dialog"
-import { Alert01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertDialog, Button } from "@heroui/react"
 import { useTranslation } from "react-i18next"
 
 interface ConfirmDeleteDialogProps {
@@ -46,40 +35,26 @@ export function ConfirmDeleteDialog({
   const displayCancelText = cancelText ?? t("common.cancel")
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-              <HugeiconsIcon
-                className="size-5 text-destructive"
-                icon={Alert01Icon}
-              />
-            </div>
-            <DialogTitle className="text-lg">{displayTitle}</DialogTitle>
-          </div>
-          <DialogDescription className="mt-2 pl-13">
-            {displayDescription}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose
-            disabled={isLoading}
-            render={<Button variant="outline" />}
-          >
-            {displayCancelText}
-          </DialogClose>
-          <Button
-            disabled={isLoading}
-            onClick={() => {
-              onConfirm()
-            }}
-            variant="destructive"
-          >
-            {isLoading ? t("common.deleting") : displayConfirmText}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <AlertDialog.Backdrop isOpen={open} onOpenChange={onOpenChange}>
+      <AlertDialog.Container size="sm">
+        <AlertDialog.Dialog>
+          <AlertDialog.Header>
+            <AlertDialog.Icon status="danger" />
+            <AlertDialog.Heading>{displayTitle}</AlertDialog.Heading>
+          </AlertDialog.Header>
+          <AlertDialog.Body>
+            <p className="text-sm text-muted">{displayDescription}</p>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <Button isDisabled={isLoading} slot="close" variant="tertiary">
+              {displayCancelText}
+            </Button>
+            <Button isDisabled={isLoading} onPress={onConfirm} variant="danger">
+              {isLoading ? t("common.deleting") : displayConfirmText}
+            </Button>
+          </AlertDialog.Footer>
+        </AlertDialog.Dialog>
+      </AlertDialog.Container>
+    </AlertDialog.Backdrop>
   )
 }
