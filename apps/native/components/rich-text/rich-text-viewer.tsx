@@ -1,9 +1,17 @@
 import type { JSONContent } from "@tiptap/core"
 import { renderJSONContentToReactElement } from "@tiptap/static-renderer/json/react"
 import type { MarkProps, NodeProps } from "@tiptap/static-renderer/json/react"
-import { Children, useMemo } from "react"
+import { Children, useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
-import { Linking, Platform, StyleSheet, Text, View } from "react-native"
+import {
+  Image,
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View
+} from "react-native"
 
 interface RichTextViewerProps {
   /** ProseMirror JSON content string */
@@ -45,6 +53,10 @@ const MONO_FONT = Platform.select({
 const ALLOWED_LINK_SCHEMES = new Set(["http", "https", "mailto", "tel"])
 const URL_SCHEME_REGEX = /^([a-z][a-z0-9+.-]*):/i
 
+/** Horizontal padding of the viewer container (matches styles.container). */
+const CONTAINER_PADDING = 16
+const IMAGE_RADIUS = 12
+
 function openLink(href?: string): void {
   if (!href) {
     return
@@ -62,7 +74,7 @@ function openLink(href?: string): void {
 
 function createStyles(c: Palette) {
   return StyleSheet.create({
-    container: { padding: 16 },
+    container: { padding: CONTAINER_PADDING },
     paragraph: {
       color: c.foreground,
       fontSize: 16,
@@ -150,6 +162,65 @@ function headingStyle(styles: Styles, level: number) {
   return styles.h3
 }
 
+interface RichTextImageProps {
+  src: string
+  alt?: string
+  /** Width set by the editor's resize handles, in px. Natural size if absent. */
+  width?: number
+}
+
+/**
+ * Read-only image node.
+ *
+ * React Native images need explicit dimensions, so we fetch the intrinsic size,
+ * then render at the editor-stored width (or the natural width), capped to the
+ * viewport. `aspectRatio` derives the height so proportions are preserved.
+ */
+function RichTextImage({ src, alt, width }: RichTextImageProps) {
+  const { width: screenWidth } = useWindowDimensions()
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
+
+  useEffect(() => {
+    let active = true
+    Image.getSize(
+      src,
+      (w, h) => {
+        if (active && w > 0 && h > 0) {
+          setSize({ w, h })
+        }
+      },
+      () => {
+        // Broken/unreachable image: leave it unrendered rather than 0-sized.
+      }
+    )
+    return () => {
+      active = false
+    }
+  }, [src])
+
+  if (!size) {
+    return null
+  }
+
+  const available = screenWidth - CONTAINER_PADDING * 2
+  const targetWidth = width && width > 0 ? width : size.w
+  const displayWidth = Math.min(targetWidth, available)
+
+  return (
+    <Image
+      accessibilityLabel={alt || undefined}
+      source={{ uri: src }}
+      style={{
+        width: displayWidth,
+        maxWidth: "100%",
+        aspectRatio: size.w / size.h,
+        borderRadius: IMAGE_RADIUS,
+        marginBottom: 12
+      }}
+    />
+  )
+}
+
 /**
  * Build a render function that turns ProseMirror JSON into React Native
  * elements. Every node and mark is mapped explicitly — text always lands inside
@@ -210,6 +281,24 @@ function buildRenderDoc(styles: Styles) {
         </View>
       ),
       horizontalRule: () => <View style={styles.hr} />,
+      image: ({ node }: NodeProps) => {
+        const src = node?.attrs?.src as string | undefined
+        if (!src) {
+          return null
+        }
+        const widthAttr = Number(node?.attrs?.width)
+        return (
+          <RichTextImage
+            alt={node?.attrs?.alt as string | undefined}
+            src={src}
+            width={
+              Number.isFinite(widthAttr) && widthAttr > 0
+                ? widthAttr
+                : undefined
+            }
+          />
+        )
+      },
       hardBreak: () => "\n",
       text: ({ node }: NodeProps) => node?.text ?? ""
     },
