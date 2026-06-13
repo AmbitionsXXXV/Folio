@@ -651,7 +651,10 @@
     "untitled": "無題",
     "searchPage": "検索ページ",
     "advancedSearch": "フィルター付きで全件表示",
-    "tryAdvancedSearch": "詳細検索を試す"
+    "tryAdvancedSearch": "詳細検索を試す",
+    "navigate": "移動",
+    "select": "選択",
+    "close": "閉じる"
   },
   "error": {
     "unauthorized": "続行するにはログインしてください",

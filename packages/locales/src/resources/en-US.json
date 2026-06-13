@@ -225,7 +225,10 @@
     "untitled": "Untitled",
     "searchPage": "Search Page",
     "advancedSearch": "View all results with filters",
-    "tryAdvancedSearch": "Try Advanced Search"
+    "tryAdvancedSearch": "Try Advanced Search",
+    "navigate": "Navigate",
+    "select": "Select",
+    "close": "Close"
   },
   "source": {
     "sources": "Sources",

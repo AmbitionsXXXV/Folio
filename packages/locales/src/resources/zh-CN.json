@@ -280,7 +280,10 @@
     "untitled": "无标题",
     "searchPage": "搜索页面",
     "advancedSearch": "使用过滤器查看全部结果",
-    "tryAdvancedSearch": "尝试高级搜索"
+    "tryAdvancedSearch": "尝试高级搜索",
+    "navigate": "导航",
+    "select": "选择",
+    "close": "关闭"
   },
   "source": {
     "sources": "来源",
