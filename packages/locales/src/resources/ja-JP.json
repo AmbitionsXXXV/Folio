@@ -205,6 +205,53 @@
     "deleteFailed": "削除に失敗しました"
   },
   "review": {
+    "jlptExam": {
+      "title": "JLPT 模擬問題",
+      "levelAll": "全レベル",
+      "sectionAll": "全分野",
+      "sections": {
+        "vocabulary": "文字・語彙",
+        "grammar": "文法"
+      },
+      "types": {
+        "kanjiReading": "漢字読み",
+        "context": "文脈規定",
+        "paraphrase": "言い換え類義",
+        "grammarForm": "文法形式"
+      },
+      "hint": {
+        "reading": "「　」の語の読み方を選んでください。",
+        "blank": "空欄に最も合うものを選んでください。",
+        "paraphrase": "「　」の語に意味が最も近いものを選んでください。"
+      },
+      "readingLabel": "読み",
+      "translationLabel": "意味",
+      "grammarTitle": "文法解説（蓝宝书）",
+      "vocabularyTitle": "語彙解説（红宝书）",
+      "connectionLabel": "接続",
+      "correctAnswerLabel": "正解",
+      "correct": "正解",
+      "incorrect": "不正解",
+      "next": "次の問題",
+      "finish": "結果を見る",
+      "restart": "もう一度",
+      "completedTitle": "練習完了",
+      "completedDescription": "{{total}}問中{{correct}}問正解しました。",
+      "statsAnswered": "解答数",
+      "statsCorrect": "正解数",
+      "statsAccuracy": "正答率",
+      "reviewMissed": "間違えた問題を復習",
+      "noMistakes": "全問正解、お見事です！",
+      "disclaimer": "JLPTのレベルは非公式の学習目安です。",
+      "emptyTitle": "条件に合う問題がありません",
+      "emptyDescription": "レベルか分野を変えてみてください。"
+    },
+    "japanesePractice": {
+      "title": "日本語練習",
+      "readingDescription": "単語をタップして読み・ローマ字・品詞を確認できます。",
+      "typingDescription": "文の読みを入力し、文法と語彙を学べます。",
+      "examDescription": "N5〜N1の本格的な問題と、語彙・文法の解説。"
+    },
     "today": "今日の復習",
     "markReviewed": "復習済みとしてマーク",
     "reviewQueue": "復習キュー",

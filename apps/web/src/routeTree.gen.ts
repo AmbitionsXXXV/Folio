@@ -13,6 +13,8 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JpTypingRouteImport } from './routes/jp-typing'
+import { Route as JpReadingRouteImport } from './routes/jp-reading'
+import { Route as JpExamRouteImport } from './routes/jp-exam'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -51,6 +53,16 @@ const LoginRoute = LoginRouteImport.update({
 const JpTypingRoute = JpTypingRouteImport.update({
   id: '/jp-typing',
   path: '/jp-typing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JpReadingRoute = JpReadingRouteImport.update({
+  id: '/jp-reading',
+  path: '/jp-reading',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JpExamRoute = JpExamRouteImport.update({
+  id: '/jp-exam',
+  path: '/jp-exam',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -151,6 +163,8 @@ const AppEntriesIdRoute = AppEntriesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/jp-exam': typeof JpExamRoute
+  '/jp-reading': typeof JpReadingRoute
   '/jp-typing': typeof JpTypingRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -175,6 +189,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/jp-exam': typeof JpExamRoute
+  '/jp-reading': typeof JpReadingRoute
   '/jp-typing': typeof JpTypingRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -201,6 +217,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/jp-exam': typeof JpExamRoute
+  '/jp-reading': typeof JpReadingRoute
   '/jp-typing': typeof JpTypingRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
@@ -227,6 +245,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/forgot-password'
+    | '/jp-exam'
+    | '/jp-reading'
     | '/jp-typing'
     | '/login'
     | '/register'
@@ -251,6 +271,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/forgot-password'
+    | '/jp-exam'
+    | '/jp-reading'
     | '/jp-typing'
     | '/login'
     | '/register'
@@ -276,6 +298,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/forgot-password'
+    | '/jp-exam'
+    | '/jp-reading'
     | '/jp-typing'
     | '/login'
     | '/register'
@@ -302,6 +326,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  JpExamRoute: typeof JpExamRoute
+  JpReadingRoute: typeof JpReadingRoute
   JpTypingRoute: typeof JpTypingRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
@@ -337,6 +363,20 @@ declare module '@tanstack/react-router' {
       path: '/jp-typing'
       fullPath: '/jp-typing'
       preLoaderRoute: typeof JpTypingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jp-reading': {
+      id: '/jp-reading'
+      path: '/jp-reading'
+      fullPath: '/jp-reading'
+      preLoaderRoute: typeof JpReadingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jp-exam': {
+      id: '/jp-exam'
+      path: '/jp-exam'
+      fullPath: '/jp-exam'
+      preLoaderRoute: typeof JpExamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -527,6 +567,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  JpExamRoute: JpExamRoute,
+  JpReadingRoute: JpReadingRoute,
   JpTypingRoute: JpTypingRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,

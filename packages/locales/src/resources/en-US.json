@@ -252,6 +252,53 @@
     "deleteFailed": "Failed to delete"
   },
   "review": {
+    "jlptExam": {
+      "title": "JLPT Exam Practice",
+      "levelAll": "All levels",
+      "sectionAll": "All sections",
+      "sections": {
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar"
+      },
+      "types": {
+        "kanjiReading": "Kanji reading",
+        "context": "Word choice",
+        "paraphrase": "Paraphrase",
+        "grammarForm": "Grammar form"
+      },
+      "hint": {
+        "reading": "Choose the reading of the bracketed word.",
+        "blank": "Choose the best option for the blank.",
+        "paraphrase": "Choose the closest meaning to the bracketed phrase."
+      },
+      "readingLabel": "Reading",
+      "translationLabel": "Meaning",
+      "grammarTitle": "Grammar (蓝宝书)",
+      "vocabularyTitle": "Vocabulary (红宝书)",
+      "connectionLabel": "Connection",
+      "correctAnswerLabel": "Answer",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "next": "Next question",
+      "finish": "View results",
+      "restart": "Restart",
+      "completedTitle": "Practice Complete",
+      "completedDescription": "You answered {{correct}} of {{total}} questions correctly.",
+      "statsAnswered": "Answered",
+      "statsCorrect": "Correct",
+      "statsAccuracy": "Accuracy",
+      "reviewMissed": "Review missed questions",
+      "noMistakes": "Perfect run — no mistakes!",
+      "disclaimer": "JLPT levels are an unofficial study-grouping heuristic.",
+      "emptyTitle": "No questions match this filter",
+      "emptyDescription": "Try a different level or section."
+    },
+    "japanesePractice": {
+      "title": "Japanese practice",
+      "readingDescription": "Tap any word to reveal its reading, romaji, and part of speech.",
+      "typingDescription": "Type each sentence's reading, then study its grammar and vocabulary.",
+      "examDescription": "Authentic N5–N1 questions with 红宝书 vocabulary and 蓝宝书 grammar analysis."
+    },
     "today": "Today's Review",
     "markReviewed": "Mark as Reviewed",
     "reviewQueue": "Review Queue",

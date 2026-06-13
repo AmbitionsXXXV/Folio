@@ -307,6 +307,53 @@
     "deleteFailed": "删除失败"
   },
   "review": {
+    "jlptExam": {
+      "title": "JLPT 真题练习",
+      "levelAll": "全部级别",
+      "sectionAll": "全部题型",
+      "sections": {
+        "vocabulary": "文字・词汇",
+        "grammar": "语法"
+      },
+      "types": {
+        "kanjiReading": "汉字读法",
+        "context": "词汇填空",
+        "paraphrase": "近义替换",
+        "grammarForm": "语法形式"
+      },
+      "hint": {
+        "reading": "请选择「」中词语的正确读音。",
+        "blank": "请为空格选择最合适的选项。",
+        "paraphrase": "请选择与「」中词语意思最接近的选项。"
+      },
+      "readingLabel": "读音",
+      "translationLabel": "释义",
+      "grammarTitle": "语法解析（蓝宝书）",
+      "vocabularyTitle": "词汇解析（红宝书）",
+      "connectionLabel": "接续",
+      "correctAnswerLabel": "正确答案",
+      "correct": "正确",
+      "incorrect": "错误",
+      "next": "下一题",
+      "finish": "查看结果",
+      "restart": "重新开始",
+      "completedTitle": "练习完成",
+      "completedDescription": "本次共答对 {{correct}} / {{total}} 题。",
+      "statsAnswered": "已答",
+      "statsCorrect": "答对",
+      "statsAccuracy": "正确率",
+      "reviewMissed": "复习错题",
+      "noMistakes": "全部答对，太棒了！",
+      "disclaimer": "JLPT 级别为非官方的学习分级参考。",
+      "emptyTitle": "没有符合该筛选条件的题目",
+      "emptyDescription": "请尝试其他级别或题型。"
+    },
+    "japanesePractice": {
+      "title": "日语练习",
+      "readingDescription": "点按任意单词，查看读音、罗马字与词性。",
+      "typingDescription": "输入每句的读音，并学习其语法与词汇。",
+      "examDescription": "N5–N1 真题，配红宝书词汇与蓝宝书语法解析。"
+    },
     "today": "今日复习",
     "markReviewed": "标记为已复习",
     "reviewQueue": "复习队列",
