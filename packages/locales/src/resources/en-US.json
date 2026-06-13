@@ -1212,6 +1212,14 @@
     "openEntry": "Open entry",
     "linkAlreadyExists": "Link already exists",
     "linkAdded": "Link added",
-    "linkFailed": "Failed to add link"
+    "linkFailed": "Failed to add link",
+    "relayout": "Re-layout",
+    "legendTitle": "Connections",
+    "edgeTypes": {
+      "ref": "Reference",
+      "manual": "Manual link",
+      "sharedTag": "Shared tag",
+      "sharedSource": "Shared source"
+    }
   }
 }

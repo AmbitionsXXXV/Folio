@@ -1212,6 +1212,14 @@
     "openEntry": "打开条目",
     "linkAlreadyExists": "关联已存在",
     "linkAdded": "关联已添加",
-    "linkFailed": "添加关联失败"
+    "linkFailed": "添加关联失败",
+    "relayout": "重新布局",
+    "legendTitle": "关联类型",
+    "edgeTypes": {
+      "ref": "引用",
+      "manual": "手动关联",
+      "sharedTag": "共享标签",
+      "sharedSource": "共享来源"
+    }
   }
 }

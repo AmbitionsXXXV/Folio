@@ -1212,6 +1212,14 @@
     "openEntry": "エントリを開く",
     "linkAlreadyExists": "リンクは既に存在します",
     "linkAdded": "リンクを追加しました",
-    "linkFailed": "リンクの追加に失敗しました"
+    "linkFailed": "リンクの追加に失敗しました",
+    "relayout": "再配置",
+    "legendTitle": "つながり",
+    "edgeTypes": {
+      "ref": "参照",
+      "manual": "手動リンク",
+      "sharedTag": "共通タグ",
+      "sharedSource": "共通ソース"
+    }
   }
 }

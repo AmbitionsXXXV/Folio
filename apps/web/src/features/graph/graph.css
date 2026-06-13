@@ -1,0 +1,87 @@
+/**
+ * Brand theming for @xyflow/react. The library ships light-mode defaults
+ * (white minimap, white control buttons, grey edges) that clash with the
+ * FolioNote obsidian + amber palette. We remap its `--xy-*` custom properties
+ * to the app's design tokens so the canvas, minimap, controls, edges, and
+ * handles all follow the active (dark or light) theme.
+ */
+
+.react-flow.graph-flow {
+  --xy-background-color: var(--background);
+
+  --xy-node-background-color: var(--card);
+  --xy-node-color: var(--card-foreground);
+  --xy-node-border-default: 1px solid var(--border);
+  --xy-node-border-radius-default: 0.75rem;
+
+  --xy-edge-stroke: var(--muted-foreground);
+  --xy-edge-stroke-width: 1.5;
+  --xy-edge-stroke-selected: var(--primary);
+  --xy-connectionline-stroke: var(--primary);
+
+  --xy-handle-background-color: var(--muted-foreground);
+  --xy-handle-border-color: var(--background);
+
+  --xy-selection-background-color: color-mix(
+    in oklch,
+    var(--primary) 12%,
+    transparent
+  );
+  --xy-selection-border-default: 1px dashed var(--primary);
+
+  --xy-minimap-background-color: var(--card);
+  --xy-minimap-mask-background-color: color-mix(
+    in oklch,
+    var(--background) 62%,
+    transparent
+  );
+  --xy-minimap-mask-stroke-color: var(--border);
+
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--surface-secondary);
+  --xy-controls-button-color: var(--muted-foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+
+  --xy-attribution-background-color: transparent;
+}
+
+/* Rounded, bordered, soft-shadowed minimap + controls that read as panels. */
+.react-flow.graph-flow .react-flow__minimap {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.18));
+}
+
+.react-flow.graph-flow .react-flow__controls {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.18));
+}
+
+.react-flow.graph-flow .react-flow__controls-button {
+  border-bottom: 1px solid var(--border);
+}
+
+.react-flow.graph-flow .react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+/* Handles stay discreet until the node is hovered or a connection starts. */
+.react-flow.graph-flow .react-flow__handle {
+  width: 7px;
+  height: 7px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.react-flow.graph-flow .react-flow__node:hover .react-flow__handle,
+.react-flow.graph-flow.connectable-mode .react-flow__handle {
+  opacity: 1;
+}
+
+.react-flow.graph-flow .react-flow__handle:hover {
+  background-color: var(--primary);
+}
