@@ -380,8 +380,8 @@ importers:
         specifier: 1.0.0-rc.4
         version: 1.0.0-rc.4(3406bdb42168688652943ddd3da1a7a2)
       heroui-native-pro:
-        specifier: 1.0.0-beta.4
-        version: 1.0.0-beta.4
+        specifier: 1.0.0-beta.5
+        version: 1.0.0-beta.5
       i18next:
         specifier: 'catalog:'
         version: 26.3.1(typescript@6.0.3)
@@ -8351,8 +8351,8 @@ packages:
   hermes-parser@0.35.0:
     resolution: {integrity: sha512-9JLjeHxBx8T4CAsydZR49PNZUaix+WpQJwu9p2010lu+7Kwl6D/7wYFFJxoz+aXkaaClp9Zfg6W6/zVlSJORaA==}
 
-  heroui-native-pro@1.0.0-beta.4:
-    resolution: {integrity: sha512-Yi4qvpOJ2+tvImhuYEMjKto3BF+eek7FaLbB6pk5mG34R2c+1Mj7hastwYXwIQ66qPfT6Z3lP1hJgnc/gcnI/w==}
+  heroui-native-pro@1.0.0-beta.5:
+    resolution: {integrity: sha512-XiNvCLvLA9eaMOtI6Pjch8BLIiNH0A7iJVBKxZZkd+1rHn6P3fjt2bWPkQAAQwI2yGGSmIJMz1zx4BQUEFV/uA==}
 
   heroui-native@1.0.0-rc.4:
     resolution: {integrity: sha512-jufoDSZiPGlxpnUxprzuc62ylnRwHcZc84vglE1HhUIZAkFsq17QVpmPUwqt8jTcJcP8s+/GNRYqgX6B0X8/3A==}
@@ -19010,7 +19010,7 @@ snapshots:
     dependencies:
       hermes-estree: 0.35.0
 
-  heroui-native-pro@1.0.0-beta.4:
+  heroui-native-pro@1.0.0-beta.5:
     dependencies:
       chalk: 5.6.2
       heroui-pro: 1.0.0-beta.11

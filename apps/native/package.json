@@ -70,7 +70,7 @@
     "expo-updates": "~56.0.18",
     "expo-web-browser": "~56.0.5",
     "heroui-native": "1.0.0-rc.4",
-    "heroui-native-pro": "1.0.0-beta.4",
+    "heroui-native-pro": "1.0.0-beta.5",
     "i18next": "catalog:",
     "react": "19.2.3",
     "react-dom": "19.2.3",
