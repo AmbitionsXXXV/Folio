@@ -22,6 +22,8 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { BlockHandle } from "@/components/editor/block-handle"
+import { EditorBubbleMenu } from "@/components/editor/editor-bubble-menu"
+import { EditorCharacterCount } from "@/components/editor/editor-character-count"
 import { ResizableImage } from "@/components/editor/resizable-image"
 import { HeadingIds } from "@/lib/heading-id-extension"
 
@@ -204,7 +206,11 @@ export function EntryEditor({
           levels: [1, 2, 3]
         },
         // Disable the default code block in favor of CodeBlockShiki
-        codeBlock: false
+        codeBlock: false,
+        // Use the hardened CustomLink (noopener, protocol allowlist, openOnClick
+        // off) below instead of StarterKit's bundled link, which would otherwise
+        // register a duplicate "link" extension.
+        link: false
       }),
       CodeBlockShiki.configure({
         defaultLanguage: "plaintext"
@@ -346,7 +352,9 @@ export function EntryEditor({
   return (
     <div className="entry-editor tiptap-caret-container" ref={containerRef}>
       <BlockHandle containerRef={containerRef} editor={editor} />
+      {editable && <EditorBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />
+      {editable && <EditorCharacterCount editor={editor} />}
     </div>
   )
 }

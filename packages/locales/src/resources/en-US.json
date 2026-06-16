@@ -557,6 +557,26 @@
       "fileTooLarge": "File too large. Maximum size is {{maxMB}}MB",
       "uploading": "Uploading image…"
     },
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "code": "Code",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "link": "Link",
+      "linkPlaceholder": "Paste or type a link…",
+      "linkApply": "Apply",
+      "linkRemove": "Remove link",
+      "words_one": "{{count}} word",
+      "words_other": "{{count}} words",
+      "characters_one": "{{count}} character",
+      "characters_other": "{{count}} characters"
+    },
     "sourceCommand": {
       "linkSource": "Link Source",
       "linkSourceDesc": "Search and link books, articles, and other sources"

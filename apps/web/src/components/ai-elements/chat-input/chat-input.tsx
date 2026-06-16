@@ -375,6 +375,7 @@ export function ChatInput({
           className
         )}
         globalDrop
+        layout="stacked"
         maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
         maxFiles={FILE_ATTACHMENT_MAX_FILES}
         multiple
@@ -382,6 +383,7 @@ export function ChatInput({
           toast.error(getAttachmentErrorMessage(t, error))
         }}
         onSubmit={handlePromptSubmit}
+        variant="primary"
       >
         {/* Attachments (Notes + Files) */}
         <ChatInputAttachmentsHeader

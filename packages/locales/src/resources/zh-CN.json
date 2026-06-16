@@ -612,6 +612,26 @@
       "fileTooLarge": "文件过大，最大允许 {{maxMB}}MB",
       "uploading": "正在上传图片…"
     },
+    "toolbar": {
+      "bold": "加粗",
+      "italic": "斜体",
+      "strikethrough": "删除线",
+      "code": "行内代码",
+      "heading1": "标题 1",
+      "heading2": "标题 2",
+      "heading3": "标题 3",
+      "bulletList": "无序列表",
+      "orderedList": "有序列表",
+      "blockquote": "引用",
+      "link": "链接",
+      "linkPlaceholder": "粘贴或输入链接…",
+      "linkApply": "应用",
+      "linkRemove": "移除链接",
+      "words_one": "{{count}} 个词",
+      "words_other": "{{count}} 个词",
+      "characters_one": "{{count}} 个字符",
+      "characters_other": "{{count}} 个字符"
+    },
     "sourceCommand": {
       "linkSource": "关联来源",
       "linkSourceDesc": "搜索并关联书籍、文章等来源"
