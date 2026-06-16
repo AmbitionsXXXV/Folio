@@ -62,6 +62,17 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
   },
+  "cSpell.ignorePaths": [
+    "package-lock.json",
+    "node_modules",
+    "vscode-extension",
+    ".git/{info,lfs,logs,refs,objects}/**",
+    ".git/{index,*refs,*HEAD}",
+    ".vscode",
+    ".vscode-insiders",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml"
+  ],
   "cSpell.words": [
     "AISTT",
     "AITTS",
@@ -73,6 +84,7 @@
     "isready",
     "Leckerli",
     "Maru",
+    "msgpackr",
     "navigations",
     "Noninteractive",
     "Noto",
@@ -86,6 +98,7 @@
     "tavily",
     "Toggleable",
     "tokenlens",
+    "unlayered",
     "workerd",
     "xyflow",
     "ZCOOL"

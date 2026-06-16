@@ -55,9 +55,9 @@ export function SearchHistory({
   if (isLoading) {
     return (
       <div className={cn("space-y-2", className)}>
-        <div className="h-10 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 animate-pulse rounded-md bg-muted" />
+        <div className="h-10 animate-pulse rounded-md bg-surface-secondary" />
+        <div className="h-10 animate-pulse rounded-md bg-surface-secondary" />
+        <div className="h-10 animate-pulse rounded-md bg-surface-secondary" />
       </div>
     )
   }
@@ -91,7 +91,7 @@ export function SearchHistory({
       </div>
       {history.map((item) => (
         <div
-          className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-muted"
+          className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-surface-secondary"
           key={item.id}
         >
           <button

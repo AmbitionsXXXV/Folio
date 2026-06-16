@@ -25,6 +25,13 @@ import { nanoid } from "nanoid"
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure } from "../index"
+import {
+  catalogModelExists,
+  catalogProviderExists,
+  getModelCatalog as getModelCatalogFromStore,
+  getModelEnabledDefault,
+  getProviderEnabledDefault
+} from "../services/model-catalog/store"
 
 const GENERATE_TEXT_PROMPT_MAX_LENGTH = 20_000
 
@@ -190,7 +197,11 @@ async function checkProviderEnabled(
     return userSetting.enabled
   }
 
-  // Fall back to default from model-list
+  // Fall back to the catalog default (DB-authoritative), then the bundled list.
+  const dbDefault = await getProviderEnabledDefault(providerId)
+  if (dbDefault !== undefined) {
+    return dbDefault
+  }
   const provider = DEFAULT_MODEL_PROVIDER_LIST.find((p) => p.id === providerId)
   return Boolean(provider?.enabled)
 }
@@ -230,7 +241,11 @@ async function checkModelEnabled(
     return userSetting.enabled
   }
 
-  // Fall back to default from model-list
+  // Fall back to the catalog default (DB-authoritative), then the bundled list.
+  const dbDefault = await getModelEnabledDefault(providerId, modelId, type)
+  if (dbDefault !== undefined) {
+    return dbDefault
+  }
   const model = FOLIO_DEFAULT_MODEL_LIST.find(
     (m) => m.providerId === providerId && m.id === modelId && m.type === type
   )
@@ -239,68 +254,51 @@ async function checkModelEnabled(
 }
 
 /**
- * Get model catalog with user's enabled overrides
+ * Get model catalog with user's enabled overrides.
+ *
+ * The catalog is DB-authoritative (seeded from @folionote/model-list, refreshed
+ * on-demand from models.dev / Vercel AI Gateway). This handler only layers the
+ * per-user enable/disable overrides on top of the catalog defaults.
  */
 const getModelCatalog = protectedProcedure.handler(async ({ context }) => {
   const userId = context.session.user.id
 
-  // Get all user's model settings
-  const userModelSettings = await db
-    .select()
-    .from(userAiModelSettings)
-    .where(eq(userAiModelSettings.userId, userId))
+  const [catalog, userModelSettings, userProviderSettings] = await Promise.all([
+    getModelCatalogFromStore(),
+    db
+      .select()
+      .from(userAiModelSettings)
+      .where(eq(userAiModelSettings.userId, userId)),
+    db
+      .select()
+      .from(userAiProviderSettings)
+      .where(eq(userAiProviderSettings.userId, userId))
+  ])
 
-  // Get all user's provider settings
-  const userProviderSettings = await db
-    .select()
-    .from(userAiProviderSettings)
-    .where(eq(userAiProviderSettings.userId, userId))
-
-  // Create maps for quick lookup
-  const userModelSettingsMap = new Map<string, boolean>()
+  const userModelEnabled = new Map<string, boolean>()
   for (const setting of userModelSettings) {
-    const key = `${setting.providerId}:${setting.modelId}:${setting.type}`
-    userModelSettingsMap.set(key, setting.enabled)
+    userModelEnabled.set(
+      `${setting.providerId}:${setting.modelId}:${setting.type}`,
+      setting.enabled
+    )
   }
 
-  const userProviderSettingsMap = new Map<string, boolean>()
+  const userProviderEnabled = new Map<string, boolean>()
   for (const setting of userProviderSettings) {
-    userProviderSettingsMap.set(setting.providerId, setting.enabled)
+    userProviderEnabled.set(setting.providerId, setting.enabled)
   }
 
-  // Build providers list (with logos) with user overrides applied
-  const providers = DEFAULT_MODEL_PROVIDER_LIST.map((p) => {
-    const userEnabled = userProviderSettingsMap.get(p.id)
-    const enabled = userEnabled !== undefined ? userEnabled : Boolean(p.enabled)
+  const providers = catalog.providers.map((provider) => ({
+    ...provider,
+    enabled: userProviderEnabled.get(provider.id) ?? provider.enabled
+  }))
 
-    return {
-      id: p.id,
-      name: p.name,
-      logo: p.logo,
-      enabled
-    }
-  })
-
-  // Build models list with user overrides applied
-  const models = FOLIO_DEFAULT_MODEL_LIST.map((m) => {
-    const key = `${m.providerId}:${m.id}:${m.type}`
-    const userEnabled = userModelSettingsMap.get(key)
-    const enabled = userEnabled !== undefined ? userEnabled : Boolean(m.enabled)
-
-    return {
-      id: m.id,
-      providerId: m.providerId,
-      type: m.type,
-      displayName: m.displayName ?? m.id,
-      enabled,
-      // Include reasoning ability for thinking support
-      reasoning: m.abilities?.reasoning,
-      // Include settings for extended params like enableReasoning
-      settings: m.settings,
-      // Include context window for token tracking
-      contextWindowTokens: m.contextWindowTokens
-    }
-  })
+  const models = catalog.models.map((model) => ({
+    ...model,
+    enabled:
+      userModelEnabled.get(`${model.providerId}:${model.id}:${model.type}`) ??
+      model.enabled
+  }))
 
   return { providers, models }
 })
@@ -320,13 +318,16 @@ const setModelEnabled = protectedProcedure
   .handler(async ({ context, input }) => {
     const userId = context.session.user.id
 
-    // Validate that the model exists in the default list
-    const modelExists = FOLIO_DEFAULT_MODEL_LIST.some(
-      (m) =>
-        m.providerId === input.providerId &&
-        m.id === input.id &&
-        m.type === input.type
-    )
+    // Validate that the model exists in the catalog (DB-authoritative),
+    // falling back to the bundled list for the pre-seed case.
+    const modelExists =
+      (await catalogModelExists(input.providerId, input.id, input.type)) ||
+      FOLIO_DEFAULT_MODEL_LIST.some(
+        (m) =>
+          m.providerId === input.providerId &&
+          m.id === input.id &&
+          m.type === input.type
+      )
 
     if (!modelExists) {
       throw new ORPCError("NOT_FOUND", {
@@ -386,10 +387,11 @@ const setProviderEnabled = protectedProcedure
   .handler(async ({ context, input }) => {
     const userId = context.session.user.id
 
-    // Validate that the provider exists in the default list
-    const providerExists = DEFAULT_MODEL_PROVIDER_LIST.some(
-      (p) => p.id === input.providerId
-    )
+    // Validate that the provider exists in the catalog (DB-authoritative),
+    // falling back to the bundled list for the pre-seed case.
+    const providerExists =
+      (await catalogProviderExists(input.providerId)) ||
+      DEFAULT_MODEL_PROVIDER_LIST.some((p) => p.id === input.providerId)
 
     if (!providerExists) {
       throw new ORPCError("NOT_FOUND", {

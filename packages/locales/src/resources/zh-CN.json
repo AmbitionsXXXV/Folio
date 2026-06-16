@@ -280,7 +280,10 @@
     "untitled": "无标题",
     "searchPage": "搜索页面",
     "advancedSearch": "使用过滤器查看全部结果",
-    "tryAdvancedSearch": "尝试高级搜索"
+    "tryAdvancedSearch": "尝试高级搜索",
+    "navigate": "导航",
+    "select": "选择",
+    "close": "关闭"
   },
   "source": {
     "sources": "来源",
@@ -307,6 +310,53 @@
     "deleteFailed": "删除失败"
   },
   "review": {
+    "jlptExam": {
+      "title": "JLPT 真题练习",
+      "levelAll": "全部级别",
+      "sectionAll": "全部题型",
+      "sections": {
+        "vocabulary": "文字・词汇",
+        "grammar": "语法"
+      },
+      "types": {
+        "kanjiReading": "汉字读法",
+        "context": "词汇填空",
+        "paraphrase": "近义替换",
+        "grammarForm": "语法形式"
+      },
+      "hint": {
+        "reading": "请选择「」中词语的正确读音。",
+        "blank": "请为空格选择最合适的选项。",
+        "paraphrase": "请选择与「」中词语意思最接近的选项。"
+      },
+      "readingLabel": "读音",
+      "translationLabel": "释义",
+      "grammarTitle": "语法解析（蓝宝书）",
+      "vocabularyTitle": "词汇解析（红宝书）",
+      "connectionLabel": "接续",
+      "correctAnswerLabel": "正确答案",
+      "correct": "正确",
+      "incorrect": "错误",
+      "next": "下一题",
+      "finish": "查看结果",
+      "restart": "重新开始",
+      "completedTitle": "练习完成",
+      "completedDescription": "本次共答对 {{correct}} / {{total}} 题。",
+      "statsAnswered": "已答",
+      "statsCorrect": "答对",
+      "statsAccuracy": "正确率",
+      "reviewMissed": "复习错题",
+      "noMistakes": "全部答对，太棒了！",
+      "disclaimer": "JLPT 级别为非官方的学习分级参考。",
+      "emptyTitle": "没有符合该筛选条件的题目",
+      "emptyDescription": "请尝试其他级别或题型。"
+    },
+    "japanesePractice": {
+      "title": "日语练习",
+      "readingDescription": "点按任意单词，查看读音、罗马字与词性。",
+      "typingDescription": "输入每句的读音，并学习其语法与词汇。",
+      "examDescription": "N5–N1 真题，配红宝书词汇与蓝宝书语法解析。"
+    },
     "today": "今日复习",
     "markReviewed": "标记为已复习",
     "reviewQueue": "复习队列",
@@ -439,6 +489,17 @@
         "auxiliary": "助动词",
         "expression": "表达"
       }
+    },
+    "japaneseReading": {
+      "title": "阅读解析",
+      "subtitle": "点按词语查看其读音与词性。",
+      "translationLabel": "翻译",
+      "fieldReading": "读音",
+      "fieldRomaji": "罗马字",
+      "fieldPos": "词性",
+      "fieldBaseForm": "词典形",
+      "selectHint": "选择一个词语，查看其读音、罗马字与词性。",
+      "phraseNote": "短语分组为近似结果。"
     }
   },
   "activity": {
@@ -551,6 +612,26 @@
       "fileTooLarge": "文件过大，最大允许 {{maxMB}}MB",
       "uploading": "正在上传图片…"
     },
+    "toolbar": {
+      "bold": "加粗",
+      "italic": "斜体",
+      "strikethrough": "删除线",
+      "code": "行内代码",
+      "heading1": "标题 1",
+      "heading2": "标题 2",
+      "heading3": "标题 3",
+      "bulletList": "无序列表",
+      "orderedList": "有序列表",
+      "blockquote": "引用",
+      "link": "链接",
+      "linkPlaceholder": "粘贴或输入链接…",
+      "linkApply": "应用",
+      "linkRemove": "移除链接",
+      "words_one": "{{count}} 个词",
+      "words_other": "{{count}} 个词",
+      "characters_one": "{{count}} 个字符",
+      "characters_other": "{{count}} 个字符"
+    },
     "sourceCommand": {
       "linkSource": "关联来源",
       "linkSourceDesc": "搜索并关联书籍、文章等来源"
@@ -571,7 +652,83 @@
       "addColumnBefore": "在左侧插入列",
       "addColumnAfter": "在右侧插入列",
       "deleteColumn": "删除列",
-      "toggleHeaderRow": "切换标题行"
+      "toggleHeaderRow": "切换标题行",
+      "toggleHeaderColumn": "切换标题列",
+      "insertAbove": "在上方插入",
+      "insertBelow": "在下方插入",
+      "insertLeft": "在左侧插入",
+      "insertRight": "在右侧插入",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "moveLeft": "左移",
+      "moveRight": "右移",
+      "duplicate": "再制",
+      "duplicateRow": "再制行",
+      "duplicateColumn": "再制列",
+      "clearRowContents": "清空行内容",
+      "clearColumnContents": "清空列内容",
+      "backgroundColor": "背景色",
+      "defaultColor": "默认",
+      "clearRowStyle": "清除行样式",
+      "clearColumnStyle": "清除列样式",
+      "align": "文本对齐",
+      "alignLeft": "左对齐",
+      "alignCenter": "居中对齐",
+      "alignRight": "右对齐",
+      "rowOptions": "行选项",
+      "columnOptions": "列选项",
+      "addRow": "添加行",
+      "addColumn": "添加列",
+      "block": {
+        "menuLabel": "表格选项",
+        "syncBlock": "同步块",
+        "indent": "缩进",
+        "cut": "剪切",
+        "copy": "复制",
+        "duplicate": "再制",
+        "delete": "删除",
+        "share": "分享",
+        "saveAsTemplate": "保存为模板",
+        "copyLink": "复制链接",
+        "headerRow": "标题行",
+        "headerColumn": "标题列",
+        "distributeColumns": "均分列宽",
+        "addBelow": "在下方添加",
+        "comingSoon": "即将推出"
+      }
+    },
+    "tableGrid": {
+      "hint": "拖动以选择大小",
+      "insert": "插入表格"
+    },
+    "block": {
+      "add": "在下方添加",
+      "delete": "删除",
+      "duplicate": "再制",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "options": "块选项",
+      "turnInto": "转换为",
+      "indentAndAlign": "缩进和对齐",
+      "color": "颜色",
+      "comment": "评论",
+      "cut": "剪切",
+      "copy": "复制",
+      "translate": "翻译",
+      "share": "分享",
+      "saveAsTemplate": "保存为模板",
+      "copyLink": "复制链接",
+      "comingSoon": "即将推出",
+      "types": {
+        "text": "正文",
+        "heading1": "一级标题",
+        "heading2": "二级标题",
+        "heading3": "三级标题",
+        "bulletList": "无序列表",
+        "orderedList": "有序列表",
+        "codeBlock": "代码块",
+        "quote": "引用"
+      }
     }
   },
   "error": {
@@ -690,7 +847,8 @@
         "allTypes": "全部类型",
         "enableAll": "全部启用",
         "disableAll": "全部禁用",
-        "toggleProvider": "切换 {{provider}} 提供商"
+        "toggleProvider": "切换 {{provider}} 提供商",
+        "recentOnly": "近 6 个月"
       }
     }
   },
@@ -1077,6 +1235,14 @@
     "openEntry": "打开条目",
     "linkAlreadyExists": "关联已存在",
     "linkAdded": "关联已添加",
-    "linkFailed": "添加关联失败"
+    "linkFailed": "添加关联失败",
+    "relayout": "重新布局",
+    "legendTitle": "关联类型",
+    "edgeTypes": {
+      "ref": "引用",
+      "manual": "手动关联",
+      "sharedTag": "共享标签",
+      "sharedSource": "共享来源"
+    }
   }
 }

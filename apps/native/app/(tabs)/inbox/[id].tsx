@@ -172,7 +172,7 @@ export default function EntryDetailScreen() {
               placeholder={t("entry.placeholder")}
             />
             {updateMutation.isPending && (
-              <View className="bg-surface absolute right-4 bottom-4 flex-row items-center gap-2 rounded-full px-3 py-1">
+              <View className="absolute right-4 bottom-4 flex-row items-center gap-2 rounded-full bg-surface px-3 py-1">
                 <ActivityIndicator color={accentColor} size="small" />
                 <Text className="text-xs text-muted">{t("common.saving")}</Text>
               </View>
@@ -186,13 +186,7 @@ export default function EntryDetailScreen() {
             contentInsetAdjustmentBehavior="automatic"
           >
             {contentJson ? (
-              <RichTextViewer
-                content={contentJson}
-                dom={{
-                  scrollEnabled: false
-                }}
-                isDark
-              />
+              <RichTextViewer content={contentJson} isDark />
             ) : (
               <View className="flex-1 items-center justify-center p-8">
                 <Text className="text-center text-muted">

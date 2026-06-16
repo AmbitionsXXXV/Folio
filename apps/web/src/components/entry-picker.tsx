@@ -153,9 +153,9 @@ export function EntryPicker({
             if (isLoading) {
               return (
                 <div className="space-y-2 py-4">
-                  <Skeleton className="h-16 rounded-lg bg-muted" />
-                  <Skeleton className="h-16 rounded-lg bg-muted" />
-                  <Skeleton className="h-16 rounded-lg bg-muted" />
+                  <Skeleton className="h-16 rounded-lg bg-surface-secondary" />
+                  <Skeleton className="h-16 rounded-lg bg-surface-secondary" />
+                  <Skeleton className="h-16 rounded-lg bg-surface-secondary" />
                 </div>
               )
             }
@@ -165,7 +165,7 @@ export function EntryPicker({
                 <div className="space-y-1">
                   {filteredEntries.map((entry) => (
                     <button
-                      className="flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
+                      className="flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-surface-secondary"
                       key={entry.id}
                       onClick={() => handleSelect(entry)}
                       type="button"

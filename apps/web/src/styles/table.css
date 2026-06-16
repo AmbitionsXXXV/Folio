@@ -433,28 +433,278 @@
   background-color: var(--color-gray-800);
 }
 
+/*
+ * Whole-row hover highlighting is intentionally omitted — hovering a cell
+ * should not tint the entire row (matches Lark's table behavior).
+ */
+
 /* ==================== */
-/* Row/Column Hover     */
+/* Block Drag Handle    */
 /* ==================== */
 
-.ProseMirror tr:hover td,
-.ProseMirror tr:hover th {
-  background-color: var(--color-gray-50);
+/* One pill holding both the table-type action icon and the drag dots. */
+.table-block-handle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 11;
+  display: flex;
+  gap: 1px;
+  align-items: center;
+  padding: 2px;
+  pointer-events: none;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  /* Sit diagonally just outside the table's top-left corner */
+  transform: translate(calc(-100% - 4px), calc(-100% - 4px));
+  transition: opacity 0.15s ease;
 }
 
-.dark .ProseMirror tr:hover td,
-.dark .ProseMirror tr:hover th {
+.table-node-wrapper:hover .table-block-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dark .table-block-handle {
   background-color: var(--color-gray-800);
+  border-color: var(--color-gray-600);
 }
 
-/* Cell with custom background color should preserve it on hover */
-
-.ProseMirror tr:hover td[data-background-color],
-.ProseMirror tr:hover th[data-background-color] {
-  filter: brightness(0.98);
+.table-block-handle-action,
+.table-block-handle-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
-.dark .ProseMirror tr:hover td[data-background-color],
-.dark .ProseMirror tr:hover th[data-background-color] {
-  filter: brightness(1.1);
+.table-block-handle-action {
+  color: var(--color-emerald-500, #10b981);
+  cursor: pointer;
+}
+
+.table-block-handle-action:hover {
+  background-color: color-mix(
+    in oklab,
+    var(--color-emerald-500, #10b981) 16%,
+    transparent
+  );
+}
+
+.table-block-handle-drag {
+  color: var(--color-gray-400);
+  cursor: grab;
+}
+
+.table-block-handle-drag:hover {
+  color: var(--color-gray-600);
+  background-color: var(--color-gray-100);
+}
+
+.dark .table-block-handle-drag:hover {
+  color: var(--color-gray-200);
+  background-color: var(--color-gray-700);
+}
+
+/* ==================== */
+/* Block Menu (Lark)    */
+/* ==================== */
+
+.table-block-menu {
+  min-width: 220px;
+}
+
+.table-menu-item-disabled {
+  color: var(--color-gray-400);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.table-menu-item-disabled:hover {
+  background-color: transparent;
+}
+
+.dark .table-menu-item-disabled {
+  color: var(--color-gray-500);
+}
+
+/* Header row / column toggle switch */
+.table-menu-item .table-menu-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 16px;
+  margin-left: auto;
+  background-color: var(--color-gray-300);
+  border-radius: 999px;
+  transition: background-color 0.15s ease;
+}
+
+.table-menu-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-white);
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+}
+
+.table-menu-switch.is-on {
+  background-color: var(--color-blue-500);
+}
+
+.table-menu-switch.is-on .table-menu-switch-thumb {
+  transform: translateX(12px);
+}
+
+.dark .table-menu-item .table-menu-switch {
+  background-color: var(--color-gray-600);
+}
+
+/* ==================== */
+/* Alignment Row        */
+/* ==================== */
+
+.table-menu-align-row {
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px;
+}
+
+.table-menu-align-btn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  color: var(--color-gray-600);
+  cursor: pointer;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.table-menu-align-btn:hover {
+  color: var(--color-blue-600);
+  background-color: var(--color-gray-100);
+}
+
+.dark .table-menu-align-btn {
+  color: var(--color-gray-300);
+}
+
+.dark .table-menu-align-btn:hover {
+  color: var(--color-blue-300);
+  background-color: var(--color-gray-700);
+}
+
+/* ==================== */
+/* Grid Size Picker     */
+/* ==================== */
+
+.table-grid-picker {
+  padding: 10px;
+  user-select: none;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .table-grid-picker {
+  background-color: var(--color-gray-800);
+  border-color: var(--color-gray-700);
+}
+
+.table-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.table-grid-row {
+  display: flex;
+  gap: 3px;
+}
+
+.table-grid-cell {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  cursor: pointer;
+  background-color: var(--color-gray-100);
+  border: 1px solid var(--color-gray-300);
+  border-radius: 2px;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease;
+}
+
+.dark .table-grid-cell {
+  background-color: var(--color-gray-700);
+  border-color: var(--color-gray-600);
+}
+
+.table-grid-cell.is-active {
+  background-color: var(--color-blue-200);
+  border-color: var(--color-blue-400);
+}
+
+.dark .table-grid-cell.is-active {
+  background-color: var(--color-blue-800);
+  border-color: var(--color-blue-500);
+}
+
+.table-grid-label {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: var(--color-gray-500);
+  text-align: center;
+}
+
+.dark .table-grid-label {
+  color: var(--color-gray-400);
+}
+
+/* Header shown when the grid picker is used as a slash-menu submenu */
+.table-grid-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.table-grid-picker-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-gray-600);
+}
+
+.dark .table-grid-picker-title {
+  color: var(--color-gray-300);
+}
+
+.table-grid-picker-size {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-gray-400);
 }

@@ -66,7 +66,7 @@ const WebSearchReferences = memo(
       <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-muted-foreground">
         {visible.map((result) => (
           <a
-            className="inline-flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1 transition-colors duration-150 hover:border-border/60 hover:bg-muted/50"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border/40 bg-surface-secondary/30 px-2 py-1 transition-colors duration-150 hover:border-border/60 hover:bg-surface-secondary/50"
             href={result.url}
             key={result.url}
             rel="noopener noreferrer"
@@ -85,7 +85,7 @@ const WebSearchReferences = memo(
         ))}
         {remaining > 0 && onViewAll ? (
           <button
-            className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/40 bg-muted/30 px-2 py-1 transition-colors duration-150 hover:border-border/60 hover:bg-muted/50"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-border/40 bg-surface-secondary/30 px-2 py-1 transition-colors duration-150 hover:border-border/60 hover:bg-surface-secondary/50"
             onClick={onViewAll}
             type="button"
           >

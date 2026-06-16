@@ -1,6 +1,6 @@
 {
   "name": "@folionote/db",
-  "version": "0.2.20",
+  "version": "0.2.22",
   "type": "module",
   "exports": {
     ".": {
@@ -39,8 +39,7 @@
   "dependencies": {
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "pg": "^8.21.0",
-    "zod": "catalog:"
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@folionote/config": "workspace:*",

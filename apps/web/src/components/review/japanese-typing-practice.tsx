@@ -360,7 +360,7 @@ export function JapaneseTypingPractice() {
 
       {/* Progress Bar */}
       <Progress
-        className="h-1 shrink-0 rounded-none bg-muted [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-300 [&>div]:ease-out"
+        className="h-1 shrink-0 rounded-none bg-surface-secondary [&>div]:bg-emerald-500 [&>div]:transition-all [&>div]:duration-300 [&>div]:ease-out"
         value={overallProgressPercent}
       />
 
@@ -405,7 +405,7 @@ export function JapaneseTypingPractice() {
                   const isHighlighted = enabledPosCategories.has(token.pos)
                   const colorClasses = isHighlighted
                     ? JAPANESE_POS_COLOR_MAP[token.pos]
-                    : "bg-muted/50 border-border/50 text-muted-foreground"
+                    : "bg-surface-secondary/50 border-border/50 text-muted-foreground"
                   return (
                     <div
                       className={`flex flex-col items-center gap-0.5 rounded-lg border px-2.5 py-2 transition-colors duration-200 ${colorClasses}`}
@@ -490,7 +490,7 @@ export function JapaneseTypingPractice() {
             />
             <div className="mt-1.5 flex items-center gap-2">
               <Progress
-                className="h-0.5 flex-1 rounded-full bg-muted [&>div]:bg-emerald-500/60 [&>div]:transition-all [&>div]:duration-200"
+                className="h-0.5 flex-1 rounded-full bg-surface-secondary [&>div]:bg-emerald-500/60 [&>div]:transition-all [&>div]:duration-200"
                 value={answerProgressValue}
               />
               <span className="shrink-0 text-xs text-muted-foreground/50 tabular-nums">

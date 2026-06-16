@@ -217,7 +217,7 @@ export function EntryTags({ entryId, ref }: EntryTagsProps) {
               </p>
               {availableTags.map((tag) => (
                 <button
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-surface-secondary"
                   disabled={addTagMutation.isPending}
                   key={tag.id}
                   onClick={() => {

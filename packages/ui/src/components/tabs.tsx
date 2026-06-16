@@ -26,7 +26,7 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "etc-tabs-list-variant-default bg-muted",
+        default: "etc-tabs-list-variant-default bg-surface-secondary",
         line: "etc-tabs-list-variant-line gap-1 bg-transparent"
       }
     },

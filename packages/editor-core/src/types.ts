@@ -44,6 +44,8 @@ export interface SlashCommandDefinition {
   keywords?: string[]
   /** i18n key for the group name */
   groupKey?: string
+  /** Optional submenu the UI shows on hover/selection instead of executing immediately */
+  submenuType?: string
   /** Execute the command */
   execute: (context: CommandContext) => void
 }
@@ -59,6 +61,8 @@ export interface SlashCommandItem {
   iconId: IconId
   keywords?: string[]
   group?: string
+  /** Optional submenu the UI shows on hover/selection instead of executing immediately */
+  submenuType?: string
   command: (props: { editor: Editor; range: Range }) => void
 }
 

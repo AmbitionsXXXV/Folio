@@ -1,6 +1,6 @@
 {
   "name": "native",
-  "version": "0.2.20",
+  "version": "0.2.22",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -28,15 +28,19 @@
     "@gorhom/bottom-sheet": "^5.2.6",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react-native": "^1.0.9",
+    "@internationalized/date": "^3.12.2",
+    "@internationalized/number": "^3.6.7",
     "@orpc/client": "catalog:",
     "@orpc/tanstack-query": "catalog:",
     "@shopify/flash-list": "^2.0.2",
+    "@shopify/react-native-skia": "^2.6.4",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tiptap/core": "catalog:",
     "@tiptap/extension-placeholder": "catalog:",
     "@tiptap/react": "catalog:",
     "@tiptap/starter-kit": "catalog:",
+    "@tiptap/static-renderer": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
@@ -66,6 +70,7 @@
     "expo-updates": "~56.0.18",
     "expo-web-browser": "~56.0.5",
     "heroui-native": "1.0.0-rc.4",
+    "heroui-native-pro": "1.0.0-beta.4",
     "i18next": "catalog:",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -84,6 +89,7 @@
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "catalog:",
     "uniwind": "^1.8.0",
+    "victory-native": "^41.26.0",
     "zod": "catalog:"
   },
   "devDependencies": {

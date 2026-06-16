@@ -27,7 +27,7 @@ const SearchResultItem = memo(({ result }: { result: WebSearchResult }) => {
 
   return (
     <a
-      className="group block rounded-lg border border-transparent p-3 transition-colors duration-150 hover:border-border/40 hover:bg-muted/40"
+      className="group block rounded-lg border border-transparent p-3 transition-colors duration-150 hover:border-border/40 hover:bg-surface-secondary/40"
       href={result.url}
       rel="noopener noreferrer"
       target="_blank"
@@ -97,7 +97,7 @@ export const WebSearchPanel = memo(
             </div>
 
             {data?.query ? (
-              <div className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-xs text-muted-foreground">
+              <div className="mt-2 rounded-md bg-surface-secondary/50 px-2.5 py-1.5 font-mono text-xs text-muted-foreground">
                 {data.query}
               </div>
             ) : null}

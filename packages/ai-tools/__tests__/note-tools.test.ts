@@ -1,4 +1,4 @@
-import type { ModelMessage } from "ai"
+import { RequestContext } from "@mastra/core/request-context"
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test"
 
 import {
@@ -8,7 +8,7 @@ import {
   searchNotes,
   updateNote
 } from "../src/note/tools"
-import type { NoteToolContext, NoteToolResult } from "../src/note/types"
+import type { NoteToolResult } from "../src/note/types"
 
 const SAMPLE_USER_ID = "user-123"
 const SAMPLE_NOTE_ID = "note-123"
@@ -53,14 +53,11 @@ vi.mock("drizzle-orm", () => ({
   }))
 }))
 
-const noteContext = {
-  userId: SAMPLE_USER_ID
-} satisfies NoteToolContext
+const requestContext = new RequestContext()
+requestContext.set("userId", SAMPLE_USER_ID)
 
 const toolExecutionOptions = {
-  toolCallId: "tool-call-1",
-  messages: [] as ModelMessage[],
-  experimental_context: noteContext
+  requestContext
 }
 
 interface QueryChain {
@@ -117,9 +114,9 @@ beforeEach(() => {
 
 describe("note tools", () => {
   it("requires approval for all mutating note tools", () => {
-    expect(createNote.needsApproval).toBe(true)
-    expect(updateNote.needsApproval).toBe(true)
-    expect(deleteNote.needsApproval).toBe(true)
+    expect(createNote.requireApproval).toBe(true)
+    expect(updateNote.requireApproval).toBe(true)
+    expect(deleteNote.requireApproval).toBe(true)
   })
 
   it("createNote stores contentJson and contentText from plain text", async () => {

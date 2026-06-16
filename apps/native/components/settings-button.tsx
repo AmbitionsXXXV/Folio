@@ -53,7 +53,7 @@ export function SettingsButton() {
           onPress={() => setVisible(false)}
         >
           <Pressable
-            className="bg-surface mx-6 w-72 rounded-2xl p-4"
+            className="mx-6 w-72 rounded-2xl bg-surface p-4"
             onPress={(e) => e.stopPropagation()}
           >
             <Text className="mb-4 text-center text-lg font-semibold text-foreground">

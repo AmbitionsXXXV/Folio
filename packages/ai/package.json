@@ -1,6 +1,6 @@
 {
   "name": "@folionote/ai",
-  "version": "0.2.20",
+  "version": "0.2.22",
   "description": "FolioNote AI capabilities: BYOK providers, RAG, prompts, usage tracking",
   "type": "module",
   "exports": {
@@ -25,7 +25,8 @@
     "@ai-sdk/provider": "^3.0.8",
     "@ai-sdk/xai": "^3.0.68",
     "@folionote/constants": "workspace:*",
-    "@langchain/textsplitters": "^1.0.1",
+    "@mastra/core": "catalog:",
+    "@mastra/rag": "catalog:",
     "ai": "catalog:",
     "tokenlens": "catalog:",
     "zod": "catalog:"

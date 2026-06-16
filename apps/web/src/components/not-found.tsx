@@ -15,7 +15,7 @@ export function NotFound() {
     <div className="flex min-h-[400px] flex-col items-center justify-center p-8">
       <div className="flex max-w-md flex-col items-center gap-6 text-center">
         {/* Not Found Icon */}
-        <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+        <div className="flex size-16 items-center justify-center rounded-full bg-surface-secondary">
           <HugeiconsIcon
             className="size-8 text-muted-foreground"
             icon={FileNotFoundIcon}

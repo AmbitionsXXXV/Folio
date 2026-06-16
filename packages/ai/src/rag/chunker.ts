@@ -1,10 +1,10 @@
 /**
  * Text splitting for RAG indexing.
  *
- * Uses @langchain/textsplitters for recursive character splitting
+ * Uses @mastra/rag's MDocument for recursive character splitting
  * with Chinese-aware separators.
  */
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
+import { MDocument } from "@mastra/rag"
 
 const DEFAULT_CHUNK_SIZE = 800
 const DEFAULT_CHUNK_OVERLAP = 200
@@ -54,20 +54,17 @@ export async function splitEntryContent(
     ]
   }
 
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkOverlap,
-    chunkSize,
-    separators: SEPARATORS
+  const document = MDocument.fromText(trimmedContent)
+  await document.chunk({
+    strategy: "recursive",
+    separators: SEPARATORS,
+    maxSize: chunkSize,
+    overlap: chunkOverlap
   })
 
-  const docs = await splitter.createDocuments([trimmedContent])
-
-  return docs.map((doc, idx) => ({
+  return document.getDocs().map((chunk, idx) => ({
     chunkIndex: idx,
-    content: `${titlePrefix}${doc.pageContent}`,
-    metadata: {
-      start: doc.metadata.loc?.lines?.from as number | undefined,
-      end: doc.metadata.loc?.lines?.to as number | undefined
-    }
+    content: `${titlePrefix}${chunk.text}`,
+    metadata: { ...chunk.metadata }
   }))
 }

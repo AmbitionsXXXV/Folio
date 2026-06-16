@@ -13,64 +13,59 @@ import { useCallback } from "react"
  */
 export function useEditorCommands(editor: ReturnType<typeof useEditor>) {
   const toggleBold = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleBold().run()
   }, [editor])
 
   const toggleItalic = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleItalic().run()
+  }, [editor])
+
+  const toggleStrike = useCallback(() => {
+    ;(editor?.chain().focus() as any).toggleStrike().run()
   }, [editor])
 
   const toggleHeading = useCallback(
     (level: 1 | 2 | 3) => {
-      // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
       ;(editor?.chain().focus() as any).toggleHeading({ level }).run()
     },
     [editor]
   )
 
   const toggleBulletList = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleBulletList().run()
   }, [editor])
 
   const toggleOrderedList = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleOrderedList().run()
   }, [editor])
 
   const toggleBlockquote = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleBlockquote().run()
   }, [editor])
 
   const toggleCode = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleCode().run()
   }, [editor])
 
   const toggleCodeBlock = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).toggleCodeBlock().run()
   }, [editor])
 
   const setLink = useCallback(
     (href: string) => {
-      // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
       ;(editor?.chain().focus() as any).setLink({ href }).run()
     },
     [editor]
   )
 
   const unsetLink = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
     ;(editor?.chain().focus() as any).unsetLink().run()
   }, [editor])
 
   return {
     toggleBold,
     toggleItalic,
+    toggleStrike,
     toggleHeading,
     toggleBulletList,
     toggleOrderedList,

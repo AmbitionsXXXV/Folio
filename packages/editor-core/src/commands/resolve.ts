@@ -19,6 +19,7 @@ export function resolveCommands(
     iconId: def.iconId,
     keywords: def.keywords,
     group: def.groupKey ? t(def.groupKey) : undefined,
+    submenuType: def.submenuType,
     command: ({ editor, range }) => {
       def.execute({ editor, range })
     }

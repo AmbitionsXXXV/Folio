@@ -115,10 +115,10 @@ export function EntryList({
             className="rounded-lg border border-border/50 bg-card p-4"
             key={id}
           >
-            <div className="mb-3 h-5 w-3/4 rounded bg-muted" />
-            <div className="mb-2 h-4 w-full rounded bg-muted/60" />
-            <div className="mb-3 h-4 w-2/3 rounded bg-muted/40" />
-            <div className="h-3 w-1/4 rounded bg-muted/30" />
+            <div className="mb-3 h-5 w-3/4 rounded bg-surface-secondary" />
+            <div className="mb-2 h-4 w-full rounded bg-surface-secondary/60" />
+            <div className="mb-3 h-4 w-2/3 rounded bg-surface-secondary/40" />
+            <div className="h-3 w-1/4 rounded bg-surface-secondary/30" />
           </div>
         ))}
         <span className="sr-only">{t("common.loading")}</span>
@@ -160,7 +160,7 @@ export function EntryList({
         className="flex flex-col items-center justify-center py-16 text-center"
         role="status"
       >
-        <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted/50">
+        <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-surface-secondary/50">
           <svg
             aria-hidden="true"
             className="size-8 text-muted-foreground/60"

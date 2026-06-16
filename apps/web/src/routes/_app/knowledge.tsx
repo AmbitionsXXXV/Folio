@@ -59,7 +59,6 @@ import {
   PromptInputTools
 } from "@/components/ai-elements/prompt-input"
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input"
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion"
 import type { ToolApprovalHandler } from "@/components/ai-elements/tool-approval"
 import { AttachmentDisplay } from "@/features/knowledge/components/attachment-display"
 import {
@@ -116,15 +115,6 @@ function preloadChatHistoryPanel(): void {
   })
 }
 
-const SUGGESTIONS = [
-  "What are the latest trends in AI?",
-  "How does machine learning work?",
-  "Explain quantum computing",
-  "Best practices for React development",
-  "Tell me about TypeScript benefits",
-  "How to optimize database queries?"
-]
-
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Request failed"
 }
@@ -144,9 +134,9 @@ const ChatHistorySidebar = memo((props: ChatHistorySidebarProps) => {
     <Suspense
       fallback={
         <div className="h-full space-y-2 border-r bg-background p-3">
-          <div className="h-10 rounded-lg bg-muted/60" />
-          <div className="h-18 rounded-lg bg-muted/40" />
-          <div className="h-18 rounded-lg bg-muted/40" />
+          <div className="h-10 rounded-lg bg-surface-secondary/60" />
+          <div className="h-18 rounded-lg bg-surface-secondary/40" />
+          <div className="h-18 rounded-lg bg-surface-secondary/40" />
         </div>
       }
     >
@@ -1021,36 +1011,6 @@ function KnowledgePage() {
     ]
   )
 
-  const handleSuggestionClick = useCallback(
-    (suggestion: string) => {
-      if (isPending || !selectedChatId) {
-        return
-      }
-      if (!isApiSupportedProvider(selectedProvider)) {
-        toast.error(
-          `Provider "${selectedProvider}" is not yet supported by the API`
-        )
-        return
-      }
-      setInputValue("")
-      if (isImageMode) {
-        handleImageSubmit(suggestion).catch((error: unknown) => {
-          toast.error(getErrorMessage(error))
-        })
-        return
-      }
-      sendMessage({ text: suggestion })
-    },
-    [
-      isPending,
-      selectedChatId,
-      selectedProvider,
-      isImageMode,
-      handleImageSubmit,
-      sendMessage
-    ]
-  )
-
   const handleOpenWebSearchPanel = useCallback<WebSearchPanelOpenHandler>(
     (data) => {
       setWebSearchPanelData(data)
@@ -1161,18 +1121,6 @@ function KnowledgePage() {
           </Conversation>
 
           <div className="grid shrink-0 gap-4 pt-4">
-            {messages.length === 0 ? (
-              <Suggestions className="px-4">
-                {SUGGESTIONS.map((suggestion) => (
-                  <Suggestion
-                    key={suggestion}
-                    onClick={handleSuggestionClick}
-                    suggestion={suggestion}
-                  />
-                ))}
-              </Suggestions>
-            ) : null}
-
             <div className="relative w-full px-4 pb-4">
               <MentionPopover {...mention.popoverProps} />
               <PromptInput
@@ -1225,7 +1173,7 @@ function KnowledgePage() {
                     <AiModelSelector
                       catalogModels={catalogModels}
                       catalogProviders={catalogProviders}
-                      className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+                      className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-surface-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
                       disabled={isPending}
                       onValueChange={handleModelChange}
                       placeholder={t("knowledge.selectModel")}

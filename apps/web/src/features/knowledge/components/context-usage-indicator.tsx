@@ -66,7 +66,7 @@ export const ContextUsageIndicator = memo(
                 className="h-1 w-16"
                 value={Math.min(100, contextUsage.percent)}
               >
-                <ProgressTrack className="overflow-hidden rounded-full bg-muted">
+                <ProgressTrack className="overflow-hidden rounded-full bg-surface-secondary">
                   <ProgressIndicator
                     className={cn("h-full transition-all", progressColor)}
                   />

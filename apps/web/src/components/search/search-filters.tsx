@@ -53,16 +53,19 @@ function TagFilterSection({
   return (
     <div className="p-3">
       <button
-        className="flex w-full items-center justify-between text-sm font-medium"
+        className="flex w-full items-center justify-between rounded-lg font-display text-sm font-medium tracking-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         onClick={onToggleExpand}
         type="button"
       >
         <span className="flex items-center gap-2">
-          <HugeiconsIcon className="size-4" icon={Tag01Icon} />
+          <HugeiconsIcon className="size-4 text-primary" icon={Tag01Icon} />
           {t("search.filterByTags")}
         </span>
         {selectedCount > 0 && (
-          <Badge className="text-xs" variant="secondary">
+          <Badge
+            className="border-primary/15 bg-primary/10 text-xs text-primary"
+            variant="secondary"
+          >
             {selectedCount}
           </Badge>
         )}
@@ -77,7 +80,10 @@ function TagFilterSection({
             tags.map((tag) => (
               <div
                 aria-checked={selectedTagIds.includes(tag.id)}
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-muted"
+                className={cn(
+                  "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 outline-none transition-colors hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary/30",
+                  selectedTagIds.includes(tag.id) && "bg-primary/10"
+                )}
                 key={tag.id}
                 onClick={() => onToggle(tag.id)}
                 onKeyDown={(e) => {
@@ -138,16 +144,19 @@ function SourceFilterSection({
   return (
     <div className="p-3">
       <button
-        className="flex w-full items-center justify-between text-sm font-medium"
+        className="flex w-full items-center justify-between rounded-lg font-display text-sm font-medium tracking-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         onClick={onToggleExpand}
         type="button"
       >
         <span className="flex items-center gap-2">
-          <HugeiconsIcon className="size-4" icon={Link01Icon} />
+          <HugeiconsIcon className="size-4 text-primary" icon={Link01Icon} />
           {t("search.filterBySources")}
         </span>
         {selectedCount > 0 && (
-          <Badge className="text-xs" variant="secondary">
+          <Badge
+            className="border-primary/15 bg-primary/10 text-xs text-primary"
+            variant="secondary"
+          >
             {selectedCount}
           </Badge>
         )}
@@ -162,7 +171,10 @@ function SourceFilterSection({
             sources.map((source) => (
               <div
                 aria-checked={selectedSourceIds.includes(source.id)}
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-muted"
+                className={cn(
+                  "flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 outline-none transition-colors hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary/30",
+                  selectedSourceIds.includes(source.id) && "bg-primary/10"
+                )}
                 key={source.id}
                 onClick={() => onToggle(source.id)}
                 onKeyDown={(e) => {
@@ -212,16 +224,22 @@ function DateRangeFilterSection({
   return (
     <div className="p-3">
       <button
-        className="flex w-full items-center justify-between text-sm font-medium"
+        className="flex w-full items-center justify-between rounded-lg font-display text-sm font-medium tracking-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
         onClick={onToggleExpand}
         type="button"
       >
         <span className="flex items-center gap-2">
-          <HugeiconsIcon className="size-4" icon={Calendar03Icon} />
+          <HugeiconsIcon
+            className="size-4 text-primary"
+            icon={Calendar03Icon}
+          />
           {t("search.dateRange")}
         </span>
         {hasDateRange && (
-          <Badge className="text-xs" variant="secondary">
+          <Badge
+            className="border-primary/15 bg-primary/10 text-xs text-primary"
+            variant="secondary"
+          >
             {dateRange.from?.toLocaleDateString()}
             {dateRange.to && ` - ${dateRange.to.toLocaleDateString()}`}
           </Badge>
@@ -351,12 +369,18 @@ export function SearchFilters({
         <HugeiconsIcon className="size-4" icon={FilterIcon} />
         <span>{t("search.filters")}</span>
         {activeFilterCount > 0 && (
-          <Badge className="ml-1 px-1.5 py-0 text-xs" variant="default">
+          <Badge
+            className="ml-1 border-primary/15 bg-primary/10 px-1.5 py-0 text-xs text-primary"
+            variant="secondary"
+          >
             {activeFilterCount}
           </Badge>
         )}
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-0">
+      <PopoverContent
+        align="start"
+        className="w-80 rounded-3xl border border-border/60 bg-card/70 p-0 shadow-sm backdrop-blur-sm"
+      >
         <div className="no-scrollbar max-h-96 overflow-y-auto">
           <TagFilterSection
             isExpanded={showTagList}
@@ -389,7 +413,9 @@ export function SearchFilters({
 
           {/* Quick filters */}
           <div className="p-3">
-            <p className="mb-2 text-sm font-medium">{t("common.other")}</p>
+            <p className="mb-2 font-display text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t("common.other")}
+            </p>
             <div className="space-y-2">
               <div className="flex cursor-pointer items-center gap-2">
                 <Checkbox
@@ -426,7 +452,7 @@ export function SearchFilters({
               <Separator />
               <div className="p-3">
                 <Button
-                  className="w-full gap-2"
+                  className="w-full gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
                   onClick={handleClearFilters}
                   variant="ghost"
                 >
@@ -511,11 +537,15 @@ export function ActiveFilterBadges({
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {selectedTags.map((tag) => (
-        <Badge className="gap-1 pr-1" key={tag.id} variant="secondary">
+        <Badge
+          className="gap-1 border-primary/15 bg-primary/10 pr-1 text-primary"
+          key={tag.id}
+          variant="secondary"
+        >
           <HugeiconsIcon className="size-3" icon={Tag01Icon} />
           {tag.name}
           <button
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 rounded-full p-0.5 transition-colors outline-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/30"
             onClick={() => handleRemoveTag(tag.id)}
             type="button"
           >
@@ -524,11 +554,15 @@ export function ActiveFilterBadges({
         </Badge>
       ))}
       {selectedSources.map((source) => (
-        <Badge className="gap-1 pr-1" key={source.id} variant="secondary">
+        <Badge
+          className="gap-1 border-primary/15 bg-primary/10 pr-1 text-primary"
+          key={source.id}
+          variant="secondary"
+        >
           <HugeiconsIcon className="size-3" icon={Link01Icon} />
           <span className="max-w-24 truncate">{source.title}</span>
           <button
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 rounded-full p-0.5 transition-colors outline-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/30"
             onClick={() => handleRemoveSource(source.id)}
             type="button"
           >
@@ -537,13 +571,16 @@ export function ActiveFilterBadges({
         </Badge>
       ))}
       {(value.dateRange?.from || value.dateRange?.to) && (
-        <Badge className="gap-1 pr-1" variant="secondary">
+        <Badge
+          className="gap-1 border-primary/15 bg-primary/10 pr-1 text-primary"
+          variant="secondary"
+        >
           <HugeiconsIcon className="size-3" icon={Calendar03Icon} />
           {value.dateRange.from?.toLocaleDateString()}
           {value.dateRange.to &&
             ` - ${value.dateRange.to.toLocaleDateString()}`}
           <button
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 rounded-full p-0.5 transition-colors outline-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/30"
             onClick={handleRemoveDateRange}
             type="button"
           >
@@ -552,10 +589,13 @@ export function ActiveFilterBadges({
         </Badge>
       )}
       {value.isInbox && (
-        <Badge className="gap-1 pr-1" variant="secondary">
+        <Badge
+          className="gap-1 border-primary/15 bg-primary/10 pr-1 text-primary"
+          variant="secondary"
+        >
           {t("entry.inbox")}
           <button
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 rounded-full p-0.5 transition-colors outline-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/30"
             onClick={handleRemoveInbox}
             type="button"
           >
@@ -564,10 +604,13 @@ export function ActiveFilterBadges({
         </Badge>
       )}
       {value.isStarred && (
-        <Badge className="gap-1 pr-1" variant="secondary">
+        <Badge
+          className="gap-1 border-primary/15 bg-primary/10 pr-1 text-primary"
+          variant="secondary"
+        >
           {t("entry.starred")}
           <button
-            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            className="ml-1 rounded-full p-0.5 transition-colors outline-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/30"
             onClick={handleRemoveStarred}
             type="button"
           >

@@ -1,36 +1,17 @@
-import type { ModelType } from "@folionote/model-list"
+import type {
+  CatalogModel,
+  CatalogProvider,
+  ModelCatalog,
+  ModelType
+} from "@folionote/model-list"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo } from "react"
 
 import { orpc } from "@/utils/orpc"
 
-export interface CatalogProvider {
-  id: string
-  name: string
-  logo?: string
-  enabled: boolean
-}
-
-export interface CatalogModel {
-  id: string
-  providerId: string
-  type: string
-  displayName: string
-  enabled: boolean
-  /** Whether the model supports reasoning/thinking */
-  reasoning?: boolean
-  /** Model settings including extendParams */
-  settings?: {
-    extendParams?: string[]
-  }
-  /** Context window size in tokens for context tracking */
-  contextWindowTokens?: number
-}
-
-export interface ModelCatalog {
-  providers: CatalogProvider[]
-  models: CatalogModel[]
-}
+// Re-export the canonical catalog types so existing importers keep working
+// while there is a single source of truth in @folionote/model-list.
+export type { CatalogModel, CatalogProvider, ModelCatalog }
 
 const MODEL_CATALOG_QUERY_KEY = ["ai", "modelCatalog"] as const
 

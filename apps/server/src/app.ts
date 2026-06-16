@@ -9,7 +9,6 @@ import { onError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
 import { Hono } from "hono"
-import { compress } from "hono/compress"
 import { cors } from "hono/cors"
 import { languageDetector } from "hono/language"
 import { logger } from "hono/logger"
@@ -40,10 +39,9 @@ export const app = new Hono<{
 // Request ID middleware - generates unique ID for each request
 app.use("*", requestId())
 
-// Compress middleware - gzip/deflate response compression for self-hosted deployments
-// Note: On Cloudflare Workers/Deno Deploy, compression is automatic
-// Threshold: 1024 bytes (default), smaller responses are not compressed
-app.use("*", compress())
+// Response compression is handled at the edge by Caddy (`encode gzip zstd`).
+// Compressing here as well would waste CPU on the loopback hop and risks
+// buffering the SSE AI stream, so it is intentionally omitted.
 
 // Language detection middleware - detects user's preferred language
 app.use(
@@ -64,12 +62,17 @@ app.use(
   "/*",
   cors({
     origin: (origin) => {
-      // 允许配置的 origins
+      // Allow explicitly configured origins (CORS_ORIGIN).
       if (corsOrigins.includes(origin)) {
         return origin
       }
-      // 开发环境允许 localhost
-      if (origin.startsWith("http://localhost:")) {
+      // Reflect localhost only outside production. In production this must never
+      // fire — otherwise any app on any local port could make credentialed
+      // cross-origin requests with the user's session cookie.
+      if (
+        process.env.NODE_ENV !== "production" &&
+        origin?.startsWith("http://localhost:")
+      ) {
         return origin
       }
       return null

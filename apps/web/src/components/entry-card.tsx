@@ -243,7 +243,7 @@ export function EntryCard({
   const actionProps = { isStarred, isPinned, onStar, onPin, onDelete }
 
   return (
-    <Card className="group relative transition-all hover:shadow-md">
+    <Card className="group relative transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
       <Link className="block" params={{ id }} to="/entries/$id">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">

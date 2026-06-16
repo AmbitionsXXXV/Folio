@@ -72,7 +72,9 @@ function PasswordStrengthIndicator({
           <div
             className={cn(
               "h-1 flex-1 rounded-full",
-              index < strength ? strengthColors[strength] : "bg-muted"
+              index < strength
+                ? strengthColors[strength]
+                : "bg-surface-secondary"
             )}
             key={id}
           />

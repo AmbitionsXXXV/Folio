@@ -1,5 +1,4 @@
 import { Button } from "@folionote/ui/button"
-import { Card, CardContent } from "@folionote/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -25,6 +24,10 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
+import { Reveal } from "@/components/reveal"
+import { Surface } from "@/components/surface"
 import { cn } from "@/lib/utils"
 import { orpc } from "@/utils/orpc"
 
@@ -196,30 +199,23 @@ function TagsPage() {
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10 md:py-14">
+    <PageContainer width="default">
       {/* Header */}
-      <header className="animate-fade-in mb-10 flex items-start justify-between gap-4 md:mb-14">
-        <div>
-          <div className="mb-2 flex items-center gap-2.5">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/8 ring-1 ring-primary/15">
-              <HugeiconsIcon className="size-5 text-primary" icon={Tag01Icon} />
-            </div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              {t("tag.tags")}
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {tags.length > 0
-              ? `${String(tags.length)} ${t("tag.tags").toLowerCase()}`
-              : t("tag.noTags")}
-          </p>
-        </div>
-
-        <Button className="shrink-0" onClick={handleOpenCreate}>
-          <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-          {t("tag.newTag")}
-        </Button>
-      </header>
+      <PageHeader
+        actions={
+          <Button onClick={handleOpenCreate}>
+            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+            {t("tag.newTag")}
+          </Button>
+        }
+        description={
+          tags.length > 0
+            ? `${String(tags.length)} ${t("tag.tags").toLowerCase()}`
+            : t("tag.noTags")
+        }
+        icon={Tag01Icon}
+        title={t("tag.tags")}
+      />
 
       {/* Tag list */}
       <TagListContent
@@ -295,7 +291,7 @@ function TagsPage() {
             {/* Preview */}
             <div className="space-y-2">
               <Label>{t("tag.preview")}</Label>
-              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-surface-secondary/30 px-4 py-3">
                 {tagColor ? (
                   <span
                     className="size-3 rounded-full ring-1 ring-black/5"
@@ -343,7 +339,7 @@ function TagsPage() {
         open={!!deleteTarget}
         title={t("tag.deleteConfirmTitle")}
       />
-    </div>
+    </PageContainer>
   )
 }
 
@@ -366,7 +362,7 @@ function TagCard({
   const entriesCount = countData?.count ?? 0
 
   return (
-    <Card className="group relative overflow-hidden border-border/50 transition-all duration-300 hover:border-border hover:shadow-md">
+    <Surface className="group relative overflow-hidden" interactive>
       {/* Color accent bar */}
       <div
         className="absolute inset-y-0 left-0 w-1 transition-all duration-300 group-hover:w-1.5"
@@ -381,7 +377,7 @@ function TagCard({
         search={{ tagId: tag.id }}
         to="/library"
       >
-        <CardContent className="flex items-center justify-between gap-3 py-4">
+        <div className="flex items-center justify-between gap-3 p-5">
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center gap-2">
               {tag.color ? (
@@ -430,9 +426,9 @@ function TagCard({
               <HugeiconsIcon className="size-3.5" icon={Delete02Icon} />
             </Button>
           </div>
-        </CardContent>
+        </div>
       </Link>
-    </Card>
+    </Surface>
   )
 }
 
@@ -478,7 +474,7 @@ function TagListContent({
   if (isError) {
     return (
       <div className="animate-fade-in flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 rounded-full bg-destructive/8 p-4">
+        <div className="mb-4 rounded-full bg-destructive/10 p-4">
           <HugeiconsIcon
             className="size-8 text-destructive/50"
             icon={Tag01Icon}
@@ -520,16 +516,13 @@ function TagListContent({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {tags.map((tag: Tag, i: number) => (
-        <div
-          className={cn("animate-fade-in", i > 0 && `delay-${(i % 4) * 100}`)}
-          key={tag.id}
-        >
+        <Reveal delay={i * 60} key={tag.id}>
           <TagCard
             onDelete={() => handleDelete(tag)}
             onEdit={() => handleOpenEdit(tag)}
             tag={tag}
           />
-        </div>
+        </Reveal>
       ))}
     </div>
   )

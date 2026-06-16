@@ -17,16 +17,16 @@ export function ReviewSessionHeader({
   const { t } = useTranslation()
 
   return (
-    <div className="mb-6 flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-semibold">
+    <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="space-y-1.5">
+        <h2 className="font-display text-lg font-semibold tracking-tight">
           {ruleLabel} {t("review.reviewSession")}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          <span className="tabular-nums">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary tabular-nums ring-1 ring-primary/15">
             {currentIndex + 1} / {totalInQueue}
-          </span>{" "}
-          · {t("review.reviewedTodayCount", { count: reviewedToday })}
+          </span>
+          {t("review.reviewedTodayCount", { count: reviewedToday })}
         </p>
       </div>
       <Button

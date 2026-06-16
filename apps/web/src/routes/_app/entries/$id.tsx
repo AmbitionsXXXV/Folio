@@ -457,6 +457,9 @@ function EntryEditPage() {
   const title = localTitle ?? entry.title
   const hasToc = tocItems.length > 0
 
+  const actionButtonClass =
+    "inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+
   return (
     <div
       className={cn(
@@ -491,7 +494,7 @@ function EntryEditPage() {
               <Tooltip>
                 <TooltipTrigger
                   aria-label={t("entry.moveToLibrary")}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                  className={actionButtonClass}
                   onClick={handleMoveToLibrary}
                 >
                   <HugeiconsIcon className="size-4" icon={ArchiveIcon} />
@@ -502,7 +505,7 @@ function EntryEditPage() {
               <Tooltip>
                 <TooltipTrigger
                   aria-label={t("entry.moveToInbox")}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                  className={actionButtonClass}
                   onClick={handleMoveToInbox}
                 >
                   <HugeiconsIcon className="size-4" icon={InboxIcon} />
@@ -518,7 +521,7 @@ function EntryEditPage() {
                   entry.isStarred ? t("entry.unstar") : t("entry.star")
                 }
                 aria-pressed={entry.isStarred}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                className={actionButtonClass}
                 onClick={handleToggleStar}
               >
                 <HugeiconsIcon
@@ -539,7 +542,7 @@ function EntryEditPage() {
               <TooltipTrigger
                 aria-label={entry.isPinned ? t("entry.unpin") : t("entry.pin")}
                 aria-pressed={entry.isPinned}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                className={actionButtonClass}
                 onClick={handleTogglePin}
               >
                 <HugeiconsIcon
@@ -559,7 +562,7 @@ function EntryEditPage() {
             <Tooltip>
               <TooltipTrigger
                 aria-label={t("common.delete")}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-destructive/30 focus-visible:outline-none"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-destructive/30 focus-visible:outline-none"
                 onClick={handleDeleteClick}
               >
                 <HugeiconsIcon className="size-4" icon={Delete02Icon} />
@@ -599,7 +602,7 @@ function EntryEditPage() {
         <Input
           aria-label={t("entry.title")}
           autoComplete="off"
-          className="mb-4 h-auto border-none bg-transparent py-2 text-2xl font-bold shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
+          className="mb-4 h-auto border-none bg-transparent py-2 font-display text-2xl font-semibold tracking-tight shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
           onChange={handleTitleChange}
           placeholder={t("entry.title")}
           spellCheck={false}
@@ -616,7 +619,7 @@ function EntryEditPage() {
           <EntrySources entryId={id} ref={entrySourcesRef} />
         </div>
 
-        {/* Editor */}
+        {/* Editor — flows directly on the page canvas (Lark-style), no card */}
         <div ref={contentRef}>
           <EntryEditor
             additionalCommands={additionalCommands}

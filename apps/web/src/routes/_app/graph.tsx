@@ -5,6 +5,8 @@ import { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
+import { Reveal } from "@/components/reveal"
+import { Surface } from "@/components/surface"
 import { GraphCanvas } from "@/features/graph/graph-canvas"
 import { GraphToolbar } from "@/features/graph/graph-toolbar"
 import { orpc } from "@/utils/orpc"
@@ -106,15 +108,17 @@ function GraphPage() {
         />
         <div className="relative flex-1 overflow-hidden">
           {nodes.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <p className="text-lg font-medium text-muted-foreground">
-                  {t("graph.emptyTitle")}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground/60">
-                  {t("graph.emptyDescription")}
-                </p>
-              </div>
+            <div className="flex h-full items-center justify-center p-4">
+              <Reveal>
+                <Surface className="max-w-md p-8 text-center">
+                  <p className="font-display text-lg font-semibold tracking-tight text-foreground">
+                    {t("graph.emptyTitle")}
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("graph.emptyDescription")}
+                  </p>
+                </Surface>
+              </Reveal>
             </div>
           ) : (
             <GraphCanvas

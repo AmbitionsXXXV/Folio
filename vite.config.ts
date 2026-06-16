@@ -19,6 +19,7 @@ const sharedIgnores = [
   "**/.react-email/**",
   "**/convex/_generated/**",
   "**/routeTree.gen.ts",
+  "**/uniwind-types.d.ts",
   "**/*.lock",
   "tools/clean.js"
 ]

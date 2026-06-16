@@ -1,3 +1,4 @@
+import type { TranslateFunction } from "@folionote/editor-core"
 import {
   ArrowDown01Icon,
   ArrowLeft01Icon,
@@ -10,25 +11,37 @@ import {
   SquareArrowDownDoubleIcon,
   SquareArrowLeftDoubleIcon,
   SquareArrowRightDoubleIcon,
-  SquareArrowUpDoubleIcon
+  SquareArrowUpDoubleIcon,
+  TableIcon,
+  TextAlignCenterIcon,
+  TextAlignLeftIcon,
+  TextAlignRightIcon
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useRef, useState } from "react"
 
 import { TABLE_COLORS, TABLE_COLORS_DARK } from "../extensions/table-extension"
 
+/** Resolve an `editor.table.*` label with an English fallback. */
+function makeLabel(t?: TranslateFunction) {
+  return (key: string, fallback: string) =>
+    t?.(`editor.table.${key}`) ?? fallback
+}
+
 interface ColorPickerProps {
   colors: ReadonlyArray<{ name: string; value: string }>
   currentBackgroundColor: string | null | undefined
   onSetBackgroundColor: (color: string | null) => void
   onClose: () => void
+  defaultLabel: string
 }
 
 function ColorPicker({
   colors,
   currentBackgroundColor,
   onSetBackgroundColor,
-  onClose
+  onClose,
+  defaultLabel
 }: ColorPickerProps) {
   return (
     <div className="table-menu-color-picker">
@@ -38,13 +51,13 @@ function ColorPicker({
           onSetBackgroundColor(null)
           onClose()
         }}
-        title="Default"
+        title={defaultLabel}
         type="button"
       >
         <span className="table-menu-color-swatch table-menu-color-default">
           <HugeiconsIcon className="size-3" icon={Cancel01Icon} />
         </span>
-        <span>Default</span>
+        <span>{defaultLabel}</span>
       </button>
       {colors.map((color) => (
         <button
@@ -68,8 +81,54 @@ function ColorPicker({
   )
 }
 
+interface AlignSectionProps {
+  label: (key: string, fallback: string) => string
+  onSetAlign?: (align: string) => void
+}
+
+function AlignSection({ label, onSetAlign }: AlignSectionProps) {
+  if (!onSetAlign) {
+    return null
+  }
+  return (
+    <>
+      <div className="table-menu-divider" />
+      <div className="table-menu-section table-menu-align-row">
+        <button
+          aria-label={label("alignLeft", "Align left")}
+          className="table-menu-align-btn"
+          onClick={() => onSetAlign("left")}
+          title={label("alignLeft", "Align left")}
+          type="button"
+        >
+          <HugeiconsIcon className="size-4" icon={TextAlignLeftIcon} />
+        </button>
+        <button
+          aria-label={label("alignCenter", "Align center")}
+          className="table-menu-align-btn"
+          onClick={() => onSetAlign("center")}
+          title={label("alignCenter", "Align center")}
+          type="button"
+        >
+          <HugeiconsIcon className="size-4" icon={TextAlignCenterIcon} />
+        </button>
+        <button
+          aria-label={label("alignRight", "Align right")}
+          className="table-menu-align-btn"
+          onClick={() => onSetAlign("right")}
+          title={label("alignRight", "Align right")}
+          type="button"
+        >
+          <HugeiconsIcon className="size-4" icon={TextAlignRightIcon} />
+        </button>
+      </div>
+    </>
+  )
+}
+
 interface MoveSectionProps {
   isRow: boolean
+  label: (key: string, fallback: string) => string
   onMoveUp?: () => void
   onMoveDown?: () => void
   onMoveLeft?: () => void
@@ -78,6 +137,7 @@ interface MoveSectionProps {
 
 function MoveSection({
   isRow,
+  label,
   onMoveUp,
   onMoveDown,
   onMoveLeft,
@@ -104,7 +164,7 @@ function MoveSection({
                 type="button"
               >
                 <HugeiconsIcon className="size-4" icon={ArrowUp01Icon} />
-                <span>Move up</span>
+                <span>{label("moveUp", "Move up")}</span>
               </button>
             )}
             {onMoveDown && (
@@ -114,7 +174,7 @@ function MoveSection({
                 type="button"
               >
                 <HugeiconsIcon className="size-4" icon={ArrowDown01Icon} />
-                <span>Move down</span>
+                <span>{label("moveDown", "Move down")}</span>
               </button>
             )}
           </>
@@ -127,7 +187,7 @@ function MoveSection({
                 type="button"
               >
                 <HugeiconsIcon className="size-4" icon={ArrowLeft01Icon} />
-                <span>Move left</span>
+                <span>{label("moveLeft", "Move left")}</span>
               </button>
             )}
             {onMoveRight && (
@@ -137,7 +197,7 @@ function MoveSection({
                 type="button"
               >
                 <HugeiconsIcon className="size-4" icon={ArrowRight01Icon} />
-                <span>Move right</span>
+                <span>{label("moveRight", "Move right")}</span>
               </button>
             )}
           </>
@@ -149,12 +209,14 @@ function MoveSection({
 
 interface ActionsSectionProps {
   isRow: boolean
+  label: (key: string, fallback: string) => string
   onDuplicate?: () => void
   onToggleHeader?: () => void
 }
 
 function ActionsSection({
   isRow,
+  label,
   onDuplicate,
   onToggleHeader
 }: ActionsSectionProps) {
@@ -173,17 +235,27 @@ function ActionsSection({
             type="button"
           >
             <HugeiconsIcon className="size-4" icon={Copy01Icon} />
-            <span>Duplicate</span>
+            <span>
+              {label(
+                isRow ? "duplicateRow" : "duplicateColumn",
+                isRow ? "Duplicate row" : "Duplicate column"
+              )}
+            </span>
           </button>
         )}
-        {onToggleHeader && isRow && (
+        {onToggleHeader && (
           <button
             className="table-menu-item"
             onClick={onToggleHeader}
             type="button"
           >
-            <span className="table-menu-icon-placeholder" />
-            <span>Toggle header row</span>
+            <HugeiconsIcon className="size-4" icon={TableIcon} />
+            <span>
+              {label(
+                isRow ? "toggleHeaderRow" : "toggleHeaderColumn",
+                isRow ? "Toggle header row" : "Toggle header column"
+              )}
+            </span>
           </button>
         )}
       </div>
@@ -206,8 +278,10 @@ export interface TableMenuProps {
   onDuplicate?: () => void
   onClearContents?: () => void
   onSetBackgroundColor?: (color: string | null) => void
+  onSetAlign?: (align: string) => void
   currentBackgroundColor?: string | null
   isDarkMode?: boolean
+  t?: TranslateFunction
 }
 
 /**
@@ -230,11 +304,14 @@ export function TableMenu({
   onDuplicate,
   onClearContents,
   onSetBackgroundColor,
+  onSetAlign,
   currentBackgroundColor,
-  isDarkMode = false
+  isDarkMode = false,
+  t
 }: TableMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const label = makeLabel(t)
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -310,7 +387,7 @@ export function TableMenu({
               type="button"
             >
               <HugeiconsIcon className="size-4" icon={PaintBoardIcon} />
-              <span>Background color</span>
+              <span>{label("backgroundColor", "Background color")}</span>
               <span className="table-menu-item-arrow">›</span>
             </button>
 
@@ -318,6 +395,7 @@ export function TableMenu({
               <ColorPicker
                 colors={colors}
                 currentBackgroundColor={currentBackgroundColor}
+                defaultLabel={label("defaultColor", "Default")}
                 onClose={() => setShowColorPicker(false)}
                 onSetBackgroundColor={onSetBackgroundColor}
               />
@@ -331,7 +409,12 @@ export function TableMenu({
               type="button"
             >
               <HugeiconsIcon className="size-4" icon={Cancel01Icon} />
-              <span>Clear {isRow ? "row" : "column"} style</span>
+              <span>
+                {label(
+                  isRow ? "clearRowStyle" : "clearColumnStyle",
+                  isRow ? "Clear row style" : "Clear column style"
+                )}
+              </span>
             </button>
           )}
 
@@ -346,7 +429,12 @@ export function TableMenu({
             className="size-4"
             icon={isRow ? SquareArrowUpDoubleIcon : SquareArrowLeftDoubleIcon}
           />
-          <span>{isRow ? "Insert above" : "Insert left"}</span>
+          <span>
+            {label(
+              isRow ? "insertAbove" : "insertLeft",
+              isRow ? "Insert above" : "Insert left"
+            )}
+          </span>
         </button>
         <button className="table-menu-item" onClick={onAddAfter} type="button">
           <HugeiconsIcon
@@ -355,12 +443,20 @@ export function TableMenu({
               isRow ? SquareArrowDownDoubleIcon : SquareArrowRightDoubleIcon
             }
           />
-          <span>{isRow ? "Insert below" : "Insert right"}</span>
+          <span>
+            {label(
+              isRow ? "insertBelow" : "insertRight",
+              isRow ? "Insert below" : "Insert right"
+            )}
+          </span>
         </button>
       </div>
 
+      <AlignSection label={label} onSetAlign={onSetAlign} />
+
       <MoveSection
         isRow={isRow}
+        label={label}
         onMoveDown={onMoveDown}
         onMoveLeft={onMoveLeft}
         onMoveRight={onMoveRight}
@@ -369,6 +465,7 @@ export function TableMenu({
 
       <ActionsSection
         isRow={isRow}
+        label={label}
         onDuplicate={onDuplicate}
         onToggleHeader={onToggleHeader}
       />
@@ -383,7 +480,12 @@ export function TableMenu({
             type="button"
           >
             <HugeiconsIcon className="size-4" icon={Cancel01Icon} />
-            <span>Clear {isRow ? "row" : "column"} contents</span>
+            <span>
+              {label(
+                isRow ? "clearRowContents" : "clearColumnContents",
+                isRow ? "Clear row contents" : "Clear column contents"
+              )}
+            </span>
           </button>
         )}
         <button
@@ -392,7 +494,12 @@ export function TableMenu({
           type="button"
         >
           <HugeiconsIcon className="size-4" icon={Delete01Icon} />
-          <span>Delete {isRow ? "row" : "column"}</span>
+          <span>
+            {label(
+              isRow ? "deleteRow" : "deleteColumn",
+              isRow ? "Delete row" : "Delete column"
+            )}
+          </span>
         </button>
       </div>
     </div>

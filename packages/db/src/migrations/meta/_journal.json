@@ -85,6 +85,13 @@
       "when": 1772474587341,
       "tag": "0011_worthless_nightmare",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1781166124695,
+      "tag": "0012_add_model_catalog",
+      "breakpoints": true
     }
   ]
 }

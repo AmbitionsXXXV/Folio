@@ -175,7 +175,7 @@ export function EntrySources({ entryId, ref }: EntrySourcesProps) {
               </p>
               {availableSources.map((source: Source) => (
                 <button
-                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-surface-secondary"
                   disabled={addSourceMutation.isPending}
                   key={source.id}
                   onClick={() => {

@@ -224,7 +224,7 @@ function NewEntryPage() {
             <TooltipContent side="bottom">
               <span className="flex items-center gap-1.5">
                 {t("common.save")}
-                <kbd className="rounded border border-border/50 bg-muted/50 px-1.5 py-0.5 font-mono text-[10px]">
+                <kbd className="rounded border border-border/50 bg-surface-secondary/50 px-1.5 py-0.5 font-mono text-[10px]">
                   ⌘&nbsp;S
                 </kbd>
               </span>
@@ -237,14 +237,14 @@ function NewEntryPage() {
           aria-label={t("entry.title")}
           autoComplete="off"
           autoFocus
-          className="mb-4 h-auto border-none bg-transparent py-2 text-2xl font-bold shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
+          className="mb-4 h-auto border-none bg-transparent py-2 font-display text-2xl font-semibold tracking-tight shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("entry.title")}
           spellCheck={false}
           value={title}
         />
 
-        {/* Editor */}
+        {/* Editor — flows directly on the page canvas (Lark-style), no card */}
         <div ref={contentRef}>
           <EntryEditor
             content={contentJson}

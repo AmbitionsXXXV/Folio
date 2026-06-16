@@ -9,10 +9,11 @@
   --white: oklch(100% 0 0);
   --black: oklch(0% 0 0);
   --snow: oklch(0.9911 0 0);
-  --eclipse: oklch(0.2103 0.0059 285.89);
+  /* Warm obsidian (used as dark text on bright status chips) */
+  --eclipse: oklch(0.21 0.006 60);
 
-  /* Base radius - synced from web */
-  --radius: 0.75rem;
+  /* Base radius — native-tuned: web uses 1.5rem, 1rem reads better on mobile */
+  --radius: 1rem;
 
   /* Opacity */
   --opacity-disabled: 0.5;
@@ -21,34 +22,34 @@
 @layer theme {
   :root {
     @variant light {
-      /* Base Colors - synced from web light theme */
-      --background: oklch(0.9689 0.009 314.7819);
-      --foreground: oklch(0.3729 0.0306 259.7328);
+      /* FolioNote — Obsidian & Warm Amber (light), synced from packages/ui */
+      --background: oklch(0.964 0.009 84);
+      --foreground: oklch(0.265 0.008 62);
 
-      /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
-      --surface: var(--white);
+      /* Surface: non-overlay components (cards, accordions, disclosure groups) */
+      --surface: oklch(0.992 0.0045 84);
       --surface-foreground: var(--foreground);
 
-      /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) */
-      --overlay: var(--white);
+      /* Overlay: floating components (dialogs, popovers, modals, menus) */
+      --overlay: oklch(0.992 0.0045 84);
       --overlay-foreground: var(--foreground);
 
-      /* Muted - synced from web */
-      --muted: oklch(0.551 0.0234 264.3637);
+      /* Muted = web muted-foreground (muted text / placeholders) */
+      --muted: oklch(0.485 0.015 64);
 
-      /* Default - mapped from web secondary */
-      --default: oklch(0.9073 0.053 306.0902);
-      --default-foreground: oklch(0.4461 0.0263 256.8018);
+      /* Default = web secondary */
+      --default: oklch(0.922 0.015 80);
+      --default-foreground: oklch(0.3 0.01 64);
 
-      /* Accent - mapped from web primary (purple) */
-      --accent: oklch(0.709 0.1592 293.5412);
-      --accent-foreground: var(--white);
+      /* Accent = web primary (warm honey-amber) */
+      --accent: oklch(0.685 0.132 69);
+      --accent-foreground: oklch(0.215 0.022 60);
 
       /* Form Field Defaults - Colors */
-      --field-background: var(--white);
+      --field-background: oklch(0.992 0.0045 84);
       --field-foreground: var(--foreground);
       --field-placeholder: var(--muted);
-      --field-border: oklch(0.9073 0.053 306.0902);
+      --field-border: oklch(0.898 0.013 80);
 
       /* Status Colors */
       --success: oklch(0.7329 0.1935 150.81);
@@ -57,49 +58,49 @@
       --warning: oklch(0.7819 0.1585 72.33);
       --warning-foreground: var(--eclipse);
 
-      /* Danger - mapped from web destructive */
-      --danger: oklch(0.8077 0.1035 19.5706);
-      --danger-foreground: var(--white);
+      /* Danger = web destructive */
+      --danger: oklch(0.585 0.182 27);
+      --danger-foreground: oklch(0.99 0.005 90);
 
       /* Component Colors */
-      --segment: var(--white);
+      --segment: oklch(0.992 0.0045 84);
       --segment-foreground: var(--foreground);
 
       /* Misc Colors */
-      --border: oklch(0.9073 0.053 306.0902);
-      --divider: oklch(0.9073 0.053 306.0902);
-      --link: oklch(0.709 0.1592 293.5412);
+      --border: oklch(0.898 0.013 80);
+      --divider: oklch(0.898 0.013 80);
+      --link: oklch(0.685 0.132 69);
     }
 
     @variant dark {
-      /* Base Colors - synced from web dark theme */
-      --background: oklch(0.2161 0.0061 56.0434);
-      --foreground: oklch(0.9299 0.0334 272.7879);
+      /* FolioNote — Obsidian & Warm Amber (dark), synced from packages/ui */
+      --background: oklch(0.195 0.006 56);
+      --foreground: oklch(0.925 0.013 82);
 
-      /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
-      --surface: oklch(0.2805 0.0309 307.2326);
+      /* Surface: non-overlay components (cards, accordions, disclosure groups) */
+      --surface: oklch(0.245 0.009 58);
       --surface-foreground: var(--foreground);
 
-      /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) - lighter for contrast */
-      --overlay: oklch(0.3416 0.0444 308.8496);
+      /* Overlay: floating components — slightly lighter than surface for contrast */
+      --overlay: oklch(0.27 0.009 58);
       --overlay-foreground: var(--foreground);
 
-      /* Muted - synced from web */
-      --muted: oklch(0.7137 0.0192 261.3246);
+      /* Muted = web muted-foreground (muted text / placeholders) */
+      --muted: oklch(0.715 0.015 74);
 
-      /* Default - mapped from web secondary */
-      --default: oklch(0.3416 0.0444 308.8496);
-      --default-foreground: oklch(0.8717 0.0093 258.3382);
+      /* Default = web secondary */
+      --default: oklch(0.3 0.011 58);
+      --default-foreground: oklch(0.9 0.012 82);
 
-      /* Accent - mapped from web primary (purple) */
-      --accent: oklch(0.7874 0.1179 295.7538);
-      --accent-foreground: oklch(0.2161 0.0061 56.0434);
+      /* Accent = web primary (brighter amber that glows on dark) */
+      --accent: oklch(0.778 0.136 72);
+      --accent-foreground: oklch(0.2 0.012 60);
 
       /* Form Field Defaults - Colors */
       --field-background: var(--default);
       --field-foreground: var(--foreground);
       --field-placeholder: var(--muted);
-      --field-border: oklch(0.3416 0.0444 308.8496);
+      --field-border: oklch(0.305 0.011 58);
 
       /* Status Colors */
       --success: oklch(0.7329 0.1935 150.81);
@@ -108,18 +109,18 @@
       --warning: oklch(0.8203 0.1388 76.34);
       --warning-foreground: var(--eclipse);
 
-      /* Danger - mapped from web destructive */
-      --danger: oklch(0.8077 0.1035 19.5706);
-      --danger-foreground: oklch(0.2161 0.0061 56.0434);
+      /* Danger = web destructive */
+      --danger: oklch(0.62 0.19 26);
+      --danger-foreground: oklch(0.96 0.006 90);
 
       /* Component Colors */
-      --segment: oklch(0.3858 0.0509 304.6383);
+      --segment: oklch(0.3 0.011 58);
       --segment-foreground: var(--foreground);
 
       /* Misc Colors */
-      --border: oklch(0.3416 0.0444 308.8496);
-      --divider: oklch(0.3416 0.0444 308.8496);
-      --link: oklch(0.7874 0.1179 295.7538);
+      --border: oklch(0.305 0.011 58);
+      --divider: oklch(0.305 0.011 58);
+      --link: oklch(0.778 0.136 72);
     }
   }
 }

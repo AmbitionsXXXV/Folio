@@ -1,21 +1,25 @@
-import type { Editor } from "@tiptap/core"
+import type { TranslateFunction } from "@folionote/editor-core"
+import {
+  DragDropVerticalIcon,
+  LayoutTable01Icon
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { TextSelection } from "@tiptap/pm/state"
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react"
+import type { NodeViewProps } from "@tiptap/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { TableBlockMenu } from "./table-block-menu"
 import { TableControls } from "./table-controls"
-import { TableFloatingToolbar } from "./table-floating-toolbar"
 import { TableMenu } from "./table-menu"
-
-export interface TableNodeViewProps {
-  editor: Editor
-  isDarkMode?: boolean
-}
 
 export type MenuState = {
   type: "row" | "column"
   index: number
   position: { x: number; y: number }
 } | null
+
+type BlockMenuState = { x: number; y: number } | null
 
 interface ControlPosition {
   top: number
@@ -24,15 +28,35 @@ interface ControlPosition {
 
 const POSITION_EPSILON_PX = 0.5
 
+/** Track the document's dark mode via the `.dark` class on <html>. */
+function useIsDarkMode(): boolean {
+  const [isDark, setIsDark] = useState(false)
+  useEffect(() => {
+    const root = document.documentElement
+    const update = () => setIsDark(root.classList.contains("dark"))
+    update()
+    const observer = new MutationObserver(update)
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
+  return isDark
+}
+
 /**
- * Enhanced TableNodeView wrapper component
- * Provides row/column controls, context menus, and floating toolbar for table manipulation
- * Inspired by AFFiNE's table implementation
+ * Enhanced TableNodeView wrapper component.
+ *
+ * Provides row/column controls, context menus, a floating add toolbar, and a
+ * Lark-style block menu (opened from the ⠿ handle) for table manipulation.
  */
 export function TableNodeView({
   editor,
-  isDarkMode = false
-}: TableNodeViewProps) {
+  node,
+  getPos,
+  extension
+}: NodeViewProps) {
+  const t = (extension.options as { t?: TranslateFunction }).t
+  const isDarkMode = useIsDarkMode()
+
   const [tableElement, setTableElement] = useState<HTMLTableElement | null>(
     null
   )
@@ -43,9 +67,29 @@ export function TableNodeView({
   const [columnControlPosition, setColumnControlPosition] =
     useState<ControlPosition | null>(null)
   const [menuState, setMenuState] = useState<MenuState>(null)
+  const [blockMenu, setBlockMenu] = useState<BlockMenuState>(null)
   const contentRef = useRef<HTMLTableSectionElement>(null)
   const hoveredRowIndexRef = useRef<number | null>(null)
   const hoveredColumnIndexRef = useRef<number | null>(null)
+
+  const rowCount = node.childCount
+  const columnCount = node.childCount > 0 ? node.child(0).childCount : 0
+
+  // Column widths for the <colgroup>. Rendering a colgroup (as the default
+  // TableView does) is what lets prosemirror-tables' column resizing apply and
+  // persist widths — our custom node view replaced that TableView.
+  const colWidths: Array<number | null> = []
+  if (node.childCount > 0) {
+    const firstRow = node.child(0)
+    for (let i = 0; i < firstRow.childCount; i++) {
+      const cell = firstRow.child(i)
+      const colspan = (cell.attrs.colspan as number | undefined) ?? 1
+      const colwidth = cell.attrs.colwidth as number[] | null
+      for (let j = 0; j < colspan; j++) {
+        colWidths.push(colwidth?.[j] ?? null)
+      }
+    }
+  }
 
   // Update table element ref when mounted
   useEffect(() => {
@@ -225,110 +269,102 @@ export function TableNodeView({
     }
   }, [tableElement, updateControlPositions])
 
+  // ── Command plumbing ──────────────────────────────────────────────────────
+
+  /** Resolve a document position inside the cell at (rowIndex, columnIndex). */
+  const cellInsidePos = useCallback(
+    (rowIndex: number, columnIndex: number): number | null => {
+      const pos = getPos()
+      if (typeof pos !== "number") {
+        return null
+      }
+      const table = editor.state.doc.nodeAt(pos)
+      if (!table || table.type.name !== "table" || table.childCount === 0) {
+        return null
+      }
+      const r = Math.min(Math.max(rowIndex, 0), table.childCount - 1)
+      const row = table.child(r)
+      if (row.childCount === 0) {
+        return null
+      }
+      const c = Math.min(Math.max(columnIndex, 0), row.childCount - 1)
+      let p = pos + 1 // into table, before first row
+      for (let i = 0; i < r; i++) {
+        p += table.child(i).nodeSize
+      }
+      p += 1 // into row, before first cell
+      for (let i = 0; i < c; i++) {
+        p += row.child(i).nodeSize
+      }
+      p += 1 // into cell, before its first child
+      return p
+    },
+    [editor, getPos]
+  )
+
+  /** Run a chained command with the selection first placed in a given cell. */
+  const runOnCell = useCallback(
+    (
+      rowIndex: number,
+      columnIndex: number,
+      build: (chain: ReturnType<typeof editor.chain>) => void
+    ) => {
+      const inside = cellInsidePos(rowIndex, columnIndex)
+      if (inside === null) {
+        return
+      }
+      const chain = editor.chain().command(({ tr, dispatch }) => {
+        if (dispatch) {
+          tr.setSelection(TextSelection.near(tr.doc.resolve(inside)))
+        }
+        return true
+      })
+      build(chain)
+    },
+    [editor, cellInsidePos]
+  )
+
+  /** Invoke a callback with the current table position, if available. */
+  const withPos = useCallback(
+    (fn: (pos: number) => void) => {
+      const pos = getPos()
+      if (typeof pos === "number") {
+        fn(pos)
+      }
+    },
+    [getPos]
+  )
+
+  const closeMenu = useCallback(() => setMenuState(null), [])
+
   // Row operations
-  const handleAddRowBefore = useCallback(
-    (_index: number) => {
-      // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-      ;(editor.chain().focus() as any).addRowBefore().run()
-    },
-    [editor]
-  )
-
   const handleAddRowAfter = useCallback(
-    (_index: number) => {
-      // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-      ;(editor.chain().focus() as any).addRowAfter().run()
+    (index: number) => {
+      runOnCell(index, hoveredColumn ?? 0, (chain) =>
+        // biome-ignore lint/suspicious/noExplicitAny: extension-table command typing
+        (chain as any).addRowAfter().run()
+      )
     },
-    [editor]
+    [runOnCell, hoveredColumn]
   )
-
-  const handleDeleteRow = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).deleteRow().run()
-    setMenuState(null)
-  }, [editor])
-
-  const handleMoveRowUp = useCallback(() => {
-    // Move row up by deleting and inserting
-    // Note: TipTap doesn't have built-in move commands, this is a workaround
-    // For a full implementation, you'd need to implement custom commands
-    setMenuState(null)
-  }, [])
-
-  const handleMoveRowDown = useCallback(() => {
-    setMenuState(null)
-  }, [])
 
   // Column operations
-  const handleAddColumnBefore = useCallback(
-    (_index: number) => {
-      // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-      ;(editor.chain().focus() as any).addColumnBefore().run()
-    },
-    [editor]
-  )
-
   const handleAddColumnAfter = useCallback(
-    (_index: number) => {
-      // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-      ;(editor.chain().focus() as any).addColumnAfter().run()
+    (index: number) => {
+      runOnCell(hoveredRow ?? 0, index, (chain) =>
+        // biome-ignore lint/suspicious/noExplicitAny: extension-table command typing
+        (chain as any).addColumnAfter().run()
+      )
     },
-    [editor]
+    [runOnCell, hoveredRow]
   )
-
-  const handleDeleteColumn = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).deleteColumn().run()
-    setMenuState(null)
-  }, [editor])
-
-  const handleMoveColumnLeft = useCallback(() => {
-    setMenuState(null)
-  }, [])
-
-  const handleMoveColumnRight = useCallback(() => {
-    setMenuState(null)
-  }, [])
-
-  // Header operations
-  const handleToggleHeaderRow = useCallback(() => {
-    // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-    ;(editor.chain().focus() as any).toggleHeaderRow().run()
-    setMenuState(null)
-  }, [editor])
-
-  // Cell operations
-  const handleSetBackgroundColor = useCallback(
-    (color: string | null) => {
-      // biome-ignore lint/suspicious/noExplicitAny: TipTap extension commands
-      const chain = editor.chain().focus() as any
-      if (color) {
-        chain.setCellAttribute("backgroundColor", color).run()
-      } else {
-        chain.setCellAttribute("backgroundColor", null).run()
-      }
-      setMenuState(null)
-    },
-    [editor]
-  )
-
-  const handleClearContents = useCallback(() => {
-    // Clear the contents of selected cells
-    // This would require custom implementation
-    setMenuState(null)
-  }, [])
-
-  const handleDuplicate = useCallback(() => {
-    // Duplicate row or column
-    // This would require custom implementation
-    setMenuState(null)
-  }, [])
 
   // Menu handlers
   const handleOpenMenu = useCallback(
     (type: "row" | "column", index: number, event: React.MouseEvent) => {
       event.preventDefault()
       event.stopPropagation()
+      setBlockMenu(null)
       setMenuState({
         type,
         index,
@@ -338,12 +374,219 @@ export function TableNodeView({
     []
   )
 
-  const handleCloseMenu = useCallback(() => {
+  const handleOpenBlockMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    // Anchor the menu to the whole pill, regardless of which segment is clicked.
+    const pill = (event.currentTarget as HTMLElement).closest(
+      ".table-block-handle"
+    )
+    const rect = (pill ?? event.currentTarget).getBoundingClientRect()
     setMenuState(null)
+    setBlockMenu({ x: rect.left, y: rect.bottom + 4 })
   }, [])
+
+  // Build the row/column menu handlers for the currently open menu.
+  const renderMenu = () => {
+    if (!menuState) {
+      return null
+    }
+    const { type, index, position } = menuState
+    const isRow = type === "row"
+
+    const setBackgroundColor = (color: string | null) =>
+      withPos((pos) =>
+        isRow
+          ? editor.commands.setTableRowAttribute({
+              pos,
+              index,
+              name: "backgroundColor",
+              value: color
+            })
+          : editor.commands.setTableColumnAttribute({
+              pos,
+              index,
+              name: "backgroundColor",
+              value: color
+            })
+      )
+
+    const setAlign = (align: string) =>
+      withPos((pos) =>
+        isRow
+          ? editor.commands.setTableRowAttribute({
+              pos,
+              index,
+              name: "textAlign",
+              value: align
+            })
+          : editor.commands.setTableColumnAttribute({
+              pos,
+              index,
+              name: "textAlign",
+              value: align
+            })
+      )
+
+    const canMoveUp = isRow && index > 0
+    const canMoveDown = isRow && index < rowCount - 1
+    const canMoveLeft = !isRow && index > 0
+    const canMoveRight = !isRow && index < columnCount - 1
+
+    return (
+      <TableMenu
+        currentBackgroundColor={null}
+        isDarkMode={isDarkMode}
+        onAddAfter={() => {
+          runOnCell(isRow ? index : 0, isRow ? 0 : index, (chain) =>
+            // biome-ignore lint/suspicious/noExplicitAny: extension-table command typing
+            (isRow
+              ? (chain as any).addRowAfter()
+              : (chain as any).addColumnAfter()
+            ).run()
+          )
+          closeMenu()
+        }}
+        onAddBefore={() => {
+          runOnCell(isRow ? index : 0, isRow ? 0 : index, (chain) =>
+            // biome-ignore lint/suspicious/noExplicitAny: extension-table command typing
+            (isRow
+              ? (chain as any).addRowBefore()
+              : (chain as any).addColumnBefore()
+            ).run()
+          )
+          closeMenu()
+        }}
+        onClearContents={() => {
+          withPos((pos) =>
+            isRow
+              ? editor.commands.clearTableRow({ pos, index })
+              : editor.commands.clearTableColumn({ pos, index })
+          )
+          closeMenu()
+        }}
+        onClose={closeMenu}
+        onDelete={() => {
+          runOnCell(isRow ? index : 0, isRow ? 0 : index, (chain) =>
+            // biome-ignore lint/suspicious/noExplicitAny: extension-table command typing
+            (isRow
+              ? (chain as any).deleteRow()
+              : (chain as any).deleteColumn()
+            ).run()
+          )
+          closeMenu()
+        }}
+        onDuplicate={() => {
+          withPos((pos) =>
+            isRow
+              ? editor.commands.duplicateTableRow({ pos, index })
+              : editor.commands.duplicateTableColumn({ pos, index })
+          )
+          closeMenu()
+        }}
+        onMoveDown={
+          canMoveDown
+            ? () => {
+                withPos((pos) =>
+                  editor.commands.moveTableRow({
+                    pos,
+                    from: index,
+                    to: index + 1
+                  })
+                )
+                closeMenu()
+              }
+            : undefined
+        }
+        onMoveLeft={
+          canMoveLeft
+            ? () => {
+                withPos((pos) =>
+                  editor.commands.moveTableColumn({
+                    pos,
+                    from: index,
+                    to: index - 1
+                  })
+                )
+                closeMenu()
+              }
+            : undefined
+        }
+        onMoveRight={
+          canMoveRight
+            ? () => {
+                withPos((pos) =>
+                  editor.commands.moveTableColumn({
+                    pos,
+                    from: index,
+                    to: index + 1
+                  })
+                )
+                closeMenu()
+              }
+            : undefined
+        }
+        onMoveUp={
+          canMoveUp
+            ? () => {
+                withPos((pos) =>
+                  editor.commands.moveTableRow({
+                    pos,
+                    from: index,
+                    to: index - 1
+                  })
+                )
+                closeMenu()
+              }
+            : undefined
+        }
+        onSetAlign={(align) => {
+          setAlign(align)
+          closeMenu()
+        }}
+        onSetBackgroundColor={(color) => {
+          setBackgroundColor(color)
+          closeMenu()
+        }}
+        onToggleHeader={() => {
+          runOnCell(isRow ? index : 0, isRow ? 0 : index, (chain) =>
+            // biome-ignore lint/suspicious/noExplicitAny: extension-table command typing
+            (isRow
+              ? (chain as any).toggleHeaderRow()
+              : (chain as any).toggleHeaderColumn()
+            ).run()
+          )
+          closeMenu()
+        }}
+        position={position}
+        t={t}
+        type={type}
+      />
+    )
+  }
 
   return (
     <NodeViewWrapper className="table-node-wrapper">
+      {/* Block handle ─ table-type action icon + drag dots, in one pill */}
+      <div className="table-block-handle" contentEditable={false}>
+        <button
+          aria-label={t?.("editor.table.block.menuLabel") ?? "Table options"}
+          className="table-block-handle-action"
+          onClick={handleOpenBlockMenu}
+          type="button"
+        >
+          <HugeiconsIcon className="size-4" icon={LayoutTable01Icon} />
+        </button>
+        <button
+          aria-label={t?.("editor.table.block.menuLabel") ?? "Table options"}
+          className="table-block-handle-drag"
+          onClick={handleOpenBlockMenu}
+          type="button"
+        >
+          <HugeiconsIcon className="size-4" icon={DragDropVerticalIcon} />
+        </button>
+      </div>
+
       {/* Row Controls - Left side */}
       <TableControls
         hoveredIndex={hoveredRow}
@@ -372,64 +615,37 @@ export function TableNodeView({
           }
         }}
       >
+        {/* Colgroup drives column widths and enables column resizing */}
+        <colgroup>
+          {colWidths.map((width, index) => (
+            <col
+              // biome-ignore lint/suspicious/noArrayIndexKey: columns are positional
+              key={`col-${index}`}
+              style={width ? { width: `${width}px` } : undefined}
+            />
+          ))}
+        </colgroup>
         {/*
-					Render the content (rows) into the tbody 
-					Tiptap/ProseMirror expects the content to be the rows 
+					Render the content (rows) into the tbody
+					Tiptap/ProseMirror expects the content to be the rows
 				*/}
         {/* @ts-expect-error - tbody is a valid HTML tag but not typed in NodeViewContent props */}
         <NodeViewContent as="tbody" ref={contentRef} />
       </table>
 
-      {/* Floating Toolbar - Add buttons at edges */}
-      <TableFloatingToolbar editor={editor} tableElement={tableElement} />
+      {/* Row/Column Context Menu */}
+      {renderMenu()}
 
-      {/* Context Menu */}
-      {menuState && (
-        <TableMenu
-          currentBackgroundColor={null}
-          isDarkMode={isDarkMode}
-          onAddAfter={
-            menuState.type === "row"
-              ? () => {
-                  handleAddRowAfter(menuState.index)
-                  handleCloseMenu()
-                }
-              : () => {
-                  handleAddColumnAfter(menuState.index)
-                  handleCloseMenu()
-                }
-          }
-          onAddBefore={
-            menuState.type === "row"
-              ? () => {
-                  handleAddRowBefore(menuState.index)
-                  handleCloseMenu()
-                }
-              : () => {
-                  handleAddColumnBefore(menuState.index)
-                  handleCloseMenu()
-                }
-          }
-          onClearContents={handleClearContents}
-          onClose={handleCloseMenu}
-          onDelete={
-            menuState.type === "row" ? handleDeleteRow : handleDeleteColumn
-          }
-          onDuplicate={handleDuplicate}
-          onMoveDown={menuState.type === "row" ? handleMoveRowDown : undefined}
-          onMoveLeft={
-            menuState.type === "column" ? handleMoveColumnLeft : undefined
-          }
-          onMoveRight={
-            menuState.type === "column" ? handleMoveColumnRight : undefined
-          }
-          onMoveUp={menuState.type === "row" ? handleMoveRowUp : undefined}
-          onSetBackgroundColor={handleSetBackgroundColor}
-          onToggleHeader={
-            menuState.type === "row" ? handleToggleHeaderRow : undefined
-          }
-          position={menuState.position}
-          type={menuState.type}
+      {/* Block Menu (image-2 parity) */}
+      {blockMenu && (
+        <TableBlockMenu
+          editor={editor}
+          getPos={getPos}
+          node={node}
+          onClose={() => setBlockMenu(null)}
+          position={blockMenu}
+          t={t}
+          tableElement={tableElement}
         />
       )}
     </NodeViewWrapper>

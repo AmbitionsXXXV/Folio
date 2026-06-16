@@ -148,7 +148,7 @@ export default function OnboardingScreen() {
 
           {/* Sign In Button (Secondary) */}
           <Button
-            className="border-divider bg-surface mb-3 flex-row items-center justify-center border active:opacity-80"
+            className="border-divider mb-3 flex-row items-center justify-center border bg-surface active:opacity-80"
             onPress={handleSignIn}
           >
             <Text className="text-lg font-semibold text-foreground">

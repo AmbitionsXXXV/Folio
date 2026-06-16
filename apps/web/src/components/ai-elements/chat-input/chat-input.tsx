@@ -375,6 +375,7 @@ export function ChatInput({
           className
         )}
         globalDrop
+        layout="stacked"
         maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
         maxFiles={FILE_ATTACHMENT_MAX_FILES}
         multiple
@@ -382,6 +383,7 @@ export function ChatInput({
           toast.error(getAttachmentErrorMessage(t, error))
         }}
         onSubmit={handlePromptSubmit}
+        variant="primary"
       >
         {/* Attachments (Notes + Files) */}
         <ChatInputAttachmentsHeader
@@ -417,7 +419,7 @@ export function ChatInput({
             <AiModelSelector
               catalogModels={catalogModels}
               catalogProviders={catalogProviders}
-              className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+              className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-surface-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
               disabled={isDisabled || !hasApiKey}
               onValueChange={onModelChange}
               placeholder={t("knowledge.selectModel")}
@@ -432,7 +434,7 @@ export function ChatInput({
                   aria-pressed={thinkingActive}
                   className={cn(
                     "relative inline-flex size-8 items-center justify-center rounded-lg",
-                    "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    "text-muted-foreground hover:bg-surface-secondary hover:text-foreground",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     "transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none",
                     thinkingActive &&

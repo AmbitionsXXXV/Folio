@@ -78,7 +78,7 @@ export const StockCard = memo(
                 "flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
                 changeTone === "up" && "bg-emerald-500/10",
                 changeTone === "down" && "bg-red-500/10",
-                changeTone === "flat" && "bg-muted"
+                changeTone === "flat" && "bg-surface-secondary"
               )}
             >
               {changeTone === "up" && (
@@ -177,7 +177,7 @@ export const StockCard = memo(
 
           {/* 价格与涨跌幅 */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-muted/30 px-3 py-2 backdrop-blur-sm">
+            <div className="rounded-lg bg-surface-secondary/30 px-3 py-2 backdrop-blur-sm">
               <p className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
                 {priceLabel}
               </p>
@@ -185,7 +185,7 @@ export const StockCard = memo(
                 {priceValue}
               </p>
             </div>
-            <div className="rounded-lg bg-muted/30 px-3 py-2 backdrop-blur-sm">
+            <div className="rounded-lg bg-surface-secondary/30 px-3 py-2 backdrop-blur-sm">
               <p className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
                 {changeLabel}
               </p>

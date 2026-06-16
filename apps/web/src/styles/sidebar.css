@@ -1,0 +1,121 @@
+/* ===========================================================================
+   Sidebar navigation items — FolioNote redesign
+   ---------------------------------------------------------------------------
+   Re-themes the HeroUI Pro Sidebar (`@heroui-pro/react/css`) menu items to the
+   obsidian + warm amber brand. The vendor sheet ships these as BEM classes
+   (`.sidebar__menu-item-content`, `.sidebar__menu-icon`, …) with state on
+   `[data-current]` / `:hover` / `[data-state=collapsed]`.
+
+   These rules are intentionally UNLAYERED and imported after the vendor sheet
+   in `apps/web/src/index.css`, so they win by source order (same cascade trick
+   the brand `:root` uses to override HeroUI defaults). Keep them out of any
+   `@layer` — a layered rule would lose to the vendor's unlayered ones.
+
+   What the vendor gave us, and why it needed a redesign:
+   the active item used `background-color: var(--default)` — the *same* fill as
+   hover — so "you are here" read identically to "you're hovering," with no
+   brand colour anywhere. This restores a clear, amber-led current state.
+   =========================================================================== */
+
+.sidebar {
+  /* Item geometry + state colors, tuned for the brand and easy to adjust. */
+  --nav-item-radius: 12px; /* calmer than the vendor's 48px stadium pill */
+  --nav-item-min-h: 2.375rem; /* 38px — a touch more presence than the 36px default */
+  --nav-item-pad-x: 0.625rem; /* 10px */
+  --nav-item-gap: 0.625rem; /* 10px */
+
+  --nav-hover-bg: color-mix(in oklch, var(--default) 55%, transparent);
+  --nav-active-bg: color-mix(in oklch, var(--accent) 16%, transparent);
+  --nav-active-bg-hover: color-mix(in oklch, var(--accent) 24%, transparent);
+  --nav-indicator: var(--accent);
+}
+
+/* The visible pill: calmer radius, comfier height, smooth state transitions. */
+.sidebar__menu-item-content {
+  position: relative;
+  min-height: var(--nav-item-min-h);
+  gap: var(--nav-item-gap);
+  padding-inline: var(--nav-item-pad-x);
+  border-radius: var(--nav-item-radius);
+  transition:
+    background-color 0.15s var(--ease-out, ease-out),
+    color 0.15s var(--ease-out, ease-out);
+}
+
+/* Amber "current line" drawn inside the pill's left edge, in the padding
+   gutter so it never collides with the icon. Grows in on navigation. */
+.sidebar__menu-item-content::before {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 3px;
+  height: 1.125rem; /* 18px */
+  content: "";
+  background-color: var(--nav-indicator);
+  border-radius: 9999px;
+  opacity: 0;
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  transition:
+    transform 0.2s var(--ease-out, ease-out),
+    opacity 0.15s var(--ease-out, ease-out);
+}
+
+/* Hover (non-active): gentle neutral wash, icon darkens muted → ink. */
+@media (hover: hover) {
+  .sidebar__menu-item:hover .sidebar__menu-item-content,
+  .sidebar__menu-item[data-hovered="true"] .sidebar__menu-item-content {
+    background-color: var(--nav-hover-bg);
+  }
+
+  .sidebar__menu-item:hover .sidebar__menu-icon,
+  .sidebar__menu-item[data-hovered="true"] .sidebar__menu-icon {
+    color: var(--foreground);
+  }
+}
+
+/* Active (current route): amber wash, amber icon + indicator, ink label.
+   Placed after the hover block so an active item that is also hovered keeps
+   its amber treatment instead of falling back to the neutral hover fill. */
+.sidebar__menu-item[data-current="true"] .sidebar__menu-item-content {
+  background-color: var(--nav-active-bg);
+}
+
+.sidebar__menu-item[data-current="true"] .sidebar__menu-item-content::before {
+  opacity: 1;
+  transform: translateY(-50%) scaleY(1);
+}
+
+.sidebar__menu-item[data-current="true"] .sidebar__menu-icon,
+.sidebar__menu-item[data-current="true"] .sidebar__menu-chip {
+  color: var(--accent);
+}
+
+.sidebar__menu-item[data-current="true"] .sidebar__menu-label {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Active + hover: deepen the amber wash a little for tactile feedback. */
+@media (hover: hover) {
+  .sidebar__menu-item[data-current="true"]:hover .sidebar__menu-item-content,
+  .sidebar__menu-item[data-current="true"][data-hovered="true"]
+    .sidebar__menu-item-content {
+    background-color: var(--nav-active-bg-hover);
+  }
+}
+
+/* Collapsed icon rail: a left line reads awkwardly behind a centred icon, so
+   drop it — the amber square fill + amber icon carry the active state alone. */
+.sidebar[data-collapsible="icon"][data-state="collapsed"]
+  .sidebar__menu-item-content::before {
+  content: none;
+}
+
+/* Respect reduced-motion: no wash crossfade, no indicator grow-in. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar__menu-item-content,
+  .sidebar__menu-item-content::before {
+    transition: none;
+  }
+}

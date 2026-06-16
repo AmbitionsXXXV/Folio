@@ -37,6 +37,7 @@ function createReactSuggestionAdapter(options: {
   iconMap?: IconMapType
   emptyText?: string
   defaultGroupName?: string
+  t?: TranslateFunction
 }): SuggestionAdapter<SlashCommandItem> & {
   getRef: () => CommandListRef | null
 } {
@@ -54,12 +55,15 @@ function createReactSuggestionAdapter(options: {
       <SlashCommandList
         command={(item) => state.command(item)}
         defaultGroupName={options.defaultGroupName}
+        editor={state.editor}
         emptyText={options.emptyText}
         iconMap={options.iconMap}
         items={state.items}
+        range={state.range}
         ref={(r) => {
           componentRef = r
         }}
+        t={options.t}
       />
     )
   }
@@ -84,7 +88,7 @@ function createReactSuggestionAdapter(options: {
         trigger: "manual",
         placement: "bottom-start",
         animation: "shift-away",
-        maxWidth: 320,
+        maxWidth: "none",
         offset: [0, 8]
       })
     },
@@ -143,7 +147,8 @@ export function createSlashCommandExtension(
     iconMap,
     emptyText:
       t?.("editor.slashCommand.noMatchingCommands") ?? "No matching commands",
-    defaultGroupName: t?.("editor.slashCommand.basic") ?? "Basic"
+    defaultGroupName: t?.("editor.slashCommand.basic") ?? "Basic",
+    t
   })
 
   return Extension.create({

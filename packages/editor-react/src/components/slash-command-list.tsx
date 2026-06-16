@@ -1,4 +1,9 @@
-import type { IconId, SlashCommandItem } from "@folionote/editor-core"
+import type {
+  IconId,
+  SlashCommandItem,
+  TranslateFunction
+} from "@folionote/editor-core"
+import type { Editor, Range } from "@tiptap/core"
 import {
   useCallback,
   useEffect,
@@ -11,6 +16,7 @@ import type { ReactNode, Ref } from "react"
 
 import { defaultIconMap } from "./icon-map"
 import type { IconMapType } from "./icon-map"
+import { TableGridPicker } from "./table-grid-picker"
 
 /**
  * Ref methods for the command list
@@ -32,10 +38,17 @@ interface SlashCommandListProps {
   emptyText?: string
   /** Default group name */
   defaultGroupName?: string
+  /** Editor instance — lets submenu items (e.g. the table grid) act directly. */
+  editor?: Editor
+  /** The range the trigger occupies, replaced when a submenu item commits. */
+  range?: Range
+  /** Translation function for submenu labels. */
+  t?: TranslateFunction
 }
 
 /**
- * Slash command list component with keyboard navigation
+ * Slash command list component with keyboard navigation and an optional
+ * flyout submenu (used by the "Table" item to show a size grid à la Lark).
  */
 export function SlashCommandList({
   items,
@@ -43,14 +56,16 @@ export function SlashCommandList({
   ref,
   iconMap = defaultIconMap,
   emptyText = "No matching commands",
-  defaultGroupName = "Basic"
+  defaultGroupName = "Basic",
+  editor,
+  range,
+  t
 }: SlashCommandListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Build flat items list with correct index mapping (grouped by group)
   const flatItems = useMemo(() => {
-    // Group items by their group property
     const groupedItems = items.reduce<Record<string, SlashCommandItem[]>>(
       (acc, item) => {
         const group = item.group ?? defaultGroupName
@@ -63,7 +78,6 @@ export function SlashCommandList({
       {}
     )
 
-    // Build flat list with index
     const result: { item: SlashCommandItem; group: string; index: number }[] =
       []
     let idx = 0
@@ -144,8 +158,10 @@ export function SlashCommandList({
 
   if (items.length === 0) {
     return (
-      <div className="slash-command-menu">
-        <div className="slash-command-empty">{emptyText}</div>
+      <div className="slash-command-root">
+        <div className="slash-command-menu">
+          <div className="slash-command-empty">{emptyText}</div>
+        </div>
       </div>
     )
   }
@@ -161,35 +177,68 @@ export function SlashCommandList({
     return acc
   }, {})
 
+  const selectedItem = flatItems[selectedIndex]?.item
+  const showTableGrid =
+    selectedItem?.submenuType === "tableGrid" &&
+    Boolean(editor) &&
+    Boolean(range)
+
+  const handlePickTableSize = (rows: number, cols: number) => {
+    if (!(editor && range)) {
+      return
+    }
+    editor
+      .chain()
+      .focus()
+      .deleteRange(range)
+      .insertTable({ rows, cols, withHeaderRow: true })
+      .run()
+  }
+
   return (
-    <div className="slash-command-menu" ref={menuRef}>
-      {Object.entries(groupedFlat).map(([group, groupEntries]) => (
-        <div className="slash-command-group" key={group}>
-          <div className="slash-command-group-label">{group}</div>
-          {groupEntries.map(({ item, index }) => (
-            <button
-              className={`slash-command-item ${
-                index === selectedIndex ? "is-selected" : ""
-              }`}
-              data-index={index}
-              key={item.id}
-              onClick={() => selectItem(index)}
-              onMouseEnter={() => setSelectedIndex(index)}
-              type="button"
-            >
-              <span className="slash-command-item-icon">
-                {getIcon(item.iconId)}
-              </span>
-              <div className="slash-command-item-content">
-                <span className="slash-command-item-title">{item.title}</span>
-                <span className="slash-command-item-description">
-                  {item.description}
+    <div className="slash-command-root">
+      <div className="slash-command-menu" ref={menuRef}>
+        {Object.entries(groupedFlat).map(([group, groupEntries]) => (
+          <div className="slash-command-group" key={group}>
+            <div className="slash-command-group-label">{group}</div>
+            {groupEntries.map(({ item, index }) => (
+              <button
+                className={`slash-command-item ${
+                  index === selectedIndex ? "is-selected" : ""
+                }`}
+                data-index={index}
+                key={item.id}
+                onClick={() => selectItem(index)}
+                onMouseEnter={() => setSelectedIndex(index)}
+                type="button"
+              >
+                <span className="slash-command-item-icon">
+                  {getIcon(item.iconId)}
                 </span>
-              </div>
-            </button>
-          ))}
+                <div className="slash-command-item-content">
+                  <span className="slash-command-item-title">{item.title}</span>
+                  <span className="slash-command-item-description">
+                    {item.description}
+                  </span>
+                </div>
+                {item.submenuType ? (
+                  <span className="slash-command-item-chevron">›</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {showTableGrid ? (
+        <div className="slash-command-submenu">
+          <TableGridPicker
+            onSelect={handlePickTableSize}
+            t={t}
+            title={t?.("editor.tableGrid.insert") ?? "Insert table"}
+          />
         </div>
-      ))}
+      ) : null}
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { PinIcon, StarIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Handle, Position } from "@xyflow/react"
 import type { NodeProps } from "@xyflow/react"
 import { memo } from "react"
@@ -6,61 +8,90 @@ import { cn } from "@/lib/utils"
 
 import type { EntryFlowNode } from "./types"
 
+const HUB_DEGREE = 6
+const EMPHASIS_DEGREE = 3
+const MAX_TITLE_LENGTH = 44
+
 function GraphNodeComponent({ data, selected }: NodeProps<EntryFlowNode>) {
   const displayTitle = data.title.trim().length > 0 ? data.title : "Untitled"
   const truncatedTitle =
-    displayTitle.length > 40 ? `${displayTitle.slice(0, 40)}...` : displayTitle
+    displayTitle.length > MAX_TITLE_LENGTH
+      ? `${displayTitle.slice(0, MAX_TITLE_LENGTH)}…`
+      : displayTitle
+
+  const isHub = data.degree >= HUB_DEGREE
+  const isEmphasized = data.degree >= EMPHASIS_DEGREE
+  const isFocused = data.focused || selected
+
+  let titleClass = "text-[13px] font-medium"
+  if (isHub) {
+    titleClass = "text-sm font-semibold"
+  } else if (isEmphasized) {
+    titleClass = "text-sm font-medium"
+  }
 
   return (
     <div
       className={cn(
-        "min-w-[120px] max-w-[200px] rounded-lg border bg-background px-3 py-2 shadow-sm transition-shadow",
-        selected && "shadow-md ring-2 ring-primary",
-        data.isInbox && "border-muted-foreground/40 border-dashed",
-        data.isStarred && "border-yellow-400/60"
+        "group/node relative rounded-xl border bg-card px-3 py-2 text-card-foreground shadow-sm backdrop-blur-sm transition-all duration-200",
+        "min-w-[120px] max-w-[220px] hover:-translate-y-0.5 hover:shadow-md",
+        isEmphasized ? "border-primary/30" : "border-border",
+        isHub && "border-primary/50",
+        data.isInbox && "border-dashed",
+        isFocused &&
+          "shadow-md ring-2 ring-primary ring-offset-1 ring-offset-background",
+        data.dimmed && "opacity-40 saturate-50"
       )}
     >
-      <Handle
-        className="!h-2 !w-2 !border-muted-foreground/30 !bg-muted-foreground/50"
-        position={Position.Top}
-        type="target"
-      />
+      <Handle position={Position.Top} type="target" />
 
       <div className="flex items-center gap-1.5">
         {data.isStarred && (
-          <span className="shrink-0 text-xs text-yellow-500">&#9733;</span>
+          <HugeiconsIcon
+            className="size-3 shrink-0 text-primary"
+            icon={StarIcon}
+          />
         )}
         {data.isPinned && (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            &#128204;
-          </span>
+          <HugeiconsIcon
+            className="size-3 shrink-0 text-muted-foreground"
+            icon={PinIcon}
+          />
         )}
-        <span className="truncate text-sm font-medium">{truncatedTitle}</span>
+        <span className={cn("truncate", titleClass)}>{truncatedTitle}</span>
       </div>
 
-      {data.tags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-1">
-          {data.tags.slice(0, 3).map((tag) => (
-            <span
-              className="inline-block h-2 w-2 rounded-full"
-              key={tag.id}
-              style={{ backgroundColor: tag.color ?? "#a1a1aa" }}
-              title={tag.name}
-            />
-          ))}
-          {data.tags.length > 3 && (
-            <span className="text-[10px] text-muted-foreground">
-              +{data.tags.length - 3}
-            </span>
-          )}
-        </div>
-      )}
+      <div className="mt-1 flex items-center gap-2">
+        {data.tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1">
+            {data.tags.slice(0, 3).map((tag) => (
+              <span
+                className="inline-block size-2 rounded-full ring-1 ring-border/50"
+                key={tag.id}
+                style={{ backgroundColor: tag.color ?? "var(--color-muted)" }}
+                title={tag.name}
+              />
+            ))}
+            {data.tags.length > 3 && (
+              <span className="text-[10px] text-muted-foreground">
+                +{data.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+        {data.degree > 0 && (
+          <span
+            className={cn(
+              "ml-auto text-[10px] tabular-nums",
+              isHub ? "font-medium text-primary" : "text-muted-foreground/60"
+            )}
+          >
+            {data.degree}
+          </span>
+        )}
+      </div>
 
-      <Handle
-        className="!h-2 !w-2 !border-muted-foreground/30 !bg-muted-foreground/50"
-        position={Position.Bottom}
-        type="source"
-      />
+      <Handle position={Position.Bottom} type="source" />
     </div>
   )
 }

@@ -95,6 +95,7 @@
   "dependencies": {
     "@ai-sdk/provider": "^3.0.8",
     "@folionote/db": "workspace:*",
+    "@mastra/core": "catalog:",
     "ai": "catalog:",
     "drizzle-orm": "catalog:",
     "nanoid": "catalog:",

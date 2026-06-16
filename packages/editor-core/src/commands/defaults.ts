@@ -124,6 +124,7 @@ export const defaultSlashCommands: SlashCommandDefinition[] = [
     iconId: "table",
     keywords: ["table", "grid", "spreadsheet", "表格"],
     groupKey: "editor.slashCommand.basicBlocks",
+    submenuType: "tableGrid",
     execute: ({ editor, range }) => {
       // biome-ignore lint/suspicious/noExplicitAny: extension commands are dynamically typed
       ;(editor.chain().focus().deleteRange(range) as any)

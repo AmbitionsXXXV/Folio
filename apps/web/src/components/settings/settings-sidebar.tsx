@@ -66,7 +66,7 @@ export function SettingsSidebar() {
         />
         {!isCollapsed && (
           <div className="flex-1 overflow-hidden">
-            <h2 className="truncate text-sm font-semibold">
+            <h2 className="truncate font-display text-sm font-semibold">
               {t("settings.title")}
             </h2>
             <p className="truncate text-xs text-muted-foreground">
@@ -80,7 +80,7 @@ export function SettingsSidebar() {
       <nav className="flex-1 overflow-y-auto p-2">
         {!isCollapsed && (
           <div className="mb-2 px-2">
-            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            <span className="font-display text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {t("settings.nav.menu")}
             </span>
           </div>
@@ -98,9 +98,9 @@ export function SettingsSidebar() {
                         <Link
                           className={cn(
                             "relative flex size-10 items-center justify-center rounded-lg transition-colors",
-                            "hover:bg-accent/50",
+                            "hover:bg-surface-secondary/50",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                            isActive && "bg-accent"
+                            isActive && "bg-primary/10 ring-1 ring-primary/15"
                           )}
                           to={item.to}
                         />
@@ -133,9 +133,9 @@ export function SettingsSidebar() {
                 <Link
                   className={cn(
                     "relative flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
-                    "hover:bg-accent/50",
+                    "hover:bg-surface-secondary/50",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isActive && "bg-accent"
+                    isActive && "bg-primary/10 ring-1 ring-primary/15"
                   )}
                   to={item.to}
                 >
@@ -177,7 +177,7 @@ export function SettingsSidebar() {
           <TooltipTrigger
             className={cn(
               "flex w-full items-center justify-center rounded-md p-2 text-muted-foreground transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
+              "hover:bg-surface-secondary hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             )}
             onClick={() => setIsCollapsed((prev) => !prev)}
@@ -208,7 +208,9 @@ export function SettingsNavTabs() {
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
         <HugeiconsIcon className="size-5 text-primary" icon={Settings02Icon} />
         <div>
-          <h1 className="text-base font-semibold">{t("settings.title")}</h1>
+          <h1 className="font-display text-base font-semibold">
+            {t("settings.title")}
+          </h1>
           <p className="text-xs text-muted-foreground">
             {t("settings.subtitle")}
           </p>
@@ -225,7 +227,7 @@ export function SettingsNavTabs() {
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted/60 text-muted-foreground hover:bg-accent"
+                  : "bg-surface-secondary/60 text-muted-foreground hover:bg-surface-secondary"
               )}
               key={item.id}
               to={item.to}

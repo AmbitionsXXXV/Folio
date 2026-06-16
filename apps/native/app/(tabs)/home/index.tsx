@@ -241,7 +241,7 @@ export default function HomeScreen() {
         {/* Local Mode Banner */}
         {isLocalMode && !session?.user && (
           <Card
-            className="border-accent-soft-hover mb-4 border bg-accent/5 p-4"
+            className="mb-4 border border-accent-soft-hover bg-accent/5 p-4"
             variant="secondary"
           >
             <View className="flex-row items-center">
@@ -350,7 +350,7 @@ export default function HomeScreen() {
               <PressableFeedback.Highlight />
               <Card className="p-4" variant="secondary">
                 <View className="flex-row items-center">
-                  <View className="bg-success/10 mr-3 size-12 items-center justify-center rounded-lg">
+                  <View className="mr-3 size-12 items-center justify-center rounded-lg bg-success/10">
                     <HugeiconsIcon
                       color={successColor}
                       icon={BookOpen01Icon}
@@ -383,7 +383,7 @@ export default function HomeScreen() {
               <PressableFeedback.Highlight />
               <Card className="p-4" variant="secondary">
                 <View className="flex-row items-center">
-                  <View className="bg-warning/10 mr-3 size-12 items-center justify-center rounded-lg">
+                  <View className="mr-3 size-12 items-center justify-center rounded-lg bg-warning/10">
                     <HugeiconsIcon
                       color={warningColor}
                       icon={Rocket01Icon}

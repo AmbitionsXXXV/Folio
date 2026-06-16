@@ -2,7 +2,7 @@ import { cn } from "heroui-native"
 import type { PropsWithChildren } from "react"
 import { Platform, ScrollView, View } from "react-native"
 import type { ViewProps } from "react-native"
-import Animated from "react-native-reanimated"
+import Animated, { FadeIn } from "react-native-reanimated"
 import type { AnimatedProps } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -36,6 +36,7 @@ export function Container({
   disableTopInset = false,
   disableBottomInset = false,
   disableContentInsetAdjustment = false,
+  entering,
   ...props
 }: PropsWithChildren<Props>) {
   const insets = useSafeAreaInsets()
@@ -43,6 +44,9 @@ export function Container({
   return (
     <AnimatedView
       className={cn("flex-1 bg-background", className)}
+      // Gentle, app-wide screen entrance (mirrors the web shell fade-in);
+      // callers can override by passing their own `entering`.
+      entering={entering ?? FadeIn.duration(350)}
       style={{
         paddingBottom: disableBottomInset ? 0 : insets.bottom,
         paddingTop: disableTopInset ? 0 : insets.top

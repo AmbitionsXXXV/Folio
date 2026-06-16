@@ -225,7 +225,10 @@
     "untitled": "Untitled",
     "searchPage": "Search Page",
     "advancedSearch": "View all results with filters",
-    "tryAdvancedSearch": "Try Advanced Search"
+    "tryAdvancedSearch": "Try Advanced Search",
+    "navigate": "Navigate",
+    "select": "Select",
+    "close": "Close"
   },
   "source": {
     "sources": "Sources",
@@ -252,6 +255,53 @@
     "deleteFailed": "Failed to delete"
   },
   "review": {
+    "jlptExam": {
+      "title": "JLPT Exam Practice",
+      "levelAll": "All levels",
+      "sectionAll": "All sections",
+      "sections": {
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar"
+      },
+      "types": {
+        "kanjiReading": "Kanji reading",
+        "context": "Word choice",
+        "paraphrase": "Paraphrase",
+        "grammarForm": "Grammar form"
+      },
+      "hint": {
+        "reading": "Choose the reading of the bracketed word.",
+        "blank": "Choose the best option for the blank.",
+        "paraphrase": "Choose the closest meaning to the bracketed phrase."
+      },
+      "readingLabel": "Reading",
+      "translationLabel": "Meaning",
+      "grammarTitle": "Grammar (蓝宝书)",
+      "vocabularyTitle": "Vocabulary (红宝书)",
+      "connectionLabel": "Connection",
+      "correctAnswerLabel": "Answer",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "next": "Next question",
+      "finish": "View results",
+      "restart": "Restart",
+      "completedTitle": "Practice Complete",
+      "completedDescription": "You answered {{correct}} of {{total}} questions correctly.",
+      "statsAnswered": "Answered",
+      "statsCorrect": "Correct",
+      "statsAccuracy": "Accuracy",
+      "reviewMissed": "Review missed questions",
+      "noMistakes": "Perfect run — no mistakes!",
+      "disclaimer": "JLPT levels are an unofficial study-grouping heuristic.",
+      "emptyTitle": "No questions match this filter",
+      "emptyDescription": "Try a different level or section."
+    },
+    "japanesePractice": {
+      "title": "Japanese practice",
+      "readingDescription": "Tap any word to reveal its reading, romaji, and part of speech.",
+      "typingDescription": "Type each sentence's reading, then study its grammar and vocabulary.",
+      "examDescription": "Authentic N5–N1 questions with 红宝书 vocabulary and 蓝宝书 grammar analysis."
+    },
     "today": "Today's Review",
     "markReviewed": "Mark as Reviewed",
     "reviewQueue": "Review Queue",
@@ -384,6 +434,17 @@
         "auxiliary": "Auxiliary",
         "expression": "Expression"
       }
+    },
+    "japaneseReading": {
+      "title": "Reading Analysis",
+      "subtitle": "Tap a word to see its reading and part of speech.",
+      "translationLabel": "Translation",
+      "fieldReading": "Reading",
+      "fieldRomaji": "Romaji",
+      "fieldPos": "Part of speech",
+      "fieldBaseForm": "Dictionary form",
+      "selectHint": "Select a word to see its reading, romaji, and part of speech.",
+      "phraseNote": "Phrase grouping is approximate."
     }
   },
   "activity": {
@@ -496,6 +557,26 @@
       "fileTooLarge": "File too large. Maximum size is {{maxMB}}MB",
       "uploading": "Uploading image…"
     },
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "code": "Code",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "link": "Link",
+      "linkPlaceholder": "Paste or type a link…",
+      "linkApply": "Apply",
+      "linkRemove": "Remove link",
+      "words_one": "{{count}} word",
+      "words_other": "{{count}} words",
+      "characters_one": "{{count}} character",
+      "characters_other": "{{count}} characters"
+    },
     "sourceCommand": {
       "linkSource": "Link Source",
       "linkSourceDesc": "Search and link books, articles, and other sources"
@@ -516,7 +597,83 @@
       "addColumnBefore": "Add column left",
       "addColumnAfter": "Add column right",
       "deleteColumn": "Delete column",
-      "toggleHeaderRow": "Toggle header row"
+      "toggleHeaderRow": "Toggle header row",
+      "toggleHeaderColumn": "Toggle header column",
+      "insertAbove": "Insert above",
+      "insertBelow": "Insert below",
+      "insertLeft": "Insert left",
+      "insertRight": "Insert right",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "duplicate": "Duplicate",
+      "duplicateRow": "Duplicate row",
+      "duplicateColumn": "Duplicate column",
+      "clearRowContents": "Clear row contents",
+      "clearColumnContents": "Clear column contents",
+      "backgroundColor": "Background color",
+      "defaultColor": "Default",
+      "clearRowStyle": "Clear row style",
+      "clearColumnStyle": "Clear column style",
+      "align": "Text align",
+      "alignLeft": "Align left",
+      "alignCenter": "Align center",
+      "alignRight": "Align right",
+      "rowOptions": "Row options",
+      "columnOptions": "Column options",
+      "addRow": "Add row",
+      "addColumn": "Add column",
+      "block": {
+        "menuLabel": "Table options",
+        "syncBlock": "Sync block",
+        "indent": "Indent",
+        "cut": "Cut",
+        "copy": "Copy",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "share": "Share",
+        "saveAsTemplate": "Save as template",
+        "copyLink": "Copy link",
+        "headerRow": "Header row",
+        "headerColumn": "Header column",
+        "distributeColumns": "Distribute columns evenly",
+        "addBelow": "Add block below",
+        "comingSoon": "Coming soon"
+      }
+    },
+    "tableGrid": {
+      "hint": "Drag to choose size",
+      "insert": "Insert table"
+    },
+    "block": {
+      "add": "Add block below",
+      "delete": "Delete",
+      "duplicate": "Duplicate",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "options": "Block options",
+      "turnInto": "Turn into",
+      "indentAndAlign": "Indent & align",
+      "color": "Color",
+      "comment": "Comment",
+      "cut": "Cut",
+      "copy": "Copy",
+      "translate": "Translate",
+      "share": "Share",
+      "saveAsTemplate": "Save as template",
+      "copyLink": "Copy link",
+      "comingSoon": "Coming soon",
+      "types": {
+        "text": "Text",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "bulletList": "Bulleted list",
+        "orderedList": "Numbered list",
+        "codeBlock": "Code block",
+        "quote": "Quote"
+      }
     }
   },
   "error": {
@@ -690,7 +847,8 @@
         "allTypes": "All Types",
         "enableAll": "Enable All",
         "disableAll": "Disable All",
-        "toggleProvider": "Toggle {{provider}} provider"
+        "toggleProvider": "Toggle {{provider}} provider",
+        "recentOnly": "Last 6 months"
       }
     }
   },
@@ -1077,6 +1235,14 @@
     "openEntry": "Open entry",
     "linkAlreadyExists": "Link already exists",
     "linkAdded": "Link added",
-    "linkFailed": "Failed to add link"
+    "linkFailed": "Failed to add link",
+    "relayout": "Re-layout",
+    "legendTitle": "Connections",
+    "edgeTypes": {
+      "ref": "Reference",
+      "manual": "Manual link",
+      "sharedTag": "Shared tag",
+      "sharedSource": "Shared source"
+    }
   }
 }

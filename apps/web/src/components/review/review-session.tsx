@@ -8,6 +8,8 @@ import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
+import { Reveal } from "@/components/reveal"
+import { Surface } from "@/components/surface"
 import {
   getUserTimezoneOffset,
   REVIEW_RULES,
@@ -221,12 +223,12 @@ export function ReviewSession({
       ) : null}
 
       {isQueueError ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Surface className="flex flex-col items-center justify-center p-6 py-16 text-center">
           <HugeiconsIcon
             className="mb-4 size-12 text-destructive/50"
             icon={RefreshIcon}
           />
-          <p className="mb-2 font-medium text-destructive">
+          <p className="mb-2 font-display font-semibold text-destructive">
             {t("review.loadFailed")}
           </p>
           <p className="mb-4 text-sm text-muted-foreground">
@@ -235,7 +237,7 @@ export function ReviewSession({
           <Button onClick={() => refetchQueue()} variant="outline">
             {t("common.retry")}
           </Button>
-        </div>
+        </Surface>
       ) : null}
 
       {!(isLoadingQueue || isQueueError) && totalInQueue === 0 ? (
@@ -247,13 +249,15 @@ export function ReviewSession({
       ) : null}
 
       {!(isLoadingQueue || isQueueError) && currentEntry ? (
-        <ReviewCard
-          entry={currentEntry}
-          isLoading={isMutating}
-          onRate={handleRate}
-          onSkip={handleSkip}
-          onSnooze={handleSnooze}
-        />
+        <Reveal>
+          <ReviewCard
+            entry={currentEntry}
+            isLoading={isMutating}
+            onRate={handleRate}
+            onSkip={handleSkip}
+            onSnooze={handleSnooze}
+          />
+        </Reveal>
       ) : null}
     </div>
   )

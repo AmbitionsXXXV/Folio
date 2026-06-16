@@ -3,6 +3,7 @@ import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTranslation } from "react-i18next"
 
+import { Surface } from "@/components/surface"
 import type { ReviewEmptyStateProps } from "@/types/review"
 
 /**
@@ -20,20 +21,25 @@ export function ReviewEmptyState({
       : t("review.noMatchingEntries", { rule: ruleLabel })
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <HugeiconsIcon
-        className="mb-4 size-12 text-green-500"
-        icon={CheckmarkCircle02Icon}
-      />
-      <p className="mb-2 text-lg font-medium">{t("review.greatJob")}</p>
-      <p className="mb-4 text-muted-foreground">{message}</p>
+    <Surface className="mx-auto flex max-w-md flex-col items-center px-6 py-12 text-center">
+      <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-primary/5 ring-1 ring-primary/15">
+        <HugeiconsIcon
+          className="size-8 text-green-500"
+          icon={CheckmarkCircle02Icon}
+        />
+      </div>
+      <p className="mb-2 font-display text-xl font-semibold tracking-tight">
+        {t("review.greatJob")}
+      </p>
+      <p className="mb-6 text-muted-foreground">{message}</p>
       <Button
         aria-label={t("review.backLabel")}
+        className="transition-transform hover:scale-[1.02] active:scale-[0.98]"
         onClick={onStop}
         variant="outline"
       >
         {t("common.back")}
       </Button>
-    </div>
+    </Surface>
   )
 }

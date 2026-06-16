@@ -99,13 +99,20 @@ export function QuickCapture({
 
   return (
     <div className="flex gap-2">
-      <div className="relative flex-1">
+      <div className="relative flex-1 rounded-[min(var(--radius-md),12px)] transition-shadow focus-within:ring-2 focus-within:ring-primary/30">
+        {/* Radius uses `!` because `.etc-textarea` ships unlayered (see
+            packages/ui component.css) and outranks normal utilities — only
+            !important (or the `unstyled` prop) can override its rounded-lg. */}
         <Textarea
-          className="border-border [&_textarea]:pr-10 [&_textarea]:placeholder:text-muted-foreground/70"
+          className="rounded-[min(var(--radius-md),12px)]! border-border before:rounded-[min(var(--radius-md),12px)]! [&_textarea]:pr-10 [&_textarea]:pl-3.5 [&_textarea]:placeholder:text-muted-foreground/70"
           disabled={createMutation.isPending}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          // Collapse to a single line that grows with input. Forced inline
+          // because the shared Textarea's field-sizing / min-h utilities don't
+          // take effect here, leaving a tall fixed 2-row box.
+          style={{ fieldSizing: "content", minHeight: 0 }}
           value={value}
         />
         {createMutation.isPending ? (
@@ -118,6 +125,7 @@ export function QuickCapture({
         ) : null}
       </div>
       <Button
+        className="transition-transform hover:scale-[1.02] active:scale-[0.98]"
         disabled={!value.trim() || createMutation.isPending}
         onClick={handleSubmit}
         size="icon"

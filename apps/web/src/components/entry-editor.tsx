@@ -2,16 +2,17 @@ import {
   CustomCaret,
   CustomLink,
   createSlashCommandExtension,
+  createTableKit,
+  FoldableHeadings,
   getResolvedDefaultCommands,
   PasteHandler,
-  TableKit,
+  TableCommands,
   useEditorCommands
 } from "@folionote/editor-react"
 import type { PasteStrategy, SlashCommandItem } from "@folionote/editor-react"
 import { CodeBlockShiki } from "@folionote/editor-react/extensions"
 import type { JSONContent } from "@tiptap/core"
 import { Extension } from "@tiptap/core"
-import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { EditorContent, useEditor } from "@tiptap/react"
@@ -20,6 +21,10 @@ import { useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
+import { BlockHandle } from "@/components/editor/block-handle"
+import { EditorBubbleMenu } from "@/components/editor/editor-bubble-menu"
+import { EditorCharacterCount } from "@/components/editor/editor-character-count"
+import { ResizableImage } from "@/components/editor/resizable-image"
 import { HeadingIds } from "@/lib/heading-id-extension"
 
 /**
@@ -174,11 +179,14 @@ export function EntryEditor({
   onUploadImage
 }: EntryEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   // 跟踪最后一次内部更新的 content，用于避免 setContent 重置 undo 历史
   const lastInternalContentRef = useRef<string | null>(null)
 
-  // Combine default commands with additional commands
+  // Combine default commands with additional commands. The default `table`
+  // command carries submenuType "tableGrid", so the slash menu shows an
+  // interactive size grid as a flyout (see SlashCommandList).
   const commands = useMemo(() => {
     const defaults = getResolvedDefaultCommands(t)
     return [...defaults, ...additionalCommands]
@@ -198,7 +206,11 @@ export function EntryEditor({
           levels: [1, 2, 3]
         },
         // Disable the default code block in favor of CodeBlockShiki
-        codeBlock: false
+        codeBlock: false,
+        // Use the hardened CustomLink (noopener, protocol allowlist, openOnClick
+        // off) below instead of StarterKit's bundled link, which would otherwise
+        // register a duplicate "link" extension.
+        link: false
       }),
       CodeBlockShiki.configure({
         defaultLanguage: "plaintext"
@@ -206,8 +218,11 @@ export function EntryEditor({
       // Stable slug ids on H1-H3 headings so the fumadocs TOC can track the
       // active section (decorations persist through editor re-renders).
       HeadingIds,
-      // Table extensions
-      ...TableKit,
+      // Collapsible headings — fold content until the next same/higher heading
+      FoldableHeadings,
+      // Table extensions (+ position-based row/column/block commands)
+      ...createTableKit({ t }),
+      TableCommands,
       // Link 扩展：支持粘贴 URL 自动转换为链接
       CustomLink,
       // 粘贴处理扩展：处理富文本粘贴策略
@@ -218,7 +233,7 @@ export function EntryEditor({
         placeholder,
         emptyEditorClass: "is-editor-empty"
       }),
-      Image.configure({
+      ResizableImage.configure({
         inline: false,
         allowBase64: false,
         HTMLAttributes: {
@@ -325,18 +340,21 @@ export function EntryEditor({
         className="animate-pulse space-y-3"
         role="status"
       >
-        <div className="h-5 w-4/5 rounded bg-muted/60" />
-        <div className="h-4 w-full rounded bg-muted/40" />
-        <div className="h-4 w-3/4 rounded bg-muted/40" />
-        <div className="h-4 w-1/2 rounded bg-muted/30" />
+        <div className="h-5 w-4/5 rounded bg-surface-secondary/60" />
+        <div className="h-4 w-full rounded bg-surface-secondary/40" />
+        <div className="h-4 w-3/4 rounded bg-surface-secondary/40" />
+        <div className="h-4 w-1/2 rounded bg-surface-secondary/30" />
         <span className="sr-only">{t("common.loading")}</span>
       </div>
     )
   }
 
   return (
-    <div className="entry-editor tiptap-caret-container">
+    <div className="entry-editor tiptap-caret-container" ref={containerRef}>
+      <BlockHandle containerRef={containerRef} editor={editor} />
+      {editable && <EditorBubbleMenu editor={editor} />}
       <EditorContent editor={editor} />
+      {editable && <EditorCharacterCount editor={editor} />}
     </div>
   )
 }

@@ -103,9 +103,9 @@ const ChatItem = memo(
           "group relative flex cursor-pointer flex-col gap-1 rounded-lg border-transparent border-l-2 px-3 py-2",
           "[contain-intrinsic-size:96px] [content-visibility:auto]",
           "transition-colors duration-200 motion-reduce:transition-none",
-          "hover:bg-muted/60",
+          "hover:bg-surface-secondary/60",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          isSelected && "border-primary bg-muted"
+          isSelected && "border-primary bg-surface-secondary"
         )}
         onClick={onSelect}
         onKeyDown={handleKeyDown}
@@ -196,7 +196,7 @@ function EmptyState({ onNewChat }: { onNewChat: () => void }) {
   const { t } = useTranslation()
 
   return (
-    <div className="flex animate-in flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-muted-foreground/20 bg-muted/10 p-6 text-center duration-200 fade-in-0 motion-reduce:animate-none">
+    <div className="flex animate-in flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-muted-foreground/20 bg-surface-secondary/10 p-6 text-center duration-200 fade-in-0 motion-reduce:animate-none">
       <HugeiconsIcon
         className="size-10 text-muted-foreground/40"
         icon={MessageMultiple01Icon}

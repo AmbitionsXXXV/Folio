@@ -111,7 +111,7 @@ export const ToolApprovalButtons = memo(
     return (
       <div
         className={cn(
-          "flex flex-col gap-3 rounded-lg border border-border/60 bg-muted/30 p-3",
+          "flex flex-col gap-3 rounded-lg border border-border/60 bg-surface-secondary/30 p-3",
           isDestructive && "border-destructive/30 bg-destructive/5",
           className
         )}

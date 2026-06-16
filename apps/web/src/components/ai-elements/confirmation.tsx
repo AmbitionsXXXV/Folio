@@ -54,7 +54,7 @@ export const Confirmation = ({
     <ConfirmationContext.Provider value={{ approval, state }}>
       <div
         className={cn(
-          "flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/20 p-3 text-sm",
+          "flex flex-col gap-2 rounded-lg border border-border/60 bg-surface-secondary/20 p-3 text-sm",
           className
         )}
         {...props}

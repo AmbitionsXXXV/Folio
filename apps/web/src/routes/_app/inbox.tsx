@@ -1,10 +1,11 @@
 import { InboxIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
 import { EntryList } from "@/components/entry-list"
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
 import { QuickCapture } from "@/components/quick-capture"
 import { orpc } from "@/utils/orpc"
 
@@ -52,19 +53,12 @@ function InboxPage() {
     data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-3">
-        <div className="rounded-lg bg-primary/10 p-2">
-          <HugeiconsIcon className="size-6 text-primary" icon={InboxIcon} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">{t("entry.inbox")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("entry.quickCapture")}
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        description={t("entry.quickCapture")}
+        icon={InboxIcon}
+        title={t("entry.inbox")}
+      />
 
       {/* Quick capture */}
       <div className="mb-8">
@@ -84,6 +78,6 @@ function InboxPage() {
         onLoadMore={() => fetchNextPage()}
         onRetry={refetch}
       />
-    </div>
+    </PageContainer>
   )
 }

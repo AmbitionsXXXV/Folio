@@ -21,7 +21,7 @@ export const WebSearchCompactBar = memo(
     return (
       <button
         className={cn(
-          "group flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-border/40 bg-muted/30 px-3 py-2 text-left text-xs transition-all duration-200 hover:border-border/60 hover:bg-muted/50",
+          "group flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-border/40 bg-surface-secondary/30 px-3 py-2 text-left text-xs transition-all duration-200 hover:border-border/60 hover:bg-surface-secondary/50",
           isLoading && "animate-pulse",
           className
         )}

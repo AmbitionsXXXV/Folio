@@ -20,6 +20,7 @@ vi.mock("../src/routes/ai/helpers", () => ({
   extractApiErrorStatus: vi.fn(() => 500),
   getAuthenticatedUser: mockGetAuthenticatedUser,
   isValidProvider: mockIsValidProvider,
+  validateUserBaseUrl: vi.fn(() => null),
   log: {
     error: vi.fn(),
     warn: vi.fn()

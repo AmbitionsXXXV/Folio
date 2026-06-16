@@ -40,7 +40,7 @@ export function DefaultErrorBoundary({ error, reset }: ErrorComponentProps) {
 
         {/* Dev Mode: Show Error Details */}
         {import.meta.env.DEV && error.stack && (
-          <details className="w-full rounded-md bg-muted/50 p-4 text-left">
+          <details className="w-full rounded-md bg-surface-secondary/50 p-4 text-left">
             <summary className="cursor-pointer text-sm font-medium">
               Error Details
             </summary>

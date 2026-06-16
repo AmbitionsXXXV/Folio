@@ -294,7 +294,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
               </Text>
               {shares.map((share) => (
                 <View
-                  className="bg-surface mb-2 rounded-lg border border-border p-3"
+                  className="mb-2 rounded-lg border border-border bg-surface p-3"
                   key={share.id}
                   style={{
                     opacity:
@@ -320,7 +320,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
                           />
                         )}
                         {isExpired(share.expiresAt) && (
-                          <Text className="text-danger text-xs">
+                          <Text className="text-xs text-danger">
                             {t("share.expired")}
                           </Text>
                         )}
@@ -398,7 +398,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 
             {/* Password toggle */}
             <Pressable
-              className="bg-surface mb-3 flex-row items-center justify-between rounded-lg p-3"
+              className="mb-3 flex-row items-center justify-between rounded-lg bg-surface p-3"
               onPress={() => setUsePassword((prev) => !prev)}
             >
               <Text className="text-foreground">
@@ -420,7 +420,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
             {usePassword && (
               <BottomSheetTextInput
                 autoCapitalize="none"
-                className="bg-surface mb-3 rounded-lg border border-border px-3 py-2 text-foreground"
+                className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                 onChangeText={setPassword}
                 placeholder={t("share.passwordPlaceholder")}
                 placeholderTextColor={mutedColor}
@@ -463,7 +463,7 @@ export const ShareSheet = forwardRef<ShareSheetRef, ShareSheetProps>(
 
             {/* Show branding toggle */}
             <Pressable
-              className="bg-surface mb-4 flex-row items-center justify-between rounded-lg p-3"
+              className="mb-4 flex-row items-center justify-between rounded-lg bg-surface p-3"
               onPress={() => setShowBranding((prev) => !prev)}
             >
               <Text className="text-foreground">{t("share.showBranding")}</Text>

@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "0.2.20",
+  "version": "0.2.22",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
@@ -21,6 +21,9 @@
     "@folionote/log": "workspace:*",
     "@folionote/storage": "workspace:*",
     "@hono/node-server": "^2.0.4",
+    "@mastra/ai-sdk": "catalog:",
+    "@mastra/core": "catalog:",
+    "@mastra/memory": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",

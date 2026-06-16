@@ -1,3 +1,5 @@
+import type { RequestContext } from "@mastra/core/request-context"
+
 export interface NoteToolContext {
   userId: string
 }
@@ -53,17 +55,23 @@ export interface NoteSearchData {
 const EMPTY_CONTEXT_ERROR = "Missing tool context."
 const MISSING_USER_ID_ERROR = "Missing userId in tool context."
 
+/**
+ * Extract the authenticated userId from a Mastra tool's RequestContext.
+ *
+ * The chat route seeds `userId` into the agent's RequestContext per request,
+ * which Mastra forwards to every tool's `execute` context.
+ */
 export function getNoteToolContext(
-  experimentalContext: unknown
+  requestContext: RequestContext | undefined
 ): NoteToolContext {
-  if (!experimentalContext || typeof experimentalContext !== "object") {
+  if (!requestContext) {
     throw new Error(EMPTY_CONTEXT_ERROR)
   }
 
-  const context = experimentalContext as { userId?: unknown }
-  if (typeof context.userId !== "string" || context.userId.length === 0) {
+  const userId = requestContext.get("userId")
+  if (typeof userId !== "string" || userId.length === 0) {
     throw new Error(MISSING_USER_ID_ERROR)
   }
 
-  return { userId: context.userId }
+  return { userId }
 }

@@ -1144,7 +1144,7 @@ function ShowcaseSection() {
                       i < 3 && "bg-primary/20 text-primary",
                       i === 3 &&
                         "bg-amber-400/25 text-amber-700 dark:text-amber-300",
-                      i > 3 && "bg-muted/60 text-muted-foreground"
+                      i > 3 && "bg-surface-secondary/60 text-muted-foreground"
                     )}
                   >
                     {i < 3 ? (
@@ -1178,7 +1178,7 @@ function ShowcaseSection() {
               <div className="mb-3 flex gap-2 border-b border-border/40 pb-3">
                 {EDITOR_TOOLS.map((btn) => (
                   <div
-                    className="flex size-7 items-center justify-center rounded-lg bg-muted/50 font-mono text-xs text-muted-foreground"
+                    className="flex size-7 items-center justify-center rounded-lg bg-surface-secondary/50 font-mono text-xs text-muted-foreground"
                     key={btn}
                   >
                     {btn}
@@ -1272,7 +1272,7 @@ function ChatBubble({ text, isAi }: { text: string; isAi: boolean }) {
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
           isAi
-            ? "rounded-tl-sm bg-muted/70 text-foreground"
+            ? "rounded-tl-sm bg-surface-secondary/70 text-foreground"
             : "rounded-tr-sm bg-primary/15 text-foreground"
         )}
       >

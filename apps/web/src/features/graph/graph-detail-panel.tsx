@@ -54,7 +54,7 @@ export function GraphDetailPanel({
             </span>
           )}
           {data.isInbox && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <span className="rounded-full bg-surface-secondary px-2 py-0.5 text-xs text-muted-foreground">
               {t("graph.inbox")}
             </span>
           )}
@@ -68,7 +68,7 @@ export function GraphDetailPanel({
             <div className="flex flex-wrap gap-1">
               {data.tags.map((tag) => (
                 <span
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs"
+                  className="inline-flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5 text-xs"
                   key={tag.id}
                 >
                   <span
@@ -141,7 +141,7 @@ function LinkSection({
             <li key={edge.id}>
               <Link
                 className={cn(
-                  "flex items-center gap-2 rounded px-2 py-1 text-xs transition-colors hover:bg-muted",
+                  "flex items-center gap-2 rounded px-2 py-1 text-xs transition-colors hover:bg-surface-secondary",
                   linkType === "ref" && "text-primary",
                   linkType === "shared-tag" && "text-muted-foreground italic"
                 )}

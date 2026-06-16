@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next"
 import { useDebounce } from "use-debounce"
 
 import { EntryList } from "@/components/entry-list"
+import { Reveal } from "@/components/reveal"
+import { Surface } from "@/components/surface"
 import { cn } from "@/lib/utils"
 import type { Entry } from "@/types"
 import { orpc } from "@/utils/orpc"
@@ -266,54 +268,60 @@ export function AdvancedSearch({
   return (
     <div className={cn("space-y-4", className)}>
       {/* Search form */}
-      <form onSubmit={handleSubmit}>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <HugeiconsIcon
-              className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
-              icon={Search01Icon}
-            />
-            <Input
-              className="pl-10"
-              onBlur={() => {
-                // Delay to allow click on dropdown items
-                setTimeout(() => setIsInputFocused(false), 200)
-              }}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setIsInputFocused(true)}
-              placeholder={t("search.placeholder")}
-              ref={inputRef}
-              type="search"
-              value={query}
-            />
+      <Surface className="p-4">
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-2">
+            <div className="relative flex-1 rounded-md transition-shadow focus-within:ring-2 focus-within:ring-primary/30">
+              <HugeiconsIcon
+                className="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
+                icon={Search01Icon}
+              />
+              <Input
+                className="pl-10"
+                onBlur={() => {
+                  // Delay to allow click on dropdown items
+                  setTimeout(() => setIsInputFocused(false), 200)
+                }}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                placeholder={t("search.placeholder")}
+                ref={inputRef}
+                type="search"
+                value={query}
+              />
 
-            {/* Dropdown for history and suggestions */}
-            {showDropdown && (
-              <div className="absolute top-full right-0 left-0 z-50 mt-1 rounded-md border bg-popover p-3 shadow-md">
-                {showSuggestions && (
-                  <SearchSuggestions
-                    className="mb-4"
-                    onSelect={(s) => handleSelectSuggestion(s)}
-                    query=""
-                  />
-                )}
-                {showHistory && (
-                  <SearchHistory onSelect={handleSelectSuggestion} />
-                )}
-              </div>
-            )}
+              {/* Dropdown for history and suggestions */}
+              {showDropdown && (
+                <div className="absolute top-full right-0 left-0 z-50 mt-1 rounded-md border bg-popover p-3 shadow-md">
+                  {showSuggestions && (
+                    <SearchSuggestions
+                      className="mb-4"
+                      onSelect={(s) => handleSelectSuggestion(s)}
+                      query=""
+                    />
+                  )}
+                  {showHistory && (
+                    <SearchHistory onSelect={handleSelectSuggestion} />
+                  )}
+                </div>
+              )}
+            </div>
+            <SearchFilters onChange={handleFiltersChange} value={filters} />
+            <Button type="submit">{t("common.search")}</Button>
           </div>
-          <SearchFilters onChange={handleFiltersChange} value={filters} />
-          <Button type="submit">{t("common.search")}</Button>
-        </div>
-      </form>
+        </form>
 
-      {/* Active filters display */}
-      <ActiveFilterBadges onChange={handleFiltersChange} value={filters} />
+        {/* Active filters display */}
+        <ActiveFilterBadges
+          className="mt-3"
+          onChange={handleFiltersChange}
+          value={filters}
+        />
+      </Surface>
 
       {/* Search results */}
       {hasSearchCriteria ? (
-        <>
+        <Reveal className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {(() => {
               if (isLoading) {
@@ -337,20 +345,22 @@ export function AdvancedSearch({
             onLoadMore={() => fetchNextPage()}
             onRetry={refetch}
           />
-        </>
+        </Reveal>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <HugeiconsIcon
-            className="mb-4 size-12 text-muted-foreground/50"
-            icon={Search01Icon}
-          />
-          <p className="mb-2 font-medium text-muted-foreground">
+        <Reveal className="flex flex-col items-center justify-center py-16 text-center">
+          <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
+            <HugeiconsIcon
+              className="size-7 text-primary"
+              icon={Search01Icon}
+            />
+          </span>
+          <p className="mb-2 font-display font-semibold text-muted-foreground">
             {t("search.advanced")}
           </p>
           <p className="text-sm text-muted-foreground">
             {t("search.placeholder")}
           </p>
-        </div>
+        </Reveal>
       )}
     </div>
   )

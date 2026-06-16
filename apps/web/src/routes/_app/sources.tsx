@@ -22,6 +22,9 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
+import { Reveal } from "@/components/reveal"
 import { SourceCard } from "@/components/source-card"
 import { SourceDialog } from "@/components/source-dialog"
 import { cn } from "@/lib/utils"
@@ -183,44 +186,33 @@ function SourcesPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10 md:py-14">
-      {/* Header */}
-      <header className="animate-fade-in mb-10 flex items-start justify-between gap-4 md:mb-14">
-        <div>
-          <div className="mb-2 flex items-center gap-2.5">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/8 ring-1 ring-primary/15">
-              <HugeiconsIcon
-                className="size-5 text-primary"
-                icon={Link01Icon}
-              />
-            </div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              {t("source.sources")}
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {sources.length > 0
-              ? `${String(sources.length)} ${t("source.sources").toLowerCase()}`
-              : t("source.noSources")}
-          </p>
-        </div>
-
-        <Button className="shrink-0" onClick={handleCreate}>
-          <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-          {t("source.addSource")}
-        </Button>
-      </header>
+    <PageContainer width="default">
+      <PageHeader
+        actions={
+          <Button className="shrink-0" onClick={handleCreate}>
+            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+            {t("source.addSource")}
+          </Button>
+        }
+        description={
+          sources.length > 0
+            ? `${String(sources.length)} ${t("source.sources").toLowerCase()}`
+            : t("source.noSources")
+        }
+        icon={Link01Icon}
+        title={t("source.sources")}
+      />
 
       {/* Filter pills */}
-      <nav className="animate-fade-in mb-8 delay-100">
-        <div className="flex flex-wrap gap-2">
+      <Reveal className="mb-8" delay={60}>
+        <nav className="flex flex-wrap gap-2">
           {filters.map(({ key, labelKey, icon }) => (
             <button
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-medium text-sm transition-all duration-200",
                 filter === key
-                  ? "border-primary/30 bg-primary/8 text-primary shadow-sm dark:border-primary/40 dark:bg-primary/12"
-                  : "border-border/50 bg-transparent text-muted-foreground hover:border-border hover:bg-muted/40 hover:text-foreground"
+                  ? "border-primary/30 bg-primary/10 text-primary shadow-sm dark:border-primary/40"
+                  : "border-border/50 bg-transparent text-muted-foreground hover:border-border hover:bg-surface-secondary/40 hover:text-foreground"
               )}
               key={key}
               onClick={() => setFilter(key)}
@@ -230,8 +222,8 @@ function SourcesPage() {
               {t(labelKey)}
             </button>
           ))}
-        </div>
-      </nav>
+        </nav>
+      </Reveal>
 
       {/* Source list */}
       <SourceListContent
@@ -267,7 +259,7 @@ function SourcesPage() {
         open={!!deleteTarget}
         title={t("source.deleteConfirmTitle")}
       />
-    </div>
+    </PageContainer>
   )
 }
 
@@ -362,10 +354,7 @@ function SourceListContent({
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sources.map((source, i) => (
-          <div
-            className={cn("animate-fade-in", i > 0 && `delay-${(i % 4) * 100}`)}
-            key={source.id}
-          >
+          <Reveal delay={i * 60} key={source.id}>
             <SourceCard
               {...source}
               icon={
@@ -382,7 +371,7 @@ function SourceListContent({
                   : t("source.other")
               }
             />
-          </div>
+          </Reveal>
         ))}
       </div>
 

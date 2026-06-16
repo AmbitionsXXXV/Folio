@@ -51,8 +51,6 @@
   },
   "dependencies": {
     "dotenv": "catalog:",
-    "prosemirror-state": "^1.4.4",
-    "prosemirror-view": "^1.41.8",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -68,5 +66,5 @@
     "ultracite": "^7.8.3",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@11.5.2"
+  "packageManager": "pnpm@11.6.0"
 }

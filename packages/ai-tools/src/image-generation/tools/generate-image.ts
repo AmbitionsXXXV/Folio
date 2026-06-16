@@ -1,5 +1,7 @@
 import type { ImageModelV3 } from "@ai-sdk/provider"
-import { generateImage as aiGenerateImage, tool } from "ai"
+import { createTool } from "@mastra/core/tools"
+import { generateImage as aiGenerateImage } from "ai"
+import type { z } from "zod"
 
 import { ImageGenerationToolInputSchema } from "../schemas"
 
@@ -22,7 +24,8 @@ export interface ImageGenerationResult {
  * never flows through the tool execution context.
  */
 export function createImageGenerationTool(imageModel: ImageModelV3) {
-  return tool({
+  return createTool({
+    id: "generateImage",
     description: [
       "Generate images based on a text prompt using AI.",
       "Use when the user asks you to create, draw, generate, or design an image, illustration, photo, or artwork.",
@@ -32,10 +35,15 @@ export function createImageGenerationTool(imageModel: ImageModelV3) {
     strict: true,
     inputSchema: ImageGenerationToolInputSchema,
     execute: async (
-      { prompt, n, size, aspectRatio },
-      { abortSignal }
+      {
+        prompt,
+        n,
+        size,
+        aspectRatio
+      }: z.infer<typeof ImageGenerationToolInputSchema>,
+      context
     ): Promise<ImageGenerationResult> => {
-      if (abortSignal?.aborted) {
+      if (context?.abortSignal?.aborted) {
         throw new Error(TOOL_ABORTED_ERROR)
       }
 
@@ -45,7 +53,7 @@ export function createImageGenerationTool(imageModel: ImageModelV3) {
         n: n ?? 1,
         size: size as `${number}x${number}` | undefined,
         aspectRatio: aspectRatio as `${number}:${number}` | undefined,
-        abortSignal
+        abortSignal: context?.abortSignal
       })
 
       return {

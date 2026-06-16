@@ -1,0 +1,55 @@
+/* PromptInput layout system (HeroUI Pro beta-6)
+ *
+ * The composer surface is the InputGroup, which carries `.prompt-input-surface`
+ * plus `data-layout` / `data-variant`. These selectors live outside Tailwind's
+ * utility layer and outrank the base `.etc-input-group` styles by specificity,
+ * so they can refine the surface and density per layout/variant. */
+
+.prompt-input-surface {
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    background-color 200ms ease;
+}
+
+/* Primary — dedicated AI surface: softly elevated. */
+.prompt-input-surface[data-variant="primary"] {
+  background-color: var(--background);
+  box-shadow: 0 1px 2px 0 color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+/* Secondary — blends into the surrounding page surface. */
+.prompt-input-surface[data-variant="secondary"] {
+  background-color: color-mix(
+    in oklch,
+    var(--surface-secondary) 35%,
+    transparent
+  );
+  box-shadow: none;
+}
+
+/* Compact — a denser composer. */
+.prompt-input-surface[data-layout="compact"] [data-slot="input-group-control"] {
+  min-height: 2.5rem;
+}
+
+/* Inline — textarea and trailing tools/submit share a single row. A full-width
+ * attachments header (data-align=block-end) otherwise flips .etc-input-group to
+ * a column; forcing a wrapping row keeps the header on its own line above while
+ * the textarea + trailing controls stay on one row. */
+.prompt-input-surface[data-layout="inline"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  height: auto;
+}
+
+.prompt-input-surface[data-layout="inline"] [data-slot="input-group-control"] {
+  min-height: 2.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-input-surface {
+    transition: none;
+  }
+}

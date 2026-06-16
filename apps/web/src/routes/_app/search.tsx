@@ -1,9 +1,10 @@
 import { Search01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { createFileRoute, useSearch } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { PageContainer } from "@/components/page-container"
+import { PageHeader } from "@/components/page-header"
 import { AdvancedSearch } from "@/components/search"
 import type { SearchFiltersValue } from "@/components/search/search-filters"
 import { searchQuerySchema } from "@/lib/search-schemas"
@@ -57,21 +58,12 @@ function SearchPage() {
   }, [])
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-3">
-        <div className="rounded-lg bg-primary/10 p-2">
-          <HugeiconsIcon className="size-6 text-primary" icon={Search01Icon} />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-balance">
-            {t("search.advanced")}
-          </h1>
-          <p className="text-sm text-pretty text-muted-foreground">
-            {t("search.advancedDescription")}
-          </p>
-        </div>
-      </div>
+    <PageContainer width="default">
+      <PageHeader
+        description={t("search.advancedDescription")}
+        icon={Search01Icon}
+        title={t("search.advanced")}
+      />
 
       {/* Advanced Search Component */}
       <AdvancedSearch
@@ -80,6 +72,6 @@ function SearchPage() {
         showHistory
         showSuggestions
       />
-    </div>
+    </PageContainer>
   )
 }

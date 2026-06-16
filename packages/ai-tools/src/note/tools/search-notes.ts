@@ -1,6 +1,7 @@
 import { db, entries } from "@folionote/db"
-import { tool } from "ai"
+import { createTool } from "@mastra/core/tools"
 import { and, desc, eq, isNull, sql } from "drizzle-orm"
+import type { z } from "zod"
 
 import { SearchNotesInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
@@ -13,19 +14,20 @@ const SEARCH_FALLBACK_MESSAGE = "Search completed using fallback matching."
 
 const WHITESPACE_REGEX = /\s+/
 
-export const searchNotes = tool({
+export const searchNotes = createTool({
+  id: "searchNotes",
   description: "Search notes in the user library",
   strict: true,
   inputSchema: SearchNotesInputSchema,
   execute: async (
-    { query, limit },
-    { experimental_context, abortSignal }
+    { query, limit }: z.infer<typeof SearchNotesInputSchema>,
+    context
   ): Promise<NoteToolResult<NoteSearchData>> => {
-    if (abortSignal?.aborted) {
+    if (context?.abortSignal?.aborted) {
       throw new Error(TOOL_ABORTED_ERROR)
     }
 
-    const { userId } = getNoteToolContext(experimental_context)
+    const { userId } = getNoteToolContext(context?.requestContext)
     const trimmedQuery = query.trim()
 
     if (!trimmedQuery) {

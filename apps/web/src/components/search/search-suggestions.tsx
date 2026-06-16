@@ -45,7 +45,7 @@ export function SearchSuggestions({
       </p>
       {suggestions.map((suggestion) => (
         <button
-          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-muted"
+          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-surface-secondary"
           key={suggestion.query}
           onClick={() => onSelect(suggestion.query)}
           type="button"

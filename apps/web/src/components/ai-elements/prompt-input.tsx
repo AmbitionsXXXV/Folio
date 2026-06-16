@@ -325,7 +325,7 @@ export function PromptInputAttachment({
       <HoverCardTrigger>
         <div
           className={cn(
-            "group relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-md border border-border px-1.5 font-medium text-sm transition-all hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+            "group relative flex h-8 cursor-pointer select-none items-center gap-1.5 rounded-md border border-border px-1.5 font-medium text-sm transition-all hover:bg-surface-secondary hover:text-foreground dark:hover:bg-surface-secondary/50",
             className
           )}
           key={data.id}
@@ -451,6 +451,33 @@ export const PromptInputActionAddAttachments = ({
   )
 }
 
+// ============================================================================
+// Layout & Variant (HeroUI Pro beta-6 PromptInput layout system)
+// ============================================================================
+
+/**
+ * Composer layout, mirroring HeroUI Pro beta-6's PromptInput layout prop.
+ * - `stacked`: textarea on top, full-width tool row below (default).
+ * - `compact`: a denser stacked composer with tighter spacing.
+ * - `inline`: textarea and trailing tools/submit share a single row.
+ */
+export type PromptInputLayout = "stacked" | "compact" | "inline"
+
+/** Surface variant. `primary` for dedicated AI surfaces, `secondary` to blend into a page. */
+export type PromptInputVariant = "primary" | "secondary"
+
+interface PromptInputLayoutContextValue {
+  layout: PromptInputLayout
+  variant: PromptInputVariant
+}
+
+const PromptInputLayoutContext = createContext<PromptInputLayoutContextValue>({
+  layout: "stacked",
+  variant: "primary"
+})
+
+export const usePromptInputLayout = () => use(PromptInputLayoutContext)
+
 export interface PromptInputMessage {
   text: string
   files: FileUIPart[]
@@ -460,6 +487,10 @@ export type PromptInputProps = Omit<
   HTMLAttributes<HTMLFormElement>,
   "onSubmit" | "onError"
 > & {
+  /** Composer layout (HeroUI Pro beta-6). Defaults to "stacked". */
+  layout?: PromptInputLayout
+  /** Surface variant (HeroUI Pro beta-6). Defaults to "primary". */
+  variant?: PromptInputVariant
   accept?: string // e.g., "image/*" or leave undefined for any
   multiple?: boolean
   // When true, accepts drops anywhere on document. Default false (opt-in).
@@ -512,6 +543,8 @@ export const PromptInput = ({
   maxFileSize,
   onError,
   onSubmit,
+  layout = "stacked",
+  variant = "primary",
   children,
   ...props
 }: PromptInputProps) => {
@@ -902,7 +935,13 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        <InputGroup
+          className="prompt-input-surface overflow-hidden"
+          data-layout={layout}
+          data-variant={variant}
+        >
+          {children}
+        </InputGroup>
       </form>
     </>
   )
@@ -913,11 +952,18 @@ export const PromptInput = ({
     </LocalReferencedSourcesContext>
   )
 
+  const layoutContextValue = useMemo(
+    () => ({ layout, variant }),
+    [layout, variant]
+  )
+
   // Always provide LocalAttachmentsContext so children get validated add function
   return (
-    <LocalAttachmentsContext value={attachmentsCtx}>
-      {withReferencedSources}
-    </LocalAttachmentsContext>
+    <PromptInputLayoutContext value={layoutContextValue}>
+      <LocalAttachmentsContext value={attachmentsCtx}>
+        {withReferencedSources}
+      </LocalAttachmentsContext>
+    </PromptInputLayoutContext>
   )
 }
 
@@ -1070,13 +1116,18 @@ export type PromptInputFooterProps = Omit<
 export const PromptInputFooter = ({
   className,
   ...props
-}: PromptInputFooterProps) => (
-  <InputGroupAddon
-    align="block-end"
-    className={cn("justify-between gap-1", className)}
-    {...props}
-  />
-)
+}: PromptInputFooterProps) => {
+  const { layout } = usePromptInputLayout()
+  const inline = layout === "inline"
+
+  return (
+    <InputGroupAddon
+      align={inline ? "inline-end" : "block-end"}
+      className={cn(inline ? "gap-1" : "justify-between gap-1", className)}
+      {...props}
+    />
+  )
+}
 
 export type PromptInputToolsProps = HTMLAttributes<HTMLDivElement>
 
@@ -1259,7 +1310,7 @@ export const PromptInputSelectTrigger = ({
   <SelectTrigger
     className={cn(
       "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
-      "hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground",
+      "hover:bg-surface-secondary hover:text-foreground aria-expanded:bg-surface-secondary aria-expanded:text-foreground",
       className
     )}
     {...props}
@@ -1364,7 +1415,7 @@ export const PromptInputTabItem = ({
 }: PromptInputTabItemProps) => (
   <div
     className={cn(
-      "flex items-center gap-2 px-3 py-2 text-xs hover:bg-accent",
+      "flex items-center gap-2 px-3 py-2 text-xs hover:bg-surface-secondary",
       className
     )}
     {...props}
