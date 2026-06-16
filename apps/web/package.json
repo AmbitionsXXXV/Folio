@@ -11,7 +11,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.201",
+    "@ai-sdk/react": "^3.0.208",
     "@base-ui/react": "catalog:",
     "@folionote/ai-tools": "workspace:*",
     "@folionote/api": "workspace:*",

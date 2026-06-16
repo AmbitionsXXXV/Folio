@@ -20,7 +20,7 @@
     "@folionote/locales": "workspace:*",
     "@folionote/log": "workspace:*",
     "@folionote/storage": "workspace:*",
-    "@hono/node-server": "^2.0.4",
+    "@hono/node-server": "^2.0.5",
     "@mastra/ai-sdk": "catalog:",
     "@mastra/core": "catalog:",
     "@mastra/memory": "catalog:",
