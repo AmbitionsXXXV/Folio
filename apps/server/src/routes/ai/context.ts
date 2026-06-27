@@ -24,7 +24,7 @@ export function buildVisionContextMessage(
 ): ModelMessage | undefined {
   const content: (
     | { type: "text"; text: string }
-    | { type: "image"; image: URL; mediaType?: string }
+    | { type: "file"; data: URL; mediaType: string }
   )[] = [
     {
       type: "text",
@@ -54,8 +54,8 @@ export function buildVisionContextMessage(
           text: `Note: ${note.title}\nImage summary: ${truncateText(description, MAX_IMAGE_DESCRIPTION_CHARS)}`
         })
         content.push({
-          type: "image",
-          image: imageUrl,
+          type: "file",
+          data: imageUrl,
           mediaType: image.mimeType
         })
         imageCount += 1

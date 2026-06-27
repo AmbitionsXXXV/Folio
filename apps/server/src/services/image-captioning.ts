@@ -243,14 +243,14 @@ async function generateCaptionText(params: {
   const result = await generateText({
     model,
     output: Output.object({ schema: ImageCaptionSchema }),
-    system: IMAGE_CAPTION_SYSTEM_PROMPT,
+    instructions: IMAGE_CAPTION_SYSTEM_PROMPT,
     messages: [
       {
         role: "user",
         content: [
           {
-            type: "image",
-            image: new URL(params.imageUrl),
+            type: "file",
+            data: new URL(params.imageUrl),
             mediaType: params.mimeType
           },
           {

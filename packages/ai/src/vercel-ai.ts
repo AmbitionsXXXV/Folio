@@ -17,13 +17,13 @@
 
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { devToolsMiddleware } from "@ai-sdk/devtools"
-import { createGoogleGenerativeAI } from "@ai-sdk/google"
+import { createGoogle } from "@ai-sdk/google"
 import { createOpenAI } from "@ai-sdk/openai"
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
 import type {
-  EmbeddingModelV3,
-  ImageModelV3,
-  LanguageModelV3
+  EmbeddingModelV4,
+  ImageModelV4,
+  LanguageModelV4
 } from "@ai-sdk/provider"
 import { wrapLanguageModel } from "ai"
 
@@ -120,7 +120,7 @@ function isGeminiOpenAiCompatibilityBaseUrl(baseUrl: string): boolean {
  * Wrap a language model with DevTools middleware (development only).
  * In production, returns the model unchanged.
  */
-function maybeWrapWithDevTools(model: LanguageModelV3): LanguageModelV3 {
+function maybeWrapWithDevTools(model: LanguageModelV4): LanguageModelV4 {
   if (!isDevToolsEnabled) {
     return model
   }
@@ -139,10 +139,10 @@ function maybeWrapWithDevTools(model: LanguageModelV3): LanguageModelV3 {
 export function createVercelAiChatModel(
   credential: DecryptedCredential,
   options: CreateChatModelOptions = {}
-): LanguageModelV3 {
+): LanguageModelV4 {
   const modelId = resolveChatModelId(credential, options.model)
 
-  let model: LanguageModelV3
+  let model: LanguageModelV4
 
   switch (credential.provider) {
     case "openai": {
@@ -190,7 +190,7 @@ export function createVercelAiChatModel(
         break
       }
 
-      const google = createGoogleGenerativeAI({
+      const google = createGoogle({
         apiKey: credential.apiKey,
         baseURL: credential.baseUrl
       })
@@ -214,7 +214,7 @@ export function createVercelAiChatModel(
 export function createVercelAiEmbeddingModel(
   credential: DecryptedCredential,
   options: CreateEmbeddingModelOptions = {}
-): EmbeddingModelV3 {
+): EmbeddingModelV4 {
   const modelId = resolveEmbeddingModelId(credential, options.model)
 
   switch (credential.provider) {
@@ -242,7 +242,7 @@ export function createVercelAiEmbeddingModel(
         )
       }
 
-      const google = createGoogleGenerativeAI({
+      const google = createGoogle({
         apiKey: credential.apiKey,
         baseURL: credential.baseUrl
       })
@@ -271,7 +271,7 @@ export function createVercelAiEmbeddingModel(
 export function createVercelAiImageModel(
   credential: DecryptedCredential,
   options: CreateImageModelOptions = {}
-): ImageModelV3 {
+): ImageModelV4 {
   const modelId = resolveImageModelId(credential, options.model)
 
   switch (credential.provider) {
@@ -283,7 +283,7 @@ export function createVercelAiImageModel(
       return openai.image(modelId)
     }
     case "gemini": {
-      const google = createGoogleGenerativeAI({
+      const google = createGoogle({
         apiKey: credential.apiKey,
         baseURL: credential.baseUrl
       })

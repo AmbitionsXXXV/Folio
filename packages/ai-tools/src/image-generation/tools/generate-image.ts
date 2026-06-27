@@ -1,4 +1,4 @@
-import type { ImageModelV3 } from "@ai-sdk/provider"
+import type { ImageModelV4 } from "@ai-sdk/provider"
 import { createTool } from "@mastra/core/tools"
 import { generateImage as aiGenerateImage } from "ai"
 import type { z } from "zod"
@@ -23,7 +23,7 @@ export interface ImageGenerationResult {
  * The credential/model binding happens at tool creation time so sensitive data
  * never flows through the tool execution context.
  */
-export function createImageGenerationTool(imageModel: ImageModelV3) {
+export function createImageGenerationTool(imageModel: ImageModelV4) {
   return createTool({
     id: "generateImage",
     description: [

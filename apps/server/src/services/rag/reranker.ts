@@ -143,7 +143,7 @@ async function rerankWithLLM(
   const result = await generateText({
     model,
     output: Output.object({ schema: RerankResultSchema }),
-    system: RERANK_SYSTEM_PROMPT,
+    instructions: RERANK_SYSTEM_PROMPT,
     prompt: `Query: ${query}\n\nCandidate notes:\n${candidateList}`
   })
 

@@ -3,7 +3,7 @@ import { z } from "zod"
 const DEFAULT_IS_INBOX = false
 const MIN_SEARCH_LIMIT = 1
 const MAX_SEARCH_LIMIT = 20
-const DEFAULT_SEARCH_LIMIT = 10
+export const DEFAULT_SEARCH_LIMIT = 10
 
 export const CreateNoteInputSchema = z.object({
   title: z.string().describe("The title of the note"),
