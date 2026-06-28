@@ -15,7 +15,7 @@ import {
 import type { IconSvgElement } from "@hugeicons/react-native"
 import { HugeiconsIcon } from "@hugeicons/react-native"
 import { cn, useThemeColor } from "heroui-native"
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Animated, Pressable, Text, View } from "react-native"
 
@@ -51,7 +51,9 @@ export function SyncStatusIndicator({
   const dangerColor = useThemeColor("danger")
   const successColor = useThemeColor("success")
 
-  const rotateAnim = useRef(new Animated.Value(0)).current
+  // Create the Animated.Value once via lazy state init instead of reading
+  // useRef().current during render (which also reconstructed it each render).
+  const [rotateAnim] = useState(() => new Animated.Value(0))
 
   // Rotate animation for syncing state
   useEffect(() => {
