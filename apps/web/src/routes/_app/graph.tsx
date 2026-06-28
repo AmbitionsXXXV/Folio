@@ -16,6 +16,9 @@ interface GraphSearchParams {
 }
 
 export const Route = createFileRoute("/_app/graph")({
+  validateSearch: (search: Record<string, unknown>): GraphSearchParams => ({
+    tagId: typeof search.tagId === "string" ? search.tagId : undefined
+  }),
   loader: ({ context: { queryClient } }) => {
     queryClient.ensureQueryData({
       queryKey: ["graph", "getGraph", undefined, true],
@@ -26,10 +29,7 @@ export const Route = createFileRoute("/_app/graph")({
       queryFn: () => orpc.tags.list.call()
     })
   },
-  component: GraphPage,
-  validateSearch: (search: Record<string, unknown>): GraphSearchParams => ({
-    tagId: typeof search.tagId === "string" ? search.tagId : undefined
-  })
+  component: GraphPage
 })
 
 function GraphPage() {

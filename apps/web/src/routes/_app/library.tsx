@@ -26,6 +26,7 @@ const librarySearchSchema = z.object({
 export type LibrarySearchParams = z.infer<typeof librarySearchSchema>
 
 export const Route = createFileRoute("/_app/library")({
+  validateSearch: librarySearchSchema,
   loader: ({ context: { queryClient } }) => {
     queryClient.ensureInfiniteQueryData({
       queryKey: ["entries", "library", "all", undefined],
@@ -33,8 +34,7 @@ export const Route = createFileRoute("/_app/library")({
       initialPageParam: undefined as string | undefined
     })
   },
-  component: LibraryPage,
-  validateSearch: librarySearchSchema
+  component: LibraryPage
 })
 
 /**
