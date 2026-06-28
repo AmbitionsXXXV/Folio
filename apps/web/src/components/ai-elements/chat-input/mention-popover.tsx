@@ -170,10 +170,15 @@ export function useMentionPopover({
 
   const filtered = filterItems(items, query)
 
-  // Reset selection when query or items change
-  useEffect(() => {
+  // Reset the highlighted item during render when the query or items change,
+  // so it never points at a stale row for a frame.
+  const [prevQuery, setPrevQuery] = useState(query)
+  const [prevItems, setPrevItems] = useState(items)
+  if (query !== prevQuery || items !== prevItems) {
+    setPrevQuery(query)
+    setPrevItems(items)
     setSelectedIndex(0)
-  }, [query, items])
+  }
 
   const close = useCallback(() => {
     setOpen(false)

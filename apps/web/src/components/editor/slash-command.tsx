@@ -115,9 +115,11 @@ export function SlashCommandList({ items, command, ref }: CommandListProps) {
     selectItem(selectedIndex)
   }, [selectItem, selectedIndex])
 
-  useEffect(() => {
+  const [prevItems, setPrevItems] = useState(items)
+  if (items !== prevItems) {
+    setPrevItems(items)
     setSelectedIndex(0)
-  }, [items])
+  }
 
   // Scroll selected item into view
   useEffect(() => {
