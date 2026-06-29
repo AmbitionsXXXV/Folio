@@ -43,6 +43,10 @@ jobs:
 
       - name: Install dependencies
         run: vp install --frozen-lockfile
+        env:
+          # HeroUI Pro is licensed; its postinstall uses this token to fetch Pro
+          # artifacts (e.g. @heroui-pro/react/css) that `vp check` resolves.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
 
       - name: Lint & format
         run: vp check
@@ -88,6 +92,10 @@ jobs:
 
       - name: Install dependencies
         run: vp install --frozen-lockfile
+        env:
+          # HeroUI Pro is licensed; its postinstall uses this token to fetch Pro
+          # artifacts (e.g. @heroui-pro/react/css) that `vp check` resolves.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
 
       - name: Push database schema
         run: vp run db:push
@@ -116,6 +124,10 @@ jobs:
 
       - name: Install dependencies
         run: vp install --frozen-lockfile
+        env:
+          # HeroUI Pro is licensed; its postinstall uses this token to fetch Pro
+          # artifacts (e.g. @heroui-pro/react/css) that `vp check` resolves.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
 
       - name: Build server
         run: vp run build -F server
