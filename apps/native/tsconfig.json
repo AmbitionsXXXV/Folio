@@ -12,6 +12,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
+    "expo-types.d.ts",
     "uniwind-types.d.ts"
   ],
   "exclude": ["node_modules", "dist", "android", "ios"]
