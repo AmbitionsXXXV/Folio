@@ -20,7 +20,7 @@ import {
 import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -60,10 +60,23 @@ const SOURCE_TYPES: { key: SourceType; label: string; icon: IconSvgElement }[] =
   ]
 
 export function SourceDialog({ open, onClose, source }: SourceDialogProps) {
-  const [type, setType] = useState<SourceType>("link")
-  const [title, setTitle] = useState("")
-  const [url, setUrl] = useState("")
-  const [author, setAuthor] = useState("")
+  const [type, setType] = useState<SourceType>(source?.type ?? "link")
+  const [title, setTitle] = useState(source?.title ?? "")
+  const [url, setUrl] = useState(source?.url ?? "")
+  const [author, setAuthor] = useState(source?.author ?? "")
+
+  // Reset the form when the dialog opens or the edited source changes. Adjust
+  // state during render (not in an effect) so the inputs never flash the
+  // previous source's values for a frame between commits.
+  const formKey = `${source?.id ?? "new"}:${open}`
+  const [prevFormKey, setPrevFormKey] = useState(formKey)
+  if (formKey !== prevFormKey) {
+    setPrevFormKey(formKey)
+    setType(source?.type ?? "link")
+    setTitle(source?.title ?? "")
+    setUrl(source?.url ?? "")
+    setAuthor(source?.author ?? "")
+  }
 
   const isEditing = !!source
 
@@ -103,20 +116,6 @@ export function SourceDialog({ open, onClose, source }: SourceDialogProps) {
       toast.error("更新失败")
     }
   })
-
-  useEffect(() => {
-    if (source) {
-      setType(source.type)
-      setTitle(source.title)
-      setUrl(source.url || "")
-      setAuthor(source.author || "")
-    } else {
-      setType("link")
-      setTitle("")
-      setUrl("")
-      setAuthor("")
-    }
-  }, [source, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

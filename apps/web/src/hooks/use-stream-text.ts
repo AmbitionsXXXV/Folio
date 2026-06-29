@@ -53,6 +53,31 @@ type StreamTextResult = {
   reset: () => void
 } & StreamTextState
 
+const makeStreamRequest = async (
+  params: StreamTextParams,
+  signal: AbortSignal
+) => {
+  const response = await fetch(`${getServerUrl()}/api/ai/stream`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify(params),
+    signal
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      (errorData as { error?: string }).error ||
+        `HTTP error! status: ${response.status}`
+    )
+  }
+
+  return response
+}
+
 /**
  * Hook for streaming text generation from the AI endpoint.
  * Returns text progressively as it's received from the server.
@@ -85,31 +110,6 @@ export function useStreamText(): StreamTextResult {
       usage: null,
       error: null
     })
-  }
-
-  const makeStreamRequest = async (
-    params: StreamTextParams,
-    signal: AbortSignal
-  ) => {
-    const response = await fetch(`${getServerUrl()}/api/ai/stream`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify(params),
-      signal
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-        (errorData as { error?: string }).error ||
-          `HTTP error! status: ${response.status}`
-      )
-    }
-
-    return response
   }
 
   /** Delimiter used to mark thinking content in the stream */

@@ -574,6 +574,7 @@ export class ReviewRepository {
     }
 
     const sortedDates = [...uniqueDates].toSorted().toReversed()
+    const dateSet = new Set(sortedDates)
 
     // Check if today or yesterday has a review
     const todayStr = today.toISOString().split("T")[0] ?? ""
@@ -595,7 +596,7 @@ export class ReviewRepository {
 
     for (const _ of sortedDates) {
       const checkDateStr = checkDate.toISOString().split("T")[0] ?? ""
-      if (sortedDates.includes(checkDateStr)) {
+      if (dateSet.has(checkDateStr)) {
         streak++
         checkDate.setDate(checkDate.getDate() - 1)
       } else {

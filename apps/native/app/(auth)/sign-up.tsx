@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form"
 import { router } from "expo-router"
 import { useHeaderHeight } from "expo-router/react-navigation"
 import { Button, FieldError, Input, Label, TextField } from "heroui-native"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ActivityIndicator,
@@ -91,9 +91,9 @@ export default function SignUpScreen() {
     }
   })
 
-  const navigateToSignIn = useCallback(() => {
+  const navigateToSignIn = () => {
     router.replace("/(auth)/sign-in")
-  }, [])
+  }
 
   return (
     <Container

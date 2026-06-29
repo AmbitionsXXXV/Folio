@@ -3,7 +3,7 @@ import type { SupportedLanguage } from "@folionote/locales"
 import { supportedLanguages } from "@folionote/locales"
 import * as Localization from "expo-localization"
 import * as SecureStore from "expo-secure-store"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Appearance } from "react-native"
 
 const FIRST_LAUNCH_KEY = "folio_first_launch_completed"
@@ -130,22 +130,21 @@ export function useFirstLaunch(
         setIsFirstLaunch(true)
       } catch (error) {
         console.error("Failed to check first launch:", error)
-      } finally {
-        setIsLoading(false)
       }
+      setIsLoading(false)
     }
 
     checkFirstLaunch()
   }, [currentLanguage])
 
-  const completeFirstLaunch = useCallback(async () => {
+  const completeFirstLaunch = async () => {
     try {
       await SecureStore.setItemAsync(FIRST_LAUNCH_KEY, "true")
       setIsFirstLaunch(false)
     } catch (error) {
       console.error("Failed to complete first launch:", error)
     }
-  }, [])
+  }
 
   return {
     isLoading,

@@ -1,5 +1,5 @@
 import type { SupportedLanguage } from "@folionote/locales"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { useAppTheme } from "@/contexts/app-theme-context"
@@ -49,18 +49,18 @@ export function FirstLaunchHandler() {
     completeFirstLaunch
   ])
 
-  const handleLanguageConfirm = useCallback(async () => {
+  const handleLanguageConfirm = async () => {
     if (systemPreferences?.detectedLanguage) {
       await i18n.changeLanguage(systemPreferences.detectedLanguage)
     }
     setShowLanguageDialog(false)
     await completeFirstLaunch()
-  }, [i18n, systemPreferences, completeFirstLaunch])
+  }
 
-  const handleLanguageCancel = useCallback(async () => {
+  const handleLanguageCancel = async () => {
     setShowLanguageDialog(false)
     await completeFirstLaunch()
-  }, [completeFirstLaunch])
+  }
 
   // Don't render anything if not first launch or no language to prompt
   const detectedLabel = systemPreferences?.detectedLanguageLabel

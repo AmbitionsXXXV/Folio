@@ -25,7 +25,7 @@ import {
   PressableFeedback,
   useThemeColor
 } from "heroui-native"
-import { useCallback, useEffect, useImperativeHandle, useState } from "react"
+import { useEffect, useImperativeHandle, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native"
 
@@ -266,7 +266,7 @@ export function AvatarUploader({
   const isLoading = uploadMutation.isPending || deleteMutation.isPending
   const displayUrl = previewUrl ?? currentImageUrl
 
-  const getFormattedRateLimit = useCallback((): {
+  const getFormattedRateLimit = (): {
     value: number
     unit: string
   } => {
@@ -275,28 +275,25 @@ export function AvatarUploader({
         ? countdown
         : Math.ceil((rateLimitStatus?.resetInMs ?? 0) / 1000)
     return formatTimeWithI18n(seconds, t, { maxUnit: "hour" })
-  }, [countdown, rateLimitStatus?.resetInMs, t])
+  }
 
-  const validateFile = useCallback(
-    (mimeType: string, fileSize: number): string | null => {
-      if (!config) {
-        return null
-      }
-
-      if (!ALLOWED_AVATAR_TYPES.includes(mimeType as AllowedAvatarMimeType)) {
-        return t("avatar.invalidType")
-      }
-
-      if (fileSize > config.maxSize) {
-        return t("avatar.fileTooLarge", { size: config.maxSizeMB })
-      }
-
+  const validateFile = (mimeType: string, fileSize: number): string | null => {
+    if (!config) {
       return null
-    },
-    [config, t]
-  )
+    }
 
-  const pickImage = useCallback(async () => {
+    if (!ALLOWED_AVATAR_TYPES.includes(mimeType as AllowedAvatarMimeType)) {
+      return t("avatar.invalidType")
+    }
+
+    if (fileSize > config.maxSize) {
+      return t("avatar.fileTooLarge", { size: config.maxSizeMB })
+    }
+
+    return null
+  }
+
+  const pickImage = async () => {
     if (isRateLimited) {
       const { value, unit } = getFormattedRateLimit()
       Alert.alert(
@@ -341,17 +338,24 @@ export function AvatarUploader({
 
     try {
       const compressed = await compressImage(asset.uri)
-      uploadMutation.mutate({
-        base64: compressed.base64,
-        contentType: "image/jpeg"
-      })
+      uploadMutation.mutate(
+        {
+          base64: compressed.base64,
+          contentType: "image/jpeg"
+        },
+        {
+          // Clear the optimistic preview once the upload settles: on success the
+          // server URL takes over via onAvatarChange, on error we revert.
+          onSettled: () => setPreviewUrl(null)
+        }
+      )
     } catch {
       setPreviewUrl(null)
       Alert.alert(t("common.error"), t("avatar.compressError"))
     }
-  }, [isRateLimited, getFormattedRateLimit, t, validateFile, uploadMutation])
+  }
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = () => {
     setActionSheetVisible(false)
     Alert.alert(t("avatar.deleteTitle"), t("avatar.deleteConfirmation"), [
       { text: t("common.cancel"), style: "cancel" },
@@ -361,9 +365,9 @@ export function AvatarUploader({
         onPress: () => deleteMutation.mutate()
       }
     ])
-  }, [t, deleteMutation])
+  }
 
-  const handlePress = useCallback(() => {
+  const handlePress = () => {
     if (isLoading || disableDirectPress) {
       return
     }
@@ -373,11 +377,11 @@ export function AvatarUploader({
     } else {
       pickImage()
     }
-  }, [isLoading, disableDirectPress, displayUrl, pickImage])
+  }
 
-  const closeActionSheet = useCallback(() => {
+  const closeActionSheet = () => {
     setActionSheetVisible(false)
-  }, [])
+  }
 
   useImperativeHandle(
     ref,
@@ -395,20 +399,6 @@ export function AvatarUploader({
     }),
     [isLoading, pickImage]
   )
-
-  // Reset preview on successful upload
-  useEffect(() => {
-    if (uploadMutation.isSuccess) {
-      setPreviewUrl(null)
-    }
-  }, [uploadMutation.isSuccess])
-
-  // Reset preview on error
-  useEffect(() => {
-    if (uploadMutation.isError) {
-      setPreviewUrl(null)
-    }
-  }, [uploadMutation.isError])
 
   const borderRadius = size / 2
 

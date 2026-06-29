@@ -17,6 +17,20 @@ interface QuickCaptureProps {
 const TITLE_PUNCTUATION_REGEX = /[.。!！?？]$/
 
 /**
+ * 将纯文本转换为 ProseMirror JSON 格式
+ */
+const textToProseMirrorJson = (text: string): string => {
+  const paragraphs = text.split("\n").filter((line) => line.trim())
+  return JSON.stringify({
+    type: "doc",
+    content: paragraphs.map((para) => ({
+      type: "paragraph",
+      content: para.trim() ? [{ type: "text", text: para }] : []
+    }))
+  })
+}
+
+/**
  * Compact textarea for quickly creating an inbox entry from typed text.
  *
  * Splits multi-line input into a short title (first line) and content when the first line is under 100 characters and does not end with punctuation; otherwise treats the whole input as content. Use Ctrl/Cmd+Enter to submit. On successful creation the input is cleared and the 'entries' cache is invalidated.
@@ -44,20 +58,6 @@ export function QuickCapture({
       onSuccess?.()
     }
   })
-
-  /**
-   * 将纯文本转换为 ProseMirror JSON 格式
-   */
-  const textToProseMirrorJson = (text: string): string => {
-    const paragraphs = text.split("\n").filter((line) => line.trim())
-    return JSON.stringify({
-      type: "doc",
-      content: paragraphs.map((para) => ({
-        type: "paragraph",
-        content: para.trim() ? [{ type: "text", text: para }] : []
-      }))
-    })
-  }
 
   const handleSubmit = () => {
     const trimmedValue = value.trim()

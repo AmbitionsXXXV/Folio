@@ -24,6 +24,22 @@ export interface EntryPickerRef {
   close: () => void
 }
 
+const formatDate = (date: Entry["updatedAt"]) => {
+  const d = new Date(date)
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric"
+  })
+}
+
+const getPreview = (contentText: string | null | undefined) => {
+  if (!contentText) {
+    return ""
+  }
+  const text = contentText.trim()
+  return text.length > 50 ? `${text.slice(0, 50)}...` : text
+}
+
 interface EntryPickerProps {
   ref?: Ref<EntryPickerRef>
   /** Called when an entry is selected */
@@ -107,22 +123,6 @@ export function EntryPicker({
     onSelect(entry)
     setIsOpen(false)
     setSearchQuery("")
-  }
-
-  const formatDate = (date: Entry["updatedAt"]) => {
-    const d = new Date(date)
-    return d.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric"
-    })
-  }
-
-  const getPreview = (contentText: string | null | undefined) => {
-    if (!contentText) {
-      return ""
-    }
-    const text = contentText.trim()
-    return text.length > 50 ? `${text.slice(0, 50)}...` : text
   }
 
   return (

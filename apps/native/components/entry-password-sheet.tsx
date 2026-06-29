@@ -12,14 +12,8 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react-native"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useThemeColor } from "heroui-native"
-import {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState
-} from "react"
+import { useImperativeHandle, useRef, useState } from "react"
+import type { Ref } from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, Pressable, Text, View } from "react-native"
 
@@ -34,13 +28,282 @@ export interface EntryPasswordSheetRef {
   close: () => void
 }
 
+interface SheetHeaderProps {
+  foregroundColor: string
+  mutedColor: string
+  onClose: () => void
+}
+
+/**
+ * Title bar with lock icon and a close button.
+ */
+const SheetHeader = ({
+  foregroundColor,
+  mutedColor,
+  onClose
+}: SheetHeaderProps) => {
+  const { t } = useTranslation()
+  return (
+    <View className="mb-4 flex-row items-center justify-between">
+      <View className="flex-row items-center gap-2">
+        <HugeiconsIcon
+          color={foregroundColor}
+          icon={LockPasswordIcon}
+          size={24}
+        />
+        <Text className="text-lg font-semibold text-foreground">
+          {t("privacy.title")}
+        </Text>
+      </View>
+      <Pressable onPress={onClose}>
+        <HugeiconsIcon color={mutedColor} icon={Cancel01Icon} size={24} />
+      </Pressable>
+    </View>
+  )
+}
+
+interface ConfirmPasswordSectionProps {
+  confirmPassword: string
+  setConfirmPassword: (value: string) => void
+  passwordsMatch: boolean
+  mutedColor: string
+}
+
+/**
+ * Confirm-password input plus its mismatch warning, shared by both views.
+ */
+const ConfirmPasswordSection = ({
+  confirmPassword,
+  setConfirmPassword,
+  passwordsMatch,
+  mutedColor
+}: ConfirmPasswordSectionProps) => {
+  const { t } = useTranslation()
+  return (
+    <>
+      <Text className="mb-2 text-sm text-foreground">
+        {t("privacy.confirmPassword")}
+      </Text>
+      <BottomSheetTextInput
+        autoCapitalize="none"
+        className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
+        onChangeText={setConfirmPassword}
+        placeholder={t("privacy.confirmPlaceholder")}
+        placeholderTextColor={mutedColor}
+        secureTextEntry
+        value={confirmPassword}
+      />
+      {confirmPassword.length > 0 && !passwordsMatch && (
+        <Text className="mb-3 text-sm text-danger">
+          {t("privacy.passwordMismatch")}
+        </Text>
+      )}
+    </>
+  )
+}
+
+interface HasPasswordViewProps {
+  password: string
+  confirmPassword: string
+  setPassword: (value: string) => void
+  setConfirmPassword: (value: string) => void
+  passwordsMatch: boolean
+  isValidPassword: boolean
+  foregroundColor: string
+  mutedColor: string
+  warningColor: string
+  accentColor: string
+  onRemovePassword: () => void
+  onSetPassword: () => void
+  isRemovePending: boolean
+  isSetPending: boolean
+}
+
+/**
+ * View shown when the entry is already password-protected: change or remove.
+ */
+const HasPasswordView = ({
+  password,
+  confirmPassword,
+  setPassword,
+  setConfirmPassword,
+  passwordsMatch,
+  isValidPassword,
+  foregroundColor,
+  mutedColor,
+  warningColor,
+  accentColor,
+  onRemovePassword,
+  onSetPassword,
+  isRemovePending,
+  isSetPending
+}: HasPasswordViewProps) => {
+  const { t } = useTranslation()
+  const isSetDisabled = !(isValidPassword && passwordsMatch) || isSetPending
+  return (
+    <View>
+      {/* Status indicator */}
+      <View
+        className="mb-4 flex-row items-center gap-2 rounded-lg p-3"
+        style={{ backgroundColor: `${warningColor}20` }}
+      >
+        <HugeiconsIcon color={warningColor} icon={LockPasswordIcon} size={20} />
+        <Text style={{ color: warningColor }}>
+          {t("privacy.currentlyProtected")}
+        </Text>
+      </View>
+
+      {/* New password input */}
+      <Text className="mb-2 text-sm text-foreground">
+        {t("privacy.newPassword")}
+      </Text>
+      <BottomSheetTextInput
+        autoCapitalize="none"
+        className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
+        onChangeText={setPassword}
+        placeholder={t("privacy.passwordPlaceholder")}
+        placeholderTextColor={mutedColor}
+        secureTextEntry
+        value={password}
+      />
+
+      {password.length > 0 && (
+        <ConfirmPasswordSection
+          confirmPassword={confirmPassword}
+          mutedColor={mutedColor}
+          passwordsMatch={passwordsMatch}
+          setConfirmPassword={setConfirmPassword}
+        />
+      )}
+
+      {/* Action buttons */}
+      <View className="mt-4 flex-row gap-3">
+        <Pressable
+          className="flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-border py-3"
+          disabled={isRemovePending}
+          onPress={onRemovePassword}
+        >
+          <HugeiconsIcon
+            color={foregroundColor}
+            icon={SquareUnlock01Icon}
+            size={20}
+          />
+          <Text className="font-semibold text-foreground">
+            {t("privacy.removePassword")}
+          </Text>
+        </Pressable>
+        <Pressable
+          className="flex-1 flex-row items-center justify-center gap-2 rounded-lg py-3"
+          disabled={isSetDisabled}
+          onPress={onSetPassword}
+          style={{
+            backgroundColor: accentColor,
+            opacity: isSetDisabled ? 0.5 : 1
+          }}
+        >
+          <HugeiconsIcon color="white" icon={LockPasswordIcon} size={20} />
+          <Text className="font-semibold text-white">
+            {t("privacy.changePassword")}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  )
+}
+
+interface NoPasswordViewProps {
+  password: string
+  confirmPassword: string
+  setPassword: (value: string) => void
+  setConfirmPassword: (value: string) => void
+  passwordsMatch: boolean
+  isValidPassword: boolean
+  mutedColor: string
+  accentColor: string
+  onSetPassword: () => void
+  isSetPending: boolean
+}
+
+/**
+ * View shown when the entry has no password yet: set one.
+ */
+const NoPasswordView = ({
+  password,
+  confirmPassword,
+  setPassword,
+  setConfirmPassword,
+  passwordsMatch,
+  isValidPassword,
+  mutedColor,
+  accentColor,
+  onSetPassword,
+  isSetPending
+}: NoPasswordViewProps) => {
+  const { t } = useTranslation()
+  const isSetDisabled = !(isValidPassword && passwordsMatch) || isSetPending
+  return (
+    <View>
+      <Text className="mb-4 text-muted">{t("privacy.setDescription")}</Text>
+
+      {/* Password input */}
+      <Text className="mb-2 text-sm text-foreground">
+        {t("privacy.password")}
+      </Text>
+      <BottomSheetTextInput
+        autoCapitalize="none"
+        className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
+        onChangeText={setPassword}
+        placeholder={t("privacy.passwordPlaceholder")}
+        placeholderTextColor={mutedColor}
+        secureTextEntry
+        value={password}
+      />
+      {password.length > 0 && password.length < 4 && (
+        <Text className="mb-3 text-sm text-muted">
+          {t("privacy.minLength")}
+        </Text>
+      )}
+
+      {password.length >= 4 && (
+        <ConfirmPasswordSection
+          confirmPassword={confirmPassword}
+          mutedColor={mutedColor}
+          passwordsMatch={passwordsMatch}
+          setConfirmPassword={setConfirmPassword}
+        />
+      )}
+
+      {/* Set password button */}
+      <Pressable
+        className="mt-4 flex-row items-center justify-center gap-2 rounded-lg py-3"
+        disabled={isSetDisabled}
+        onPress={onSetPassword}
+        style={{
+          backgroundColor: accentColor,
+          opacity: isSetDisabled ? 0.5 : 1
+        }}
+      >
+        <HugeiconsIcon color="white" icon={LockPasswordIcon} size={20} />
+        <Text className="font-semibold text-white">
+          {t("privacy.setPassword")}
+        </Text>
+      </Pressable>
+    </View>
+  )
+}
+
+// Render backdrop
+const renderBackdrop = (props: BottomSheetBackdropProps) => (
+  <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} />
+)
+
 /**
  * EntryPasswordSheet component for managing password protection on Native
  */
-export const EntryPasswordSheet = forwardRef<
-  EntryPasswordSheetRef,
-  EntryPasswordSheetProps
->(({ entryId }, ref) => {
+export const EntryPasswordSheet = ({
+  entryId,
+  ref
+}: EntryPasswordSheetProps & { ref?: Ref<EntryPasswordSheetRef> }) => {
   const { t } = useTranslation()
   const bottomSheetRef = useRef<BottomSheet>(null)
 
@@ -56,7 +319,7 @@ export const EntryPasswordSheet = forwardRef<
   const [confirmPassword, setConfirmPassword] = useState("")
 
   // Snap points
-  const snapPoints = useMemo(() => ["50%"], [])
+  const snapPoints = ["50%"]
 
   // Expose ref methods
   useImperativeHandle(ref, () => ({
@@ -107,14 +370,14 @@ export const EntryPasswordSheet = forwardRef<
   })
 
   // Handle set password
-  const handleSetPassword = useCallback(() => {
+  const handleSetPassword = () => {
     if (password.length >= 4 && password === confirmPassword) {
       setPasswordMutation.mutate(password)
     }
-  }, [password, confirmPassword, setPasswordMutation])
+  }
 
   // Handle remove password
-  const handleRemovePassword = useCallback(() => {
+  const handleRemovePassword = () => {
     Alert.alert(t("privacy.removePassword"), t("privacy.removeConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
       {
@@ -123,22 +386,10 @@ export const EntryPasswordSheet = forwardRef<
         onPress: () => removePasswordMutation.mutate()
       }
     ])
-  }, [removePasswordMutation, t])
+  }
 
   const passwordsMatch = password === confirmPassword
   const isValidPassword = password.length >= 4
-
-  // Render backdrop
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-      />
-    ),
-    []
-  )
 
   return (
     <BottomSheet
@@ -154,196 +405,46 @@ export const EntryPasswordSheet = forwardRef<
         contentContainerStyle={{ padding: 16 }}
         style={{ flex: 1 }}
       >
-        {/* Header */}
-        <View className="mb-4 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
-            <HugeiconsIcon
-              color={foregroundColor}
-              icon={LockPasswordIcon}
-              size={24}
-            />
-            <Text className="text-lg font-semibold text-foreground">
-              {t("privacy.title")}
-            </Text>
-          </View>
-          <Pressable onPress={() => bottomSheetRef.current?.close()}>
-            <HugeiconsIcon color={mutedColor} icon={Cancel01Icon} size={24} />
-          </Pressable>
-        </View>
+        <SheetHeader
+          foregroundColor={foregroundColor}
+          mutedColor={mutedColor}
+          onClose={() => bottomSheetRef.current?.close()}
+        />
 
-        {/* Content */}
         {passwordStatus?.hasPassword ? (
-          // Entry has password
-          <View>
-            {/* Status indicator */}
-            <View
-              className="mb-4 flex-row items-center gap-2 rounded-lg p-3"
-              style={{ backgroundColor: `${warningColor}20` }}
-            >
-              <HugeiconsIcon
-                color={warningColor}
-                icon={LockPasswordIcon}
-                size={20}
-              />
-              <Text style={{ color: warningColor }}>
-                {t("privacy.currentlyProtected")}
-              </Text>
-            </View>
-
-            {/* New password input */}
-            <Text className="mb-2 text-sm text-foreground">
-              {t("privacy.newPassword")}
-            </Text>
-            <BottomSheetTextInput
-              autoCapitalize="none"
-              className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
-              onChangeText={setPassword}
-              placeholder={t("privacy.passwordPlaceholder")}
-              placeholderTextColor={mutedColor}
-              secureTextEntry
-              value={password}
-            />
-
-            {password.length > 0 && (
-              <>
-                <Text className="mb-2 text-sm text-foreground">
-                  {t("privacy.confirmPassword")}
-                </Text>
-                <BottomSheetTextInput
-                  autoCapitalize="none"
-                  className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
-                  onChangeText={setConfirmPassword}
-                  placeholder={t("privacy.confirmPlaceholder")}
-                  placeholderTextColor={mutedColor}
-                  secureTextEntry
-                  value={confirmPassword}
-                />
-                {confirmPassword.length > 0 && !passwordsMatch && (
-                  <Text className="mb-3 text-sm text-danger">
-                    {t("privacy.passwordMismatch")}
-                  </Text>
-                )}
-              </>
-            )}
-
-            {/* Action buttons */}
-            <View className="mt-4 flex-row gap-3">
-              <Pressable
-                className="flex-1 flex-row items-center justify-center gap-2 rounded-lg border border-border py-3"
-                disabled={removePasswordMutation.isPending}
-                onPress={handleRemovePassword}
-              >
-                <HugeiconsIcon
-                  color={foregroundColor}
-                  icon={SquareUnlock01Icon}
-                  size={20}
-                />
-                <Text className="font-semibold text-foreground">
-                  {t("privacy.removePassword")}
-                </Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 flex-row items-center justify-center gap-2 rounded-lg py-3"
-                disabled={
-                  !(isValidPassword && passwordsMatch) ||
-                  setPasswordMutation.isPending
-                }
-                onPress={handleSetPassword}
-                style={{
-                  backgroundColor: accentColor,
-                  opacity:
-                    !(isValidPassword && passwordsMatch) ||
-                    setPasswordMutation.isPending
-                      ? 0.5
-                      : 1
-                }}
-              >
-                <HugeiconsIcon
-                  color="white"
-                  icon={LockPasswordIcon}
-                  size={20}
-                />
-                <Text className="font-semibold text-white">
-                  {t("privacy.changePassword")}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+          <HasPasswordView
+            accentColor={accentColor}
+            confirmPassword={confirmPassword}
+            foregroundColor={foregroundColor}
+            isRemovePending={removePasswordMutation.isPending}
+            isSetPending={setPasswordMutation.isPending}
+            isValidPassword={isValidPassword}
+            mutedColor={mutedColor}
+            onRemovePassword={handleRemovePassword}
+            onSetPassword={handleSetPassword}
+            password={password}
+            passwordsMatch={passwordsMatch}
+            setConfirmPassword={setConfirmPassword}
+            setPassword={setPassword}
+            warningColor={warningColor}
+          />
         ) : (
-          // Entry has no password
-          <View>
-            <Text className="mb-4 text-muted">
-              {t("privacy.setDescription")}
-            </Text>
-
-            {/* Password input */}
-            <Text className="mb-2 text-sm text-foreground">
-              {t("privacy.password")}
-            </Text>
-            <BottomSheetTextInput
-              autoCapitalize="none"
-              className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
-              onChangeText={setPassword}
-              placeholder={t("privacy.passwordPlaceholder")}
-              placeholderTextColor={mutedColor}
-              secureTextEntry
-              value={password}
-            />
-            {password.length > 0 && password.length < 4 && (
-              <Text className="mb-3 text-sm text-muted">
-                {t("privacy.minLength")}
-              </Text>
-            )}
-
-            {password.length >= 4 && (
-              <>
-                <Text className="mb-2 text-sm text-foreground">
-                  {t("privacy.confirmPassword")}
-                </Text>
-                <BottomSheetTextInput
-                  autoCapitalize="none"
-                  className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
-                  onChangeText={setConfirmPassword}
-                  placeholder={t("privacy.confirmPlaceholder")}
-                  placeholderTextColor={mutedColor}
-                  secureTextEntry
-                  value={confirmPassword}
-                />
-                {confirmPassword.length > 0 && !passwordsMatch && (
-                  <Text className="mb-3 text-sm text-danger">
-                    {t("privacy.passwordMismatch")}
-                  </Text>
-                )}
-              </>
-            )}
-
-            {/* Set password button */}
-            <Pressable
-              className="mt-4 flex-row items-center justify-center gap-2 rounded-lg py-3"
-              disabled={
-                !(isValidPassword && passwordsMatch) ||
-                setPasswordMutation.isPending
-              }
-              onPress={handleSetPassword}
-              style={{
-                backgroundColor: accentColor,
-                opacity:
-                  !(isValidPassword && passwordsMatch) ||
-                  setPasswordMutation.isPending
-                    ? 0.5
-                    : 1
-              }}
-            >
-              <HugeiconsIcon color="white" icon={LockPasswordIcon} size={20} />
-              <Text className="font-semibold text-white">
-                {t("privacy.setPassword")}
-              </Text>
-            </Pressable>
-          </View>
+          <NoPasswordView
+            accentColor={accentColor}
+            confirmPassword={confirmPassword}
+            isSetPending={setPasswordMutation.isPending}
+            isValidPassword={isValidPassword}
+            mutedColor={mutedColor}
+            onSetPassword={handleSetPassword}
+            password={password}
+            passwordsMatch={passwordsMatch}
+            setConfirmPassword={setConfirmPassword}
+            setPassword={setPassword}
+          />
         )}
       </BottomSheetScrollView>
     </BottomSheet>
   )
-})
+}
 
 EntryPasswordSheet.displayName = "EntryPasswordSheet"

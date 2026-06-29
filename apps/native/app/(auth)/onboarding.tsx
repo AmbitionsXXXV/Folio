@@ -10,7 +10,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native"
 import { router } from "expo-router"
 import * as SecureStore from "expo-secure-store"
 import { Button, useThemeColor } from "heroui-native"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ActivityIndicator, Text, View } from "react-native"
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated"
@@ -41,22 +41,21 @@ export default function OnboardingScreen() {
         }
       } catch (error) {
         console.error("Failed to check onboarding status:", error)
-      } finally {
-        setIsReady(true)
       }
+      setIsReady(true)
     }
     checkAnimationStatus()
   }, [])
 
-  const handleSignIn = useCallback(() => {
+  const handleSignIn = () => {
     router.push("/(auth)/sign-in")
-  }, [])
+  }
 
-  const handleSignUp = useCallback(() => {
+  const handleSignUp = () => {
     router.push("/(auth)/sign-up")
-  }, [])
+  }
 
-  const handleSkipLogin = useCallback(async () => {
+  const handleSkipLogin = async () => {
     setIsSkipping(true)
     try {
       await enableLocalMode()
@@ -66,7 +65,7 @@ export default function OnboardingScreen() {
       // Error is logged in context
       setIsSkipping(false)
     }
-  }, [enableLocalMode])
+  }
 
   const getEntryAnimation = (delay: number, animation = FadeInDown) =>
     shouldAnimate ? animation.delay(delay).springify() : undefined

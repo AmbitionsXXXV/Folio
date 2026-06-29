@@ -11,7 +11,7 @@ import {
   TextField,
   useThemeColor
 } from "heroui-native"
-import { useCallback, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ActivityIndicator,
@@ -48,24 +48,24 @@ export default function ProfileScreen() {
   const foregroundColor = useThemeColor("foreground")
 
   // Handle edit photo button press
-  const handleEditPhoto = useCallback(() => {
+  const handleEditPhoto = () => {
     if (Platform.OS === "ios") {
       impactAsync(ImpactFeedbackStyle.Light)
     }
     avatarUploaderRef.current?.openActionSheet()
-  }, [])
+  }
 
   // Handle name edit press
-  const handleNamePress = useCallback(() => {
+  const handleNamePress = () => {
     if (Platform.OS === "ios") {
       impactAsync(ImpactFeedbackStyle.Light)
     }
     setEditingName(session?.user?.name ?? "")
     setNameSheetOpen(true)
-  }, [session?.user?.name])
+  }
 
   // Handle save name
-  const handleSaveName = useCallback(async () => {
+  const handleSaveName = async () => {
     const trimmedName = editingName.trim()
     if (!trimmedName) {
       Alert.alert(t("common.error"), t("auth.nameRequired"))
@@ -92,10 +92,9 @@ export default function ProfileScreen() {
       Alert.alert(t("common.save"), t("profile.nameUpdated"))
     } catch {
       Alert.alert(t("common.error"), t("profile.nameUpdateFailed"))
-    } finally {
-      setIsUpdating(false)
     }
-  }, [editingName, session?.user?.name, queryClient, t])
+    setIsUpdating(false)
+  }
 
   return (
     <Container className="flex-1" disableScroll disableTopInset>
@@ -108,15 +107,7 @@ export default function ProfileScreen() {
           {/* Large Avatar */}
           <View
             className="rounded-full bg-white p-[4px] shadow-lg"
-            style={{
-              shadowOffset: {
-                width: 0,
-                height: 2
-              },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3
-            }}
+            style={{ boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)" }}
           >
             <AvatarUploader
               currentImageUrl={currentImageUrl}

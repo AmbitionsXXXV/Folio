@@ -144,7 +144,7 @@ export default function SignInForm() {
               <form.Field
                 name="email"
                 validators={{
-                  onBlur: z.string().email(t("auth.invalidEmail"))
+                  onBlur: z.email(t("auth.invalidEmail"))
                 }}
               >
                 {(field) => {

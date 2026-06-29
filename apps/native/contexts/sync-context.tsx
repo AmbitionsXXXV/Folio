@@ -11,7 +11,6 @@ import {
   use,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState
 } from "react"
@@ -118,7 +117,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return unsubscribe
   }, [])
 
-  // Refresh metadata
+  // Refresh metadata.
+  // Kept in useCallback (despite React Compiler) because this function is both
+  // exposed on the context value and listed in effect dependency arrays below;
+  // a stable identity is required so those effects don't re-run every render.
   const refreshMetadata = useCallback(async () => {
     const meta = await syncService.getMetadata()
     setMetadata(meta)
@@ -148,7 +150,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, isLocalMode, localUserId, isOnline, refreshMetadata])
 
   // Manual sync
-  const sync = useCallback(async (): Promise<SyncResult | null> => {
+  const sync = async (): Promise<SyncResult | null> => {
     if (!isOnline) {
       return null
     }
@@ -174,64 +176,42 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     await refreshMetadata()
 
     return result
-  }, [
-    isOnline,
-    isAuthenticated,
-    isLocalMode,
-    localUserId,
-    session?.user?.id,
-    refreshMetadata
-  ])
+  }
 
   // Upload all local data
-  const uploadAllLocalData =
-    useCallback(async (): Promise<SyncResult | null> => {
-      if (!(isOnline && localUserId)) {
-        return null
-      }
+  const uploadAllLocalData = async (): Promise<SyncResult | null> => {
+    if (!(isOnline && localUserId)) {
+      return null
+    }
 
-      const result = await syncService.uploadAllLocalData(localUserId)
-      setLastResult(result)
-      await refreshMetadata()
+    const result = await syncService.uploadAllLocalData(localUserId)
+    setLastResult(result)
+    await refreshMetadata()
 
-      return result
-    }, [isOnline, localUserId, refreshMetadata])
+    return result
+  }
 
   // Resolve conflict
-  const resolveConflict = useCallback(
-    async (conflictId: string, strategy: ConflictStrategy): Promise<void> => {
-      await syncService.resolveConflict(conflictId, strategy)
-      await refreshMetadata()
-    },
-    [refreshMetadata]
-  )
+  const resolveConflict = async (
+    conflictId: string,
+    strategy: ConflictStrategy
+  ): Promise<void> => {
+    await syncService.resolveConflict(conflictId, strategy)
+    await refreshMetadata()
+  }
 
-  const value = useMemo(
-    () => ({
-      syncState,
-      isOnline,
-      metadata,
-      conflicts,
-      progress,
-      lastResult,
-      sync,
-      uploadAllLocalData,
-      resolveConflict,
-      refreshMetadata
-    }),
-    [
-      syncState,
-      isOnline,
-      metadata,
-      conflicts,
-      progress,
-      lastResult,
-      sync,
-      uploadAllLocalData,
-      resolveConflict,
-      refreshMetadata
-    ]
-  )
+  const value = {
+    syncState,
+    isOnline,
+    metadata,
+    conflicts,
+    progress,
+    lastResult,
+    sync,
+    uploadAllLocalData,
+    resolveConflict,
+    refreshMetadata
+  }
 
   return <SyncContext value={value}>{children}</SyncContext>
 }

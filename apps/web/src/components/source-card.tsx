@@ -10,6 +10,12 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Surface } from "@/components/surface"
 
+const sourceDateFormatter = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "short",
+  day: "numeric"
+})
+
 interface SourceCardProps {
   id: string
   title: string
@@ -35,18 +41,10 @@ export function SourceCard({
   onEdit,
   onDelete
 }: SourceCardProps) {
-  const formattedDate = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  }).format(new Date(updatedAt))
+  const formattedDate = sourceDateFormatter.format(new Date(updatedAt))
 
   const formattedPublishedAt = publishedAt
-    ? new Intl.DateTimeFormat("zh-CN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      }).format(new Date(publishedAt))
+    ? sourceDateFormatter.format(new Date(publishedAt))
     : null
 
   return (

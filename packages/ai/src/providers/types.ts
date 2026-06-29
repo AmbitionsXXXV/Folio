@@ -188,7 +188,7 @@ export const PROVIDER_CONFIGS: Record<AiProvider, ProviderConfig> = {
       },
       createInstance: {
         importFrom: "@ai-sdk/google",
-        factoryName: "createGoogleGenerativeAI",
+        factoryName: "createGoogle",
         supportsBaseUrl: true
       }
     },

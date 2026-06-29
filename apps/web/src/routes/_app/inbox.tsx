@@ -50,7 +50,7 @@ function InboxPage() {
 
   // Flatten all pages into a single array with safe access
   const entries =
-    data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
+    data?.pages?.flatMap((page) => (page?.items ?? []).filter(Boolean)) ?? []
 
   return (
     <PageContainer>

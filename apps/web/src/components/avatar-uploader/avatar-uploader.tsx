@@ -219,6 +219,7 @@ function AvatarUploader({
     <div className={cn("relative inline-flex", className)}>
       <input
         accept={config?.allowedTypes.join(",")}
+        aria-label={t("avatar.reupload")}
         className="hidden"
         onChange={handleInputChange}
         ref={fileInputRef}

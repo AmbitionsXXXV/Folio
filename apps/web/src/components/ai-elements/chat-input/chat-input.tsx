@@ -57,6 +57,8 @@ const FILE_SIZE_KB = 1024
 const FILE_SIZE_MB = FILE_SIZE_KB * 1024
 const MENTION_QUERY_LIMIT = 100
 
+const EMPTY_NOTES: NonNullable<ChatInputProps["attachedNotes"]> = []
+
 interface AttachmentError {
   code: "max_files" | "max_file_size" | "accept"
   message: string
@@ -161,6 +163,91 @@ function getAttachmentErrorMessage(
   return t("knowledge.attachments.errorInvalidType")
 }
 
+interface ChatInputThinkingToggleProps {
+  hasToggleableReasoning: boolean | undefined
+  onThinkingToggle: (enabled: boolean) => void
+  thinkingActive: boolean
+  thinkingEnabled: boolean
+}
+
+function ChatInputThinkingToggle({
+  hasToggleableReasoning,
+  onThinkingToggle,
+  thinkingActive,
+  thinkingEnabled
+}: ChatInputThinkingToggleProps) {
+  const { t } = useTranslation()
+
+  const getThinkingTooltip = () => {
+    if (!hasToggleableReasoning) {
+      return t("knowledge.thinkingBuiltIn")
+    }
+    return thinkingEnabled
+      ? t("knowledge.thinkingEnabled")
+      : t("knowledge.enableThinking")
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        aria-label={t("knowledge.toggleThinking")}
+        aria-pressed={thinkingActive}
+        className={cn(
+          "relative inline-flex size-8 items-center justify-center rounded-lg",
+          "text-muted-foreground hover:bg-surface-secondary hover:text-foreground",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none",
+          thinkingActive &&
+            "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+        )}
+        disabled={!hasToggleableReasoning}
+        onClick={() =>
+          hasToggleableReasoning && onThinkingToggle(!thinkingEnabled)
+        }
+        type="button"
+      >
+        <HugeiconsIcon className="size-4" icon={AiBrain01Icon} />
+        {thinkingActive && (
+          <span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
+        )}
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        <p>{getThinkingTooltip()}</p>
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+interface ChatInputContextUsageProps {
+  contextUsage: NonNullable<ChatInputProps["contextUsage"]>
+}
+
+function ChatInputContextUsage({ contextUsage }: ChatInputContextUsageProps) {
+  return (
+    <Context
+      maxTokens={contextUsage.maxTokens}
+      modelId={contextUsage.modelId}
+      usage={contextUsage.sessionUsage}
+      usedTokens={contextUsage.usedTokens}
+    >
+      <ContextTrigger
+        className="h-8 gap-1.5 rounded-lg px-2 text-xs"
+        size="sm"
+      />
+      <ContextContent align="start" side="top">
+        <ContextContentHeader />
+        <ContextContentBody className="space-y-1.5">
+          <ContextInputUsage />
+          <ContextOutputUsage />
+          <ContextReasoningUsage />
+          <ContextCacheUsage />
+        </ContextContentBody>
+        <ContextContentFooter />
+      </ContextContent>
+    </Context>
+  )
+}
+
 // ============================================================================
 // Main component
 // ============================================================================
@@ -182,7 +269,7 @@ export function ChatInput({
   thinkingEnabled = false,
   onThinkingToggle,
   isImageMode = false,
-  attachedNotes = [],
+  attachedNotes = EMPTY_NOTES,
   onAddNoteAttachment,
   onRemoveNoteAttachment,
   contextUsage
@@ -209,15 +296,6 @@ export function ChatInput({
   const hasToggleableReasoning =
     selectedModelInfo?.settings?.extendParams?.includes("enableReasoning")
   const thinkingActive = hasToggleableReasoning ? thinkingEnabled : true
-
-  const getThinkingTooltip = () => {
-    if (!hasToggleableReasoning) {
-      return t("knowledge.thinkingBuiltIn")
-    }
-    return thinkingEnabled
-      ? t("knowledge.thinkingEnabled")
-      : t("knowledge.enableThinking")
-  }
 
   const isDisabled = disabled || isPending
 
@@ -428,60 +506,19 @@ export function ChatInput({
 
             {/* Thinking Toggle (hidden in image mode) */}
             {!isImageMode && supportsThinking && onThinkingToggle && (
-              <Tooltip>
-                <TooltipTrigger
-                  aria-label={t("knowledge.toggleThinking")}
-                  aria-pressed={thinkingActive}
-                  className={cn(
-                    "relative inline-flex size-8 items-center justify-center rounded-lg",
-                    "text-muted-foreground hover:bg-surface-secondary hover:text-foreground",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    "transition-all duration-200 ease-out active:scale-95 motion-reduce:transition-none",
-                    thinkingActive &&
-                      "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
-                  )}
-                  disabled={!hasToggleableReasoning}
-                  onClick={() =>
-                    hasToggleableReasoning && onThinkingToggle(!thinkingEnabled)
-                  }
-                  type="button"
-                >
-                  <HugeiconsIcon className="size-4" icon={AiBrain01Icon} />
-                  {thinkingActive && (
-                    <span className="absolute top-0.5 right-0.5 size-2 rounded-full bg-primary" />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>{getThinkingTooltip()}</p>
-                </TooltipContent>
-              </Tooltip>
+              <ChatInputThinkingToggle
+                hasToggleableReasoning={hasToggleableReasoning}
+                onThinkingToggle={onThinkingToggle}
+                thinkingActive={thinkingActive}
+                thinkingEnabled={thinkingEnabled}
+              />
             )}
           </PromptInputTools>
 
           <div className="flex items-center gap-1">
             {/* Context Usage (hidden in image mode) */}
             {!isImageMode && contextUsage && contextUsage.usedTokens > 0 && (
-              <Context
-                maxTokens={contextUsage.maxTokens}
-                modelId={contextUsage.modelId}
-                usage={contextUsage.sessionUsage}
-                usedTokens={contextUsage.usedTokens}
-              >
-                <ContextTrigger
-                  className="h-8 gap-1.5 rounded-lg px-2 text-xs"
-                  size="sm"
-                />
-                <ContextContent align="start" side="top">
-                  <ContextContentHeader />
-                  <ContextContentBody className="space-y-1.5">
-                    <ContextInputUsage />
-                    <ContextOutputUsage />
-                    <ContextReasoningUsage />
-                    <ContextCacheUsage />
-                  </ContextContentBody>
-                  <ContextContentFooter />
-                </ContextContent>
-              </Context>
+              <ChatInputContextUsage contextUsage={contextUsage} />
             )}
 
             <ChatInputSubmitButton

@@ -174,7 +174,7 @@ describe("image-captioning service", () => {
     expect(result?.modelId).toBe("openai/gpt-4o-mini")
     expect(mockGenerateText).toHaveBeenCalledTimes(1)
     const toolCall = mockGenerateText.mock.calls[0]?.[0]
-    expect(toolCall?.messages?.[0]?.content?.[0]?.image?.toString()).toBe(
+    expect(toolCall?.messages?.[0]?.content?.[0]?.data?.toString()).toBe(
       "https://storage.example.com/object/public/attachments/user-1/entries/entry-1/chart.png"
     )
     expect(set).toHaveBeenCalledWith(

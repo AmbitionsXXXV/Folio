@@ -530,40 +530,65 @@ const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
 }
 
 // ============================================================================
-// PromptInput
+// Internal hooks
 // ============================================================================
 
-export const PromptInput = ({
-  className,
+/** Local referenced-sources state + its context value (always local to PromptInput). */
+const useReferencedSources = () => {
+  const [referencedSources, setReferencedSources] = useState<
+    (SourceDocumentUIPart & { id: string })[]
+  >([])
+
+  const clear = useCallback(() => setReferencedSources([]), [])
+
+  const refsCtx = useMemo<ReferencedSourcesContext>(
+    () => ({
+      sources: referencedSources,
+      add: (incoming: SourceDocumentUIPart[] | SourceDocumentUIPart) => {
+        const array = Array.isArray(incoming) ? incoming : [incoming]
+        setReferencedSources((prev) =>
+          prev.concat(array.map((s) => ({ ...s, id: nanoid() })))
+        )
+      },
+      remove: (id: string) => {
+        setReferencedSources((prev) => prev.filter((s) => s.id !== id))
+      },
+      clear
+    }),
+    [referencedSources, clear]
+  )
+
+  return { refsCtx, clear }
+}
+
+interface UseAttachmentsManagerOptions {
+  controller: PromptInputControllerProps | null
+  accept?: string
+  maxFiles?: number
+  maxFileSize?: number
+  syncHiddenInput?: boolean
+  onError?: PromptInputProps["onError"]
+}
+
+/**
+ * Owns attachment state (local or provider-backed), validation, the hidden file
+ * input ref, and the attachments context consumed by descendant components.
+ */
+const useAttachmentsManager = ({
+  controller,
   accept,
-  multiple,
-  globalDrop,
-  syncHiddenInput,
   maxFiles,
   maxFileSize,
-  onError,
-  onSubmit,
-  layout = "stacked",
-  variant = "primary",
-  children,
-  ...props
-}: PromptInputProps) => {
-  // Try to use a provider controller if present
-  const controller = useOptionalPromptInputController()
+  syncHiddenInput,
+  onError
+}: UseAttachmentsManagerOptions) => {
   const usingProvider = !!controller
 
-  // Refs
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const formRef = useRef<HTMLFormElement | null>(null)
 
   // ----- Local attachments (only used when no provider)
   const [items, setItems] = useState<(FileUIPart & { id: string })[]>([])
   const files = usingProvider ? controller.attachments.files : items
-
-  // ----- Local referenced sources (always local to PromptInput)
-  const [referencedSources, setReferencedSources] = useState<
-    (SourceDocumentUIPart & { id: string })[]
-  >([])
 
   // Keep a ref to files for cleanup on unmount (avoids stale closure)
   const filesRef = useRef(files)
@@ -717,18 +742,11 @@ export const PromptInput = ({
     [usingProvider, controller]
   )
 
-  const clearReferencedSources = useCallback(() => setReferencedSources([]), [])
-
   const add = usingProvider ? addWithProviderValidation : addLocal
   const remove = usingProvider ? controller.attachments.remove : removeLocal
   const openFileDialog = usingProvider
     ? controller.attachments.openFileDialog
     : openFileDialogLocal
-
-  const clear = useCallback(() => {
-    clearAttachments()
-    clearReferencedSources()
-  }, [clearAttachments, clearReferencedSources])
 
   // Let provider know about our hidden file input so external menus can call openFileDialog()
   useEffect(() => {
@@ -745,63 +763,6 @@ export const PromptInput = ({
       inputRef.current.value = ""
     }
   }, [files, syncHiddenInput])
-
-  // Attach drop handlers on nearest form and document (opt-in)
-  useEffect(() => {
-    const form = formRef.current
-    if (!form) {
-      return
-    }
-    if (globalDrop) {
-      return
-    } // when global drop is on, let the document-level handler own drops
-
-    const onDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault()
-      }
-    }
-    const onDrop = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault()
-      }
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        add(e.dataTransfer.files)
-      }
-    }
-    form.addEventListener("dragover", onDragOver)
-    form.addEventListener("drop", onDrop)
-    return () => {
-      form.removeEventListener("dragover", onDragOver)
-      form.removeEventListener("drop", onDrop)
-    }
-  }, [add, globalDrop])
-
-  useEffect(() => {
-    if (!globalDrop) {
-      return
-    }
-
-    const onDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault()
-      }
-    }
-    const onDrop = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault()
-      }
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        add(e.dataTransfer.files)
-      }
-    }
-    document.addEventListener("dragover", onDragOver)
-    document.addEventListener("drop", onDrop)
-    return () => {
-      document.removeEventListener("dragover", onDragOver)
-      document.removeEventListener("drop", onDrop)
-    }
-  }, [add, globalDrop])
 
   useEffect(
     () => () => {
@@ -840,22 +801,131 @@ export const PromptInput = ({
     [files, add, remove, clearAttachments, openFileDialog]
   )
 
-  const refsCtx = useMemo<ReferencedSourcesContext>(
-    () => ({
-      sources: referencedSources,
-      add: (incoming: SourceDocumentUIPart[] | SourceDocumentUIPart) => {
-        const array = Array.isArray(incoming) ? incoming : [incoming]
-        setReferencedSources((prev) =>
-          prev.concat(array.map((s) => ({ ...s, id: nanoid() })))
-        )
-      },
-      remove: (id: string) => {
-        setReferencedSources((prev) => prev.filter((s) => s.id !== id))
-      },
-      clear: clearReferencedSources
-    }),
-    [referencedSources, clearReferencedSources]
-  )
+  return {
+    inputRef,
+    files,
+    add,
+    clearAttachments,
+    handleChange,
+    attachmentsCtx
+  }
+}
+
+interface UseFileDropOptions {
+  formRef: RefObject<HTMLFormElement | null>
+  globalDrop?: boolean
+  add: (files: File[] | FileList) => void
+}
+
+/** Wires drag-and-drop file handlers onto the form (default) or the document (globalDrop). */
+const useFileDrop = ({ formRef, globalDrop, add }: UseFileDropOptions) => {
+  // Attach drop handlers on nearest form and document (opt-in)
+  useEffect(() => {
+    const form = formRef.current
+    if (!form) {
+      return
+    }
+    if (globalDrop) {
+      return
+    } // when global drop is on, let the document-level handler own drops
+
+    const onDragOver = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        e.preventDefault()
+      }
+    }
+    const onDrop = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        e.preventDefault()
+      }
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        add(e.dataTransfer.files)
+      }
+    }
+    form.addEventListener("dragover", onDragOver)
+    form.addEventListener("drop", onDrop)
+    return () => {
+      form.removeEventListener("dragover", onDragOver)
+      form.removeEventListener("drop", onDrop)
+    }
+  }, [add, globalDrop, formRef])
+
+  useEffect(() => {
+    if (!globalDrop) {
+      return
+    }
+
+    const onDragOver = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        e.preventDefault()
+      }
+    }
+    const onDrop = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        e.preventDefault()
+      }
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        add(e.dataTransfer.files)
+      }
+    }
+    document.addEventListener("dragover", onDragOver)
+    document.addEventListener("drop", onDrop)
+    return () => {
+      document.removeEventListener("dragover", onDragOver)
+      document.removeEventListener("drop", onDrop)
+    }
+  }, [add, globalDrop])
+}
+
+// ============================================================================
+// PromptInput
+// ============================================================================
+
+export const PromptInput = ({
+  className,
+  accept,
+  multiple,
+  globalDrop,
+  syncHiddenInput,
+  maxFiles,
+  maxFileSize,
+  onError,
+  onSubmit,
+  layout = "stacked",
+  variant = "primary",
+  children,
+  ...props
+}: PromptInputProps) => {
+  // Try to use a provider controller if present
+  const controller = useOptionalPromptInputController()
+  const usingProvider = !!controller
+
+  const formRef = useRef<HTMLFormElement | null>(null)
+
+  const {
+    inputRef,
+    files,
+    add,
+    clearAttachments,
+    handleChange,
+    attachmentsCtx
+  } = useAttachmentsManager({
+    controller,
+    accept,
+    maxFiles,
+    maxFileSize,
+    syncHiddenInput,
+    onError
+  })
+
+  const { refsCtx, clear: clearReferencedSources } = useReferencedSources()
+
+  const clear = useCallback(() => {
+    clearAttachments()
+    clearReferencedSources()
+  }, [clearAttachments, clearReferencedSources])
+
+  useFileDrop({ formRef, globalDrop, add })
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (event) => {
@@ -987,7 +1057,7 @@ export const PromptInputTextarea = ({
 }: PromptInputTextareaProps) => {
   const controller = useOptionalPromptInputController()
   const attachments = usePromptInputAttachments()
-  const [isComposing, setIsComposing] = useState(false)
+  const isComposingRef = useRef(false)
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
     (e) => {
@@ -998,7 +1068,7 @@ export const PromptInputTextarea = ({
       }
 
       if (e.key === "Enter") {
-        if (isComposing || e.nativeEvent.isComposing) {
+        if (isComposingRef.current || e.nativeEvent.isComposing) {
           return
         }
         if (e.shiftKey) {
@@ -1029,7 +1099,7 @@ export const PromptInputTextarea = ({
         }
       }
     },
-    [onKeyDown, isComposing, attachments]
+    [onKeyDown, attachments]
   )
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = useCallback(
@@ -1059,8 +1129,12 @@ export const PromptInputTextarea = ({
     [attachments]
   )
 
-  const handleCompositionEnd = useCallback(() => setIsComposing(false), [])
-  const handleCompositionStart = useCallback(() => setIsComposing(true), [])
+  const handleCompositionEnd = useCallback(() => {
+    isComposingRef.current = false
+  }, [])
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true
+  }, [])
 
   const controlledProps = controller
     ? {

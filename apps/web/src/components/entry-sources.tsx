@@ -39,6 +39,8 @@ const SOURCE_TYPE_ICONS: Record<string, IconSvgElement> = {
   other: Link01Icon
 }
 
+const getSourceIcon = (type: string) => SOURCE_TYPE_ICONS[type] || Link01Icon
+
 /**
  * Ref methods for EntrySources component
  */
@@ -126,8 +128,6 @@ export function EntrySources({ entryId, ref }: EntrySourcesProps) {
   const availableSources = allSources.filter(
     (s: Source) => !entrySourceIds.has(s.id)
   )
-
-  const getSourceIcon = (type: string) => SOURCE_TYPE_ICONS[type] || Link01Icon
 
   return (
     <div className="flex flex-wrap items-center gap-2">

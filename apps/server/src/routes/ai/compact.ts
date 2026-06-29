@@ -173,7 +173,7 @@ export async function executeContextCompaction(
   const compactModel = createVercelAiChatModel(credential, { model })
   const compactResult = await aiGenerateText({
     model: compactModel,
-    system: COMPACT_SUMMARY_SYSTEM_PROMPT,
+    instructions: COMPACT_SUMMARY_SYSTEM_PROMPT,
     prompt: [
       "Conversation transcript (older turns to compact):",
       transcript,

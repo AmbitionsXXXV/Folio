@@ -1,7 +1,6 @@
 import { db, entries } from "@folionote/db"
 import { createTool } from "@mastra/core/tools"
 import { nanoid } from "nanoid"
-import type { z } from "zod"
 
 import { CreateNoteInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
@@ -56,7 +55,7 @@ export const createNote = createTool({
   inputSchema: CreateNoteInputSchema,
   requireApproval: true,
   execute: async (
-    { title, content, isInbox }: z.infer<typeof CreateNoteInputSchema>,
+    { title, content, isInbox },
     context
   ): Promise<NoteToolResult<NoteCreateData>> => {
     if (context?.abortSignal?.aborted) {

@@ -121,6 +121,10 @@ interface GenerateChatTitleResponse {
 
 const MAX_CACHED_CHATS = 20
 
+// Stable empty default for `noteEntryIds` so omitting the prop doesn't create a
+// fresh array each render (which would churn the `sendMessage` useCallback).
+const EMPTY_NOTE_ENTRY_IDS: string[] = []
+
 const chatMessageCache = new Map<string, UIMessage[]>()
 
 export function getCachedMessages(chatId: string): UIMessage[] | undefined {
@@ -194,7 +198,7 @@ export function useKnowledgeChat(config: KnowledgeChatConfig) {
     apiKey,
     baseUrl,
     model,
-    noteEntryIds: defaultNoteEntryIds = [],
+    noteEntryIds: defaultNoteEntryIds = EMPTY_NOTE_ENTRY_IDS,
     enableReasoning = false,
     enableWebSearch = false,
     enableImageGeneration = false,

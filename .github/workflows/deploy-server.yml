@@ -46,6 +46,10 @@ jobs:
 
       - name: Install dependencies
         run: vp install --frozen-lockfile
+        env:
+          # HeroUI Pro is licensed; its postinstall uses this token to fetch Pro
+          # artifacts (e.g. @heroui-pro/react/css) that the `vp check` gate resolves.
+          HEROUI_AUTH_TOKEN: ${{ secrets.HEROUI_AUTH_TOKEN }}
 
       # Gate the deploy: never ship a release that fails lint or server types.
       # (Server-scoped type-check so unrelated native debt can't block deploys.)

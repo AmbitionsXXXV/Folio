@@ -11,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm } from "@tanstack/react-form"
+import type { AnyFieldApi } from "@tanstack/react-form"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -32,7 +33,6 @@ const PASSWORD_MIN_LENGTH = 8
  */
 export default function ResetPasswordForm() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const search = useSearch({ from: "/reset-password" })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -104,75 +104,12 @@ export default function ResetPasswordForm() {
 
   // No token provided
   if (!token) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
-        <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-destructive shadow-lg">
-              <HugeiconsIcon
-                className="size-8 text-destructive-foreground"
-                icon={SecurityLockIcon}
-              />
-            </div>
-            <h1 className="mb-2 text-3xl font-bold">{t("auth.invalidLink")}</h1>
-            <p className="text-sm text-muted-foreground">
-              {t("auth.invalidLinkDescription")}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border bg-card p-8 shadow-xl dark:border-border/50 dark:bg-card/50">
-            <div className="space-y-4 text-center">
-              <Link className="block" to="/forgot-password">
-                <Button className="w-full" variant="default">
-                  {t("auth.requestNewLink")}
-                </Button>
-              </Link>
-
-              <Link
-                className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
-                to="/login"
-              >
-                <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
-                {t("auth.backToSignIn")}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <InvalidTokenState />
   }
 
   // Password reset success
   if (resetSuccess) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
-        <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-green-500 shadow-lg">
-              <HugeiconsIcon
-                className="size-8 text-white"
-                icon={CheckmarkCircle02Icon}
-              />
-            </div>
-            <h1 className="mb-2 text-3xl font-bold">
-              {t("auth.passwordResetComplete")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("auth.passwordResetCompleteDescription")}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border bg-card p-8 shadow-xl dark:border-border/50 dark:bg-card/50">
-            <Button
-              className="w-full"
-              onClick={() => navigate({ to: "/login" })}
-            >
-              {t("auth.signIn")}
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+    return <ResetSuccessState />
   }
 
   return (
@@ -215,51 +152,15 @@ export default function ResetPasswordForm() {
                     .min(PASSWORD_MIN_LENGTH, t("auth.passwordTooShort"))
                 }}
               >
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t("auth.newPassword")}
-                      </FieldLabel>
-                      <div className="relative">
-                        <HugeiconsIcon
-                          className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                          icon={SecurityLockIcon}
-                        />
-                        <Input
-                          aria-invalid={isInvalid}
-                          autoComplete="new-password"
-                          className="pr-10 pl-10 transition-all duration-200 hover:border-primary/50"
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder={t("auth.newPasswordPlaceholder")}
-                          type={showPassword ? "text" : "password"}
-                          value={field.state.value}
-                        />
-                        <button
-                          aria-label={
-                            showPassword ? "Hide password" : "Show password"
-                          }
-                          className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                          onClick={() => setShowPassword(!showPassword)}
-                          type="button"
-                        >
-                          <HugeiconsIcon
-                            className="size-4"
-                            icon={showPassword ? ViewOffSlashIcon : ViewIcon}
-                          />
-                        </button>
-                      </div>
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
+                {(field) => (
+                  <PasswordField
+                    field={field}
+                    label={t("auth.newPassword")}
+                    onToggleVisibility={() => setShowPassword(!showPassword)}
+                    placeholder={t("auth.newPasswordPlaceholder")}
+                    showPassword={showPassword}
+                  />
+                )}
               </form.Field>
 
               {/* Confirm Password Field */}
@@ -269,57 +170,17 @@ export default function ResetPasswordForm() {
                   onBlur: z.string().min(1, t("auth.confirmPasswordRequired"))
                 }}
               >
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid
-                  return (
-                    <Field data-invalid={isInvalid || undefined}>
-                      <FieldLabel htmlFor={field.name}>
-                        {t("auth.confirmPassword")}
-                      </FieldLabel>
-                      <div className="relative">
-                        <HugeiconsIcon
-                          className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-                          icon={SecurityLockIcon}
-                        />
-                        <Input
-                          aria-invalid={isInvalid}
-                          autoComplete="new-password"
-                          className="pr-10 pl-10 transition-all duration-200 hover:border-primary/50"
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder={t("auth.confirmPasswordPlaceholder")}
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={field.state.value}
-                        />
-                        <button
-                          aria-label={
-                            showConfirmPassword
-                              ? "Hide password"
-                              : "Show password"
-                          }
-                          className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          type="button"
-                        >
-                          <HugeiconsIcon
-                            className="size-4"
-                            icon={
-                              showConfirmPassword ? ViewOffSlashIcon : ViewIcon
-                            }
-                          />
-                        </button>
-                      </div>
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  )
-                }}
+                {(field) => (
+                  <PasswordField
+                    field={field}
+                    label={t("auth.confirmPassword")}
+                    onToggleVisibility={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    placeholder={t("auth.confirmPasswordPlaceholder")}
+                    showPassword={showConfirmPassword}
+                  />
+                )}
               </form.Field>
 
               {/* Password Requirements Hint */}
@@ -349,14 +210,151 @@ export default function ResetPasswordForm() {
 
           {/* Back to Login Link */}
           <div className="mt-6 text-center text-sm">
-            <Link
-              className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
-              to="/login"
-            >
-              <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
-              {t("auth.backToSignIn")}
-            </Link>
+            <BackToSignInLink />
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface PasswordFieldProps {
+  field: AnyFieldApi
+  label: string
+  placeholder: string
+  showPassword: boolean
+  onToggleVisibility: () => void
+}
+
+/**
+ * Renders a password input with a visibility toggle and inline validation error.
+ */
+function PasswordField({
+  field,
+  label,
+  placeholder,
+  showPassword,
+  onToggleVisibility
+}: PasswordFieldProps) {
+  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+  return (
+    <Field data-invalid={isInvalid || undefined}>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+      <div className="relative">
+        <HugeiconsIcon
+          className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          icon={SecurityLockIcon}
+        />
+        <Input
+          aria-invalid={isInvalid}
+          autoComplete="new-password"
+          className="pr-10 pl-10 transition-all duration-200 hover:border-primary/50"
+          id={field.name}
+          name={field.name}
+          onBlur={field.handleBlur}
+          onChange={(e) => field.handleChange(e.target.value)}
+          placeholder={placeholder}
+          type={showPassword ? "text" : "password"}
+          value={field.state.value}
+        />
+        <button
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+          onClick={onToggleVisibility}
+          type="button"
+        >
+          <HugeiconsIcon
+            className="size-4"
+            icon={showPassword ? ViewOffSlashIcon : ViewIcon}
+          />
+        </button>
+      </div>
+      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+    </Field>
+  )
+}
+
+/**
+ * Renders the navigation link back to the sign-in page.
+ */
+function BackToSignInLink() {
+  const { t } = useTranslation()
+  return (
+    <Link
+      className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+      to="/login"
+    >
+      <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
+      {t("auth.backToSignIn")}
+    </Link>
+  )
+}
+
+/**
+ * Renders the error state shown when the reset link has no token.
+ */
+function InvalidTokenState() {
+  const { t } = useTranslation()
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-destructive shadow-lg">
+            <HugeiconsIcon
+              className="size-8 text-destructive-foreground"
+              icon={SecurityLockIcon}
+            />
+          </div>
+          <h1 className="mb-2 text-3xl font-bold">{t("auth.invalidLink")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t("auth.invalidLinkDescription")}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-8 shadow-xl dark:border-border/50 dark:bg-card/50">
+          <div className="space-y-4 text-center">
+            <Link className="block" to="/forgot-password">
+              <Button className="w-full" variant="default">
+                {t("auth.requestNewLink")}
+              </Button>
+            </Link>
+
+            <BackToSignInLink />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Renders the success state shown after the password has been reset.
+ */
+function ResetSuccessState() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background to-muted/20 px-4 py-6 sm:px-6 sm:py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-green-500 shadow-lg">
+            <HugeiconsIcon
+              className="size-8 text-white"
+              icon={CheckmarkCircle02Icon}
+            />
+          </div>
+          <h1 className="mb-2 text-3xl font-bold">
+            {t("auth.passwordResetComplete")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("auth.passwordResetCompleteDescription")}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-8 shadow-xl dark:border-border/50 dark:bg-card/50">
+          <Button className="w-full" onClick={() => navigate({ to: "/login" })}>
+            {t("auth.signIn")}
+          </Button>
         </div>
       </div>
     </div>

@@ -273,6 +273,7 @@ function TagsPage() {
                 </button>
                 {PRESET_COLORS.map((color) => (
                   <button
+                    aria-label={color}
                     className={cn(
                       "size-8 rounded-full border-2 transition-all",
                       tagColor === color

@@ -20,6 +20,18 @@ import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
+const entryDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit"
+})
+
+const handleTriggerClick = (e: MouseEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+}
+
 interface EntryCardProps {
   id: string
   title: string
@@ -49,11 +61,6 @@ function MobileActionsMenu({
   onDelete
 }: EntryCardActionsProps) {
   const { t } = useTranslation()
-
-  const handleTriggerClick = (e: MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
 
   const handleStarClick = (e: MouseEvent) => {
     e.stopPropagation()
@@ -232,12 +239,7 @@ export function EntryCard({
   const date = new Date(updatedAt)
 
   // Format date
-  const formattedDate = new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(date)
+  const formattedDate = entryDateFormatter.format(date)
 
   const hasActions = onStar || onPin || onDelete
   const actionProps = { isStarred, isPinned, onStar, onPin, onDelete }

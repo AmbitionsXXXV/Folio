@@ -39,7 +39,7 @@ export async function rewriteQuery(
     const result = await generateText({
       model,
       output: Output.object({ schema: QueryRewriteSchema }),
-      system: REWRITE_SYSTEM_PROMPT,
+      instructions: REWRITE_SYSTEM_PROMPT,
       prompt: query
     })
 

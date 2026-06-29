@@ -317,9 +317,13 @@ const MessageProcess = memo(
     thinkingEnabled,
     onToolApprovalResponse
   }: MessageProcessProps) => {
+    const toolInvocations = useMemo(
+      () => (message.parts ?? []).filter(isToolInvocationPart),
+      [message.parts]
+    )
+
     if (message.role !== "assistant") return null
 
-    const toolInvocations = (message.parts ?? []).filter(isToolInvocationPart)
     const hasToolInvocations = toolInvocations.length > 0
     const hasThinking = Boolean(message.thinking && message.thinking.length > 0)
     const shouldShowReasoning = thinkingEnabled && hasThinking

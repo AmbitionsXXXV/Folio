@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { createContext, use, useMemo } from "react"
+import { createContext, use } from "react"
 
 import migrations from "@/drizzle/migrations"
 import { useIsOnline } from "@/hooks"
@@ -70,7 +70,7 @@ export function DataServiceProvider({ children }: { children: ReactNode }) {
   const useOfflineFirst = isAuthenticated && migrationSuccess && localUserId
 
   // Create appropriate data service based on auth state and network
-  const dataService = useMemo(() => {
+  const dataService = (() => {
     if (isAuthenticated && isOnline && !useOfflineFirst) {
       // User is logged in and online, use remote API directly
       return createRemoteDataService()
@@ -88,14 +88,7 @@ export function DataServiceProvider({ children }: { children: ReactNode }) {
 
     // Not ready yet
     return null
-  }, [
-    isAuthenticated,
-    isOnline,
-    isLocal,
-    localUserId,
-    migrationSuccess,
-    useOfflineFirst
-  ])
+  })()
 
   return (
     <DataServiceContext

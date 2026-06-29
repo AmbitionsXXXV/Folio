@@ -1,9 +1,8 @@
 import { db, entries } from "@folionote/db"
 import { createTool } from "@mastra/core/tools"
 import { and, desc, eq, isNull, sql } from "drizzle-orm"
-import type { z } from "zod"
 
-import { SearchNotesInputSchema } from "../schemas"
+import { DEFAULT_SEARCH_LIMIT, SearchNotesInputSchema } from "../schemas"
 import { getNoteToolContext } from "../types"
 import type { NoteSearchData, NoteToolResult } from "../types"
 
@@ -20,7 +19,7 @@ export const searchNotes = createTool({
   strict: true,
   inputSchema: SearchNotesInputSchema,
   execute: async (
-    { query, limit }: z.infer<typeof SearchNotesInputSchema>,
+    { query, limit },
     context
   ): Promise<NoteToolResult<NoteSearchData>> => {
     if (context?.abortSignal?.aborted) {
@@ -29,6 +28,9 @@ export const searchNotes = createTool({
 
     const { userId } = getNoteToolContext(context?.requestContext)
     const trimmedQuery = query.trim()
+    // Mastra types the execute param as the schema input type, so the
+    // `.default()` for `limit` is applied at runtime but stays optional here.
+    const effectiveLimit = limit ?? DEFAULT_SEARCH_LIMIT
 
     if (!trimmedQuery) {
       return {
@@ -71,7 +73,7 @@ export const searchNotes = createTool({
           )
         )
         .orderBy(desc(entries.updatedAt))
-        .limit(limit)
+        .limit(effectiveLimit)
 
       if (ftsResults.length > 0) {
         return {
@@ -109,7 +111,7 @@ export const searchNotes = createTool({
         )
       )
       .orderBy(desc(entries.updatedAt))
-      .limit(limit)
+      .limit(effectiveLimit)
 
     return {
       success: true,
