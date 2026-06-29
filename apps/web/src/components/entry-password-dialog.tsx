@@ -234,9 +234,7 @@ function ConfirmPasswordField({
                       />
                     )}
                   </div>
-                  {isInvalid && (
-                    <FieldError errors={field.state.meta.errors} />
-                  )}
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               )
             }}

@@ -801,7 +801,14 @@ const useAttachmentsManager = ({
     [files, add, remove, clearAttachments, openFileDialog]
   )
 
-  return { inputRef, files, add, clearAttachments, handleChange, attachmentsCtx }
+  return {
+    inputRef,
+    files,
+    add,
+    clearAttachments,
+    handleChange,
+    attachmentsCtx
+  }
 }
 
 interface UseFileDropOptions {
@@ -895,15 +902,21 @@ export const PromptInput = ({
 
   const formRef = useRef<HTMLFormElement | null>(null)
 
-  const { inputRef, files, add, clearAttachments, handleChange, attachmentsCtx } =
-    useAttachmentsManager({
-      controller,
-      accept,
-      maxFiles,
-      maxFileSize,
-      syncHiddenInput,
-      onError
-    })
+  const {
+    inputRef,
+    files,
+    add,
+    clearAttachments,
+    handleChange,
+    attachmentsCtx
+  } = useAttachmentsManager({
+    controller,
+    accept,
+    maxFiles,
+    maxFileSize,
+    syncHiddenInput,
+    onError
+  })
 
   const { refsCtx, clear: clearReferencedSources } = useReferencedSources()
 

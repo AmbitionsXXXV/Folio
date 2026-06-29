@@ -10,7 +10,8 @@ import {
   ViewOffSlashIcon
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useForm } from "@tanstack/react-form"
+import type { AnyFieldApi } from "@tanstack/react-form"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"

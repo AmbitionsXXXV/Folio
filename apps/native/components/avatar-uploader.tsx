@@ -277,10 +277,7 @@ export function AvatarUploader({
     return formatTimeWithI18n(seconds, t, { maxUnit: "hour" })
   }
 
-  const validateFile = (
-    mimeType: string,
-    fileSize: number
-  ): string | null => {
+  const validateFile = (mimeType: string, fileSize: number): string | null => {
     if (!config) {
       return null
     }

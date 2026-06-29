@@ -402,11 +402,7 @@ function RecentEntriesSection({
           <Text className="mr-1 text-sm text-muted">
             {t("activity.viewAll")}
           </Text>
-          <HugeiconsIcon
-            color={mutedColor}
-            icon={ArrowRight01Icon}
-            size={16}
-          />
+          <HugeiconsIcon color={mutedColor} icon={ArrowRight01Icon} size={16} />
         </Pressable>
       </View>
 
@@ -455,11 +451,7 @@ function QuickAccessCard({
             <Text className="font-medium text-foreground">{title}</Text>
             <Text className="text-sm text-muted">{subtitle}</Text>
           </View>
-          <HugeiconsIcon
-            color={mutedColor}
-            icon={ArrowRight01Icon}
-            size={20}
-          />
+          <HugeiconsIcon color={mutedColor} icon={ArrowRight01Icon} size={20} />
         </View>
       </Card>
     </PressableFeedback>
@@ -553,9 +545,7 @@ function QuickAccessSection({
           mutedColor={mutedColor}
           onPress={onReview}
           subtitle={
-            isLoadingStats
-              ? "..."
-              : t("activity.dueCount", { count: totalDue })
+            isLoadingStats ? "..." : t("activity.dueCount", { count: totalDue })
           }
           title={t("nav.review")}
         />

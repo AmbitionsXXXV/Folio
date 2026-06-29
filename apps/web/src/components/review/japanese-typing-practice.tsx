@@ -740,7 +740,10 @@ function TypingBottomBar({
 
       {/* Center: Tool Icons */}
       <div className="flex items-center gap-1">
-        <Sheet onOpenChange={onGrammarSheetOpenChange} open={isGrammarSheetOpen}>
+        <Sheet
+          onOpenChange={onGrammarSheetOpenChange}
+          open={isGrammarSheetOpen}
+        >
           <Tooltip>
             <SheetTrigger
               aria-label={t("review.japaneseTyping.grammarTitle")}
@@ -758,9 +761,7 @@ function TypingBottomBar({
           </Tooltip>
           <SheetContent className="overflow-y-auto" side="right">
             <SheetHeader>
-              <SheetTitle>
-                {t("review.japaneseTyping.grammarTitle")}
-              </SheetTitle>
+              <SheetTitle>{t("review.japaneseTyping.grammarTitle")}</SheetTitle>
               <SheetDescription>{exercise.focus}</SheetDescription>
             </SheetHeader>
             <div className="mt-4 space-y-4 px-1">
