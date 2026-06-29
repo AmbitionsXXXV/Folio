@@ -10,6 +10,15 @@ import { JAPANESE_ANALYZED_SENTENCES } from "./japanese-analyzed-data"
 import { JapaneseAnalyzedSentenceView } from "./japanese-analyzed-sentence"
 import { JapanesePosLegend } from "./japanese-pos-legend"
 
+const JAPANESE_TOKEN_BY_ID = new Map<string, JapaneseAnalyzedToken>()
+for (const sentence of JAPANESE_ANALYZED_SENTENCES) {
+  for (const token of sentence.tokens) {
+    if (!JAPANESE_TOKEN_BY_ID.has(token.id)) {
+      JAPANESE_TOKEN_BY_ID.set(token.id, token)
+    }
+  }
+}
+
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col">
@@ -76,20 +85,13 @@ export function JapaneseReadingView() {
     setSelectedTokenId((previous) => (previous === token.id ? null : token.id))
   }, [])
 
-  const selectedToken = useMemo(() => {
-    if (!selectedTokenId) {
-      return null
-    }
-    for (const sentence of JAPANESE_ANALYZED_SENTENCES) {
-      const found = sentence.tokens.find(
-        (token) => token.id === selectedTokenId
-      )
-      if (found) {
-        return found
-      }
-    }
-    return null
-  }, [selectedTokenId])
+  const selectedToken = useMemo(
+    () =>
+      selectedTokenId
+        ? (JAPANESE_TOKEN_BY_ID.get(selectedTokenId) ?? null)
+        : null,
+    [selectedTokenId]
+  )
 
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">

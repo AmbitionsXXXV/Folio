@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Stack, useLocalSearchParams, useRouter } from "expo-router"
 import { Button, useThemeColor } from "heroui-native"
-import { useCallback, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ActivityIndicator,
@@ -42,14 +42,14 @@ export default function EntryDetailScreen() {
   const passwordSheetRef = useRef<EntryPasswordSheetRef>(null)
 
   // Handle share
-  const handleShare = useCallback(() => {
+  const handleShare = () => {
     shareSheetRef.current?.open()
-  }, [])
+  }
 
   // Handle password
-  const handlePassword = useCallback(() => {
+  const handlePassword = () => {
     passwordSheetRef.current?.open()
-  }, [])
+  }
 
   // Fetch entry details
   const { data: entry, isLoading } = useQuery(
@@ -66,29 +66,26 @@ export default function EntryDetailScreen() {
   })
 
   // Handle content change from editor
-  const handleContentChange = useCallback(
-    (json: string, text: string) => {
-      updateMutation.mutate({ contentJson: json, contentText: text })
-      return Promise.resolve()
-    },
-    [updateMutation]
-  )
+  const handleContentChange = (json: string, text: string) => {
+    updateMutation.mutate({ contentJson: json, contentText: text })
+    return Promise.resolve()
+  }
 
   // Handle save
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     setIsEditing(false)
     return Promise.resolve()
-  }, [])
+  }
 
   // Toggle edit mode
-  const toggleEdit = useCallback(() => {
+  const toggleEdit = () => {
     setIsEditing((prev) => !prev)
-  }, [])
+  }
 
   // Go back
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     router.back()
-  }, [router])
+  }
 
   if (isLoading) {
     return (

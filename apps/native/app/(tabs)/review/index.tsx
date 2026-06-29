@@ -7,7 +7,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react-native"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button, Card, useThemeColor } from "heroui-native"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   ActivityIndicator,
@@ -163,32 +163,29 @@ export default function ReviewScreen() {
     }
   })
 
-  const handleStartReview = useCallback(() => {
+  const handleStartReview = () => {
     setIsReviewing(true)
     setCurrentIndex(0)
-  }, [])
+  }
 
-  const handleEndReview = useCallback(() => {
+  const handleEndReview = () => {
     setIsReviewing(false)
     setCurrentIndex(0)
     refetch()
-  }, [refetch])
+  }
 
-  const handleRating = useCallback(
-    (rating: Rating) => {
-      const currentEntry = queueData?.items[currentIndex]
-      if (currentEntry) {
-        markReviewedMutation.mutate({ entryId: currentEntry.id, rating })
-      }
-    },
-    [queueData?.items, currentIndex, markReviewedMutation]
-  )
+  const handleRating = (rating: Rating) => {
+    const currentEntry = queueData?.items[currentIndex]
+    if (currentEntry) {
+      markReviewedMutation.mutate({ entryId: currentEntry.id, rating })
+    }
+  }
 
-  const handleRuleChange = useCallback((rule: ReviewRule) => {
+  const handleRuleChange = (rule: ReviewRule) => {
     setCurrentRule(rule)
     setCurrentIndex(0)
     setIsReviewing(false)
-  }, [])
+  }
 
   // Show loading while migrating or loading data
   if (isMigrating || isLoading || !dataService) {

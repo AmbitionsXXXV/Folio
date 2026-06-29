@@ -15,7 +15,7 @@ import {
 import type { IconSvgElement } from "@hugeicons/react-native"
 import { HugeiconsIcon } from "@hugeicons/react-native"
 import { cn, useThemeColor } from "heroui-native"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Animated, Pressable, Text, View } from "react-native"
 
@@ -71,11 +71,11 @@ export function SyncStatusIndicator({
     rotateAnim.setValue(0)
   }, [syncState, rotateAnim])
 
-  const handlePress = useCallback(() => {
+  const handlePress = () => {
     if (interactive && syncState !== "syncing" && isOnline) {
       sync()
     }
-  }, [interactive, syncState, isOnline, sync])
+  }
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],

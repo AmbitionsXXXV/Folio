@@ -27,6 +27,8 @@ import { EditorCharacterCount } from "@/components/editor/editor-character-count
 import { ResizableImage } from "@/components/editor/resizable-image"
 import { HeadingIds } from "@/lib/heading-id-extension"
 
+const EMPTY_COMMANDS: SlashCommandItem[] = []
+
 /**
  * 内容格式类型
  * - json: ProseMirror JSON 格式（推荐）
@@ -174,7 +176,7 @@ export function EntryEditor({
   editable = true,
   autoFocus = false,
   className = "",
-  additionalCommands = [],
+  additionalCommands = EMPTY_COMMANDS,
   pasteStrategy = "preserve",
   onUploadImage
 }: EntryEditorProps) {

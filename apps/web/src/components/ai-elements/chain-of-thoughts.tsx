@@ -26,6 +26,12 @@ const ChainOfThoughtContext = createContext<ChainOfThoughtContextValue | null>(
   null
 )
 
+const statusStyles = {
+  complete: "text-muted-foreground",
+  active: "text-foreground",
+  pending: "text-muted-foreground/50"
+}
+
 const useChainOfThought = () => {
   const context = use(ChainOfThoughtContext)
   if (!context) {
@@ -125,37 +131,29 @@ export const ChainOfThoughtStep = memo(
     status = "complete",
     children,
     ...props
-  }: ChainOfThoughtStepProps) => {
-    const statusStyles = {
-      complete: "text-muted-foreground",
-      active: "text-foreground",
-      pending: "text-muted-foreground/50"
-    }
-
-    return (
-      <div
-        className={cn(
-          "flex gap-2 text-sm",
-          statusStyles[status],
-          "fade-in-0 slide-in-from-top-2 animate-in motion-reduce:animate-none motion-reduce:transition-none",
-          className
-        )}
-        {...props}
-      >
-        <div className="relative mt-0.5">
-          <HugeiconsIcon className="size-4" icon={icon} />
-          <div className="absolute top-7 bottom-0 left-1/2 -mx-px w-px bg-border" />
-        </div>
-        <div className="flex-1 space-y-2 overflow-hidden">
-          <div>{label}</div>
-          {description && (
-            <div className="text-xs text-muted-foreground">{description}</div>
-          )}
-          {children}
-        </div>
+  }: ChainOfThoughtStepProps) => (
+    <div
+      className={cn(
+        "flex gap-2 text-sm",
+        statusStyles[status],
+        "fade-in-0 slide-in-from-top-2 animate-in motion-reduce:animate-none motion-reduce:transition-none",
+        className
+      )}
+      {...props}
+    >
+      <div className="relative mt-0.5">
+        <HugeiconsIcon className="size-4" icon={icon} />
+        <div className="absolute top-7 bottom-0 left-1/2 -mx-px w-px bg-border" />
       </div>
-    )
-  }
+      <div className="flex-1 space-y-2 overflow-hidden">
+        <div>{label}</div>
+        {description && (
+          <div className="text-xs text-muted-foreground">{description}</div>
+        )}
+        {children}
+      </div>
+    </div>
+  )
 )
 
 export type ChainOfThoughtSearchResultsProps = ComponentProps<"div">

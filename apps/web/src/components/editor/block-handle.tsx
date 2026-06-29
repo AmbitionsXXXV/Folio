@@ -242,29 +242,176 @@ function MenuItem({
   )
 }
 
+/** The hover/drag handle's two header buttons: the type badge and the menu. */
+interface BlockHandleButtonsProps {
+  badge: string
+  onToggleType: () => void
+  onToggleMenu: () => void
+  t: TranslateFn
+}
+
+function BlockHandleButtons({
+  badge,
+  onToggleType,
+  onToggleMenu,
+  t
+}: BlockHandleButtonsProps) {
+  return (
+    <>
+      <button
+        aria-label={t("editor.block.turnInto")}
+        className="block-handle-type"
+        onClick={onToggleType}
+        title={t("editor.block.turnInto")}
+        type="button"
+      >
+        <span className="block-handle-type-label">{badge}</span>
+        <HugeiconsIcon
+          className="block-handle-type-caret"
+          icon={ArrowDown01Icon}
+        />
+      </button>
+      <button
+        aria-label={t("editor.block.options")}
+        className="block-handle-btn"
+        onClick={onToggleMenu}
+        title={t("editor.block.options")}
+        type="button"
+      >
+        <HugeiconsIcon className="size-4" icon={DragDropVerticalIcon} />
+      </button>
+    </>
+  )
+}
+
+interface BlockFullMenuProps {
+  activeKind: BlockKind | null
+  onPick: (kind: BlockKind) => void
+  onCut: () => void
+  onCopy: () => void
+  onDelete: () => void
+  onAdd: () => void
+  comingSoon: string
+  t: TranslateFn
+}
+
+/** The full block menu opened from the drag button. */
+function BlockFullMenu({
+  activeKind,
+  onPick,
+  onCut,
+  onCopy,
+  onDelete,
+  onAdd,
+  comingSoon,
+  t
+}: BlockFullMenuProps) {
+  return (
+    <div className="block-handle-menu block-handle-fullmenu">
+      <div className="block-handle-menu-section">
+        <TypeGrid activeKind={activeKind} onPick={onPick} t={t} />
+      </div>
+
+      <div className="block-handle-menu-divider" />
+
+      <div className="block-handle-menu-section">
+        <MenuItem
+          chevron
+          disabled
+          icon={TextIndent01Icon}
+          label={t("editor.block.indentAndAlign")}
+          title={comingSoon}
+        />
+        <MenuItem
+          chevron
+          disabled
+          icon={TextColorIcon}
+          label={t("editor.block.color")}
+          title={comingSoon}
+        />
+      </div>
+
+      <div className="block-handle-menu-divider" />
+
+      <div className="block-handle-menu-section">
+        <MenuItem
+          disabled
+          icon={Comment01Icon}
+          label={t("editor.block.comment")}
+          title={comingSoon}
+        />
+        <MenuItem
+          icon={Scissor01Icon}
+          label={t("editor.block.cut")}
+          onClick={onCut}
+        />
+        <MenuItem
+          icon={Copy01Icon}
+          label={t("editor.block.copy")}
+          onClick={onCopy}
+        />
+        <MenuItem
+          disabled
+          icon={TranslateIcon}
+          label={t("editor.block.translate")}
+          title={comingSoon}
+        />
+        <MenuItem
+          danger
+          icon={Delete01Icon}
+          label={t("editor.block.delete")}
+          onClick={onDelete}
+        />
+      </div>
+
+      <div className="block-handle-menu-divider" />
+
+      <div className="block-handle-menu-section">
+        <MenuItem
+          disabled
+          icon={Share08Icon}
+          label={t("editor.block.share")}
+          title={comingSoon}
+        />
+        <MenuItem
+          disabled
+          icon={File01Icon}
+          label={t("editor.block.saveAsTemplate")}
+          title={comingSoon}
+        />
+        <MenuItem
+          disabled
+          icon={LinkSquare01Icon}
+          label={t("editor.block.copyLink")}
+          title={comingSoon}
+        />
+      </div>
+
+      <div className="block-handle-menu-divider" />
+
+      <div className="block-handle-menu-section">
+        <MenuItem
+          icon={InsertRowDownIcon}
+          label={t("editor.block.add")}
+          onClick={onAdd}
+        />
+      </div>
+    </div>
+  )
+}
+
 /**
- * Notion/Lark-style block handle: hovering a block reveals a left-gutter handle
- * with a type badge and a drag/menu button. The badge opens a "turn into" type
- * picker; the drag button opens the full block menu.
+ * Track the hovered top-level block, anchoring the handle to its top. Pauses
+ * while a popover is open (read via refs) so the menu isn't torn down on hover.
  */
-export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
-  const { t } = useTranslation()
+function useBlockHover(
+  editor: Editor | null,
+  containerRef: RefObject<HTMLDivElement | null>,
+  handleRef: RefObject<HTMLDivElement | null>,
+  menuOpenRef: RefObject<boolean>,
+  typeOpenRef: RefObject<boolean>
+) {
   const [state, setState] = useState<HandleState | null>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [typeOpen, setTypeOpen] = useState(false)
-  const handleRef = useRef<HTMLDivElement>(null)
-
-  // Refs let the editor's mouse listeners read the latest open state without
-  // re-subscribing, so an open menu isn't repositioned or torn down on hover.
-  const menuOpenRef = useRef(false)
-  const typeOpenRef = useRef(false)
-  menuOpenRef.current = menuOpen
-  typeOpenRef.current = typeOpen
-
-  const closeMenus = useCallback(() => {
-    setMenuOpen(false)
-    setTypeOpen(false)
-  }, [])
 
   useEffect(() => {
     if (!editor) {
@@ -323,11 +470,19 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
       editorDom.removeEventListener("mousemove", handleMove)
       container.removeEventListener("mouseleave", handleLeave)
     }
-  }, [editor, containerRef])
+  }, [editor, containerRef, handleRef, menuOpenRef, typeOpenRef])
 
-  // Close popovers on an outside click or Escape.
+  return [state, setState] as const
+}
+
+/** Dismiss the open popover on an outside click or Escape. */
+function useDismissOnInteraction(
+  active: boolean,
+  handleRef: RefObject<HTMLDivElement | null>,
+  onDismiss: () => void
+) {
   useEffect(() => {
-    if (!(menuOpen || typeOpen)) {
+    if (!active) {
       return
     }
     const onDown = (event: MouseEvent) => {
@@ -335,12 +490,12 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
         handleRef.current &&
         !handleRef.current.contains(event.target as Node)
       ) {
-        closeMenus()
+        onDismiss()
       }
     }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        closeMenus()
+        onDismiss()
       }
     }
     document.addEventListener("mousedown", onDown)
@@ -349,7 +504,41 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
       document.removeEventListener("mousedown", onDown)
       document.removeEventListener("keydown", onKey)
     }
-  }, [menuOpen, typeOpen, closeMenus])
+  }, [active, handleRef, onDismiss])
+}
+
+/**
+ * Notion/Lark-style block handle: hovering a block reveals a left-gutter handle
+ * with a type badge and a drag/menu button. The badge opens a "turn into" type
+ * picker; the drag button opens the full block menu.
+ */
+export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
+  const { t } = useTranslation()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [typeOpen, setTypeOpen] = useState(false)
+  const handleRef = useRef<HTMLDivElement>(null)
+
+  // Refs let the editor's mouse listeners read the latest open state without
+  // re-subscribing, so an open menu isn't repositioned or torn down on hover.
+  const menuOpenRef = useRef(false)
+  const typeOpenRef = useRef(false)
+  menuOpenRef.current = menuOpen
+  typeOpenRef.current = typeOpen
+
+  const closeMenus = useCallback(() => {
+    setMenuOpen(false)
+    setTypeOpen(false)
+  }, [])
+
+  const [state, setState] = useBlockHover(
+    editor,
+    containerRef,
+    handleRef,
+    menuOpenRef,
+    typeOpenRef
+  )
+
+  useDismissOnInteraction(menuOpen || typeOpen, handleRef, closeMenus)
 
   /** Resolve the hovered top-level block's range and node. */
   const resolveBlock = useCallback(() => {
@@ -493,7 +682,7 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
       .run()
     closeMenus()
     setState(null)
-  }, [editor, resolveBlock, closeMenus])
+  }, [editor, resolveBlock, closeMenus, setState])
 
   const handleCopy = useCallback(() => {
     const block = resolveBlock()
@@ -514,7 +703,7 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
     }
     closeMenus()
     setState(null)
-  }, [editor, resolveBlock, copyNode, closeMenus])
+  }, [editor, resolveBlock, copyNode, closeMenus, setState])
 
   const handleDelete = useCallback(() => {
     if (!editor) {
@@ -526,7 +715,7 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
     }
     closeMenus()
     setState(null)
-  }, [editor, resolveBlock, closeMenus])
+  }, [editor, resolveBlock, closeMenus, setState])
 
   if (!(editor && state)) {
     return null
@@ -547,34 +736,18 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
       // handle further left on headings to sit beside it rather than overlap.
       style={{ top: state.top, ...(isHeading ? { left: "-4.5rem" } : {}) }}
     >
-      <button
-        aria-label={t("editor.block.turnInto")}
-        className="block-handle-type"
-        onClick={() => {
-          setMenuOpen(false)
-          setTypeOpen((open) => !open)
-        }}
-        title={t("editor.block.turnInto")}
-        type="button"
-      >
-        <span className="block-handle-type-label">{badge}</span>
-        <HugeiconsIcon
-          className="block-handle-type-caret"
-          icon={ArrowDown01Icon}
-        />
-      </button>
-      <button
-        aria-label={t("editor.block.options")}
-        className="block-handle-btn"
-        onClick={() => {
+      <BlockHandleButtons
+        badge={badge}
+        onToggleMenu={() => {
           setTypeOpen(false)
           setMenuOpen((open) => !open)
         }}
-        title={t("editor.block.options")}
-        type="button"
-      >
-        <HugeiconsIcon className="size-4" icon={DragDropVerticalIcon} />
-      </button>
+        onToggleType={() => {
+          setMenuOpen(false)
+          setTypeOpen((open) => !open)
+        }}
+        t={t}
+      />
 
       {typeOpen ? (
         <div className="block-handle-menu block-handle-typeswitch">
@@ -586,96 +759,16 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
       ) : null}
 
       {menuOpen ? (
-        <div className="block-handle-menu block-handle-fullmenu">
-          <div className="block-handle-menu-section">
-            <TypeGrid activeKind={activeKind} onPick={turnInto} t={t} />
-          </div>
-
-          <div className="block-handle-menu-divider" />
-
-          <div className="block-handle-menu-section">
-            <MenuItem
-              chevron
-              disabled
-              icon={TextIndent01Icon}
-              label={t("editor.block.indentAndAlign")}
-              title={comingSoon}
-            />
-            <MenuItem
-              chevron
-              disabled
-              icon={TextColorIcon}
-              label={t("editor.block.color")}
-              title={comingSoon}
-            />
-          </div>
-
-          <div className="block-handle-menu-divider" />
-
-          <div className="block-handle-menu-section">
-            <MenuItem
-              disabled
-              icon={Comment01Icon}
-              label={t("editor.block.comment")}
-              title={comingSoon}
-            />
-            <MenuItem
-              icon={Scissor01Icon}
-              label={t("editor.block.cut")}
-              onClick={handleCut}
-            />
-            <MenuItem
-              icon={Copy01Icon}
-              label={t("editor.block.copy")}
-              onClick={handleCopy}
-            />
-            <MenuItem
-              disabled
-              icon={TranslateIcon}
-              label={t("editor.block.translate")}
-              title={comingSoon}
-            />
-            <MenuItem
-              danger
-              icon={Delete01Icon}
-              label={t("editor.block.delete")}
-              onClick={handleDelete}
-            />
-          </div>
-
-          <div className="block-handle-menu-divider" />
-
-          <div className="block-handle-menu-section">
-            <MenuItem
-              disabled
-              icon={Share08Icon}
-              label={t("editor.block.share")}
-              title={comingSoon}
-            />
-            <MenuItem
-              disabled
-              icon={File01Icon}
-              label={t("editor.block.saveAsTemplate")}
-              title={comingSoon}
-            />
-            <MenuItem
-              disabled
-              icon={LinkSquare01Icon}
-              label={t("editor.block.copyLink")}
-              title={comingSoon}
-            />
-          </div>
-
-          <div className="block-handle-menu-divider" />
-
-          <div className="block-handle-menu-section">
-            <MenuItem
-              icon={InsertRowDownIcon}
-              label={t("editor.block.add")}
-              onClick={handleAdd}
-            />
-          </div>
-        </div>
+        <BlockFullMenu
+          activeKind={activeKind}
+          comingSoon={comingSoon}
+          onAdd={handleAdd}
+          onCopy={handleCopy}
+          onCut={handleCut}
+          onDelete={handleDelete}
+          onPick={turnInto}
+          t={t}
+        />
       ) : null}
     </div>
   )

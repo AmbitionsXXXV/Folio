@@ -58,6 +58,8 @@ function buildSearchParams(
   return params
 }
 
+const EMPTY_FILTERS: SearchFiltersValue = {}
+
 interface AdvancedSearchProps {
   initialQuery?: string
   initialFilters?: SearchFiltersValue
@@ -85,7 +87,7 @@ interface AdvancedSearchResponse {
 
 export function AdvancedSearch({
   initialQuery = "",
-  initialFilters = {},
+  initialFilters = EMPTY_FILTERS,
   onSearch,
   showHistory = true,
   showSuggestions = true,
@@ -182,7 +184,7 @@ export function AdvancedSearch({
   })
 
   const entries =
-    data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
+    data?.pages?.flatMap((page) => (page?.items ?? []).filter(Boolean)) ?? []
 
   // Handle form submission
   const handleSubmit = useCallback(

@@ -25,6 +25,15 @@ const librarySearchSchema = z.object({
 
 export type LibrarySearchParams = z.infer<typeof librarySearchSchema>
 
+const filters: {
+  key: FilterType
+  labelKey: string
+  icon?: IconSvgElement
+}[] = [
+  { key: "all", labelKey: "review.allItems" },
+  { key: "starred", labelKey: "entry.starred", icon: StarIcon }
+]
+
 export const Route = createFileRoute("/_app/library")({
   validateSearch: librarySearchSchema,
   loader: ({ context: { queryClient } }) => {
@@ -75,18 +84,9 @@ function LibraryPage() {
 
   // Flatten all pages and filter out inbox entries for 'all' filter with safe access
   const allEntries =
-    data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
+    data?.pages?.flatMap((page) => (page?.items ?? []).filter(Boolean)) ?? []
   const entries =
     filter === "all" ? allEntries.filter((e) => !e.isInbox) : allEntries
-
-  const filters: {
-    key: FilterType
-    labelKey: string
-    icon?: IconSvgElement
-  }[] = [
-    { key: "all", labelKey: "review.allItems" },
-    { key: "starred", labelKey: "entry.starred", icon: StarIcon }
-  ]
 
   return (
     <PageContainer>

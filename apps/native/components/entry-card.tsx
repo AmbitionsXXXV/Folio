@@ -3,7 +3,6 @@ import { PinIcon, StarIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react-native"
 import { useRouter } from "expo-router"
 import { Card, PressableFeedback, useThemeColor } from "heroui-native"
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Text, View } from "react-native"
 
@@ -81,13 +80,13 @@ export function EntryCard({
   const warningColor = useThemeColor("warning")
   const accentColor = useThemeColor("accent")
 
-  const handlePress = useCallback(() => {
+  const handlePress = () => {
     if (onPress) {
       onPress(entry)
     } else if (navigateOnPress) {
       router.push(`/inbox/${entry.id}`)
     }
-  }, [entry, onPress, navigateOnPress, router])
+  }
 
   const title = entry.title || t("entryCard.untitled")
   const preview = entry.contentText

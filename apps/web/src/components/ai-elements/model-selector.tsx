@@ -191,13 +191,14 @@ export function createModelSelectorGroups(
 ): ModelSelectorGroup[] {
   const enabledProviders = providers.filter((p) => p.enabled)
   const groups: ModelSelectorGroup[] = []
+  const modelTypeSet = new Set(modelTypes)
 
   for (const provider of enabledProviders) {
     const providerModels = models.filter(
       (model) =>
         model.providerId === provider.id &&
         model.enabled &&
-        modelTypes.includes(model.type)
+        modelTypeSet.has(model.type)
     )
 
     if (providerModels.length > 0) {

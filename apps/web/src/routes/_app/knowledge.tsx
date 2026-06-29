@@ -25,7 +25,7 @@ import {
   useRef,
   useState
 } from "react"
-import type { ChangeEvent } from "react"
+import type { ChangeEvent, RefObject } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
@@ -548,7 +548,7 @@ function ChatConversationContent(props: ChatConversationContentProps) {
   )
 }
 
-function KnowledgePage() {
+function useKnowledgePage() {
   const { t } = useTranslation()
 
   const { config } = useModelProviderConfig()
@@ -1032,6 +1032,310 @@ function KnowledgePage() {
     [sessionContextUsage, selectedModel]
   )
 
+  return {
+    addToolApprovalResponse,
+    attachedNotes,
+    catalogModels,
+    catalogProviders,
+    contextPopoverDetails,
+    handleCompactNow,
+    handleDeleteChat,
+    handleModelChange,
+    handleNewChat,
+    handleOpenWebSearchPanel,
+    handleRemoveNote,
+    handleSelectChat,
+    handleSubmit,
+    handleTextareaChange,
+    hasToggleableReasoning,
+    imageGenerationEnabled,
+    inputPlaceholder,
+    inputValue,
+    isCompacting,
+    isHistoryCollapsed,
+    isImageMode,
+    isInputDisabled,
+    isMobileHistoryOpen,
+    isPending,
+    isSessionsLoading,
+    mention,
+    messages,
+    selectedChatId,
+    selectedModel,
+    sessionContextUsage,
+    sessions,
+    setImageGenerationEnabled,
+    setIsHistoryCollapsed,
+    setMobileHistoryOpen,
+    setThinkingEnabled,
+    setWebSearchEnabled,
+    setWebSearchPanelOpen,
+    showWaiting,
+    supportsThinking,
+    t,
+    textareaRef,
+    thinkingActive,
+    thinkingEnabled,
+    webSearchEnabled,
+    webSearchPanelData,
+    webSearchPanelOpen
+  }
+}
+
+interface KnowledgeHeaderBarProps {
+  isPending: boolean
+  onNewChat: () => void
+  onOpenMobileHistory: () => void
+  onToggleHistoryCollapsed: () => void
+}
+
+function KnowledgeHeaderBar(props: KnowledgeHeaderBarProps) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex items-center justify-between gap-2 px-4 py-2">
+      <Button
+        className="inline-flex gap-2 md:hidden"
+        onClick={props.onOpenMobileHistory}
+        onFocus={preloadChatHistoryPanel}
+        onMouseEnter={preloadChatHistoryPanel}
+        size="sm"
+        variant="outline"
+      >
+        <HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
+        <span>{t("knowledge.chatHistory")}</span>
+      </Button>
+      <Button
+        className="hidden gap-2 md:inline-flex"
+        onClick={props.onToggleHistoryCollapsed}
+        onFocus={preloadChatHistoryPanel}
+        onMouseEnter={preloadChatHistoryPanel}
+        size="sm"
+        variant="outline"
+      >
+        <HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
+        <span>{t("knowledge.chatHistory")}</span>
+      </Button>
+
+      <Button
+        className="inline-flex gap-2"
+        disabled={props.isPending}
+        onClick={props.onNewChat}
+        size="sm"
+        variant="ghost"
+      >
+        <HugeiconsIcon className="size-4" icon={MessageAdd01Icon} />
+        <span>{t("knowledge.newChat")}</span>
+      </Button>
+    </div>
+  )
+}
+
+interface KnowledgeComposerProps {
+  attachedNotes: AttachedNote[]
+  catalogModels: ReturnType<typeof useAiModelCatalog>["models"]
+  catalogProviders: ReturnType<typeof useAiModelCatalog>["providers"]
+  contextPopoverDetails: ReturnType<typeof buildContextPopoverDetails>
+  hasToggleableReasoning: boolean
+  imageGenerationEnabled: boolean
+  inputPlaceholder: string
+  inputValue: string
+  isImageMode: boolean
+  isInputDisabled: boolean
+  isPending: boolean
+  mentionPopoverProps: ReturnType<typeof useMentionPopover>["popoverProps"]
+  onImageGenerationToggle: (enabled: boolean) => void
+  onModelChange: (modelId: string, providerId?: string) => void
+  onRemoveNote: (noteId: string) => void
+  onSubmit: (message: PromptInputMessage) => void
+  onTextareaChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
+  onThinkingToggle: (enabled: boolean) => void
+  onWebSearchToggle: (enabled: boolean) => void
+  selectedChatId: string | null
+  selectedModel: string
+  sessionContextUsage: ReturnType<typeof useSessionContextUsage>
+  supportsThinking: boolean
+  textareaRef: RefObject<HTMLTextAreaElement | null>
+  thinkingActive: boolean
+  thinkingEnabled: boolean
+  webSearchEnabled: boolean
+}
+
+function KnowledgeComposer(props: KnowledgeComposerProps) {
+  const { t } = useTranslation()
+  return (
+    <div className="grid shrink-0 gap-4 pt-4">
+      <div className="relative w-full px-4 pb-4">
+        <MentionPopover {...props.mentionPopoverProps} />
+        <PromptInput
+          accept={FILE_ATTACHMENT_ACCEPT}
+          className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
+          globalDrop
+          maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
+          maxFiles={FILE_ATTACHMENT_MAX_FILES}
+          multiple
+          onError={(error) => {
+            toast.error(error.message)
+          }}
+          onSubmit={props.onSubmit}
+        >
+          <AttachmentDisplay />
+          {props.attachedNotes.length > 0 && (
+            <PromptInputHeader className="flex-wrap gap-2 px-3 pt-2">
+              {props.attachedNotes.map((note) => (
+                <NoteAttachment
+                  key={note.id}
+                  note={note}
+                  onRemove={props.onRemoveNote}
+                />
+              ))}
+            </PromptInputHeader>
+          )}
+          <PromptInputBody>
+            <PromptInputTextarea
+              disabled={props.isInputDisabled}
+              onChange={props.onTextareaChange}
+              placeholder={props.inputPlaceholder}
+              ref={props.textareaRef}
+              value={props.inputValue}
+            />
+          </PromptInputBody>
+          <PromptInputFooter className="px-3">
+            <PromptInputTools>
+              <PromptInputActionMenu>
+                <PromptInputActionMenuTrigger
+                  aria-label={t("knowledge.addAttachments")}
+                  disabled={props.isPending || !props.selectedChatId}
+                />
+                <PromptInputActionMenuContent>
+                  <PromptInputActionAddAttachments
+                    label={t("knowledge.addAttachments")}
+                  />
+                </PromptInputActionMenuContent>
+              </PromptInputActionMenu>
+
+              <AiModelSelector
+                catalogModels={props.catalogModels}
+                catalogProviders={props.catalogProviders}
+                className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-surface-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+                disabled={props.isPending}
+                onValueChange={props.onModelChange}
+                placeholder={t("knowledge.selectModel")}
+                value={props.selectedModel}
+              />
+
+              {!props.isImageMode && (
+                <WebSearchToggle
+                  disabled={props.isPending}
+                  enabled={props.webSearchEnabled}
+                  onToggle={props.onWebSearchToggle}
+                />
+              )}
+
+              {!props.isImageMode && (
+                <ImageGenerationToggle
+                  disabled={props.isPending}
+                  enabled={props.imageGenerationEnabled}
+                  onToggle={props.onImageGenerationToggle}
+                />
+              )}
+
+              {!props.isImageMode && props.supportsThinking ? (
+                <ThinkingToggle
+                  hasToggleableReasoning={props.hasToggleableReasoning}
+                  onToggle={props.onThinkingToggle}
+                  thinkingActive={props.thinkingActive}
+                  thinkingEnabled={props.thinkingEnabled}
+                />
+              ) : null}
+
+              <Link className="contents" to="/settings/models">
+                <PromptInputButton
+                  aria-label={t("knowledge.configuration")}
+                  variant="ghost"
+                >
+                  <HugeiconsIcon className="size-4" icon={Setting06Icon} />
+                </PromptInputButton>
+              </Link>
+            </PromptInputTools>
+
+            <div className="flex items-center gap-1">
+              {!props.isImageMode && (
+                <ContextUsagePopover
+                  contextPopoverDetails={props.contextPopoverDetails}
+                  selectedModel={props.selectedModel}
+                  sessionContextUsage={props.sessionContextUsage}
+                />
+              )}
+
+              <PromptInputSubmit
+                aria-label={t("knowledge.send")}
+                className={cn(
+                  "transition-colors duration-200 motion-reduce:transition-none",
+                  props.isPending
+                    ? "animate-pulse motion-reduce:animate-none"
+                    : "hover:bg-primary/90"
+                )}
+                disabled={props.isInputDisabled}
+                status={props.isPending ? "submitted" : "ready"}
+              />
+            </div>
+          </PromptInputFooter>
+        </PromptInput>
+      </div>
+    </div>
+  )
+}
+
+function KnowledgePage() {
+  const {
+    addToolApprovalResponse,
+    attachedNotes,
+    catalogModels,
+    catalogProviders,
+    contextPopoverDetails,
+    handleCompactNow,
+    handleDeleteChat,
+    handleModelChange,
+    handleNewChat,
+    handleOpenWebSearchPanel,
+    handleRemoveNote,
+    handleSelectChat,
+    handleSubmit,
+    handleTextareaChange,
+    hasToggleableReasoning,
+    imageGenerationEnabled,
+    inputPlaceholder,
+    inputValue,
+    isCompacting,
+    isHistoryCollapsed,
+    isImageMode,
+    isInputDisabled,
+    isMobileHistoryOpen,
+    isPending,
+    isSessionsLoading,
+    mention,
+    messages,
+    selectedChatId,
+    selectedModel,
+    sessionContextUsage,
+    sessions,
+    setImageGenerationEnabled,
+    setIsHistoryCollapsed,
+    setMobileHistoryOpen,
+    setThinkingEnabled,
+    setWebSearchEnabled,
+    setWebSearchPanelOpen,
+    showWaiting,
+    supportsThinking,
+    t,
+    textareaRef,
+    thinkingActive,
+    thinkingEnabled,
+    webSearchEnabled,
+    webSearchPanelData,
+    webSearchPanelOpen
+  } = useKnowledgePage()
+
   return (
     <div className="relative flex h-svh overflow-hidden">
       <Sheet onOpenChange={setMobileHistoryOpen} open={isMobileHistoryOpen}>
@@ -1069,41 +1373,12 @@ function KnowledgePage() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col divide-y overflow-hidden">
-        <div className="flex items-center justify-between gap-2 px-4 py-2">
-          <Button
-            className="inline-flex gap-2 md:hidden"
-            onClick={() => setMobileHistoryOpen(true)}
-            onFocus={preloadChatHistoryPanel}
-            onMouseEnter={preloadChatHistoryPanel}
-            size="sm"
-            variant="outline"
-          >
-            <HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
-            <span>{t("knowledge.chatHistory")}</span>
-          </Button>
-          <Button
-            className="hidden gap-2 md:inline-flex"
-            onClick={() => setIsHistoryCollapsed((v) => !v)}
-            onFocus={preloadChatHistoryPanel}
-            onMouseEnter={preloadChatHistoryPanel}
-            size="sm"
-            variant="outline"
-          >
-            <HugeiconsIcon className="size-4" icon={SidebarLeftIcon} />
-            <span>{t("knowledge.chatHistory")}</span>
-          </Button>
-
-          <Button
-            className="inline-flex gap-2"
-            disabled={isPending}
-            onClick={handleNewChat}
-            size="sm"
-            variant="ghost"
-          >
-            <HugeiconsIcon className="size-4" icon={MessageAdd01Icon} />
-            <span>{t("knowledge.newChat")}</span>
-          </Button>
-        </div>
+        <KnowledgeHeaderBar
+          isPending={isPending}
+          onNewChat={handleNewChat}
+          onOpenMobileHistory={() => setMobileHistoryOpen(true)}
+          onToggleHistoryCollapsed={() => setIsHistoryCollapsed((v) => !v)}
+        />
 
         <div className="flex min-h-0 flex-1 flex-col divide-y overflow-hidden">
           <Conversation>
@@ -1120,129 +1395,35 @@ function KnowledgePage() {
             <ConversationScrollButton />
           </Conversation>
 
-          <div className="grid shrink-0 gap-4 pt-4">
-            <div className="relative w-full px-4 pb-4">
-              <MentionPopover {...mention.popoverProps} />
-              <PromptInput
-                accept={FILE_ATTACHMENT_ACCEPT}
-                className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
-                globalDrop
-                maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
-                maxFiles={FILE_ATTACHMENT_MAX_FILES}
-                multiple
-                onError={(error) => {
-                  toast.error(error.message)
-                }}
-                onSubmit={handleSubmit}
-              >
-                <AttachmentDisplay />
-                {attachedNotes.length > 0 && (
-                  <PromptInputHeader className="flex-wrap gap-2 px-3 pt-2">
-                    {attachedNotes.map((note) => (
-                      <NoteAttachment
-                        key={note.id}
-                        note={note}
-                        onRemove={handleRemoveNote}
-                      />
-                    ))}
-                  </PromptInputHeader>
-                )}
-                <PromptInputBody>
-                  <PromptInputTextarea
-                    disabled={isInputDisabled}
-                    onChange={handleTextareaChange}
-                    placeholder={inputPlaceholder}
-                    ref={textareaRef}
-                    value={inputValue}
-                  />
-                </PromptInputBody>
-                <PromptInputFooter className="px-3">
-                  <PromptInputTools>
-                    <PromptInputActionMenu>
-                      <PromptInputActionMenuTrigger
-                        aria-label={t("knowledge.addAttachments")}
-                        disabled={isPending || !selectedChatId}
-                      />
-                      <PromptInputActionMenuContent>
-                        <PromptInputActionAddAttachments
-                          label={t("knowledge.addAttachments")}
-                        />
-                      </PromptInputActionMenuContent>
-                    </PromptInputActionMenu>
-
-                    <AiModelSelector
-                      catalogModels={catalogModels}
-                      catalogProviders={catalogProviders}
-                      className="h-8 w-auto gap-2 rounded-lg border-0 px-3 text-xs shadow-none transition-colors duration-200 hover:bg-surface-secondary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
-                      disabled={isPending}
-                      onValueChange={handleModelChange}
-                      placeholder={t("knowledge.selectModel")}
-                      value={selectedModel}
-                    />
-
-                    {!isImageMode && (
-                      <WebSearchToggle
-                        disabled={isPending}
-                        enabled={webSearchEnabled}
-                        onToggle={setWebSearchEnabled}
-                      />
-                    )}
-
-                    {!isImageMode && (
-                      <ImageGenerationToggle
-                        disabled={isPending}
-                        enabled={imageGenerationEnabled}
-                        onToggle={setImageGenerationEnabled}
-                      />
-                    )}
-
-                    {!isImageMode && supportsThinking ? (
-                      <ThinkingToggle
-                        hasToggleableReasoning={hasToggleableReasoning}
-                        onToggle={setThinkingEnabled}
-                        thinkingActive={thinkingActive}
-                        thinkingEnabled={thinkingEnabled}
-                      />
-                    ) : null}
-
-                    <Link className="contents" to="/settings/models">
-                      <PromptInputButton
-                        aria-label={t("knowledge.configuration")}
-                        variant="ghost"
-                      >
-                        <HugeiconsIcon
-                          className="size-4"
-                          icon={Setting06Icon}
-                        />
-                      </PromptInputButton>
-                    </Link>
-                  </PromptInputTools>
-
-                  <div className="flex items-center gap-1">
-                    {!isImageMode && (
-                      <ContextUsagePopover
-                        contextPopoverDetails={contextPopoverDetails}
-                        selectedModel={selectedModel}
-                        sessionContextUsage={sessionContextUsage}
-                      />
-                    )}
-
-                    <PromptInputSubmit
-                      aria-label={t("knowledge.send")}
-                      className={cn(
-                        "transition-colors duration-200 motion-reduce:transition-none",
-                        isPending
-                          ? "animate-pulse motion-reduce:animate-none"
-                          : "hover:bg-primary/90"
-                      )}
-                      disabled={isInputDisabled}
-                      status={isPending ? "submitted" : "ready"}
-                    />
-                  </div>
-                </PromptInputFooter>
-              </PromptInput>
-            </div>
-          </div>
+          <KnowledgeComposer
+            attachedNotes={attachedNotes}
+            catalogModels={catalogModels}
+            catalogProviders={catalogProviders}
+            contextPopoverDetails={contextPopoverDetails}
+            hasToggleableReasoning={hasToggleableReasoning}
+            imageGenerationEnabled={imageGenerationEnabled}
+            inputPlaceholder={inputPlaceholder}
+            inputValue={inputValue}
+            isImageMode={isImageMode}
+            isInputDisabled={isInputDisabled}
+            isPending={isPending}
+            mentionPopoverProps={mention.popoverProps}
+            onImageGenerationToggle={setImageGenerationEnabled}
+            onModelChange={handleModelChange}
+            onRemoveNote={handleRemoveNote}
+            onSubmit={handleSubmit}
+            onTextareaChange={handleTextareaChange}
+            onThinkingToggle={setThinkingEnabled}
+            onWebSearchToggle={setWebSearchEnabled}
+            selectedChatId={selectedChatId}
+            selectedModel={selectedModel}
+            sessionContextUsage={sessionContextUsage}
+            supportsThinking={supportsThinking}
+            textareaRef={textareaRef}
+            thinkingActive={thinkingActive}
+            thinkingEnabled={thinkingEnabled}
+            webSearchEnabled={webSearchEnabled}
+          />
         </div>
       </div>
 

@@ -132,20 +132,18 @@ const CITATION_MARKER_REGEX = /\[(\d+)\]/g
  * This extracts [1], [2], etc. markers from text
  */
 export function parseCitationMarkers(content: string): number[] {
-  const markers: number[] = []
+  const markers = new Set<number>()
   const matches = content.matchAll(CITATION_MARKER_REGEX)
 
   for (const match of matches) {
     const numStr = match[1]
     if (numStr) {
       const num = Number.parseInt(numStr, 10)
-      if (!markers.includes(num)) {
-        markers.push(num)
-      }
+      markers.add(num)
     }
   }
 
-  return markers.toSorted((a, b) => a - b)
+  return [...markers].toSorted((a, b) => a - b)
 }
 
 /**

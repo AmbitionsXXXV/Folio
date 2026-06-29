@@ -3,7 +3,7 @@
 import { Button } from "@folionote/ui/button"
 import type { ToolUIPart } from "ai"
 import type { ComponentProps, ReactNode } from "react"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useMemo } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -46,12 +46,14 @@ export const Confirmation = ({
   state,
   ...props
 }: ConfirmationProps) => {
+  const contextValue = useMemo(() => ({ approval, state }), [approval, state])
+
   if (!approval || state === "input-streaming" || state === "input-available") {
     return null
   }
 
   return (
-    <ConfirmationContext.Provider value={{ approval, state }}>
+    <ConfirmationContext.Provider value={contextValue}>
       <div
         className={cn(
           "flex flex-col gap-2 rounded-lg border border-border/60 bg-surface-secondary/20 p-3 text-sm",

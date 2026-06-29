@@ -16,10 +16,12 @@ import {
 import type { SessionContextUsage } from "@/hooks/use-session-context-usage"
 import { cn } from "@/lib/utils"
 
+const compactTokenFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact"
+})
+
 function formatCompactTokenCount(tokenCount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    notation: "compact"
-  }).format(tokenCount)
+  return compactTokenFormatter.format(tokenCount)
 }
 
 export interface ContextPopoverDetails {

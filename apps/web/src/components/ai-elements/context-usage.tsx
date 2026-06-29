@@ -6,7 +6,7 @@ import {
 } from "@folionote/ui/hover-card"
 import { cn } from "@folionote/ui/lib/utils"
 import { Progress } from "@folionote/ui/progress"
-import { createContext, use } from "react"
+import { createContext, use, useMemo } from "react"
 import type { ComponentProps } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -15,6 +15,18 @@ const ICON_RADIUS = 10
 const ICON_VIEWBOX = 24
 const ICON_CENTER = 12
 const ICON_STROKE_WIDTH = 2
+
+const percentFormatter = new Intl.NumberFormat("en-US", {
+  style: "percent",
+  maximumFractionDigits: 1
+})
+const compactNumberFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact"
+})
+const usdCurrencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD"
+})
 
 type ModelId = string
 
@@ -56,18 +68,18 @@ export const Context = ({
   usage,
   modelId,
   ...props
-}: ContextProps) => (
-  <ContextContext
-    value={{
-      usedTokens,
-      maxTokens,
-      usage,
-      modelId
-    }}
-  >
-    <HoverCard {...props} />
-  </ContextContext>
-)
+}: ContextProps) => {
+  const value = useMemo(
+    () => ({ usedTokens, maxTokens, usage, modelId }),
+    [usedTokens, maxTokens, usage, modelId]
+  )
+
+  return (
+    <ContextContext value={value}>
+      <HoverCard {...props} />
+    </ContextContext>
+  )
+}
 
 const ContextIcon = () => {
   const { t } = useTranslation()
@@ -116,10 +128,7 @@ export type ContextTriggerProps = ComponentProps<typeof Button>
 export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
   const { usedTokens, maxTokens } = useContextValue()
   const usedPercent = usedTokens / maxTokens
-  const renderedPercent = new Intl.NumberFormat("en-US", {
-    style: "percent",
-    maximumFractionDigits: 1
-  }).format(usedPercent)
+  const renderedPercent = percentFormatter.format(usedPercent)
 
   return (
     <HoverCardTrigger>
@@ -156,16 +165,9 @@ export const ContextContentHeader = ({
 }: ContextContentHeaderProps) => {
   const { usedTokens, maxTokens } = useContextValue()
   const usedPercent = usedTokens / maxTokens
-  const displayPct = new Intl.NumberFormat("en-US", {
-    style: "percent",
-    maximumFractionDigits: 1
-  }).format(usedPercent)
-  const used = new Intl.NumberFormat("en-US", {
-    notation: "compact"
-  }).format(usedTokens)
-  const total = new Intl.NumberFormat("en-US", {
-    notation: "compact"
-  }).format(maxTokens)
+  const displayPct = percentFormatter.format(usedPercent)
+  const used = compactNumberFormatter.format(usedTokens)
+  const total = compactNumberFormatter.format(maxTokens)
 
   return (
     <div className={cn("w-full space-y-2 p-3", className)} {...props}>
@@ -210,10 +212,7 @@ export const ContextContentFooter = ({
 }: ContextContentFooterProps) => {
   const { t } = useTranslation()
   const { usage } = useContextValue()
-  const totalCost = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD"
-  }).format(usage?.costUSD ?? 0)
+  const totalCost = usdCurrencyFormatter.format(usage?.costUSD ?? 0)
 
   return (
     <div
@@ -371,11 +370,7 @@ const TokensWithCost = ({
   costText?: string
 }) => (
   <span>
-    {tokens === undefined
-      ? "—"
-      : new Intl.NumberFormat("en-US", {
-          notation: "compact"
-        }).format(tokens)}
+    {tokens === undefined ? "—" : compactNumberFormatter.format(tokens)}
     {costText ? (
       <span className="ml-2 text-muted-foreground">• {costText}</span>
     ) : null}

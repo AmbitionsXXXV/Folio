@@ -11,6 +11,12 @@ import { parseTocFromContent } from "@/lib/toc"
 import { cn } from "@/lib/utils"
 import type { ShareContentProps } from "@/types/share"
 
+const longDateFormatter = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "long",
+  day: "numeric"
+})
+
 /**
  * Share content display component
  */
@@ -127,11 +133,7 @@ export function ShareContent({ entryData }: ShareContentProps) {
             {/* Metadata */}
             <div className="mb-8 flex items-center gap-4 text-sm text-muted-foreground tabular-nums">
               <time dateTime={entry.createdAt}>
-                {new Intl.DateTimeFormat(undefined, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric"
-                }).format(new Date(entry.createdAt))}
+                {longDateFormatter.format(new Date(entry.createdAt))}
               </time>
             </div>
 

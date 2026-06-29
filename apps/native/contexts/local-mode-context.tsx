@@ -1,7 +1,7 @@
 import { StorageKey } from "@folionote/constants"
 import * as SecureStore from "expo-secure-store"
 import type { ReactNode } from "react"
-import { createContext, use, useCallback, useEffect, useState } from "react"
+import { createContext, use, useEffect, useState } from "react"
 
 interface LocalModeContextValue {
   /**
@@ -57,15 +57,14 @@ export function LocalModeProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error("Failed to load local mode state:", error)
-      } finally {
-        setIsLoading(false)
       }
+      setIsLoading(false)
     }
 
     loadLocalModeState()
   }, [])
 
-  const enableLocalMode = useCallback(async () => {
+  const enableLocalMode = async () => {
     try {
       // Generate a local user ID if not exists
       let userId = await SecureStore.getItemAsync(StorageKey.LOCAL_USER_ID)
@@ -81,9 +80,9 @@ export function LocalModeProvider({ children }: { children: ReactNode }) {
       console.error("Failed to enable local mode:", error)
       throw error
     }
-  }, [])
+  }
 
-  const disableLocalMode = useCallback(async () => {
+  const disableLocalMode = async () => {
     try {
       await SecureStore.setItemAsync(StorageKey.LOCAL_MODE, "false")
       setIsLocalMode(false)
@@ -92,7 +91,7 @@ export function LocalModeProvider({ children }: { children: ReactNode }) {
       console.error("Failed to disable local mode:", error)
       throw error
     }
-  }, [])
+  }
 
   return (
     <LocalModeContext

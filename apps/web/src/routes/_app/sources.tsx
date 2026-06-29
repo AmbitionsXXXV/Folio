@@ -66,6 +66,19 @@ const SOURCE_TYPE_CONFIG: Record<
   other: { labelKey: "source.other", icon: Link01Icon }
 }
 
+const FILTERS: {
+  key: FilterType
+  labelKey: string
+  icon?: IconSvgElement
+}[] = [
+  { key: "all", labelKey: "review.allItems" },
+  { key: "link", labelKey: "source.link", icon: Link01Icon },
+  { key: "book", labelKey: "source.book", icon: Book02Icon },
+  { key: "article", labelKey: "source.article", icon: News01Icon },
+  { key: "video", labelKey: "source.video", icon: Video01Icon },
+  { key: "podcast", labelKey: "source.podcast", icon: MusicNote01Icon }
+]
+
 export const Route = createFileRoute("/_app/sources")({
   loader: ({ context: { queryClient } }) => {
     queryClient.ensureInfiniteQueryData({
@@ -145,20 +158,7 @@ function SourcesPage() {
   }, [deleteTarget, deleteMutation])
 
   const sources =
-    data?.pages?.flatMap((page) => page?.items ?? []).filter(Boolean) ?? []
-
-  const filters: {
-    key: FilterType
-    labelKey: string
-    icon?: IconSvgElement
-  }[] = [
-    { key: "all", labelKey: "review.allItems" },
-    { key: "link", labelKey: "source.link", icon: Link01Icon },
-    { key: "book", labelKey: "source.book", icon: Book02Icon },
-    { key: "article", labelKey: "source.article", icon: News01Icon },
-    { key: "video", labelKey: "source.video", icon: Video01Icon },
-    { key: "podcast", labelKey: "source.podcast", icon: MusicNote01Icon }
-  ]
+    data?.pages?.flatMap((page) => (page?.items ?? []).filter(Boolean)) ?? []
 
   const handleEdit = (source: SourceItem) => {
     setEditingSource({
@@ -206,7 +206,7 @@ function SourcesPage() {
       {/* Filter pills */}
       <Reveal className="mb-8" delay={60}>
         <nav className="flex flex-wrap gap-2">
-          {filters.map(({ key, labelKey, icon }) => (
+          {FILTERS.map(({ key, labelKey, icon }) => (
             <button
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-medium text-sm transition-all duration-200",

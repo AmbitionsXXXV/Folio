@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 
@@ -23,14 +23,14 @@ export function useAvatarState() {
     localImageUrl !== undefined ? localImageUrl : session?.user?.image
 
   // Handle avatar change (for optimistic updates)
-  const handleAvatarChange = useCallback((newUrl: string | null) => {
+  const handleAvatarChange = (newUrl: string | null) => {
     setLocalImageUrl(newUrl)
-  }, [])
+  }
 
   // Reset local state to sync with server
-  const resetAvatarState = useCallback(() => {
+  const resetAvatarState = () => {
     setLocalImageUrl(undefined)
-  }, [])
+  }
 
   return {
     /** Current image URL (local state or session user image) */

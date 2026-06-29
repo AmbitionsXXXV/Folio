@@ -6,7 +6,7 @@
  */
 
 import * as Network from "expo-network"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 export interface NetworkState {
   /**
@@ -43,22 +43,22 @@ export function useNetworkState(): NetworkState {
     isLoading: true
   })
 
-  const fetchNetworkState = useCallback(async () => {
-    try {
-      const networkState = await Network.getNetworkStateAsync()
-      setState({
-        isConnected: networkState.isConnected ?? false,
-        isCellular: networkState.type === Network.NetworkStateType.CELLULAR,
-        isWifi: networkState.type === Network.NetworkStateType.WIFI,
-        type: networkState.type ?? Network.NetworkStateType.UNKNOWN,
-        isLoading: false
-      })
-    } catch {
-      setState((prev) => ({ ...prev, isLoading: false }))
-    }
-  }, [])
-
   useEffect(() => {
+    const fetchNetworkState = async () => {
+      try {
+        const networkState = await Network.getNetworkStateAsync()
+        setState({
+          isConnected: networkState.isConnected ?? false,
+          isCellular: networkState.type === Network.NetworkStateType.CELLULAR,
+          isWifi: networkState.type === Network.NetworkStateType.WIFI,
+          type: networkState.type ?? Network.NetworkStateType.UNKNOWN,
+          isLoading: false
+        })
+      } catch {
+        setState((prev) => ({ ...prev, isLoading: false }))
+      }
+    }
+
     // Get initial state
     fetchNetworkState()
 
@@ -66,7 +66,7 @@ export function useNetworkState(): NetworkState {
     const intervalId = setInterval(fetchNetworkState, 5000)
 
     return () => clearInterval(intervalId)
-  }, [fetchNetworkState])
+  }, [])
 
   return state
 }

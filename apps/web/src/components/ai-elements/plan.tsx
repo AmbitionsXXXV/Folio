@@ -19,7 +19,7 @@ import { cn } from "@folionote/ui/lib/utils"
 import { ArrowVerticalIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { ComponentProps } from "react"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useMemo } from "react"
 
 import { Shimmer } from "./shimmer"
 
@@ -46,13 +46,17 @@ export const Plan = ({
   isStreaming = false,
   children,
   ...props
-}: PlanProps) => (
-  <PlanContext.Provider value={{ isStreaming }}>
-    <Collapsible data-slot="plan" {...props}>
-      <Card className={cn("shadow-none", className)}>{children}</Card>
-    </Collapsible>
-  </PlanContext.Provider>
-)
+}: PlanProps) => {
+  const value = useMemo(() => ({ isStreaming }), [isStreaming])
+
+  return (
+    <PlanContext.Provider value={value}>
+      <Collapsible data-slot="plan" {...props}>
+        <Card className={cn("shadow-none", className)}>{children}</Card>
+      </Collapsible>
+    </PlanContext.Provider>
+  )
+}
 
 export type PlanHeaderProps = ComponentProps<typeof CardHeader>
 

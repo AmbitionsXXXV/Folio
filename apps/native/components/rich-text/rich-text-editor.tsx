@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { cn } from "heroui-native"
-import { useCallback, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 
 interface RichTextEditorProps {
   dom?: import("expo/dom").DOMProps
@@ -129,16 +129,13 @@ export default function RichTextEditor({
   )
 
   // Handle keyboard shortcuts
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      // Cmd/Ctrl + S to save
-      if ((event.metaKey || event.ctrlKey) && event.key === "s") {
-        event.preventDefault()
-        onSave?.()
-      }
-    },
-    [onSave]
-  )
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // Cmd/Ctrl + S to save
+    if ((event.metaKey || event.ctrlKey) && event.key === "s") {
+      event.preventDefault()
+      onSave?.()
+    }
+  }
 
   return (
     <div className={cn("rich-text-editor", isDark ? "dark" : "")}>

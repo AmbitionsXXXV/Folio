@@ -1,7 +1,6 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect"
 import { Stack } from "expo-router"
 import { useThemeColor } from "heroui-native"
-import { useCallback } from "react"
 import { Platform, View } from "react-native"
 
 import { useAppTheme } from "@/contexts/app-theme-context"
@@ -29,7 +28,7 @@ export function TabStack({ children }: { children?: React.ReactNode }) {
   const backgroundColor = useThemeColor("background")
   const foregroundColor = useThemeColor("foreground")
 
-  const renderThemeToggle = useCallback(() => <ThemeToggle />, [])
+  const renderThemeToggle = () => <ThemeToggle />
 
   // iOS 26+ Liquid Glass: 系统会自动应用玻璃效果
   // 在非 Liquid Glass 环境下使用传统的模糊效果

@@ -2,7 +2,6 @@ import { getTzOffset } from "@folionote/utils"
 import { useQuery } from "@tanstack/react-query"
 import { router } from "expo-router"
 import { useThemeColor } from "heroui-native"
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { ActivityIndicator } from "react-native"
 
@@ -39,14 +38,14 @@ export default function TodayScreen() {
     enabled: !!dataService
   })
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = () => {
     refetchTodayStats()
     refetchDueStats()
-  }, [refetchTodayStats, refetchDueStats])
+  }
 
-  const navigateToReview = useCallback(() => {
+  const navigateToReview = () => {
     router.push("/review" as never)
-  }, [])
+  }
 
   // Show loading while migrating or loading data
   const isLoading =

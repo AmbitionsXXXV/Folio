@@ -2,7 +2,6 @@ import { CloudIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react-native"
 import { router } from "expo-router"
 import { Button, useThemeColor } from "heroui-native"
-import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Text, View } from "react-native"
 
@@ -18,10 +17,10 @@ export function LocalModePlaceholder() {
   const { disableLocalMode } = useLocalMode()
   const accentColor = useThemeColor("accent")
 
-  const handleSignIn = useCallback(async () => {
+  const handleSignIn = async () => {
     await disableLocalMode()
     router.replace("/(auth)/sign-in")
-  }, [disableLocalMode])
+  }
 
   return (
     <Container className="flex-1 items-center justify-center p-6" disableScroll>

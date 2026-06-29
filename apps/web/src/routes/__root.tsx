@@ -21,6 +21,17 @@ import type { orpc } from "@/utils/orpc"
 
 import appCss from "../index.css?url"
 
+// Map language codes to CSS class names for font switching
+function getLangClass(lang: string) {
+  if (lang.startsWith("zh")) {
+    return "lang-zh"
+  }
+  if (lang.startsWith("ja")) {
+    return "lang-ja"
+  }
+  return "lang-en"
+}
+
 // Dev-only, client-only. In production this is `() => null` and the dynamic
 // import is dead-code-eliminated, so the devtools packages (which call
 // browser-only APIs at module load) never reach the SSR/production bundle.
@@ -88,17 +99,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 function RootDocument() {
   const { i18n: i18nInstance } = useTranslation()
   const currentLang = i18nInstance.language
-
-  // Map language codes to CSS class names for font switching
-  const getLangClass = (lang: string) => {
-    if (lang.startsWith("zh")) {
-      return "lang-zh"
-    }
-    if (lang.startsWith("ja")) {
-      return "lang-ja"
-    }
-    return "lang-en"
-  }
   const langClass = getLangClass(currentLang)
 
   return (

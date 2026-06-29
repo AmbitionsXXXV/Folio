@@ -204,7 +204,10 @@ function ActivityPage() {
     <PageContainer>
       {/* Hero greeting */}
       <header className="animate-fade-in mb-12 md:mb-16">
-        <p className="mb-2 text-sm font-medium tracking-wide text-primary uppercase">
+        <p
+          className="mb-2 text-sm font-medium tracking-wide text-primary uppercase"
+          suppressHydrationWarning
+        >
           {formatDate(new Date(), {
             locale: i18n.language,
             options: { weekday: "long", month: "long", day: "numeric" }

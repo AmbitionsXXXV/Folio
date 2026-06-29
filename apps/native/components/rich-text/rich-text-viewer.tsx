@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core"
 import { renderJSONContentToReactElement } from "@tiptap/static-renderer/json/react"
 import type { MarkProps, NodeProps } from "@tiptap/static-renderer/json/react"
-import { Children, useEffect, useMemo, useState } from "react"
+import { Children, useEffect, useState } from "react"
 import type { ReactNode } from "react"
 import {
   Image,
@@ -351,10 +351,8 @@ export default function RichTextViewer({
   content,
   isDark = false
 }: RichTextViewerProps) {
-  return useMemo(() => {
-    const styles = createStyles(isDark ? DARK_COLORS : LIGHT_COLORS)
-    const doc = parseDoc(content)
-    const body = doc ? buildRenderDoc(styles)({ content: doc }) : null
-    return <View style={styles.container}>{body}</View>
-  }, [content, isDark])
+  const styles = createStyles(isDark ? DARK_COLORS : LIGHT_COLORS)
+  const doc = parseDoc(content)
+  const body = doc ? buildRenderDoc(styles)({ content: doc }) : null
+  return <View style={styles.container}>{body}</View>
 }
