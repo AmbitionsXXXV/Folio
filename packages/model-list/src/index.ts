@@ -22,6 +22,8 @@ export {
 export * from "./catalog"
 // Constants
 export * from "./constants"
+// Default catalog builder (server seed + client placeholder, single source)
+export { buildDefaultCatalog } from "./default-catalog"
 // Model Providers
 export {
   AnthropicProvider,

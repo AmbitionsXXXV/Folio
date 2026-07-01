@@ -12,7 +12,8 @@
     "skipLibCheck": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@folionote/ui/components": ["./src/components"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
