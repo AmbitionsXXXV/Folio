@@ -60,6 +60,7 @@
     "signUpSuccess": "Account created successfully",
     "fillAllFields": "Please fill in all fields",
     "signInFailed": "Sign in failed",
+    "accountNotLinked": "This email is already registered with a different sign-in method. Please sign in with your original method.",
     "signInSubtitle": "Sign in to continue to FolioNote",
     "emailPlaceholder": "Enter your email",
     "passwordPlaceholder": "Enter your password",

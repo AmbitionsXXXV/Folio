@@ -4,7 +4,9 @@ import z from "zod"
 import SignInForm from "@/components/sign-in-form"
 
 const loginSearchSchema = z.object({
-  redirect: z.string().optional()
+  redirect: z.string().optional(),
+  // OAuth failures redirect back here as ?error=<code> (e.g. account_not_linked)
+  error: z.string().optional()
 })
 
 export const Route = createFileRoute("/login")({

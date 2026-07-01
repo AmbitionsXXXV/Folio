@@ -60,6 +60,7 @@
     "signUpSuccess": "アカウントが正常に作成されました",
     "fillAllFields": "すべてのフィールドを入力してください",
     "signInFailed": "サインイン失敗",
+    "accountNotLinked": "このメールアドレスは別の方法で登録済みです。元のサインイン方法をご利用ください。",
     "signInSubtitle": "FolioNote を続けるにはサインインしてください",
     "emailPlaceholder": "メールアドレスを入力",
     "passwordPlaceholder": "パスワードを入力",

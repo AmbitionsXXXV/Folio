@@ -18,7 +18,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm } from "@tanstack/react-form"
 import { Link, useRouter, useSearch } from "@tanstack/react-router"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import z from "zod"
@@ -42,13 +42,31 @@ export default function SignInForm() {
   const router = useRouter()
   const { isPending } = authClient.useSession()
   const [showPassword, setShowPassword] = useState(false)
-  const { redirect: redirectTo } = useSearch({ from: "/login" })
+  const { redirect: redirectTo, error: oauthError } = useSearch({
+    from: "/login"
+  })
+  const webUrl = import.meta.env.VITE_WEB_URL?.replace(/\/+$/, "") ?? ""
 
   const googleAuth = useSocialAuth({
     provider: "google",
-    callbackURL: redirectTo || `${import.meta.env.VITE_WEB_URL}/activity`,
+    callbackURL: redirectTo || `${webUrl}/activity`,
+    // Send OAuth failures back to this page (?error=<code>), not the API origin.
+    errorCallbackURL: `${webUrl}/login`,
     errorMessageKey: "auth.signInFailed"
   })
+
+  // Surface an OAuth failure redirected back from the auth server (e.g. Google
+  // account_not_linked) as a toast instead of a bare ?error= query param.
+  useEffect(() => {
+    if (!oauthError) {
+      return
+    }
+    toast.error(
+      oauthError === "account_not_linked"
+        ? t("auth.accountNotLinked")
+        : t("auth.signInFailed")
+    )
+  }, [oauthError, t])
 
   const signInSchema = useMemo(
     () =>

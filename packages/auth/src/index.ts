@@ -225,6 +225,20 @@ export const auth = betterAuth({
     }
   },
   socialProviders,
+  // Link a Google/GitHub sign-in to an existing same-email account. Better Auth
+  // otherwise throws `account_not_linked` when the *existing* account's email is
+  // unverified — which it is while REQUIRE_EMAIL_VERIFICATION is off.
+  // NOTE: trustedProviders is Better Auth's *forced* linking — it links even to
+  // unverified existing accounts, which the docs flag as an account-takeover
+  // risk. The durable fix is enabling email verification (below): once existing
+  // accounts are verified, the default verified-only linking path works and this
+  // list can be dropped. https://better-auth.com/docs/concepts/users-accounts
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "github"]
+    }
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 10,

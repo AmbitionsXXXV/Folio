@@ -49,10 +49,13 @@ export default function SignUpForm() {
   const { isPending } = authClient.useSession()
   const [showPassword, setShowPassword] = useState(false)
   const { redirect: redirectTo } = useSearch({ from: "/register" })
+  const webUrl = import.meta.env.VITE_WEB_URL?.replace(/\/+$/, "") ?? ""
 
   const googleAuth = useSocialAuth({
     provider: "google",
-    callbackURL: redirectTo || `${import.meta.env.VITE_WEB_URL}/activity`,
+    callbackURL: redirectTo || `${webUrl}/activity`,
+    // Send OAuth failures back to the web login page, not the auth/API origin.
+    errorCallbackURL: `${webUrl}/login`,
     errorMessageKey: "auth.signUpFailed"
   })
 

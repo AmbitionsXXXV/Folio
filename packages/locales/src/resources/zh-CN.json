@@ -115,6 +115,7 @@
     "signUpSuccess": "账号创建成功",
     "fillAllFields": "请填写所有字段",
     "signInFailed": "登录失败",
+    "accountNotLinked": "该邮箱已通过其他方式注册，请使用原来的登录方式。",
     "signInSubtitle": "登录以继续使用 FolioNote",
     "emailPlaceholder": "输入您的邮箱",
     "passwordPlaceholder": "输入您的密码",
