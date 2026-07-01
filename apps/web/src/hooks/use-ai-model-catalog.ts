@@ -1,3 +1,4 @@
+import { buildDefaultCatalog } from "@folionote/model-list"
 import type {
   CatalogModel,
   CatalogProvider,
@@ -5,7 +6,6 @@ import type {
   ModelType
 } from "@folionote/model-list"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
 
 import { orpc } from "@/utils/orpc"
 
@@ -16,25 +16,35 @@ export type { CatalogModel, CatalogProvider, ModelCatalog }
 const MODEL_CATALOG_QUERY_KEY = ["ai", "modelCatalog"] as const
 
 /**
+ * Static default catalog built once from the bundled model-list defaults. Used
+ * as `placeholderData` so the selector and settings render instantly instead of
+ * waiting on the protected network round-trip. It mirrors the server seed (same
+ * builder), so a user with no overrides sees identical data and zero flicker.
+ */
+const DEFAULT_CATALOG: ModelCatalog = buildDefaultCatalog()
+
+/**
  * Hook to fetch and manage AI model catalog with user's enabled overrides.
  *
  * The catalog includes:
  * - All providers from model-list
  * - All models from model-list with user's enabled overrides applied
+ *
+ * The query is seeded with {@link DEFAULT_CATALOG} via `placeholderData`, so
+ * `data` is populated on first render (React Query reports `success` while it
+ * fetches in the background). The server response then layers the user's
+ * per-model overrides on top.
  */
 export function useAiModelCatalog() {
-  const { data, isLoading, isError, error, refetch } = useQuery<ModelCatalog>({
-    queryKey: MODEL_CATALOG_QUERY_KEY,
-    queryFn: () => orpc.ai.getModelCatalog.call({}),
-    staleTime: 30_000 // Cache for 30 seconds
-  })
+  const { data, isLoading, isPlaceholderData, isError, error, refetch } =
+    useQuery<ModelCatalog>({
+      queryKey: MODEL_CATALOG_QUERY_KEY,
+      queryFn: () => orpc.ai.getModelCatalog.call({}),
+      placeholderData: DEFAULT_CATALOG,
+      staleTime: 30_000 // Cache for 30 seconds
+    })
 
-  const catalog: ModelCatalog = useMemo(() => {
-    if (!data) {
-      return { providers: [], models: [] }
-    }
-    return data
-  }, [data])
+  const catalog: ModelCatalog = data ?? DEFAULT_CATALOG
 
   return {
     catalog,
@@ -42,6 +52,8 @@ export function useAiModelCatalog() {
     models: catalog.models,
     isLoading,
     isLoaded: !isLoading && !!data,
+    /** True while the instant default catalog is shown, before server data arrives. */
+    isPlaceholderData,
     isError,
     error,
     refetch
