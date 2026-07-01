@@ -129,6 +129,24 @@ minimumReleaseAgeExclude:
   - "@heroui/styles@3.2.0"
   - "@ai-sdk/mcp@2.0.2"
   - "@mastra/schema-compat@1.3.1"
+  - "@expo/cli@57.0.2"
+  - "@expo/fingerprint@0.20.1"
+  - "@expo/inline-modules@0.1.1"
+  - "@expo/local-build-cache-provider@57.0.1"
+  - "@expo/metro-config@57.0.2"
+  - "@expo/metro-runtime@57.0.2"
+  - "@expo/prebuild-config@57.0.2"
+  - "@expo/router-server@57.0.1"
+  - babel-preset-expo@57.0.1
+  - expo-asset@57.0.2
+  - expo-constants@57.0.2
+  - expo-linking@57.0.1
+  - expo-modules-autolinking@57.0.2
+  - expo-notifications@57.0.2
+  - expo-router@57.0.2
+  - expo-splash-screen@57.0.1
+  - expo-updates@57.0.4
+  - expo@57.0.0
 
 onlyBuiltDependencies:
   - supabase

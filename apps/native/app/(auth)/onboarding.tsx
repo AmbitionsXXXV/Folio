@@ -67,8 +67,10 @@ export default function OnboardingScreen() {
     }
   }
 
-  const getEntryAnimation = (delay: number, animation = FadeInDown) =>
-    shouldAnimate ? animation.delay(delay).springify() : undefined
+  const getEntryAnimation = (
+    delay: number,
+    animation: typeof FadeInDown | typeof ZoomIn = FadeInDown
+  ) => (shouldAnimate ? animation.delay(delay).springify() : undefined)
 
   if (!isReady) {
     return <Container className="flex-1" />
