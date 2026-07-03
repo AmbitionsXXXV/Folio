@@ -581,15 +581,25 @@
 
 .block-handle {
   position: absolute;
-  /* Sit in the page's existing left margin so the text alignment is untouched
-     (adding left padding shifts content and breaks the custom caret offset). */
-  left: -3rem;
+  /* Pin the handle's right edge a fixed gap to the LEFT of the content column
+     via translateX, so the type badge + drag button always clear the text no
+     matter how wide the badge is ("T" vs "H1" vs "1."). The old `left: -3rem`
+     anchored by a fixed offset, so the wider two-button handle poked ~0.2rem
+     into the first line. Text alignment stays untouched (no left padding added). */
+  left: 0;
+  transform: translateX(calc(-100% - var(--block-handle-gap, 0.5rem)));
   z-index: 20;
   display: flex;
   gap: 2px;
   align-items: center;
   /* Nudge toward the first line of the hovered block */
   margin-top: 0.12em;
+}
+
+/* Headings render a fold triangle at -1.3rem; widen the gap so the handle sits
+   just left of it rather than on top of it. */
+.block-handle.is-heading {
+  --block-handle-gap: 1.5rem;
 }
 
 /* Type badge — shows the current block type and opens the "turn into" picker. */

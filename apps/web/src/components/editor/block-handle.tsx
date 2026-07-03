@@ -730,11 +730,9 @@ export function BlockHandle({ editor, containerRef }: BlockHandleProps) {
 
   return (
     <div
-      className="block-handle"
+      className={cx("block-handle", isHeading && "is-heading")}
       ref={handleRef}
-      // Headings render a fold triangle just left of the text, so shift the
-      // handle further left on headings to sit beside it rather than overlap.
-      style={{ top: state.top, ...(isHeading ? { left: "-4.5rem" } : {}) }}
+      style={{ top: state.top }}
     >
       <BlockHandleButtons
         badge={badge}
