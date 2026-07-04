@@ -806,3 +806,45 @@
 .tippy-content {
   padding: 0;
 }
+
+/* ==================== */
+/* Collaboration carets  */
+/* ==================== */
+
+/* Remote cursor — a thin bar in the collaborator's color (set inline via
+   CollaborationCaret's `user.color`, read here through currentColor). */
+.tiptap .collaboration-carets__caret {
+  position: relative;
+  margin-right: -1px;
+  margin-left: -1px;
+  word-break: normal;
+  pointer-events: none;
+  border-right: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+
+/* Name flag above the caret. */
+.tiptap .collaboration-carets__label {
+  position: absolute;
+  top: -1.35em;
+  left: -1px;
+  padding: 2px 6px;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  color: white;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+  background: currentColor;
+  border-radius: 0.25rem 0.25rem 0.25rem 0;
+}
+
+/* Selection tint — washed down so two overlapping selections stay legible. */
+.tiptap .collaboration-carets__selection {
+  background-color: currentColor;
+  opacity: 0.25;
+  pointer-events: none;
+}

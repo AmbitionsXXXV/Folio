@@ -3,6 +3,7 @@ import type { RouterClient } from "@orpc/server"
 import { protectedProcedure, publicProcedure } from "../index"
 import { aiRouter } from "./ai"
 import { entriesRouter } from "./entries"
+import { entryCollaboratorsRouter } from "./entry-collaborators"
 import { graphRouter } from "./graph"
 import { reviewRouter } from "./review"
 import { searchRouter } from "./search"
@@ -19,6 +20,7 @@ export const appRouter = {
   })),
   ai: aiRouter,
   entries: entriesRouter,
+  collaborators: entryCollaboratorsRouter,
   graph: graphRouter,
   tags: tagsRouter,
   sources: sourcesRouter,

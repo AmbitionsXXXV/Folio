@@ -13,6 +13,17 @@ const DEFAULT_CONFIG: ApiEnvironmentConfig = {
 }
 
 /**
+ * The collab process is a separate port in dev (see apps/server/src/collab)
+ * and a path on the same domain in production (Caddy's `handle_path
+ * /collab*`, see apps/server/Caddyfile) — not a separate host, so it can't
+ * just reuse DEFAULT_CONFIG.remote as-is.
+ */
+const DEFAULT_COLLAB_CONFIG: ApiEnvironmentConfig = {
+  local: "ws://localhost:3002",
+  remote: "wss://api.folionote.xyz/collab"
+}
+
+/**
  * Get the API environment from localStorage (non-React utility)
  */
 export function getStoredApiEnvironment(): ApiEnvironment {
@@ -57,6 +68,27 @@ export function getServerUrl(): string {
   // In development, use stored environment preference
   const environment = getStoredApiEnvironment()
   return DEFAULT_CONFIG[environment]
+}
+
+/**
+ * Get the collab (Hocuspocus) WebSocket URL, mirroring getServerUrl()'s
+ * environment logic.
+ */
+export function getCollabUrl(): string {
+  const isProduction = import.meta.env.MODE === "production"
+
+  if (isProduction) {
+    const explicit = import.meta.env.VITE_COLLAB_URL as string | undefined
+    if (explicit) {
+      return explicit
+    }
+    const serverUrl =
+      (import.meta.env.VITE_SERVER_URL as string) || DEFAULT_CONFIG.remote
+    return `${serverUrl.replace(/^http/, "ws")}/collab`
+  }
+
+  const environment = getStoredApiEnvironment()
+  return DEFAULT_COLLAB_CONFIG[environment]
 }
 
 /**

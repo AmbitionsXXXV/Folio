@@ -20,17 +20,27 @@
 
 # 主站点配置 - 使用环境变量或默认值
 {$DOMAIN:localhost} {
-	# 反向代理到 Node.js 应用
-	reverse_proxy localhost:3000 {
-		# 健康检查
-		health_uri /health
-		health_interval 30s
-		health_timeout 5s
-		
-		# 请求头设置
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
-		header_up X-Forwarded-Proto {scheme}
+	# 实时协作 WebSocket（apps/server/src/collab） — 独立单实例进程，端口见
+	# ecosystem.config.cjs 的 folio-collab。handle_path 会剥掉 /collab 前缀，
+	# 协作进程本身不需要知道这个前缀。Caddy 的 reverse_proxy 会透明处理
+	# WebSocket 的 Connection: Upgrade，不需要额外配置。
+	handle_path /collab* {
+		reverse_proxy localhost:3002
+	}
+
+	# 其余请求反向代理到主 Node.js 应用
+	handle {
+		reverse_proxy localhost:3000 {
+			# 健康检查
+			health_uri /health
+			health_interval 30s
+			health_timeout 5s
+
+			# 请求头设置
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
 	}
 
 	# 启用压缩

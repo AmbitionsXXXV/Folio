@@ -39,6 +39,7 @@ import { EntryEditor } from "@/components/entry-editor"
 import { EntryPasswordDialog } from "@/components/entry-password-dialog"
 import { EntryPicker } from "@/components/entry-picker"
 import type { EntryPickerRef } from "@/components/entry-picker"
+import { EntryPresenceStack } from "@/components/entry-presence-stack"
 import { EntrySources } from "@/components/entry-sources"
 import type { EntrySourcesRef } from "@/components/entry-sources"
 import { EntryTags } from "@/components/entry-tags"
@@ -48,7 +49,13 @@ import { ShareDialog } from "@/components/share-dialog"
 import { TableOfContents } from "@/components/table-of-contents"
 import { useAutoSave } from "@/hooks/use-auto-save"
 import type { SaveStatus } from "@/hooks/use-auto-save"
+import { useEntryCollab } from "@/hooks/use-entry-collab"
+import type {
+  CollabConnectionState,
+  CollabParticipant
+} from "@/hooks/use-entry-collab"
 import { useTocPosition } from "@/hooks/use-toc-position"
+import { authClient } from "@/lib/auth-client"
 import { createPageHead } from "@/lib/seo"
 import { parseTocFromContent } from "@/lib/toc"
 import { cn } from "@/lib/utils"
@@ -339,6 +346,11 @@ interface EntryToolbarProps {
   isStarred: boolean
   isPinned: boolean
   saveStatus: SaveStatus
+  /** Collaborators get a slimmer toolbar: back, presence, sync — the rest
+   *  are the owner's personal organization and are hidden, not disabled. */
+  isOwner: boolean
+  participants: CollabParticipant[]
+  connectionState: CollabConnectionState
   onGoBack: () => void
   onMoveToLibrary: () => void
   onMoveToInbox: () => void
@@ -347,17 +359,22 @@ interface EntryToolbarProps {
   onDelete: () => void
   onShare: () => void
   onPassword: () => void
+  onJumpToParticipant: (participant: CollabParticipant) => void
 }
 
 /**
- * Header toolbar: back navigation, save status, and entry actions
- * (move, star, pin, delete, and the share/password overflow menu).
+ * Header toolbar: back navigation, presence, save status, and entry
+ * actions (move, star, pin, delete, and the share/password overflow menu —
+ * owner-only, see `isOwner`).
  */
 function EntryToolbar({
   isInbox,
   isStarred,
   isPinned,
   saveStatus,
+  isOwner,
+  participants,
+  connectionState,
   onGoBack,
   onMoveToLibrary,
   onMoveToInbox,
@@ -365,7 +382,8 @@ function EntryToolbar({
   onTogglePin,
   onDelete,
   onShare,
-  onPassword
+  onPassword,
+  onJumpToParticipant
 }: EntryToolbarProps) {
   const { t } = useTranslation()
 
@@ -377,106 +395,124 @@ function EntryToolbar({
       </Button>
 
       <div className="flex items-center gap-1">
+        {/* Who's here right now (empty until a second person connects) */}
+        <EntryPresenceStack
+          connectionState={connectionState}
+          onJumpToParticipant={onJumpToParticipant}
+          participants={participants}
+        />
+
         {/* Save status indicator */}
         <SaveStatusIndicator className="mr-2" status={saveStatus} />
 
-        {/* Move to library/inbox */}
-        {isInbox ? (
-          <Tooltip>
-            <TooltipTrigger
-              aria-label={t("entry.moveToLibrary")}
-              className={actionButtonClass}
-              onClick={onMoveToLibrary}
-            >
-              <HugeiconsIcon className="size-4" icon={ArchiveIcon} />
-            </TooltipTrigger>
-            <TooltipContent>{t("entry.moveToLibrary")}</TooltipContent>
-          </Tooltip>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger
-              aria-label={t("entry.moveToInbox")}
-              className={actionButtonClass}
-              onClick={onMoveToInbox}
-            >
-              <HugeiconsIcon className="size-4" icon={InboxIcon} />
-            </TooltipTrigger>
-            <TooltipContent>{t("entry.moveToInbox")}</TooltipContent>
-          </Tooltip>
+        {!isOwner ? null : (
+          <>
+            {/* Move to library/inbox */}
+            {isInbox ? (
+              <Tooltip>
+                <TooltipTrigger
+                  aria-label={t("entry.moveToLibrary")}
+                  className={actionButtonClass}
+                  onClick={onMoveToLibrary}
+                >
+                  <HugeiconsIcon className="size-4" icon={ArchiveIcon} />
+                </TooltipTrigger>
+                <TooltipContent>{t("entry.moveToLibrary")}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger
+                  aria-label={t("entry.moveToInbox")}
+                  className={actionButtonClass}
+                  onClick={onMoveToInbox}
+                >
+                  <HugeiconsIcon className="size-4" icon={InboxIcon} />
+                </TooltipTrigger>
+                <TooltipContent>{t("entry.moveToInbox")}</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Star */}
+            <Tooltip>
+              <TooltipTrigger
+                aria-label={isStarred ? t("entry.unstar") : t("entry.star")}
+                aria-pressed={isStarred}
+                className={actionButtonClass}
+                onClick={onToggleStar}
+              >
+                <HugeiconsIcon
+                  className={cn(
+                    "size-4 transition-colors",
+                    isStarred && "fill-amber-500 text-amber-500"
+                  )}
+                  icon={StarIcon}
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                {isStarred ? t("entry.unstar") : t("entry.star")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Pin */}
+            <Tooltip>
+              <TooltipTrigger
+                aria-label={isPinned ? t("entry.unpin") : t("entry.pin")}
+                aria-pressed={isPinned}
+                className={actionButtonClass}
+                onClick={onTogglePin}
+              >
+                <HugeiconsIcon
+                  className={cn(
+                    "size-4 transition-colors",
+                    isPinned && "fill-primary text-primary"
+                  )}
+                  icon={PinIcon}
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                {isPinned ? t("entry.unpin") : t("entry.pin")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Delete */}
+            <Tooltip>
+              <TooltipTrigger
+                aria-label={t("common.delete")}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-destructive/30 focus-visible:outline-none"
+                onClick={onDelete}
+              >
+                <HugeiconsIcon className="size-4" icon={Delete02Icon} />
+              </TooltipTrigger>
+              <TooltipContent>{t("common.delete")}</TooltipContent>
+            </Tooltip>
+
+            {/* More actions dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  aria-label={t("common.more")}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onShare}>
+                  <HugeiconsIcon className="mr-2 size-4" icon={Share01Icon} />
+                  {t("share.title")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onPassword}>
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={LockPasswordIcon}
+                  />
+                  {t("privacy.title")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         )}
-
-        {/* Star */}
-        <Tooltip>
-          <TooltipTrigger
-            aria-label={isStarred ? t("entry.unstar") : t("entry.star")}
-            aria-pressed={isStarred}
-            className={actionButtonClass}
-            onClick={onToggleStar}
-          >
-            <HugeiconsIcon
-              className={cn(
-                "size-4 transition-colors",
-                isStarred && "fill-amber-500 text-amber-500"
-              )}
-              icon={StarIcon}
-            />
-          </TooltipTrigger>
-          <TooltipContent>
-            {isStarred ? t("entry.unstar") : t("entry.star")}
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Pin */}
-        <Tooltip>
-          <TooltipTrigger
-            aria-label={isPinned ? t("entry.unpin") : t("entry.pin")}
-            aria-pressed={isPinned}
-            className={actionButtonClass}
-            onClick={onTogglePin}
-          >
-            <HugeiconsIcon
-              className={cn(
-                "size-4 transition-colors",
-                isPinned && "fill-primary text-primary"
-              )}
-              icon={PinIcon}
-            />
-          </TooltipTrigger>
-          <TooltipContent>
-            {isPinned ? t("entry.unpin") : t("entry.pin")}
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Delete */}
-        <Tooltip>
-          <TooltipTrigger
-            aria-label={t("common.delete")}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-destructive/30 focus-visible:outline-none"
-            onClick={onDelete}
-          >
-            <HugeiconsIcon className="size-4" icon={Delete02Icon} />
-          </TooltipTrigger>
-          <TooltipContent>{t("common.delete")}</TooltipContent>
-        </Tooltip>
-
-        {/* More actions dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button aria-label={t("common.more")} size="icon" variant="ghost">
-              <HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onShare}>
-              <HugeiconsIcon className="mr-2 size-4" icon={Share01Icon} />
-              {t("share.title")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onPassword}>
-              <HugeiconsIcon className="mr-2 size-4" icon={LockPasswordIcon} />
-              {t("privacy.title")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   )
@@ -621,10 +657,25 @@ function EntryEditPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [tocPosition] = useTocPosition()
+  const { data: session } = authClient.useSession()
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entries", id],
     queryFn: () => orpc.entries.get.call({ id })
+  })
+
+  const isCollab = entry?.isCollaborative ?? false
+  const {
+    provider,
+    connectionState,
+    participants,
+    localColor,
+    jumpToParticipant
+  } = useEntryCollab({
+    entryId: id,
+    enabled: isCollab && Boolean(session?.user?.id),
+    userId: session?.user?.id ?? "",
+    userName: session?.user?.name || "Someone"
   })
 
   // Local state for optimistic updates
@@ -695,14 +746,21 @@ function EntryEditPage() {
 
   const handleContentChange = useCallback(
     (_html: string, json: string) => {
+      // Still update local state so the TOC keeps tracking headings live —
+      // in collab mode, body content persists exclusively through the
+      // collab server's flush (apps/server/src/collab/server.ts), so this
+      // must not also feed autoSave, or the two writers would race.
       setLocalContent(json)
+      if (isCollab) {
+        return
+      }
       autoSave({
         id,
         contentJson: json,
         expectedVersion: currentVersion
       })
     },
-    [id, autoSave, currentVersion]
+    [id, autoSave, currentVersion, isCollab]
   )
 
   const handleToggleStar = useCallback(() => {
@@ -827,48 +885,70 @@ function EntryEditPage() {
       <div className="min-w-0 flex-1 px-4 py-6">
         {/* Header toolbar */}
         <EntryToolbar
+          connectionState={connectionState}
           isInbox={entry.isInbox}
+          isOwner={entry.accessRole === "owner"}
           isPinned={entry.isPinned}
           isStarred={entry.isStarred}
           onDelete={handleDeleteClick}
           onGoBack={handleGoBack}
+          onJumpToParticipant={jumpToParticipant}
           onMoveToInbox={handleMoveToInbox}
           onMoveToLibrary={handleMoveToLibrary}
           onPassword={() => setShowPasswordDialog(true)}
           onShare={() => setShowShareDialog(true)}
           onTogglePin={handleTogglePin}
           onToggleStar={handleToggleStar}
+          participants={participants}
           saveStatus={displaySaveStatus}
         />
 
-        {/* Title input */}
+        {/* Title input — owner-only; collaborators change content through
+            the collab socket, not this entry's metadata (see entries.ts) */}
         <Input
           aria-label={t("entry.title")}
           autoComplete="off"
-          className="mb-4 h-auto border-none bg-transparent py-2 font-display text-2xl font-semibold tracking-tight shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 md:text-3xl"
+          className="mb-4 h-auto border-none bg-transparent py-2 font-display text-2xl font-semibold tracking-tight shadow-none transition-colors placeholder:text-muted-foreground/60 focus-visible:ring-0 disabled:cursor-default disabled:opacity-100 md:text-3xl"
+          disabled={entry.accessRole !== "owner"}
           onChange={handleTitleChange}
           placeholder={t("entry.title")}
           spellCheck={false}
           value={title}
         />
 
-        {/* Tags */}
-        <div className="mb-4">
-          <EntryTags entryId={id} ref={entryTagsRef} />
-        </div>
+        {/* Tags/sources are owner-managed metadata — hidden rather than
+            disabled for collaborators, same as the toolbar actions above */}
+        {entry.accessRole === "owner" && (
+          <>
+            <div className="mb-4">
+              <EntryTags entryId={id} ref={entryTagsRef} />
+            </div>
+            <div className="mb-4">
+              <EntrySources entryId={id} ref={entrySourcesRef} />
+            </div>
+          </>
+        )}
 
-        {/* Sources */}
-        <div className="mb-4">
-          <EntrySources entryId={id} ref={entrySourcesRef} />
-        </div>
-
-        {/* Editor — flows directly on the page canvas (Lark-style), no card */}
+        {/* Editor — flows directly on the page canvas (Lark-style), no card.
+            Keyed on collab mode so switching in/out of it remounts the
+            editor: Collaboration binds to a Y.Doc at construction time, not
+            reactively, so a live instance can't just swap onto/off of it. */}
         <div ref={contentRef}>
           <EntryEditor
             additionalCommands={additionalCommands}
             autoFocus
+            collab={
+              isCollab && provider && session?.user
+                ? {
+                    provider,
+                    user: { name: session.user.name, color: localColor }
+                  }
+                : undefined
+            }
             content={editorContent}
             contentFormat="json"
+            editable={entry.accessRole !== "viewer"}
+            key={`${id}-${isCollab ? "collab" : "solo"}`}
             onChange={handleContentChange}
             onUploadImage={uploadImage}
             placeholder={t("editor.placeholderWithSlash")}

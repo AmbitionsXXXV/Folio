@@ -18,6 +18,7 @@ import { requestId } from "hono/request-id"
 import { timeout } from "hono/timeout"
 
 import { registerRoutes } from "./routes"
+import { isAllowedOrigin } from "./utils/allowed-origin"
 import { convertToSupportedLanguage } from "./utils/language"
 
 const log = createLogger({ prefix: "server" })
@@ -27,10 +28,7 @@ type AppVariables = RequestIdVariables & {
   language: string
 }
 
-const corsOrigins = process.env.CORS_ORIGIN?.split(",").map((o) =>
-  o.trim()
-) || ["http://localhost:3001"]
-log.info("CORS_ORIGIN", corsOrigins)
+log.info("CORS_ORIGIN", process.env.CORS_ORIGIN)
 
 export const app = new Hono<{
   Variables: AppVariables
@@ -61,22 +59,10 @@ app.use(logger(createHonoLogger()))
 app.use(
   "/*",
   cors({
-    origin: (origin) => {
-      // Allow explicitly configured origins (CORS_ORIGIN).
-      if (corsOrigins.includes(origin)) {
-        return origin
-      }
-      // Reflect localhost only outside production. In production this must never
-      // fire — otherwise any app on any local port could make credentialed
-      // cross-origin requests with the user's session cookie.
-      if (
-        process.env.NODE_ENV !== "production" &&
-        origin?.startsWith("http://localhost:")
-      ) {
-        return origin
-      }
-      return null
-    },
+    // Reflects the origin only when allowed (CORS_ORIGIN, or localhost
+    // outside production) — see utils/allowed-origin, shared with the
+    // collab server's WebSocket upgrade, which CORS doesn't cover.
+    origin: (origin) => (isAllowedOrigin(origin) ? origin : null),
     allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowHeaders: [
       "Content-Type",
