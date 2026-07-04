@@ -848,3 +848,37 @@
   opacity: 0.25;
   pointer-events: none;
 }
+
+/* Blink the bar only, via border-color — the name flag is a child of the
+   caret span, so animating opacity would blink the flag too. */
+@keyframes collab-caret-blink {
+  0%,
+  49% {
+    border-color: currentColor;
+  }
+
+  50%,
+  100% {
+    border-color: transparent;
+  }
+}
+
+/* Fade the name flag once its owner idles. y-prosemirror rebuilds the caret
+   widget on that user's next awareness change (typing, moving the cursor),
+   which restarts this animation and brings the flag back — so the flag
+   reads as "active here", the bare bar as "parked here". */
+@keyframes collab-label-idle {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tiptap .collaboration-carets__caret {
+    animation: collab-caret-blink 1.1s linear infinite;
+  }
+
+  .tiptap .collaboration-carets__label {
+    animation: collab-label-idle 0.3s ease-out 4s forwards;
+  }
+}

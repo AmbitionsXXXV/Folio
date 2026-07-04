@@ -581,6 +581,7 @@
     "collabSynced": "已同步",
     "collabSyncing": "同步中...",
     "collabReconnecting": "重新连接中...",
+    "collabYou": "你",
     "codeBlockLines_one": "{{count}} 行",
     "codeBlockLines_other": "{{count}} 行",
     "codeBlockShowAll": "显示全部 {{count}} 行",

@@ -11,6 +11,7 @@ import type {
   CollabConnectionState,
   CollabParticipant
 } from "@/hooks/use-entry-collab"
+import { cn } from "@/lib/utils"
 
 const MAX_VISIBLE_AVATARS = 4
 
@@ -27,26 +28,23 @@ function initials(name: string): string {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase()
 }
 
-const CONNECTION_DOT_CLASS: Record<CollabConnectionState, string> = {
-  connected: "bg-green-500",
-  connecting: "bg-muted-foreground",
-  disconnected: "bg-destructive"
-}
-
 interface EntryPresenceStackProps {
   participants: CollabParticipant[]
-  connectionState: CollabConnectionState
+  /** The local user's display name — rendered as the amber "you" avatar at
+   *  the end of the stack, distinct from everyone else's identity colors. */
+  localUserName: string
   onJumpToParticipant: (participant: CollabParticipant) => void
 }
 
 /**
  * Who's here right now. Renders nothing until a second person actually
- * connects — a lone "you" avatar would just be noise (this component only
- * ever receives *other* participants; see useEntryCollab).
+ * connects — a lone "you" avatar would just be noise. Once others are
+ * present, the local user appears too (brand-accent amber, closest to the
+ * sync pill), so the stack reads as the full room, not just "them".
  */
 export function EntryPresenceStack({
   participants,
-  connectionState,
+  localUserName,
   onJumpToParticipant
 }: EntryPresenceStackProps) {
   const { t } = useTranslation()
@@ -57,21 +55,20 @@ export function EntryPresenceStack({
 
   const visible = participants.slice(0, MAX_VISIBLE_AVATARS)
   const overflow = participants.length - visible.length
-
-  const connectionLabelKey: Record<CollabConnectionState, string> = {
-    connected: "editor.collabSynced",
-    connecting: "editor.collabSyncing",
-    disconnected: "editor.collabReconnecting"
-  }
-  const connectionLabel = t(connectionLabelKey[connectionState])
+  const youLabel = `${localUserName} · ${t("editor.collabYou")}`
 
   return (
-    <div className="flex items-center gap-2">
-      <AvatarGroup>
-        {visible.map((participant) => (
+    <AvatarGroup>
+      {visible.map((participant) => {
+        const roleLabel =
+          participant.role === "viewer"
+            ? t("share.roleViewer")
+            : t("share.roleEditor")
+        const label = `${participant.name} · ${roleLabel}`
+        return (
           <Tooltip key={participant.clientId}>
             <TooltipTrigger
-              aria-label={participant.name}
+              aria-label={label}
               className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               onClick={() => onJumpToParticipant(participant)}
             >
@@ -88,27 +85,77 @@ export function EntryPresenceStack({
                 </AvatarFallback>
               </Avatar>
             </TooltipTrigger>
-            <TooltipContent>{participant.name}</TooltipContent>
+            <TooltipContent>{label}</TooltipContent>
           </Tooltip>
-        ))}
-        {overflow > 0 && (
-          <AvatarGroupCount className="size-7 bg-surface-secondary text-[0.65rem] font-medium text-muted-foreground">
-            +{overflow}
-          </AvatarGroupCount>
-        )}
-      </AvatarGroup>
-
+        )
+      })}
+      {overflow > 0 && (
+        <AvatarGroupCount className="size-7 bg-surface-secondary text-[0.65rem] font-medium text-muted-foreground">
+          +{overflow}
+        </AvatarGroupCount>
+      )}
       <Tooltip>
         <TooltipTrigger
-          aria-label={connectionLabel}
-          className="inline-flex size-2 items-center justify-center rounded-full outline-none"
+          aria-label={youLabel}
+          className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
-          <span
-            className={`block size-full rounded-full ${CONNECTION_DOT_CLASS[connectionState]}`}
-          />
+          <Avatar
+            className="size-7"
+            size="sm"
+            style={{ boxShadow: "0 0 0 2px var(--primary)" }}
+          >
+            <AvatarFallback className="bg-primary text-[0.65rem] text-primary-foreground">
+              {initials(localUserName)}
+            </AvatarFallback>
+          </Avatar>
         </TooltipTrigger>
-        <TooltipContent>{connectionLabel}</TooltipContent>
+        <TooltipContent>{youLabel}</TooltipContent>
       </Tooltip>
-    </div>
+    </AvatarGroup>
+  )
+}
+
+const SYNC_DOT_CLASS: Record<CollabConnectionState, string> = {
+  connected: "bg-green-500",
+  connecting: "animate-pulse bg-muted-foreground",
+  disconnected: "bg-destructive"
+}
+
+const SYNC_LABEL_KEY: Record<CollabConnectionState, string> = {
+  connected: "editor.collabSynced",
+  connecting: "editor.collabSyncing",
+  disconnected: "editor.collabReconnecting"
+}
+
+interface CollabSyncPillProps {
+  connectionState: CollabConnectionState
+  className?: string
+}
+
+/**
+ * Live sync status for a collaborative entry. Replaces the
+ * SaveStatusIndicator whenever collab is active (body content no longer
+ * flows through autosave, so "Saving/Saved" would be misleading there) —
+ * and unlike the presence stack, it shows even when you're alone in the
+ * room, since the connection itself is what it reports on.
+ */
+export function CollabSyncPill({
+  connectionState,
+  className
+}: CollabSyncPillProps) {
+  const { t } = useTranslation()
+
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-1.5 text-xs text-muted-foreground",
+        className
+      )}
+    >
+      <span
+        className={cn("size-1.5 rounded-full", SYNC_DOT_CLASS[connectionState])}
+      />
+      {t(SYNC_LABEL_KEY[connectionState])}
+    </span>
   )
 }

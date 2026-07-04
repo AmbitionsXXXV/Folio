@@ -476,6 +476,7 @@
     "collabSynced": "同期済み",
     "collabSyncing": "同期中...",
     "collabReconnecting": "再接続中...",
+    "collabYou": "あなた",
     "codeBlockLines_one": "{{count}} 行",
     "codeBlockLines_other": "{{count}} 行",
     "codeBlockShowAll": "{{count}} 行すべてを表示",

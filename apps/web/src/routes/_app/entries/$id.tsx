@@ -39,7 +39,10 @@ import { EntryEditor } from "@/components/entry-editor"
 import { EntryPasswordDialog } from "@/components/entry-password-dialog"
 import { EntryPicker } from "@/components/entry-picker"
 import type { EntryPickerRef } from "@/components/entry-picker"
-import { EntryPresenceStack } from "@/components/entry-presence-stack"
+import {
+  CollabSyncPill,
+  EntryPresenceStack
+} from "@/components/entry-presence-stack"
 import { EntrySources } from "@/components/entry-sources"
 import type { EntrySourcesRef } from "@/components/entry-sources"
 import { EntryTags } from "@/components/entry-tags"
@@ -349,6 +352,10 @@ interface EntryToolbarProps {
   /** Collaborators get a slimmer toolbar: back, presence, sync — the rest
    *  are the owner's personal organization and are hidden, not disabled. */
   isOwner: boolean
+  /** Collab entries swap the save indicator for the live sync pill — body
+   *  content no longer flows through autosave there. */
+  isCollab: boolean
+  localUserName: string
   participants: CollabParticipant[]
   connectionState: CollabConnectionState
   onGoBack: () => void
@@ -363,7 +370,7 @@ interface EntryToolbarProps {
 }
 
 /**
- * Header toolbar: back navigation, presence, save status, and entry
+ * Header toolbar: back navigation, presence, sync/save status, and entry
  * actions (move, star, pin, delete, and the share/password overflow menu —
  * owner-only, see `isOwner`).
  */
@@ -373,6 +380,8 @@ function EntryToolbar({
   isPinned,
   saveStatus,
   isOwner,
+  isCollab,
+  localUserName,
   participants,
   connectionState,
   onGoBack,
@@ -394,16 +403,20 @@ function EntryToolbar({
         {t("common.back")}
       </Button>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {/* Who's here right now (empty until a second person connects) */}
         <EntryPresenceStack
-          connectionState={connectionState}
+          localUserName={localUserName}
           onJumpToParticipant={onJumpToParticipant}
           participants={participants}
         />
 
-        {/* Save status indicator */}
-        <SaveStatusIndicator className="mr-2" status={saveStatus} />
+        {/* Live sync state for collab entries, save status otherwise */}
+        {isCollab ? (
+          <CollabSyncPill className="mr-2" connectionState={connectionState} />
+        ) : (
+          <SaveStatusIndicator className="mr-2" status={saveStatus} />
+        )}
 
         {!isOwner ? null : (
           <>
@@ -664,7 +677,9 @@ function EntryEditPage() {
     queryFn: () => orpc.entries.get.call({ id })
   })
 
-  const isCollab = entry?.isCollaborative ?? false
+  // Password-locked entries never sync live — the collab server rejects
+  // those connections outright too, this just avoids a doomed attempt.
+  const isCollab = Boolean(entry?.isCollaborative && !entry.passwordHash)
   const {
     provider,
     connectionState,
@@ -675,7 +690,8 @@ function EntryEditPage() {
     entryId: id,
     enabled: isCollab && Boolean(session?.user?.id),
     userId: session?.user?.id ?? "",
-    userName: session?.user?.name || "Someone"
+    userName: session?.user?.name || "Someone",
+    role: entry?.accessRole ?? "editor"
   })
 
   // Local state for optimistic updates
@@ -746,12 +762,14 @@ function EntryEditPage() {
 
   const handleContentChange = useCallback(
     (_html: string, json: string) => {
-      // Still update local state so the TOC keeps tracking headings live —
-      // in collab mode, body content persists exclusively through the
-      // collab server's flush (apps/server/src/collab/server.ts), so this
-      // must not also feed autoSave, or the two writers would race.
       setLocalContent(json)
+      // Collab mode: body content persists exclusively through the collab
+      // server's flush (apps/server/src/collab/server.ts), so this must not
+      // also feed autoSave — but the TOC still needs the debounced content
+      // it normally gets from autoSave's onSave (the editor already
+      // debounces onChange 500ms, so setting it here directly is fine).
       if (isCollab) {
+        setDebouncedContent(json)
         return
       }
       autoSave({
@@ -886,10 +904,12 @@ function EntryEditPage() {
         {/* Header toolbar */}
         <EntryToolbar
           connectionState={connectionState}
+          isCollab={isCollab}
           isInbox={entry.isInbox}
           isOwner={entry.accessRole === "owner"}
           isPinned={entry.isPinned}
           isStarred={entry.isStarred}
+          localUserName={session?.user?.name || "Someone"}
           onDelete={handleDeleteClick}
           onGoBack={handleGoBack}
           onJumpToParticipant={jumpToParticipant}

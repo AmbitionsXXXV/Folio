@@ -9,6 +9,10 @@ export interface CollabParticipant {
   userId: string
   name: string
   color: string
+  /** 'owner' | 'editor' | 'viewer' — self-reported via awareness (each
+   *  client knows its own accessRole from entries.get). Display-only:
+   *  write permission is enforced server-side, never from this field. */
+  role: string
 }
 
 export type CollabConnectionState = "connecting" | "connected" | "disconnected"
@@ -19,6 +23,9 @@ export interface UseEntryCollabOptions {
   enabled: boolean
   userId: string
   userName: string
+  /** This client's accessRole on the entry, shared over awareness so other
+   *  participants' tooltips can show it. */
+  role: string
 }
 
 export interface UseEntryCollabResult {
@@ -40,6 +47,7 @@ interface AwarenessUserState {
   userId?: string
   name?: string
   color?: string
+  role?: string
 }
 
 /**
@@ -53,7 +61,8 @@ export function useEntryCollab({
   entryId,
   enabled,
   userId,
-  userName
+  userName,
+  role
 }: UseEntryCollabOptions): UseEntryCollabResult {
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null)
   const [connectionState, setConnectionState] =
@@ -83,7 +92,8 @@ export function useEntryCollab({
     instance.awareness?.setLocalStateField("user", {
       userId,
       name: userName,
-      color: localColor
+      color: localColor,
+      role
     } satisfies AwarenessUserState)
 
     const updateParticipants = () => {
@@ -103,7 +113,8 @@ export function useEntryCollab({
           clientId,
           userId: user.userId,
           name: user.name || "Someone",
-          color: user.color || "#8a8a8a"
+          color: user.color || "#8a8a8a",
+          role: user.role || "editor"
         })
       }
       setParticipants(next)
@@ -119,7 +130,7 @@ export function useEntryCollab({
       setProvider(null)
       setParticipants([])
     }
-  }, [enabled, entryId, userId, userName, localColor])
+  }, [enabled, entryId, userId, userName, localColor, role])
 
   const jumpToParticipant = useCallback((participant: CollabParticipant) => {
     const labels = document.querySelectorAll<HTMLElement>(

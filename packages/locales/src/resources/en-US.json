@@ -526,6 +526,7 @@
     "collabSynced": "Synced",
     "collabSyncing": "Syncing...",
     "collabReconnecting": "Reconnecting...",
+    "collabYou": "You",
     "codeBlockLines_one": "{{count}} line",
     "codeBlockLines_other": "{{count}} lines",
     "codeBlockShowAll": "Show all {{count}} lines",

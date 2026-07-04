@@ -78,6 +78,19 @@ export const collabServer = new Server<CollabContext>({
       throw new Error("Not authorized for this entry")
     }
 
+    // Password-locked entries never sync live — for anyone. Without this,
+    // the owner (whom getEntryAccessRole never password-gates) would keep
+    // an active Y.Doc room open for an entry the UI treats as solo again,
+    // and its flushes would race the owner's solo autosave path.
+    const [lock] = await db
+      .select({ passwordHash: entries.passwordHash })
+      .from(entries)
+      .where(eq(entries.id, documentName))
+      .limit(1)
+    if (lock?.passwordHash) {
+      throw new Error("Entry is password-locked")
+    }
+
     if (role === "viewer") {
       connectionConfig.readOnly = true
     }
