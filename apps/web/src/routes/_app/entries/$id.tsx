@@ -950,29 +950,47 @@ function EntryEditPage() {
         )}
 
         {/* Editor — flows directly on the page canvas (Lark-style), no card.
-            Keyed on collab mode so switching in/out of it remounts the
-            editor: Collaboration binds to a Y.Doc at construction time, not
-            reactively, so a live instance can't just swap onto/off of it. */}
+            Collaboration binds to a Y.Doc at editor construction time, not
+            reactively, so two rules here: (1) never mount the editor while
+            collab is enabled but the provider isn't ready yet — useEditor
+            would permanently create a solo editor that silently drops every
+            keystroke on the floor as far as other participants are
+            concerned; (2) key the editor on the provider's own Y.Doc
+            clientID so a recreated provider (React strict-mode re-running
+            the hook effect) remounts the editor onto the live doc instead
+            of a destroyed one. */}
         <div ref={contentRef}>
-          <EntryEditor
-            additionalCommands={additionalCommands}
-            autoFocus
-            collab={
-              isCollab && provider && session?.user
-                ? {
-                    provider,
-                    user: { name: session.user.name, color: localColor }
-                  }
-                : undefined
-            }
-            content={editorContent}
-            contentFormat="json"
-            editable={entry.accessRole !== "viewer"}
-            key={`${id}-${isCollab ? "collab" : "solo"}`}
-            onChange={handleContentChange}
-            onUploadImage={uploadImage}
-            placeholder={t("editor.placeholderWithSlash")}
-          />
+          {isCollab && !(provider && session?.user) ? (
+            <div aria-busy="true" className="animate-pulse space-y-3">
+              <div className="h-5 w-4/5 rounded bg-surface-secondary/60" />
+              <div className="h-4 w-full rounded bg-surface-secondary/40" />
+              <div className="h-4 w-3/4 rounded bg-surface-secondary/40" />
+            </div>
+          ) : (
+            <EntryEditor
+              additionalCommands={additionalCommands}
+              autoFocus
+              collab={
+                isCollab && provider && session?.user
+                  ? {
+                      provider,
+                      user: { name: session.user.name, color: localColor }
+                    }
+                  : undefined
+              }
+              content={editorContent}
+              contentFormat="json"
+              editable={entry.accessRole !== "viewer"}
+              key={
+                isCollab && provider
+                  ? `${id}-collab-${provider.document.clientID}`
+                  : `${id}-solo`
+              }
+              onChange={handleContentChange}
+              onUploadImage={uploadImage}
+              placeholder={t("editor.placeholderWithSlash")}
+            />
+          )}
         </div>
 
         {/* Metadata footer */}
