@@ -40,6 +40,8 @@ export {
   dailyLogsRelations,
   entries,
   entriesRelations,
+  entryCollaborators,
+  entryCollaboratorsRelations,
   entryReviewState,
   entryReviewStateRelations,
   entryShares,

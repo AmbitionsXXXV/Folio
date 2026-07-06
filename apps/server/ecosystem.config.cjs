@@ -58,6 +58,54 @@ module.exports = {
 
       // Node.js arguments
       node_args: "--enable-source-maps"
+    },
+    {
+      name: "folio-collab",
+      script: "dist/collab/index.mjs",
+      cwd: "/opt/folio/server/current",
+
+      // Stateful WebSocket server: each Y.Doc room lives in this process's
+      // memory, so — unlike folio-server above — this can't run as a
+      // cluster of >1 instance without a shared backplane. Start at 1;
+      // add @hocuspocus/extension-redis (see apps/server/src/collab/server.ts)
+      // the day this needs to scale past that, don't just bump `instances`.
+      instances: 1,
+      exec_mode: "fork",
+
+      env: {
+        NODE_ENV: "development",
+        COLLAB_PORT: 3002
+      },
+      env_production: {
+        NODE_ENV: "production",
+        COLLAB_PORT: 3002
+      },
+      env_staging: {
+        NODE_ENV: "staging",
+        COLLAB_PORT: 3003
+      },
+
+      max_memory_restart: "500M",
+      restart_delay: 3000,
+      max_restarts: 10,
+      min_uptime: "10s",
+
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      error_file: "/opt/folio/server/shared/logs/collab-error.log",
+      out_file: "/opt/folio/server/shared/logs/collab-out.log",
+      merge_logs: true,
+      log_type: "json",
+
+      watch: false,
+      ignore_watch: ["node_modules", "logs", ".git"],
+
+      kill_timeout: 5000,
+      wait_ready: true,
+      listen_timeout: 10_000,
+
+      source_map_support: true,
+      autorestart: true,
+      node_args: "--enable-source-maps"
     }
   ]
 }

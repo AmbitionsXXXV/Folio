@@ -23,6 +23,7 @@ import { nanoid } from "nanoid"
 import { z } from "zod"
 
 import { protectedProcedure } from "../index"
+import { getEntryAccessRole } from "../utils/entry-access"
 import {
   createRateLimitMiddleware,
   getRateLimitStatus,
@@ -374,6 +375,12 @@ async function triggerAttachmentCaptionGeneration(
 /**
  * storage.uploadAttachment - Upload an image attachment for a note entry
  *
+ * When `entryId` is given, the caller must be the entry's owner or an
+ * editor-role collaborator — viewers and non-collaborators get NOT_FOUND
+ * (matches the rest of the API: don't reveal whether the entry exists).
+ * Attachments with no `entryId` (not yet tied to a saved entry) skip the
+ * check, same as before.
+ *
  * Rate limited: 20 requests per minute
  */
 export const uploadEntryAttachment = protectedProcedure
@@ -381,6 +388,14 @@ export const uploadEntryAttachment = protectedProcedure
   .input(UploadAttachmentInputSchema)
   .handler(async ({ context, input }) => {
     const userId = context.session.user.id
+
+    if (input.entryId) {
+      const accessRole = await getEntryAccessRole(userId, input.entryId)
+      if (!accessRole || accessRole === "viewer") {
+        throw new ORPCError("NOT_FOUND", { message: "Entry not found" })
+      }
+    }
+
     const buffer = Buffer.from(input.fileData, "base64")
 
     const validation = validateAttachmentFile(input.contentType, buffer.length)

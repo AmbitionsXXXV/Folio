@@ -1,17 +1,26 @@
 import { relations } from "drizzle-orm"
 import {
   boolean,
+  customType,
   index,
   integer,
   pgTable,
   real,
   text,
   timestamp,
+  uniqueIndex,
   vector
 } from "drizzle-orm/pg-core"
 
 import { user } from "./auth"
 import { entryLinks } from "./graph"
+
+/** Raw binary column (pg bytea) — used for the Yjs update snapshot below. */
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea"
+  }
+})
 
 /**
  * entries - 学习笔记/知识条目
@@ -81,7 +90,12 @@ export const entriesRelations = relations(entries, ({ one, many }) => ({
   entryShares: many(entryShares),
   outgoingLinks: many(entryLinks, { relationName: "outgoingLinks" }),
   incomingLinks: many(entryLinks, { relationName: "incomingLinks" }),
-  entryChunks: many(entryChunks)
+  entryChunks: many(entryChunks),
+  entryCollaborators: many(entryCollaborators),
+  syncState: one(entrySyncState, {
+    fields: [entries.id],
+    references: [entrySyncState.entryId]
+  })
 }))
 
 /**
@@ -549,6 +563,92 @@ export const entrySharesRelations = relations(entryShares, ({ one }) => ({
   user: one(user, {
     fields: [entryShares.userId],
     references: [user.id]
+  })
+}))
+
+/**
+ * entry_collaborators - 条目协作者
+ * 邀请加入某个 entry 实时协作的注册用户及其角色。owner 本身不在这张表里
+ * （owner 身份始终来自 entries.userId），这里只记录被邀请的其他用户。
+ */
+export const entryCollaborators = pgTable(
+  "entry_collaborators",
+  {
+    id: text("id").primaryKey(),
+    entryId: text("entry_id")
+      .notNull()
+      .references(() => entries.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** 协作角色：'editor' 可编辑正文，'viewer' 仅只读查看 */
+    role: text("role").notNull().default("editor"),
+    /** 发出邀请的用户（审计用途，始终是 owner） */
+    invitedBy: text("invited_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull()
+  },
+  (table) => [
+    index("entry_collaborators_entry_id_idx").on(table.entryId),
+    index("entry_collaborators_user_id_idx").on(table.userId),
+    uniqueIndex("entry_collaborators_entry_id_user_id_idx").on(
+      table.entryId,
+      table.userId
+    )
+  ]
+)
+
+export const entryCollaboratorsRelations = relations(
+  entryCollaborators,
+  ({ one }) => ({
+    entry: one(entries, {
+      fields: [entryCollaborators.entryId],
+      references: [entries.id]
+    }),
+    user: one(user, {
+      fields: [entryCollaborators.userId],
+      references: [user.id],
+      relationName: "collaboratorUser"
+    }),
+    invitedByUser: one(user, {
+      fields: [entryCollaborators.invitedBy],
+      references: [user.id],
+      relationName: "invitedByUser"
+    })
+  })
+)
+
+/**
+ * entry_sync_state - 协作 entry 的 Yjs 文档二进制快照
+ *
+ * 每个开启协作的 entry 最多一条记录（懒创建，首次协作连接时写入）。
+ * contentHash 是这份快照落库时对应的 entries.contentJson 的 sha-256 摘要——
+ * 与 entries.contentHash（RAG 变更检测用途）是两回事，是 collab server 自己的
+ * 陈旧性哨兵：加载时若与当前 entries.contentJson 的哈希对不上，说明这个 entry
+ * 在协作断开期间被 solo 保存路径改过，必须丢弃这份快照重新播种，否则会用旧
+ * 内容覆盖掉新内容。
+ */
+export const entrySyncState = pgTable("entry_sync_state", {
+  entryId: text("entry_id")
+    .notNull()
+    .references(() => entries.id, { onDelete: "cascade" })
+    .primaryKey(),
+  /** Y.encodeStateAsUpdate(doc) 的二进制快照 */
+  ydocState: bytea("ydoc_state").notNull(),
+  contentHash: text("content_hash").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull()
+})
+
+export const entrySyncStateRelations = relations(entrySyncState, ({ one }) => ({
+  entry: one(entries, {
+    fields: [entrySyncState.entryId],
+    references: [entries.id]
   })
 }))
 

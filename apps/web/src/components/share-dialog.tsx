@@ -15,9 +15,11 @@ import {
   EyeIcon,
   Link01Icon,
   LockPasswordIcon,
+  Mail01Icon,
   Share01Icon,
   Tick02Icon,
-  TimeSetting01Icon
+  TimeSetting01Icon,
+  UserGroupIcon
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -350,6 +352,196 @@ function CreateShareForm({
   )
 }
 
+interface CollaboratorInfo {
+  id: string
+  userId: string
+  role: "editor" | "viewer"
+  name: string
+  email: string
+  image: string | null
+  createdAt: string
+}
+
+interface CollaboratorRowProps {
+  collaborator: CollaboratorInfo
+  isRemovePending: boolean
+  onRoleChange: (userId: string, role: "editor" | "viewer") => void
+  onRemove: (userId: string) => void
+}
+
+/**
+ * Single collaborator row: name/email, role select, remove button
+ */
+function CollaboratorRow({
+  collaborator,
+  isRemovePending,
+  onRoleChange,
+  onRemove
+}: CollaboratorRowProps) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-lg border p-3">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate text-sm font-medium">
+          {collaborator.name}
+        </span>
+        <span className="truncate text-xs text-muted">
+          {collaborator.email}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <Select
+          onChange={(value) => {
+            if (value === "editor" || value === "viewer") {
+              onRoleChange(collaborator.userId, value)
+            }
+          }}
+          value={collaborator.role}
+          variant="secondary"
+        >
+          <Select.Trigger className="h-8 text-xs">
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              <ListBox.Item id="editor" textValue={t("share.roleEditor")}>
+                {t("share.roleEditor")}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+              <ListBox.Item id="viewer" textValue={t("share.roleViewer")}>
+                {t("share.roleViewer")}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            </ListBox>
+          </Select.Popover>
+        </Select>
+        <Tooltip>
+          <Button
+            isDisabled={isRemovePending}
+            isIconOnly
+            onPress={() => onRemove(collaborator.userId)}
+            size="sm"
+            variant="ghost"
+          >
+            <HugeiconsIcon className="size-4 text-danger" icon={Delete02Icon} />
+          </Button>
+          <Tooltip.Content>{t("share.removeCollaborator")}</Tooltip.Content>
+        </Tooltip>
+      </div>
+    </div>
+  )
+}
+
+interface CollaboratorsSectionProps {
+  collaborators: CollaboratorInfo[] | undefined
+  inviteEmail: string
+  setInviteEmail: (value: string) => void
+  inviteRole: "editor" | "viewer"
+  setInviteRole: (value: "editor" | "viewer") => void
+  onInvite: () => void
+  isInvitePending: boolean
+  isRemovePending: boolean
+  onRoleChange: (userId: string, role: "editor" | "viewer") => void
+  onRemove: (userId: string) => void
+}
+
+/**
+ * Invite-by-email form + roster of collaborators already invited to
+ * real-time co-edit this entry. Requires the invitee to already have a
+ * FolioNote account — there is no invite-to-signup flow yet.
+ */
+function CollaboratorsSection({
+  collaborators,
+  inviteEmail,
+  setInviteEmail,
+  inviteRole,
+  setInviteRole,
+  onInvite,
+  isInvitePending,
+  isRemovePending,
+  onRoleChange,
+  onRemove
+}: CollaboratorsSectionProps) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="space-y-3 border-t pt-4">
+      <p className="flex items-center gap-1.5 text-xs text-muted uppercase">
+        <HugeiconsIcon className="size-3.5" icon={UserGroupIcon} />
+        {t("share.collaborators")}
+      </p>
+
+      {collaborators && collaborators.length > 0 ? (
+        <div className="space-y-2">
+          {collaborators.map((collaborator) => (
+            <CollaboratorRow
+              collaborator={collaborator}
+              isRemovePending={isRemovePending}
+              key={collaborator.id}
+              onRemove={onRemove}
+              onRoleChange={onRoleChange}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted">{t("share.noCollaborators")}</p>
+      )}
+
+      <div className="flex items-center gap-2">
+        <TextField
+          className="min-w-0 flex-1"
+          onChange={setInviteEmail}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && inviteEmail.trim()) {
+              onInvite()
+            }
+          }}
+          type="email"
+          value={inviteEmail}
+        >
+          <Input placeholder={t("share.emailPlaceholder")} />
+        </TextField>
+        <Select
+          onChange={(value) => {
+            if (value === "editor" || value === "viewer") {
+              setInviteRole(value)
+            }
+          }}
+          value={inviteRole}
+          variant="secondary"
+        >
+          <Select.Trigger className="w-28 shrink-0 text-xs">
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              <ListBox.Item id="editor" textValue={t("share.roleEditor")}>
+                {t("share.roleEditor")}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+              <ListBox.Item id="viewer" textValue={t("share.roleViewer")}>
+                {t("share.roleViewer")}
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            </ListBox>
+          </Select.Popover>
+        </Select>
+        <Button
+          isDisabled={isInvitePending || !inviteEmail.trim()}
+          onPress={onInvite}
+          size="sm"
+        >
+          <HugeiconsIcon className="size-4" icon={Mail01Icon} />
+          {t("share.invite")}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * ShareDialog component for managing entry share links
  */
@@ -370,11 +562,65 @@ export function ShareDialog({
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [shareToDelete, setShareToDelete] = useState<string | null>(null)
 
+  // Form state for inviting a collaborator
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor")
+
   // Fetch existing shares for this entry
   const { data: shares } = useQuery({
     queryKey: ["shares", entryId],
     queryFn: () => orpc.shares.getByEntry.call({ entryId }),
     enabled: open
+  })
+
+  // Fetch existing collaborators for this entry
+  const { data: collaborators } = useQuery({
+    queryKey: ["collaborators", entryId],
+    queryFn: () => orpc.collaborators.list.call({ entryId }),
+    enabled: open
+  })
+
+  const inviteCollaboratorMutation = useMutation({
+    mutationFn: (data: {
+      entryId: string
+      email: string
+      role: "editor" | "viewer"
+    }) => orpc.collaborators.invite.call(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collaborators", entryId] })
+      toast.success(t("share.inviteSent"))
+      setInviteEmail("")
+      setInviteRole("editor")
+    },
+    onError: (error) => {
+      toast.error(error.message || t("share.inviteError"))
+    }
+  })
+
+  const updateCollaboratorRoleMutation = useMutation({
+    mutationFn: (data: {
+      entryId: string
+      userId: string
+      role: "editor" | "viewer"
+    }) => orpc.collaborators.updateRole.call(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collaborators", entryId] })
+    },
+    onError: () => {
+      toast.error(t("share.roleUpdateError"))
+    }
+  })
+
+  const removeCollaboratorMutation = useMutation({
+    mutationFn: (userId: string) =>
+      orpc.collaborators.remove.call({ entryId, userId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collaborators", entryId] })
+      toast.success(t("share.removed"))
+    },
+    onError: () => {
+      toast.error(t("share.removeError"))
+    }
   })
 
   // Create share mutation
@@ -474,6 +720,28 @@ export function ShareDialog({
     return new Date(expiresAt) < new Date()
   }, [])
 
+  const handleInvite = useCallback(() => {
+    const email = inviteEmail.trim()
+    if (!email) {
+      return
+    }
+    inviteCollaboratorMutation.mutate({ entryId, email, role: inviteRole })
+  }, [inviteCollaboratorMutation, entryId, inviteEmail, inviteRole])
+
+  const handleRoleChange = useCallback(
+    (userId: string, role: "editor" | "viewer") => {
+      updateCollaboratorRoleMutation.mutate({ entryId, userId, role })
+    },
+    [updateCollaboratorRoleMutation, entryId]
+  )
+
+  const handleRemoveCollaborator = useCallback(
+    (userId: string) => {
+      removeCollaboratorMutation.mutate(userId)
+    },
+    [removeCollaboratorMutation]
+  )
+
   return (
     <>
       <Modal.Backdrop isOpen={open} onOpenChange={onOpenChange}>
@@ -513,6 +781,19 @@ export function ShareDialog({
                   setUsePassword={setUsePassword}
                   showBranding={showBranding}
                   usePassword={usePassword}
+                />
+
+                <CollaboratorsSection
+                  collaborators={collaborators}
+                  inviteEmail={inviteEmail}
+                  inviteRole={inviteRole}
+                  isInvitePending={inviteCollaboratorMutation.isPending}
+                  isRemovePending={removeCollaboratorMutation.isPending}
+                  onInvite={handleInvite}
+                  onRemove={handleRemoveCollaborator}
+                  onRoleChange={handleRoleChange}
+                  setInviteEmail={setInviteEmail}
+                  setInviteRole={setInviteRole}
                 />
               </div>
             </Modal.Body>

@@ -1168,7 +1168,6 @@ function KnowledgeComposer(props: KnowledgeComposerProps) {
         <MentionPopover {...props.mentionPopoverProps} />
         <PromptInput
           accept={FILE_ATTACHMENT_ACCEPT}
-          className="rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none"
           globalDrop
           maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
           maxFiles={FILE_ATTACHMENT_MAX_FILES}

@@ -1,4 +1,4 @@
-import { db, entries, entryTags, tags } from "@folionote/db"
+import { db, entries, entryCollaborators, entryTags, tags } from "@folionote/db"
 import { ORPCError } from "@orpc/server"
 import bcrypt from "bcryptjs"
 import { and, desc, eq, inArray, isNotNull, isNull, lt } from "drizzle-orm"
@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { protectedProcedure } from "../index"
 import { processContentUpdate } from "../utils/content"
+import { getEntryAccessRole } from "../utils/entry-access"
 import { extractEntryRefs, syncEntryLinks } from "../utils/link-sync"
 
 const BCRYPT_ROUNDS = 10
@@ -288,29 +289,47 @@ export const restoreEntry = protectedProcedure
 
 /**
  * entries.get - Get a single entry by ID
+ *
+ * Available to the owner or any invited collaborator (see
+ * `getEntryAccessRole` — password-locked entries deny collaborators
+ * entirely). `update`/`delete`/tags/sources stay owner-only: collaborators
+ * change body content exclusively through the collab socket.
  */
 export const getEntry = protectedProcedure
   .input(GetEntryInputSchema)
   .handler(async ({ context, input }) => {
     const userId = context.session.user.id
 
+    const accessRole = await getEntryAccessRole(userId, input.id)
+    if (!accessRole) {
+      throw new ORPCError("NOT_FOUND", { message: "Entry not found" })
+    }
+
     const [entry] = await db
       .select()
       .from(entries)
-      .where(
-        and(
-          eq(entries.id, input.id),
-          eq(entries.userId, userId),
-          isNull(entries.deletedAt)
-        )
-      )
+      .where(and(eq(entries.id, input.id), isNull(entries.deletedAt)))
       .limit(1)
 
     if (!entry) {
       throw new ORPCError("NOT_FOUND", { message: "Entry not found" })
     }
 
-    return entry
+    // Whether *this entry* has any collaborators at all — not whether
+    // *this caller* is one. The owner needs this too: once a first
+    // collaborator is invited, the owner's own client must also switch to
+    // the Yjs-backed editor, or they'd never actually sync with each other.
+    const [collaboratorRow] = await db
+      .select({ id: entryCollaborators.id })
+      .from(entryCollaborators)
+      .where(eq(entryCollaborators.entryId, input.id))
+      .limit(1)
+
+    return {
+      ...entry,
+      accessRole,
+      isCollaborative: Boolean(collaboratorRow)
+    }
   })
 
 /**

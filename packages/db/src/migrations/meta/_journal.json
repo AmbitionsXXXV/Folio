@@ -92,6 +92,13 @@
       "when": 1781166124695,
       "tag": "0012_add_model_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783070548759,
+      "tag": "0013_fuzzy_spot",
+      "breakpoints": true
     }
   ]
 }

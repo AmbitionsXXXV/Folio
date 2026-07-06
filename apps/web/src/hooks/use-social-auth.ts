@@ -16,6 +16,11 @@ interface UseSocialAuthOptions {
    */
   callbackURL: string
   /**
+   * The URL to redirect to if the OAuth flow fails (e.g. account_not_linked),
+   * so errors land on the web app instead of the auth/API origin.
+   */
+  errorCallbackURL?: string
+  /**
    * Custom error message key for i18n (defaults to 'auth.signInFailed')
    */
   errorMessageKey?: string
@@ -43,6 +48,7 @@ interface UseSocialAuthOptions {
 export function useSocialAuth({
   provider,
   callbackURL,
+  errorCallbackURL,
   errorMessageKey = "auth.signInFailed"
 }: UseSocialAuthOptions) {
   const { t } = useTranslation()
@@ -51,7 +57,8 @@ export function useSocialAuth({
     mutationFn: () =>
       authClient.signIn.social({
         provider,
-        callbackURL
+        callbackURL,
+        ...(errorCallbackURL ? { errorCallbackURL } : {})
       }),
     onError: (error) => {
       toast.error(t(errorMessageKey))

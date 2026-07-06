@@ -3,7 +3,7 @@ import { defineConfig } from "vite-plus"
 export default defineConfig({
   // `vp pack` wraps tsdown; options mirror the former tsdown.config.ts.
   pack: {
-    entry: "./src/index.ts",
+    entry: ["./src/index.ts", "./src/collab/index.ts"],
     format: "esm",
     outDir: "./dist",
     clean: true,

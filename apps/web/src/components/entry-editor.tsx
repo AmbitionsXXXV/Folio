@@ -11,8 +11,11 @@ import {
 } from "@folionote/editor-react"
 import type { PasteStrategy, SlashCommandItem } from "@folionote/editor-react"
 import { CodeBlockShiki } from "@folionote/editor-react/extensions"
+import type { HocuspocusProvider } from "@hocuspocus/provider"
 import type { JSONContent } from "@tiptap/core"
 import { Extension } from "@tiptap/core"
+import Collaboration from "@tiptap/extension-collaboration"
+import CollaborationCaret from "@tiptap/extension-collaboration-caret"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { EditorContent, useEditor } from "@tiptap/react"
@@ -38,8 +41,20 @@ type ContentFormat = "json" | "html"
 
 export type ImageUploadHandler = (file: File) => Promise<{ publicUrl: string }>
 
+/**
+ * When set, the editor binds its content to the given Yjs doc instead of
+ * the `content`/`onChange` prop flow: body content persists exclusively
+ * through the collab server's flush (see apps/server/src/collab/server.ts),
+ * not through this component's normal save path. `user` drives the local
+ * participant's rendered caret/selection color on other clients.
+ */
+export interface EntryEditorCollabOptions {
+  provider: HocuspocusProvider
+  user: { name: string; color: string }
+}
+
 interface EntryEditorProps {
-  /** 初始内容，可以是 JSON 字符串或 HTML */
+  /** 初始内容，可以是 JSON 字符串或 HTML。collab 模式下会被忽略——由 Yjs 文档提供内容 */
   content: string
   /** 内容变更回调 */
   onChange?: (content: string, json: string) => void
@@ -55,6 +70,8 @@ interface EntryEditorProps {
   pasteStrategy?: PasteStrategy
   /** Image upload handler for paste/drop */
   onUploadImage?: ImageUploadHandler
+  /** Enables real-time collaborative editing for this entry */
+  collab?: EntryEditorCollabOptions
 }
 
 /**
@@ -178,7 +195,8 @@ export function EntryEditor({
   className = "",
   additionalCommands = EMPTY_COMMANDS,
   pasteStrategy = "preserve",
-  onUploadImage
+  onUploadImage,
+  collab
 }: EntryEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -212,7 +230,10 @@ export function EntryEditor({
         // Use the hardened CustomLink (noopener, protocol allowlist, openOnClick
         // off) below instead of StarterKit's bundled link, which would otherwise
         // register a duplicate "link" extension.
-        link: false
+        link: false,
+        // The Collaboration extension below brings its own Yjs-backed undo
+        // manager; StarterKit's history would fight it for the same keymap.
+        ...(collab ? { undoRedo: false } : {})
       }),
       CodeBlockShiki.configure({
         defaultLanguage: "plaintext"
@@ -250,9 +271,30 @@ export function EntryEditor({
       }),
       CustomCaret.configure({
         enabled: editable
-      })
+      }),
+      // Collaborative entries only: content lives in the Yjs doc instead of
+      // the `content` prop, and remote carets/selections render from
+      // provider awareness. CustomCaret above is unaffected — it only ever
+      // draws the local user's own cursor.
+      ...(collab
+        ? [
+            Collaboration.configure({
+              document: collab.provider.document,
+              field: "content"
+            }),
+            CollaborationCaret.configure({
+              provider: collab.provider,
+              user: collab.user
+            })
+          ]
+        : [])
     ],
-    content: initialContent,
+    // In collab mode, seeding `content` alongside the Collaboration
+    // extension is the classic doubled-document bug on first sync — the Yjs
+    // doc (hydrated server-side from entries.contentJson, see
+    // apps/server/src/collab/server.ts's onLoadDocument) is the only source
+    // of truth once collab is enabled.
+    content: collab ? undefined : initialContent,
     editable,
     immediatelyRender: false,
     editorProps: {
@@ -294,6 +336,13 @@ export function EntryEditor({
       return
     }
 
+    // Collab mode: content is owned by the Yjs doc, not the `content` prop —
+    // calling setContent here would fight the Collaboration extension's own
+    // sync and can desync local state from the shared doc.
+    if (collab) {
+      return
+    }
+
     // 如果这次 content 变化是由内部更新触发的，跳过 setContent
     // 这样可以保留 undo 历史
     if (
@@ -322,7 +371,7 @@ export function EntryEditor({
     } else if (content !== editor.getHTML()) {
       editor.commands.setContent(content, { emitUpdate: false })
     }
-  }, [content, contentFormat, editor])
+  }, [content, contentFormat, editor, collab])
 
   // Cleanup debounce on unmount
   useEffect(
