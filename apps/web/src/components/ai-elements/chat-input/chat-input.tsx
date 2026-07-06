@@ -448,10 +448,7 @@ export function ChatInput({
       <MentionPopover {...mention.popoverProps} />
       <PromptInput
         accept={FILE_ATTACHMENT_ACCEPT}
-        className={cn(
-          "rounded-xl transition-shadow duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2 focus-within:ring-offset-background motion-reduce:transition-none",
-          className
-        )}
+        className={className}
         globalDrop
         layout="stacked"
         maxFileSize={FILE_ATTACHMENT_MAX_BYTES}
