@@ -114,8 +114,14 @@ const schema = {
 
 // 数据库连接初始化
 import { drizzle } from "drizzle-orm/node-postgres"
+import type { NodePgDatabase } from "drizzle-orm/node-postgres"
 
-export const db = drizzle(process.env.DATABASE_URL || "", { schema })
+// 显式标注:TS7 对不可移植的推断类型(引用非直接依赖 @types/pg 的
+// Pool)报 TS2883,标注后无需依赖推断
+export const db: NodePgDatabase<typeof schema> = drizzle(
+  process.env.DATABASE_URL || "",
+  { schema }
+)
 
 export {
   aiCatalogSync,

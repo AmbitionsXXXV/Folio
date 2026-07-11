@@ -49,15 +49,17 @@ export function buildVisionContextMessage(
         const imageUrl = new URL(image.url)
         const description =
           image.description?.trim() ?? "No generated description available."
-        content.push({
-          type: "text",
-          text: `Note: ${note.title}\nImage summary: ${truncateText(description, MAX_IMAGE_DESCRIPTION_CHARS)}`
-        })
-        content.push({
-          type: "file",
-          data: imageUrl,
-          mediaType: image.mimeType
-        })
+        content.push(
+          {
+            type: "text",
+            text: `Note: ${note.title}\nImage summary: ${truncateText(description, MAX_IMAGE_DESCRIPTION_CHARS)}`
+          },
+          {
+            type: "file",
+            data: imageUrl,
+            mediaType: image.mimeType
+          }
+        )
         imageCount += 1
       } catch (error) {
         log.warn(`Invalid image URL skipped: ${image.url}`, error)

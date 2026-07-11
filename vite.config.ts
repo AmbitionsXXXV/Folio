@@ -24,14 +24,14 @@ const sharedIgnores = [
   "tools/clean.js"
 ]
 
-// ultracite 7.8.3 ships these rules for a newer oxlint than Vite+ 0.1.24
-// bundles (oxlint 1.67.0); they fail oxlint config parsing, so drop them until
-// the bundled oxlint catches up.
+// ultracite ships rules for plugins that the bundled oxlint doesn't support yet;
+// drop individual rules AND entire plugin prefixes until the runtime catches up.
 const incompatibleOxlintRules = [
   "prefer-named-capture-group",
   "jsdoc/require-yields-description",
   "typescript/method-signature-style"
 ]
+const incompatibleOxlintPlugins = ["github", "react-doctor", "sonarjs"]
 
 const lintRules = {
   ...ultraciteCoreConfig.rules,
@@ -44,6 +44,11 @@ const lintRules = {
 
 for (const rule of incompatibleOxlintRules) {
   delete lintRules[rule]
+}
+for (const key of Object.keys(lintRules)) {
+  if (incompatibleOxlintPlugins.some((p) => key.startsWith(`${p}/`))) {
+    delete lintRules[key]
+  }
 }
 
 // Rules the prior Biome config tolerated. The existing codebase predates this
@@ -116,7 +121,25 @@ const relaxedRules = [
   "unicorn/prefer-spread",
   "unicorn/prefer-string-replace-all",
   "unicorn/prefer-ternary",
-  "unicorn/switch-case-braces"
+  "unicorn/switch-case-braces",
+  // Rules newly promoted to error by ultracite upgrade; relax until codebase is
+  // updated to comply. Tighten incrementally.
+  "jsx-a11y/prefer-tag-over-role",
+  "oxc/branches-sharing-code",
+  "react/display-name",
+  "react/jsx-no-constructed-context-values",
+  "react/jsx-handler-names",
+  "react/no-danger",
+  "react/no-unescaped-entities",
+  "react/react-compiler",
+  "react-hooks/exhaustive-deps",
+  "unicorn/prefer-export-from",
+  "unicorn/prefer-number-coercion",
+  "jsx-a11y/heading-has-content",
+  "react/hook-use-state",
+  "react/jsx-no-useless-fragment",
+  "react/no-react-children",
+  "unicorn/prefer-single-call"
 ]
 
 for (const rule of relaxedRules) {
@@ -143,7 +166,16 @@ export default defineConfig({
     overrides: [
       ...(ultraciteCoreConfig.overrides ?? []),
       ...(ultraciteTanstackConfig.overrides ?? [])
-    ],
+    ].map((o) => {
+      if (!o.rules) return o
+      const cleaned = { ...o.rules }
+      for (const key of Object.keys(cleaned)) {
+        if (incompatibleOxlintPlugins.some((p) => key.startsWith(`${p}/`))) {
+          delete cleaned[key]
+        }
+      }
+      return { ...o, rules: cleaned }
+    }),
     plugins: [
       ...(ultraciteCoreConfig.plugins ?? []),
       ...(ultraciteReactConfig.plugins ?? [])

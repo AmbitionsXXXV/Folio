@@ -246,14 +246,13 @@ function assembleFinalPrompt(
 ): string {
   const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
 
-  sections.push(...assembleCurrentDateSection(currentDate))
   sections.push(
-    ...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
+    ...assembleCurrentDateSection(currentDate),
+    ...assembleNoteContextSections(attachedFormatted, retrievedFormatted),
+    `## User Question
+
+${userPrompt}`
   )
-
-  sections.push(`## User Question
-
-${userPrompt}`)
 
   return sections.join("\n\n")
 }
@@ -268,8 +267,8 @@ function assembleSystemPrompt(
 ): string {
   const sections: string[] = [KNOWLEDGE_CHAT_SYSTEM_PROMPT]
 
-  sections.push(...assembleCurrentDateSection(currentDate))
   sections.push(
+    ...assembleCurrentDateSection(currentDate),
     ...assembleNoteContextSections(attachedFormatted, retrievedFormatted)
   )
 

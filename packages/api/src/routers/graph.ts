@@ -380,8 +380,10 @@ const getGraph = protectedProcedure
     ]
 
     if (includeInferred) {
-      edgeSources.push(await fetchSharedTagEdges(entryIds))
-      edgeSources.push(await fetchSharedSourceEdges(entryIds))
+      edgeSources.push(
+        await fetchSharedTagEdges(entryIds),
+        await fetchSharedSourceEdges(entryIds)
+      )
     }
 
     const allEdges = deduplicateEdges(edgeSources)
@@ -507,8 +509,10 @@ const getNeighbors = protectedProcedure
       await fetchExplicitEdges(userId, validIds)
     ]
     if (includeInferred) {
-      edgeSources.push(await fetchSharedTagEdges(validIds))
-      edgeSources.push(await fetchSharedSourceEdges(validIds))
+      edgeSources.push(
+        await fetchSharedTagEdges(validIds),
+        await fetchSharedSourceEdges(validIds)
+      )
     }
 
     const nodeIdSet = new Set(validIds)
