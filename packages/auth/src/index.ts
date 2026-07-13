@@ -225,18 +225,28 @@ export const auth = betterAuth({
     }
   },
   socialProviders,
-  // Link a Google/GitHub sign-in to an existing same-email account. Better Auth
-  // otherwise throws `account_not_linked` when the *existing* account's email is
-  // unverified — which it is while REQUIRE_EMAIL_VERIFICATION is off.
-  // NOTE: trustedProviders is Better Auth's *forced* linking — it links even to
-  // unverified existing accounts, which the docs flag as an account-takeover
-  // risk. The durable fix is enabling email verification (below): once existing
-  // accounts are verified, the default verified-only linking path works and this
-  // list can be dropped. https://better-auth.com/docs/concepts/users-accounts
+  // Let a verified Google/GitHub sign-in link into a pre-existing same-email
+  // account instead of failing with `account_not_linked`.
+  //
+  // Better Auth 1.6.x's implicit-link gate rejects the link when EITHER the
+  // incoming provider's email is unverified, OR `requireLocalEmailVerified`
+  // (default true) is set and the *existing local* account is unverified.
+  // Google/GitHub always return verified emails, so the first check passes on
+  // its own — but every email/password account is unverified while
+  // REQUIRE_EMAIL_VERIFICATION is off, so the second check fires and blocks the
+  // link. That is the bug users hit. `trustedProviders` does NOT help here: it
+  // only waives the incoming-provider check (never the local one) and would let
+  // an *unverified* GitHub primary email force-link — an account-takeover
+  // vector — so it is deliberately omitted.
+  //
+  // Interim fix: waive the local-verification requirement. Durable fix: turn on
+  // REQUIRE_EMAIL_VERIFICATION, get existing users verified, then drop this
+  // override to restore verified-only linking.
+  // https://better-auth.com/docs/concepts/users-accounts#account-linking
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "github"]
+      requireLocalEmailVerified: false
     }
   },
   emailAndPassword: {
