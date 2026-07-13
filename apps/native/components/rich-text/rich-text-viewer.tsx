@@ -250,7 +250,7 @@ function buildRenderDoc(styles: Styles) {
         <View style={styles.list}>
           {Children.map(children as ReactNode, (child) => (
             <View style={styles.listRow}>
-              <Text style={styles.marker}>{"•"}</Text>
+              <Text style={styles.marker}>•</Text>
               {child}
             </View>
           ))}
