@@ -252,11 +252,11 @@ Concise rules for building accessible, fast, delightful UIs Use MUST/SHOULD/NEVE
 
 ### Services overview
 
-| Service    | Command                                         | Port | Notes                                             |
-| ---------- | ----------------------------------------------- | ---- | ------------------------------------------------- |
+| Service | Command | Port | Notes |
+| --- | --- | --- | --- |
 | PostgreSQL | `sudo docker compose up -d` (in `packages/db/`) | 5432 | Uses `docker-compose.yml` with postgres:17-alpine |
-| API server | `pnpm dev:server`                               | 3000 | Hono backend; needs `DATABASE_URL` env var        |
-| Web app    | `pnpm dev:web`                                  | 3001 | TanStack Start + Vite                             |
+| API server | `pnpm dev:server` | 3000 | Hono backend; needs `DATABASE_URL` env var |
+| Web app | `pnpm dev:web` | 3001 | TanStack Start + Vite |
 
 ### Database setup
 

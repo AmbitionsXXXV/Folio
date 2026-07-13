@@ -23,18 +23,18 @@
 
 ### 涉及文件
 
-| 文件                                                                     | 变更说明                                  |
-| ------------------------------------------------------------------------ | ----------------------------------------- |
-| `packages/ai-tools/src/web-search/types.ts`                              | 新增 `WebSearchCompactBarProps` 类型      |
-| `packages/ai-tools/src/web-search/components/web-search-compact-bar.tsx` | 新增紧凑状态条组件                        |
-| `packages/ai-tools/src/web-search/components/index.ts`                   | 导出新组件                                |
-| `packages/ai-tools/src/index.ts`                                         | 包级别导出                                |
-| `apps/web/src/features/knowledge/components/web-search-panel.tsx`        | 新增右侧结果 Panel                        |
-| `apps/web/src/features/knowledge/components/tool-cards.tsx`              | `WebSearchToolCard` 改为渲染 `CompactBar` |
-| `apps/web/src/features/knowledge/components/chat-message-item.tsx`       | 透传 `onOpenWebSearchPanel` 回调          |
-| `apps/web/src/routes/_app/knowledge.tsx`                                 | 集成 panel 状态管理                       |
-| `packages/locales/src/resources/en-US.json`                              | 新增 panel i18n key                       |
-| `packages/locales/src/resources/zh-CN.json`                              | 新增 panel i18n key                       |
+| 文件 | 变更说明 |
+| --- | --- |
+| `packages/ai-tools/src/web-search/types.ts` | 新增 `WebSearchCompactBarProps` 类型 |
+| `packages/ai-tools/src/web-search/components/web-search-compact-bar.tsx` | 新增紧凑状态条组件 |
+| `packages/ai-tools/src/web-search/components/index.ts` | 导出新组件 |
+| `packages/ai-tools/src/index.ts` | 包级别导出 |
+| `apps/web/src/features/knowledge/components/web-search-panel.tsx` | 新增右侧结果 Panel |
+| `apps/web/src/features/knowledge/components/tool-cards.tsx` | `WebSearchToolCard` 改为渲染 `CompactBar` |
+| `apps/web/src/features/knowledge/components/chat-message-item.tsx` | 透传 `onOpenWebSearchPanel` 回调 |
+| `apps/web/src/routes/_app/knowledge.tsx` | 集成 panel 状态管理 |
+| `packages/locales/src/resources/en-US.json` | 新增 panel i18n key |
+| `packages/locales/src/resources/zh-CN.json` | 新增 panel i18n key |
 
 ### 布局定位
 
@@ -88,13 +88,13 @@ User Query
 
 #### 新增模块
 
-| 文件                                              | 说明                                      |
-| ------------------------------------------------- | ----------------------------------------- |
-| `apps/server/src/services/rag/query-rewriter.ts`  | LLM query 改写（AI SDK `generateObject`） |
-| `apps/server/src/services/rag/multi-retriever.ts` | 多路召回 + 合并去重                       |
-| `apps/server/src/services/rag/reranker.ts`        | LLM 相关性评分 rerank                     |
-| `apps/server/src/services/rag/pipeline.ts`        | 完整 RAG 管线编排                         |
-| `apps/server/src/services/rag/index.ts`           | 统一导出                                  |
+| 文件 | 说明 |
+| --- | --- |
+| `apps/server/src/services/rag/query-rewriter.ts` | LLM query 改写（AI SDK `generateObject`） |
+| `apps/server/src/services/rag/multi-retriever.ts` | 多路召回 + 合并去重 |
+| `apps/server/src/services/rag/reranker.ts` | LLM 相关性评分 rerank |
+| `apps/server/src/services/rag/pipeline.ts` | 完整 RAG 管线编排 |
+| `apps/server/src/services/rag/index.ts` | 统一导出 |
 
 #### 集成方式
 

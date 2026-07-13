@@ -215,13 +215,13 @@ type JapanesePartOfSpeech =
 
 将输入匹配从纯 romaji 升级为 **假名优先 + romaji 备用** 双模式：
 
-| 变更项   | 旧版                                                 | 新版                                                                               |
-| -------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| 正规化   | `normalizeJapaneseTypingAnswer`（仅保留 `[a-z0-9]`） | `normalizeKanaAnswer`（保留假名/汉字）+ `normalizeRomajiAnswer`（保留 `[a-z0-9]`） |
-| 输入检测 | 无                                                   | `isJapaneseInput`（检测输入是否包含假名/汉字）                                     |
-| 匹配逻辑 | 固定与 `exercise.romaji` 比对                        | 假名输入 → 与 `exercise.reading` 比对；romaji 输入 → 与 `exercise.romaji` 比对     |
-| 进度指示 | 固定显示 romaji 进度                                 | 根据当前输入类型动态切换目标                                                       |
-| 错误提示 | 仅显示 romaji                                        | 显示假名读音 + romaji 作为参考                                                     |
+| 变更项 | 旧版 | 新版 |
+| --- | --- | --- |
+| 正规化 | `normalizeJapaneseTypingAnswer`（仅保留 `[a-z0-9]`） | `normalizeKanaAnswer`（保留假名/汉字）+ `normalizeRomajiAnswer`（保留 `[a-z0-9]`） |
+| 输入检测 | 无 | `isJapaneseInput`（检测输入是否包含假名/汉字） |
+| 匹配逻辑 | 固定与 `exercise.romaji` 比对 | 假名输入 → 与 `exercise.reading` 比对；romaji 输入 → 与 `exercise.romaji` 比对 |
+| 进度指示 | 固定显示 romaji 进度 | 根据当前输入类型动态切换目标 |
+| 错误提示 | 仅显示 romaji | 显示假名读音 + romaji 作为参考 |
 
 新增工具函数（`apps/web/src/lib/japanese-typing.ts`）：
 

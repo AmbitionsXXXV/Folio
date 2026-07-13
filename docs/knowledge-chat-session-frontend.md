@@ -68,7 +68,6 @@ pnpm run check-types
 
 ## 7. 圆角 Token 一致性
 
-`Knowledge` 顶部的 `Chat History` 按钮使用 `Button size="sm"`。
-为确保全站主题圆角与 `--radius` 保持一致，`Button` 的 `xs/sm/icon-xs/icon-sm` 尺寸已移除 `min(var(--radius-md), px)` 的像素上限，改为纯 Token 圆角。
+`Knowledge` 顶部的 `Chat History` 按钮使用 `Button size="sm"`。为确保全站主题圆角与 `--radius` 保持一致，`Button` 的 `xs/sm/icon-xs/icon-sm` 尺寸已移除 `min(var(--radius-md), px)` 的像素上限，改为纯 Token 圆角。
 
 这样在调整 `packages/ui/src/styles/index.css` 的 `--radius` 后，`Knowledge` 页与其他共享按钮会同步生效，避免局部圆角被硬编码截断。

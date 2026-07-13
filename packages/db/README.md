@@ -63,11 +63,11 @@ pnpm run db:stop:local
 
 The database connection uses the following environment variables:
 
-| Variable          | Description                      | Default                                                   |
-| ----------------- | -------------------------------- | --------------------------------------------------------- |
-| `DATABASE_URL`    | Primary connection string        | -                                                         |
-| `SUPABASE_DB_URL` | Supabase-specific URL (fallback) | -                                                         |
-| -                 | Local Supabase default           | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| Variable | Description | Default |
+| --- | --- | --- |
+| `DATABASE_URL` | Primary connection string | - |
+| `SUPABASE_DB_URL` | Supabase-specific URL (fallback) | - |
+| - | Local Supabase default | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 
 ### Environment Setup
 

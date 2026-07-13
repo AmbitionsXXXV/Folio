@@ -338,8 +338,7 @@ Entry images are stored in the `attachments` bucket and managed via oRPC endpoin
 
 ### Bucket Setup
 
-The `attachments` bucket is created via `packages/db/supabase/seed.sql` during local development.
-For production, create it manually in the Supabase dashboard with:
+The `attachments` bucket is created via `packages/db/supabase/seed.sql` during local development. For production, create it manually in the Supabase dashboard with:
 
 - **Name**: `attachments`
 - **Public**: Yes
@@ -355,11 +354,11 @@ For production, create it manually in the Supabase dashboard with:
 
 ### API Endpoints
 
-| Endpoint                      | Description                                                    |
-| ----------------------------- | -------------------------------------------------------------- |
-| `storage.uploadAttachment`    | Upload an image, writes metadata to `attachments` table        |
-| `storage.deleteAttachment`    | Soft-delete an attachment (marks `deletedAt`, removes from S3) |
-| `storage.getAttachmentConfig` | Returns allowed types and max size for client validation       |
+| Endpoint | Description |
+| --- | --- |
+| `storage.uploadAttachment` | Upload an image, writes metadata to `attachments` table |
+| `storage.deleteAttachment` | Soft-delete an attachment (marks `deletedAt`, removes from S3) |
+| `storage.getAttachmentConfig` | Returns allowed types and max size for client validation |
 
 ### Editor Integration
 

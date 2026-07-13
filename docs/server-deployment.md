@@ -160,10 +160,10 @@ IMAGE_CAPTION_INTERNAL_TOKEN=这里替换成随机 token
 
 ### 4.2 这几个图片描述相关环境变量分别做什么
 
-| 变量                               | 作用                                                      | 是否推荐生产显式配置 |
-| ---------------------------------- | --------------------------------------------------------- | -------------------- |
-| `IMAGE_CAPTION_INTERNAL_TOKEN`     | 保护 `POST /api/image/caption/internal`，防止伪造内部调用 | 是                   |
-| `IMAGE_CAPTION_INTERNAL_URL`       | 指定服务端上传后异步触发图片描述时，要请求的完整内部地址  | 是                   |
+| 变量 | 作用 | 是否推荐生产显式配置 |
+| --- | --- | --- |
+| `IMAGE_CAPTION_INTERNAL_TOKEN` | 保护 `POST /api/image/caption/internal`，防止伪造内部调用 | 是 |
+| `IMAGE_CAPTION_INTERNAL_URL` | 指定服务端上传后异步触发图片描述时，要请求的完整内部地址 | 是 |
 | `IMAGE_CAPTION_ALLOW_ENV_FALLBACK` | 是否允许内部图片描述流程在无用户 BYOK 时使用平台侧 AI key | 是，默认建议 `false` |
 
 如果你使用的是单机单进程部署，且应用就监听在本机端口，也可以不配 `IMAGE_CAPTION_INTERNAL_URL`，让代码自动回退到：
@@ -232,13 +232,13 @@ sudo systemctl reload nginx
 
 在 GitHub 仓库中配置以下 Secrets（Settings → Secrets and variables → Actions）：
 
-| Secret 名称       | 描述                       | 示例                                     |
-| ----------------- | -------------------------- | ---------------------------------------- |
-| `SERVER_HOST`     | 服务器 IP 或域名           | `your-server-ip-or-domain`               |
-| `SSH_USER`        | SSH 登录用户名             | `your-ssh-username`                      |
-| `SSH_PRIVATE_KEY` | SSH 私钥（完整内容）       | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
-| `SERVER_URL`      | 服务健康检查 URL（可选）   | `http://your-server-ip:3000`             |
-| `SERVER_DOMAIN`   | Caddy 反向代理域名（可选） | `api.your-domain.com`                    |
+| Secret 名称 | 描述 | 示例 |
+| --- | --- | --- |
+| `SERVER_HOST` | 服务器 IP 或域名 | `your-server-ip-or-domain` |
+| `SSH_USER` | SSH 登录用户名 | `your-ssh-username` |
+| `SSH_PRIVATE_KEY` | SSH 私钥（完整内容） | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `SERVER_URL` | 服务健康检查 URL（可选） | `http://your-server-ip:3000` |
+| `SERVER_DOMAIN` | Caddy 反向代理域名（可选） | `api.your-domain.com` |
 
 ### 生成 SSH 密钥对
 
@@ -316,11 +316,11 @@ pm2 reload ecosystem.config.cjs --env production
 
 当您注册域名后，需要配置 HTTPS 以确保通信安全。以下提供三种主流方案供选择：
 
-| 方案                | 优点                                | 缺点         | 推荐场景                      |
-| ------------------- | ----------------------------------- | ------------ | ----------------------------- |
-| **Nginx + Certbot** | 功能强大、生态成熟、文档丰富        | 配置相对复杂 | 需要精细控制、已有 Nginx 经验 |
-| **Caddy**           | 自动 HTTPS、配置极简、零配置证书    | 生态相对较小 | 快速部署、追求简洁            |
-| **Cloudflare**      | CDN 加速、DDoS 防护、无需服务器配置 | 需要更改 DNS | 需要 CDN、全球加速            |
+| 方案 | 优点 | 缺点 | 推荐场景 |
+| --- | --- | --- | --- |
+| **Nginx + Certbot** | 功能强大、生态成熟、文档丰富 | 配置相对复杂 | 需要精细控制、已有 Nginx 经验 |
+| **Caddy** | 自动 HTTPS、配置极简、零配置证书 | 生态相对较小 | 快速部署、追求简洁 |
+| **Cloudflare** | CDN 加速、DDoS 防护、无需服务器配置 | 需要更改 DNS | 需要 CDN、全球加速 |
 
 ### 方案一：Nginx + Certbot（Let's Encrypt）
 

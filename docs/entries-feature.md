@@ -216,14 +216,14 @@ Tiptap 富文本编辑器封装，支持：
 
 **Props：**
 
-| 属性          | 类型                 | 默认值               | 描述                           |
-| ------------- | -------------------- | -------------------- | ------------------------------ |
-| content       | string               | -                    | 初始内容（JSON 字符串或 HTML） |
-| contentFormat | 'json' \| 'html'     | 'json'               | 内容格式                       |
-| onChange      | (html, json) => void | -                    | 内容变更回调                   |
-| placeholder   | string               | 'Write something...' | 占位符文本                     |
-| editable      | boolean              | true                 | 是否可编辑                     |
-| autoFocus     | boolean              | false                | 是否自动聚焦                   |
+| 属性 | 类型 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| content | string | - | 初始内容（JSON 字符串或 HTML） |
+| contentFormat | 'json' \| 'html' | 'json' | 内容格式 |
+| onChange | (html, json) => void | - | 内容变更回调 |
+| placeholder | string | 'Write something...' | 占位符文本 |
+| editable | boolean | true | 是否可编辑 |
+| autoFocus | boolean | false | 是否自动聚焦 |
 
 ### EntryCard
 
