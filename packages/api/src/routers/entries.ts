@@ -346,18 +346,15 @@ export const listEntries = protectedProcedure
 
     switch (filter) {
       case "inbox": {
-        conditions.push(eq(entries.isInbox, true))
-        conditions.push(isNull(entries.deletedAt))
+        conditions.push(eq(entries.isInbox, true), isNull(entries.deletedAt))
         break
       }
       case "starred": {
-        conditions.push(eq(entries.isStarred, true))
-        conditions.push(isNull(entries.deletedAt))
+        conditions.push(eq(entries.isStarred, true), isNull(entries.deletedAt))
         break
       }
       case "pinned": {
-        conditions.push(eq(entries.isPinned, true))
-        conditions.push(isNull(entries.deletedAt))
+        conditions.push(eq(entries.isPinned, true), isNull(entries.deletedAt))
         break
       }
       case "deleted": {
