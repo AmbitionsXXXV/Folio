@@ -437,15 +437,20 @@
       }
     },
     "japaneseReading": {
-      "title": "Reading Analysis",
-      "subtitle": "Tap a word to see its reading and part of speech.",
+      "eyebrow": "Public-domain literature preview",
+      "title": "Begin with a real short story",
+      "subtitle": "Choose an Aozora Bunko excerpt and tap any word to inspect its reading, part of speech, and dictionary form.",
+      "workPickerLabel": "Choose a work",
+      "excerptCount": "{{count}} original sentences",
+      "publicDomain": "Public domain",
+      "openOriginal": "Read the original at {{source}}",
       "translationLabel": "Translation",
       "fieldReading": "Reading",
       "fieldRomaji": "Romaji",
       "fieldPos": "Part of speech",
       "fieldBaseForm": "Dictionary form",
       "selectHint": "Select a word to see its reading, romaji, and part of speech.",
-      "phraseNote": "Phrase grouping is approximate."
+      "phraseNote": "This is a human-reviewed preview of authentic text. Bunsetsu grouping remains approximate until server analysis replaces it."
     }
   },
   "activity": {

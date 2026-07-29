@@ -492,15 +492,20 @@
       }
     },
     "japaneseReading": {
-      "title": "阅读解析",
-      "subtitle": "点按词语查看其读音与词性。",
+      "eyebrow": "公共领域文学预览",
+      "title": "从真实短篇开始阅读",
+      "subtitle": "选择青空文库作品节选，点按词语查看读音、词性与词典形。",
+      "workPickerLabel": "选择作品",
+      "excerptCount": "{{count}} 句原文节选",
+      "publicDomain": "著作权保护期届满",
+      "openOriginal": "在{{source}}阅读原文",
       "translationLabel": "翻译",
       "fieldReading": "读音",
       "fieldRomaji": "罗马字",
       "fieldPos": "词性",
       "fieldBaseForm": "词典形",
       "selectHint": "选择一个词语，查看其读音、罗马字与词性。",
-      "phraseNote": "短语分组为近似结果。"
+      "phraseNote": "当前为人工校验的真实文本预览；文节分组仍是近似结果，后续将由服务端分析替换。"
     }
   },
   "activity": {

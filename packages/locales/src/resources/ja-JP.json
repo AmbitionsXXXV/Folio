@@ -387,15 +387,20 @@
       }
     },
     "japaneseReading": {
-      "title": "読解アナライザー",
-      "subtitle": "単語をタップすると読みと品詞が表示されます。",
+      "eyebrow": "パブリックドメイン文学プレビュー",
+      "title": "本物の短編から読み始める",
+      "subtitle": "青空文庫の作品を選び、単語をタップして読み・品詞・辞書形を確認できます。",
+      "workPickerLabel": "作品を選ぶ",
+      "excerptCount": "原文 {{count}} 文",
+      "publicDomain": "著作権保護期間満了",
+      "openOriginal": "{{source}}で原文を読む",
       "translationLabel": "翻訳",
       "fieldReading": "読み",
       "fieldRomaji": "ローマ字",
       "fieldPos": "品詞",
       "fieldBaseForm": "辞書形",
       "selectHint": "単語を選ぶと読み・ローマ字・品詞が表示されます。",
-      "phraseNote": "文節のグループ分けはおおよその目安です。"
+      "phraseNote": "実在作品を人手で確認したプレビューです。文節分けは近似であり、今後サーバー解析に置き換えます。"
     }
   },
   "activity": {

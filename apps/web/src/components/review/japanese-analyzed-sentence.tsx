@@ -8,7 +8,8 @@ import type { JapanesePartOfSpeech } from "@/lib/japanese-typing"
 import { JapaneseTokenChip } from "./japanese-token-chip"
 
 interface JapaneseAnalyzedSentenceViewProps {
-  sentence: JapaneseAnalyzedSentence
+  sentence: Omit<JapaneseAnalyzedSentence, "translation">
+  translation: string
   enabledPosCategories: Set<JapanesePartOfSpeech>
   selectedTokenId: string | null
   onSelectToken: (token: JapaneseAnalyzedToken) => void
@@ -17,6 +18,7 @@ interface JapaneseAnalyzedSentenceViewProps {
 
 export function JapaneseAnalyzedSentenceView({
   sentence,
+  translation,
   enabledPosCategories,
   selectedTokenId,
   onSelectToken,
@@ -24,9 +26,10 @@ export function JapaneseAnalyzedSentenceView({
 }: JapaneseAnalyzedSentenceViewProps) {
   const isAnalyzed = sentence.mode === "analyzed"
 
-  const renderChip = (token: JapaneseAnalyzedToken) => (
+  const renderChip = (token: JapaneseAnalyzedToken, isGrouped = false) => (
     <JapaneseTokenChip
       isDimmed={isAnalyzed && !enabledPosCategories.has(token.pos)}
+      isGrouped={isGrouped}
       isSelected={selectedTokenId === token.id}
       key={token.id}
       mode={sentence.mode}
@@ -46,21 +49,25 @@ export function JapaneseAnalyzedSentenceView({
           ? toRenderSegments(sentence.tokens).map((segment) =>
               segment.kind === "group" ? (
                 <div
-                  className="flex items-end gap-1 rounded-xl border border-border/40 bg-surface-secondary/30 px-1.5 py-1"
+                  className="relative flex items-start"
                   key={`${sentence.id}-g${segment.bunsetsuId}`}
                 >
-                  {segment.tokens.map(renderChip)}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-3 h-10 rounded-xl border border-border/40 bg-surface-secondary/50"
+                  />
+                  {segment.tokens.map((token) => renderChip(token, true))}
                 </div>
               ) : (
                 renderChip(segment.token)
               )
             )
-          : sentence.tokens.map(renderChip)}
+          : sentence.tokens.map((token) => renderChip(token))}
       </div>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         <span className="opacity-60">{translationLabel}：</span>
-        {sentence.translation}
+        {translation}
       </p>
     </div>
   )
