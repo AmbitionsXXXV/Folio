@@ -35,7 +35,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@v1.15.0
         with:
           node-version-file: ".node-version"
           cache: true
@@ -83,7 +83,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@v1.15.0
         with:
           node-version-file: ".node-version"
           cache: true
@@ -115,7 +115,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@v1
+        uses: voidzero-dev/setup-vp@v1.15.0
         with:
           node-version-file: ".node-version"
           cache: true
