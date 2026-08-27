@@ -15,6 +15,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Link, useMatchRoute } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
+import { BrandLockup } from "@/components/brand-lockup"
 import { useCommandPalette } from "@/contexts/command-palette-context"
 
 import UserMenu from "./user-menu"
@@ -89,16 +90,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <Sidebar.Header className="p-4">
-        <Link
-          className="font-script-en flex items-center gap-3 font-script text-2xl font-bold text-accent"
-          to="/"
-        >
-          <img
-            alt="FolioNote"
-            className="size-8 rounded-full"
-            src="/svg/icon.svg"
+        <Link className="flex items-center gap-3" to="/">
+          <BrandLockup
+            iconClassName="size-8"
+            iconOnly={isCollapsed}
+            wordmarkClassName="text-2xl"
           />
-          {!isCollapsed && <span>FolioNote</span>}
         </Link>
       </Sidebar.Header>
 

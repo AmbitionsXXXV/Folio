@@ -23,6 +23,7 @@ import {
   View
 } from "react-native"
 
+import { BrandLockup } from "@/components/brand-lockup"
 import { Container } from "@/components/container"
 import { EntryCard } from "@/components/entry-card"
 import { useLocalMode } from "@/contexts/local-mode-context"
@@ -307,9 +308,11 @@ function HomeHeader({
         </>
       ) : (
         <>
-          <Text className="mb-1 text-3xl font-bold text-foreground">
-            FolioNote
-          </Text>
+          <BrandLockup
+            className="mb-2"
+            size={40}
+            wordmarkClassName="text-3xl text-foreground"
+          />
           <View className="flex-row items-center">
             <View
               className={`mr-2 h-2 w-2 rounded-full ${isConnected ? "bg-success" : "bg-danger"}`}
