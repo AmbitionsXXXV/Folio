@@ -59,12 +59,12 @@
     "@commitlint/config-conventional": "^21.2.0",
     "@types/node": "catalog:",
     "conventional-changelog-conventionalcommits": "^10.2.1",
-    "cz-git": "^1.13.1",
+    "cz-git": "^1.14.0",
     "fast-glob": "^3.3.3",
-    "turbo": "^2.10.3",
+    "turbo": "^2.10.12",
     "typescript": "catalog:",
-    "ultracite": "^7.9.2",
+    "ultracite": "^7.10.7",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@11.11.0"
+  "packageManager": "pnpm@11.24.0"
 }
